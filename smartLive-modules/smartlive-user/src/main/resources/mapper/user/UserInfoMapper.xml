@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smartLive.userInfo.mapper.UserInfoMapper">
+    
+    <resultMap type="com.smartLive.user.domain.UserInfo" id="UserInfoResult">
+        <result property="userId"    column="user_id"    />
+        <result property="city"    column="city"    />
+        <result property="introduce"    column="introduce"    />
+        <result property="fans"    column="fans"    />
+        <result property="followee"    column="followee"    />
+        <result property="gender"    column="gender"    />
+        <result property="birthday"    column="birthday"    />
+        <result property="credits"    column="credits"    />
+        <result property="level"    column="level"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectUserInfoVo">
+        select user_id, city, introduce, fans, followee, gender, birthday, credits, level, create_time, update_time from tb_user_info
+    </sql>
+
+    <select id="selectUserInfoList" parameterType="com.smartLive.user.domain.UserInfo" resultMap="UserInfoResult">
+        <include refid="selectUserInfoVo"/>
+        <where>  
+            <if test="city != null  and city != ''"> and city = #{city}</if>
+            <if test="introduce != null  and introduce != ''"> and introduce = #{introduce}</if>
+            <if test="fans != null "> and fans = #{fans}</if>
+            <if test="followee != null "> and followee = #{followee}</if>
+            <if test="gender != null "> and gender = #{gender}</if>
+            <if test="birthday != null "> and birthday = #{birthday}</if>
+            <if test="credits != null  and credits != ''"> and credits = #{credits}</if>
+            <if test="level != null  and level != ''"> and level = #{level}</if>
+        </where>
+    </select>
+    
+    <select id="selectUserInfoByUserId" parameterType="com.smartLive.user.domain.UserInfo" resultMap="UserInfoResult">
+        <include refid="selectUserInfoVo"/>
+        where user_id = #{userId}
+    </select>
+
+    <insert id="insertUserInfo" parameterType="com.smartLive.user.domain.UserInfo">
+        insert into tb_user_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="city != null">city,</if>
+            <if test="introduce != null">introduce,</if>
+            <if test="fans != null">fans,</if>
+            <if test="followee != null">followee,</if>
+            <if test="gender != null">gender,</if>
+            <if test="birthday != null">birthday,</if>
+            <if test="credits != null">credits,</if>
+            <if test="level != null">level,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="city != null">#{city},</if>
+            <if test="introduce != null">#{introduce},</if>
+            <if test="fans != null">#{fans},</if>
+            <if test="followee != null">#{followee},</if>
+            <if test="gender != null">#{gender},</if>
+            <if test="birthday != null">#{birthday},</if>
+            <if test="credits != null">#{credits},</if>
+            <if test="level != null">#{level},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUserInfo" parameterType="com.smartLive.user.domain.UserInfo">
+        update tb_user_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="city != null">city = #{city},</if>
+            <if test="introduce != null">introduce = #{introduce},</if>
+            <if test="fans != null">fans = #{fans},</if>
+            <if test="followee != null">followee = #{followee},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="credits != null">credits = #{credits},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where user_id = #{userId}
+    </update>
+
+    <delete id="deleteUserInfoByUserId" parameterType="Long">
+        delete from tb_user_info where user_id = #{userId}
+    </delete>
+
+    <delete id="deleteUserInfoByUserIds" parameterType="String">
+        delete from tb_user_info where user_id in 
+        <foreach item="userId" collection="array" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+</mapper>

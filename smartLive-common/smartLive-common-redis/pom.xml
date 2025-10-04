@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.smartLive</groupId>
+        <artifactId>smartLive-common</artifactId>
+        <version>3.6.6</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    
+    <artifactId>smartLive-common-redis</artifactId>
+	
+    <description>
+        smartLive-common-redis缓存服务
+    </description>
+
+    <dependencies>
+		
+        <!-- SpringBoot Boot Redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        
+        <!-- smartLive Common Core-->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-core</artifactId>
+        </dependency>
+
+        <!--引入redisson依赖-->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.16.2</version>
+        </dependency>
+    </dependencies>
+</project>

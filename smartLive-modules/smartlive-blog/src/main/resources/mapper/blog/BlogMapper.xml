@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smartLive.blog.mapper.BlogMapper">
+    
+    <resultMap type="com.smartLive.blog.domain.Blog" id="BlogResult">
+        <result property="id"    column="id"    />
+        <result property="shopId"    column="shop_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="title"    column="title"    />
+        <result property="images"    column="images"    />
+        <result property="content"    column="content"    />
+        <result property="liked"    column="liked"    />
+        <result property="comments"    column="comments"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectBlogVo">
+        select id, shop_id, user_id, title, images, content, liked, comments, create_time, update_time from tb_blog
+    </sql>
+
+    <select id="selectBlogList" parameterType="com.smartLive.blog.domain.Blog" resultMap="BlogResult">
+        <include refid="selectBlogVo"/>
+        <where>  
+            <if test="shopId != null "> and shop_id = #{shopId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="title != null  and title != ''"> and title = #{title}</if>
+            <if test="images != null  and images != ''"> and images = #{images}</if>
+            <if test="content != null  and content != ''"> and content = #{content}</if>
+            <if test="liked != null  and liked != ''"> and liked = #{liked}</if>
+            <if test="comments != null  and comments != ''"> and comments = #{comments}</if>
+        </where>
+    </select>
+    
+    <select id="selectBlogById" parameterType="Long" resultMap="BlogResult">
+        <include refid="selectBlogVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertBlog" parameterType="com.smartLive.blog.domain.Blog" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_blog
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="shopId != null">shop_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="images != null and images != ''">images,</if>
+            <if test="content != null and content != ''">content,</if>
+            <if test="liked != null">liked,</if>
+            <if test="comments != null">comments,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="shopId != null">#{shopId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="images != null and images != ''">#{images},</if>
+            <if test="content != null and content != ''">#{content},</if>
+            <if test="liked != null">#{liked},</if>
+            <if test="comments != null">#{comments},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBlog" parameterType="com.smartLive.blog.domain.Blog">
+        update tb_blog
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="shopId != null">shop_id = #{shopId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="images != null and images != ''">images = #{images},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
+            <if test="liked != null">liked = #{liked},</if>
+            <if test="comments != null">comments = #{comments},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteBlogById" parameterType="Long">
+        delete from tb_blog where id = #{id}
+    </delete>
+
+    <delete id="deleteBlogByIds" parameterType="String">
+        delete from tb_blog where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

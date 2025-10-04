@@ -1,0 +1,19 @@
+package com.smartLive.blog.api.factory;
+
+import com.smartLive.common.core.domain.R;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
+import com.smartLive.blog.api.RemoteBlogService;
+@Component
+public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogService> {
+
+    @Override
+    public RemoteBlogService create(Throwable cause) {
+        return new RemoteBlogService() {
+            @Override
+            public R<Boolean> updateCommentById(Long blogId) {
+                return R.fail("评论失败");
+            }
+        };
+    }
+}

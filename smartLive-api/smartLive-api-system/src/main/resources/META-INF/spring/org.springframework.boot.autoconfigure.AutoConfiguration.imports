@@ -1,0 +1,3 @@
+com.smartLive.system.api.factory.RemoteUserFallbackFactory
+com.smartLive.system.api.factory.RemoteLogFallbackFactory
+com.smartLive.system.api.factory.RemoteFileFallbackFactory

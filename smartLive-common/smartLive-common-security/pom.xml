@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.smartLive</groupId>
+        <artifactId>smartLive-common</artifactId>
+        <version>3.6.6</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    
+    <artifactId>smartLive-common-security</artifactId>
+
+    <description>
+        smartLive-common-security安全模块
+    </description>
+
+    <dependencies>
+
+        <!-- Spring Web -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+
+        <!-- smartLive Api System -->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-system</artifactId>
+        </dependency>
+
+        <!-- smartLive Common Redis-->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-redis</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

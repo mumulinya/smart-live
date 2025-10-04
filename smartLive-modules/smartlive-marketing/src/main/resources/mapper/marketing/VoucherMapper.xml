@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smartLive.marketing.mapper.VoucherMapper">
+    
+    <resultMap type="com.smartLive.marketing.domain.Voucher" id="VoucherResult">
+        <result property="id"    column="id"    />
+        <result property="shopId"    column="shop_id"    />
+        <result property="title"    column="title"    />
+        <result property="subTitle"    column="sub_title"    />
+        <result property="rules"    column="rules"    />
+        <result property="payValue"    column="pay_value"    />
+        <result property="actualValue"    column="actual_value"    />
+        <result property="type"    column="type"    />
+        <result property="status"    column="status"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectVoucherVo">
+        select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, create_time, update_time from tb_voucher
+    </sql>
+
+    <select id="selectVoucherList" parameterType="com.smartLive.marketing.domain.Voucher" resultMap="VoucherResult">
+        <include refid="selectVoucherVo"/>
+        <where>  
+            <if test="shopId != null "> and shop_id = #{shopId}</if>
+            <if test="title != null  and title != ''"> and title = #{title}</if>
+            <if test="subTitle != null  and subTitle != ''"> and sub_title = #{subTitle}</if>
+            <if test="rules != null  and rules != ''"> and rules = #{rules}</if>
+            <if test="payValue != null  and payValue != ''"> and pay_value = #{payValue}</if>
+            <if test="actualValue != null "> and actual_value = #{actualValue}</if>
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectVoucherById" parameterType="Long" resultMap="VoucherResult">
+        <include refid="selectVoucherVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertVoucher" parameterType="com.smartLive.marketing.domain.Voucher" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_voucher
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="shopId != null">shop_id,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="subTitle != null">sub_title,</if>
+            <if test="rules != null">rules,</if>
+            <if test="payValue != null and payValue != ''">pay_value,</if>
+            <if test="actualValue != null">actual_value,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="shopId != null">#{shopId},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="subTitle != null">#{subTitle},</if>
+            <if test="rules != null">#{rules},</if>
+            <if test="payValue != null and payValue != ''">#{payValue},</if>
+            <if test="actualValue != null">#{actualValue},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateVoucher" parameterType="com.smartLive.marketing.domain.Voucher">
+        update tb_voucher
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="shopId != null">shop_id = #{shopId},</if>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="subTitle != null">sub_title = #{subTitle},</if>
+            <if test="rules != null">rules = #{rules},</if>
+            <if test="payValue != null and payValue != ''">pay_value = #{payValue},</if>
+            <if test="actualValue != null">actual_value = #{actualValue},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteVoucherById" parameterType="Long">
+        delete from tb_voucher where id = #{id}
+    </delete>
+
+    <delete id="deleteVoucherByIds" parameterType="String">
+        delete from tb_voucher where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="queryVoucherOfShop" resultType="com.smartLive.marketing.domain.Voucher" parameterType="java.lang.Long">
+        SELECT
+            v.`id`, v.`shop_id`, v.`title`, v.`sub_title`, v.`rules`, v.`pay_value`,
+            v.`actual_value`, v.`type`, sv.`stock` , sv.begin_time , sv.end_time
+        FROM tb_voucher v
+                 LEFT JOIN  tb_seckill_voucher sv ON v.id = sv.voucher_id
+        WHERE v.shop_id = #{shopId} AND v.status = 1
+    </select>
+</mapper>

@@ -1,0 +1,140 @@
+version : '3.8'
+services:
+  smartLive-nacos:
+    container_name: smartLive-nacos
+    image: nacos/nacos-server
+    build:
+      context: ./nacos
+    environment:
+      - MODE=standalone
+    volumes:
+      - ./nacos/logs/:/home/nacos/logs
+      - ./nacos/conf/application.properties:/home/nacos/conf/application.properties
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    depends_on:
+      - smartLive-mysql
+  smartLive-mysql:
+    container_name: smartLive-mysql
+    image: mysql:5.7
+    build:
+      context: ./mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/logs:/logs
+      - ./mysql/data:/var/lib/mysql
+    command: [
+          'mysqld',
+          '--innodb-buffer-pool-size=80M',
+          '--character-set-server=utf8mb4',
+          '--collation-server=utf8mb4_unicode_ci',
+          '--default-time-zone=+8:00',
+          '--lower-case-table-names=1'
+        ]
+    environment:
+      MYSQL_DATABASE: 'ry-cloud'
+      MYSQL_ROOT_PASSWORD: password
+  smartLive-redis:
+    container_name: smartLive-redis
+    image: redis
+    build:
+      context: ./redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/conf/redis.conf:/home/smartLive/redis/redis.conf
+      - ./redis/data:/data
+    command: redis-server /home/smartLive/redis/redis.conf
+  smartLive-nginx:
+    container_name: smartLive-nginx
+    image: nginx
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/html/dist:/home/smartLive/projects/smartLive-ui
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/logs:/var/log/nginx
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - smartLive-gateway
+    links:
+      - smartLive-gateway
+  smartLive-gateway:
+    container_name: smartLive-gateway
+    build:
+      context: ./smartLive/gateway
+      dockerfile: dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - smartLive-redis
+    links:
+      - smartLive-redis
+  smartLive-auth:
+    container_name: smartLive-auth
+    build:
+      context: ./smartLive/auth
+      dockerfile: dockerfile
+    ports:
+      - "9200:9200"
+    depends_on:
+      - smartLive-redis
+    links:
+      - smartLive-redis
+  smartLive-modules-system:
+    container_name: smartLive-modules-system
+    build:
+      context: ./smartLive/modules/system
+      dockerfile: dockerfile
+    ports:
+      - "9201:9201"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+  smartLive-modules-gen:
+    container_name: smartLive-modules-gen
+    build:
+      context: ./smartLive/modules/gen
+      dockerfile: dockerfile
+    ports:
+      - "9202:9202"
+    depends_on:
+      - smartLive-mysql
+    links:
+      - smartLive-mysql
+  smartLive-modules-job:
+    container_name: smartLive-modules-job
+    build:
+      context: ./smartLive/modules/job
+      dockerfile: dockerfile
+    ports:
+      - "9203:9203"
+    depends_on:
+      - smartLive-mysql
+    links:
+      - smartLive-mysql
+  smartLive-modules-file:
+    container_name: smartLive-modules-file
+    build:
+      context: ./smartLive/modules/file
+      dockerfile: dockerfile
+    ports:
+      - "9300:9300"
+    volumes:
+    - ./smartLive/uploadPath:/home/smartLive/uploadPath
+  smartLive-visual-monitor:
+    container_name: smartLive-visual-monitor
+    build:
+      context: ./smartLive/visual/monitor
+      dockerfile: dockerfile
+    ports:
+      - "9100:9100"

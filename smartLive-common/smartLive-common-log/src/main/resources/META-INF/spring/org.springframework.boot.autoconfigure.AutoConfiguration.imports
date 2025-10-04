@@ -1,0 +1,2 @@
+com.smartLive.common.log.service.AsyncLogService
+com.smartLive.common.log.aspect.LogAspect

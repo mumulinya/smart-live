@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.smartLive</groupId>
+        <artifactId>smartLive</artifactId>
+        <version>3.6.6</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <modules>
+        <module>smartLive-system</module>
+        <module>smartLive-gen</module>
+        <module>smartLive-job</module>
+        <module>smartLive-file</module>
+        <module>smartLive-user</module>
+        <module>smartLive-shop</module>
+        <module>smartLive-blog</module>
+        <module>smartLive-order</module>
+        <module>smartLive-marketing</module>
+        <module>smartLive-comment</module>
+    </modules>
+
+    <artifactId>smartLive-modules</artifactId>
+    <packaging>pom</packaging>
+
+    <description>
+        smartLive-modules业务模块
+    </description>
+
+</project>
