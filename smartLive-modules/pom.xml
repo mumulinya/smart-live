@@ -19,6 +19,7 @@
         <module>smartLive-order</module>
         <module>smartLive-marketing</module>
         <module>smartLive-comment</module>
+        <module>smartLive-chat</module>
     </modules>
 
     <artifactId>smartLive-modules</artifactId>

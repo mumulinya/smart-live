@@ -20,7 +20,7 @@ import java.io.Serializable;
 @TableName("tb_shop")
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShopDTo extends BaseEntity implements Serializable
+public class ShopDTO extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
@@ -78,6 +78,17 @@ public class ShopDTo extends BaseEntity implements Serializable
 
     @TableField(exist = false)
     private Double distance;
+    //查找关键字
+    private String keyword;
+
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
 
     public Long getId() {
         return id;
@@ -193,7 +204,7 @@ public class ShopDTo extends BaseEntity implements Serializable
 
     @Override
     public String toString() {
-        return "Shop{" +
+        return "ShopDTO{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", typeId='" + typeId + '\'' +
@@ -208,6 +219,7 @@ public class ShopDTo extends BaseEntity implements Serializable
                 ", score=" + score +
                 ", openHours='" + openHours + '\'' +
                 ", distance=" + distance +
+                ", keyword='" + keyword + '\'' +
                 '}';
     }
 }

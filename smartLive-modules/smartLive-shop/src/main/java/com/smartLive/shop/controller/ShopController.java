@@ -28,6 +28,7 @@ import com.smartLive.common.core.web.page.TableDataInfo;
  * @date 2025-09-21
  */
 @RestController
+
 //@RequestMapping("/shop")
 public class ShopController extends BaseController {
     @Autowired
@@ -106,11 +107,12 @@ public class ShopController extends BaseController {
     public Result queryShopByType(
             @RequestParam("typeId") Integer typeId,
             @RequestParam(value = "current", defaultValue = "1") Integer current,
+            @RequestParam(value = "sortBy",defaultValue = "distance") String sortBy,
             @RequestParam(value = "x", required = false) Double x,
             @RequestParam(value = "y", required = false) Double y
     ) {
 
-        return shopService.queryShopByType(typeId, current, x, y);
+        return shopService.queryShopByType(typeId, current,sortBy, x, y);
     }
 
     /**
@@ -165,4 +167,14 @@ public class ShopController extends BaseController {
     public R<Boolean> updateCommentById(@PathVariable("id") Long shopId){
         return shopService.updateCommentById(shopId);
     }
+
+    /**
+     * 根据条件查询商家信息
+     */
+    @PostMapping("/shop/getShopList")
+    public R<List<Shop>> getShopByCondition(@RequestBody Shop shop){
+        return R.ok(shopService.getShopByCondition(shop));
+    }
+
+
 }

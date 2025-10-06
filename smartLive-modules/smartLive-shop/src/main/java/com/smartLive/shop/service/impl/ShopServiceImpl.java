@@ -10,6 +10,7 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.RedisConstants;
@@ -17,6 +18,7 @@ import com.smartLive.common.core.constant.RedisData;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.until.CacheClient;
 import lombok.extern.slf4j.Slf4j;
@@ -362,9 +364,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 商铺列表
      */
     @Override
-    public Result queryShopByType(Integer typeId, Integer current, Double x, Double y) {
+    public Result queryShopByType(Integer typeId, Integer current,String sortBy, Double x, Double y) {
         //判断是否根据坐标查询
-        if (x != null && y != null) {
+        if (x == null && y == null) {
             String key = RedisConstants.SHOP_GEO_KEY + typeId;
             String shopJson = stringRedisTemplate.opsForList().leftPop(key);
             if(shopJson != null){
@@ -389,7 +391,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 .search(
                         key,
                         GeoReference.fromCoordinate(x, y),
-                        new Distance(5000),
+                        new Distance(200000),
                         RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance().limit(end)
                 );
         // 解析出id
@@ -414,7 +416,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         });
         //根据id查询shop
         String idStr = StrUtil.join(",", ids);
-        List<Shop> shops = query().in("id", ids).last("ORDER BY FIELD(id," + idStr + ")").list();
+        List<Shop> shops;
+        if(!sortBy.equals("distance")){
+            shops = query().in("id", ids).last("ORDER BY " + sortBy).list();
+        }else {
+            shops = query().in("id", ids).last("ORDER BY FIELD(id," + idStr + ")").list();
+        }
         for (Shop shop : shops) {
             shop.setDistance(distanceMap.get(shop.getId().toString()).getValue());
         }
@@ -468,6 +475,46 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         boolean update = update().setSql("comments = comments + 1").eq("id", shopId).update();
         return R.ok(update);
     }
+
+    /**
+     * 根据条件查询商铺信息
+     *
+     * @param shop 搜索条件
+     * @return 搜索结果
+     */
+    @Override
+    public List<Shop> getShopByCondition(Shop shop) {
+        QueryWrapper<Shop> wrapper = new QueryWrapper<>();
+        String distanceSql = "ST_Distance_Sphere(point(x, y), point(" + shop.getX() + ", " + shop.getY() + ")) as distance";
+         wrapper.select("*, " + distanceSql);
+        // 1. 分类条件
+        if (shop.getTypeId() != null) {
+            wrapper.eq("type_id", shop.getTypeId());
+        }
+
+        // 2. 文本搜索条件
+        if (StringUtils.isNotBlank(shop.getName()) ||
+                StringUtils.isNotBlank(shop.getArea()) ||
+                StringUtils.isNotBlank(shop.getAddress())) {
+
+            wrapper.and(w -> w
+                    .like(StringUtils.isNotBlank(shop.getName()), "name", shop.getName())
+                    .or()
+                    .like(StringUtils.isNotBlank(shop.getArea()), "area", shop.getArea())
+                    .or()
+                    .like(StringUtils.isNotBlank(shop.getAddress()), "address", shop.getAddress())
+            );
+        }
+
+        // 3. 地理位置条件
+        if (shop.getX() != null && shop.getY() != null ) {
+            wrapper.apply("ST_Distance_Sphere(point(x, y), point({0}, {1})) <= {2}",
+                    shop.getX(), shop.getY(), 200000);
+        }
+       wrapper .orderByAsc("distance");
+        return list(wrapper);
+    }
+
     /**
      * 清空缓存
      *

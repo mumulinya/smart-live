@@ -10,7 +10,7 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.domain.SeckillVoucher;
 import com.smartLive.marketing.service.ISeckillVoucherService;
 import com.smartLive.shop.api.RemoteShopService;
-import com.smartLive.shop.api.domain.ShopDTo;
+import com.smartLive.shop.api.domain.ShopDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -161,7 +161,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     public List<Voucher> listVoucher(Voucher voucher) {
         Long shopId = voucher.getShopId();
         if(voucher.getShopName()!= null){
-            R<ShopDTo> shop = remoteShopService.getShopByShopName(voucher.getShopName());
+            R<ShopDTO> shop = remoteShopService.getShopByShopName(voucher.getShopName());
             shopId = shop.getData().getId();
         }
         return query().eq(shopId != null,"shop_id", shopId).list();
@@ -177,7 +177,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     public List<Voucher> listSeckillVoucher(Voucher voucher) {
         Long shopId = voucher.getShopId();
         if(voucher.getShopName()!= null){
-            R<ShopDTo> shop = remoteShopService.getShopByShopName(voucher.getShopName());
+            R<ShopDTO> shop = remoteShopService.getShopByShopName(voucher.getShopName());
             shopId = shop.getData().getId();
         }
         return query().eq(shopId != null,"shop_id", shopId).eq("type", 1).list();
