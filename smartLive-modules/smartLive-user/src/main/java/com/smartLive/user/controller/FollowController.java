@@ -2,6 +2,7 @@ package com.smartLive.user.controller;
 
 
 import com.smartLive.blog.domain.Blog;
+import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.api.domain.BlogDTO;
 import com.smartLive.user.service.IFollowService;
@@ -55,5 +56,18 @@ public class FollowController {
     @PostMapping("/send/blog")
     public void sendBlogToFollowers(@RequestBody BlogDTO blogDTO){
         followServiceImpl.sendBlogToFollowers(blogDTO);
+    }
+
+    //获取粉丝列表
+    @GetMapping("/fans")
+    public Result getFans(){
+        Long followUserId = UserContextHolder.getUser().getId();
+        return followServiceImpl.getFans(followUserId);
+    }
+    //获取关注列表
+    @GetMapping("/follows")
+    public Result getFollows(){
+        Long userId = UserContextHolder.getUser().getId();
+        return followServiceImpl.getFollows(userId);
     }
 }

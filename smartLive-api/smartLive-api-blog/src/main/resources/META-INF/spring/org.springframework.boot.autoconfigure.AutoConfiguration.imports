@@ -1,1 +1,1 @@
-com.smartLive.marketing.api.factory.RemoteMarketingFallbackFactory
+com.smartLive.blog.api.factory.RemoteBlogFallbackFactory

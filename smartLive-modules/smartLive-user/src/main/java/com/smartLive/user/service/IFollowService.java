@@ -92,4 +92,16 @@ public interface IFollowService extends IService<Follow>
      * @param blogDTO
      */
     void sendBlogToFollowers(BlogDTO blogDTO);
+
+    /**
+     * 获取粉丝列表
+     * @return
+     */
+    Result getFans(Long followUserId);
+
+    /**
+     * 获取关注列表
+     * @return
+     */
+    Result getFollows(Long userId);
 }

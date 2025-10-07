@@ -218,4 +218,57 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             stringRedisTemplate.opsForZSet().add(key, blogDTO.getId().toString(), System.currentTimeMillis());
         }
     }
+
+    /**
+     * 获取粉丝列表
+     *
+     * @return
+     */
+    @Override
+    public Result getFans(Long followUserId) {
+        //获取粉丝id
+        List<Long> userIdList = query()
+                .select("user_id")
+                .eq("follow_user_id", followUserId)
+                .list()
+                .stream()
+                .map(Follow::getUserId)  // 假设 follow 是你的实体类
+                .collect(Collectors.toList());
+        //根据id查询用户
+       if(userIdList.isEmpty()){
+           return Result.ok(Collections.emptyList());
+       }
+        R<List<User>> userSuccess = remoteAppUserService.getUserList(userIdList);
+        if (userSuccess.getCode() != 200) {
+            return Result.fail(userSuccess.getMsg());
+        }
+        List<User> userList = userSuccess.getData();
+        return Result.ok(userList);
+    }
+
+    /**
+     * 获取关注列表
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public Result getFollows(Long userId) {
+        List<Long> followUserIdList = query()
+                .select("follow_user_id")
+                .eq("user_id", userId)
+                .list()
+                .stream()
+                .map(Follow::getFollowUserId)  // 假设 follow 是你的实体类
+                .collect(Collectors.toList());
+                if(followUserIdList.isEmpty()){
+                    return Result.ok(Collections.emptyList());
+                }
+                R<List<User>> userSuccess = remoteAppUserService.getUserList(followUserIdList);
+                if (userSuccess.getCode() != 200) {
+                    return Result.fail(userSuccess.getMsg());
+                }
+                List<User> userList = userSuccess.getData();
+        return Result.ok(userList);
+    }
 }

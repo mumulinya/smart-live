@@ -1,5 +1,6 @@
 package com.smartLive.blog.api;
 
+import com.smartLive.blog.api.factory.RemoteBlogFallbackFactory;
 import com.smartLive.common.core.constant.ServiceNameConstants;
 
 import com.smartLive.common.core.domain.R;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 
-@FeignClient(contextId = "remoteBlogService", value = ServiceNameConstants.BLOG_SERVICE)
+@FeignClient(contextId = "remoteBlogService", value = ServiceNameConstants.BLOG_SERVICE, fallbackFactory = RemoteBlogFallbackFactory.class)
 public interface RemoteBlogService {
 
     /**

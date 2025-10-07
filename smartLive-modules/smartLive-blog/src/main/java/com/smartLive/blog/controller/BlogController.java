@@ -134,13 +134,8 @@ public class BlogController extends BaseController
      */
     @GetMapping("/of/me")
     public Result queryMyBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
-        UserDTO user = UserContextHolder.getUser();
-        // 根据用户查询
-        Page<Blog> page = blogService.query()
-                .eq("user_id", user.getId()).page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        // 获取当前页数据
-        List<Blog> records = page.getRecords();
-        return Result.ok(records);
+        List<Blog> blogList=blogService.queryMyBlog(current);
+        return Result.ok(blogList);
     }
 
     /**

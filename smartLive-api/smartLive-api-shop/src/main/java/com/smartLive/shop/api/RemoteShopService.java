@@ -3,6 +3,7 @@ import com.smartLive.common.core.constant.ServiceNameConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.shop.api.domain.ShopTypeDTO;
+import com.smartLive.shop.api.factory.RemoteShopFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(contextId = "remoteShopService", value = ServiceNameConstants.SHOP_SERVICE)
+@FeignClient(contextId = "remoteShopService", value = ServiceNameConstants.SHOP_SERVICE, fallbackFactory = RemoteShopFallbackFactory.class)
 public interface RemoteShopService {
     /**
      * 根据商家名称查询商家信息

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
@@ -155,5 +156,21 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             remoteShopService.updateCommentById(id);
         }
         return Result.ok(i);
+    }
+
+    /**
+     * 获取我的评论
+     *
+     * @param current
+     * @return
+     */
+    @Override
+    public Result getCommentOfMe(Integer current) {
+        Long userId = UserContextHolder.getUser().getId();
+        Page<Comment> page = query().eq("user_id", userId)
+                .orderByDesc("liked")
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+                List<Comment> list = page.getRecords();
+        return Result.ok(list);
     }
 }

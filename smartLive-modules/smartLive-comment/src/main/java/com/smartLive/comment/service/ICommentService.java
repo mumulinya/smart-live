@@ -76,4 +76,11 @@ public interface ICommentService  extends IService<Comment>
      * @return
      */
     Result addComment(Comment comment);
+
+    /**
+     * 获取我的评论
+     * @param current
+     * @return
+     */
+    Result getCommentOfMe(Integer current);
 }

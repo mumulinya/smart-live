@@ -122,4 +122,8 @@ public class CommentController extends BaseController
 
         return commentService.addComment(comment);
     }
+    @GetMapping("/of/me")
+    public Result getCommentOfMe(Integer current){
+        return commentService.getCommentOfMe(current);
+    }
 }

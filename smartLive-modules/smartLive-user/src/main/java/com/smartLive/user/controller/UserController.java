@@ -165,6 +165,8 @@ public class UserController extends BaseController
      */
     @PostMapping("/update")
     Result updateUser(@RequestBody User user){
+        Long userId = UserContextHolder.getUser().getId();
+        user.setId(userId);
         return Result.ok(userService.updateUser(user));
     }
 

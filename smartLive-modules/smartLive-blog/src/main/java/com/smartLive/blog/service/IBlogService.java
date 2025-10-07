@@ -120,4 +120,11 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     R<Boolean> updateCommentById(Long blogId);
+
+    /**
+     * 查询我的博客
+     * @param current
+     * @return
+     */
+    List<Blog> queryMyBlog(Integer current);
 }

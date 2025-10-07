@@ -301,7 +301,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Blog> records = page.getRecords();
         records.forEach(blog ->{
-            queryBlogUser(blog);
             isBlogLiked(blog);
         });
         return Result.ok(records);
@@ -392,6 +391,30 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         flashRedisCache(blogId);
         return update ? R.ok() : R.fail();
     }
+
+    /**
+     * 查询我的博客
+     *
+     * @param current
+     * @return
+     */
+    @Override
+    public List<Blog> queryMyBlog(Integer current) {
+        UserDTO user = UserContextHolder.getUser();
+        // 根据用户查询
+        Page<Blog> page = query()
+                .eq("user_id", user.getId()).page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+        // 获取当前页数据
+        List<Blog> blogList = page.getRecords();
+        blogList.forEach(blog ->{
+            //查询blog有关的用户信息
+            queryBlogUser(blog);
+            //查询blog是否被点赞
+            isBlogLiked(blog);
+        });
+        return blogList;
+    }
+
     /**
      * 清空缓存
      *
