@@ -160,4 +160,24 @@ public class UserController extends BaseController
         return userService.queryUserById(id);
     }
 
+    /**
+     * 修改用户信息
+     */
+    @PostMapping("/update")
+    Result updateUser(@RequestBody User user){
+        return Result.ok(userService.updateUser(user));
+    }
+
+
+//    /app/user/info/stats/{userId} - 获取用户统计信息
+//
+///app/user/follow/fans - 获取粉丝列表
+//
+///app/user/follow/follows - 获取关注列表
+//
+///app/user/follow/{userId} - 关注用户
+//
+///app/user/follow/{userId} - 取消关注
+//
+///app/review/of/me - 获取我的评价
 }

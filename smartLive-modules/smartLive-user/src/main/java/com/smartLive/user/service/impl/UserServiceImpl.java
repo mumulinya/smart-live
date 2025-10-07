@@ -1,16 +1,23 @@
 package com.smartLive.user.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.user.api.domain.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import com.smartLive.user.mapper.UserMapper;
 import com.smartLive.user.domain.User;
@@ -29,6 +36,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 {
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 查询用户
@@ -77,7 +87,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public int updateUser(User user)
     {
         user.setUpdateTime(DateUtils.getNowDate());
-        return userMapper.updateUser(user);
+        int i = userMapper.updateUser(user);
+        if(i>0){
+            System.out.println("进入");
+            String tokenKey = UserContextHolder.getUser().getToken();
+            User userById = getById(user.getId());
+            UserDTO userDTO= BeanUtil.copyProperties(userById, UserDTO.class);
+            //存储
+            System.out.println("tokenKey为"+tokenKey);
+            Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
+                    CopyOptions.create()
+                            //忽略空值
+                            .setIgnoreNullValue(true)
+                            //把userDto字段值转为字符串
+                            .setFieldValueEditor((fieldName, fieldValue) -> fieldValue == null ? "" : fieldValue.toString()));
+            System.out.println("userMap为"+userMap);
+            //更新之前的数据
+            stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
+            //设置token有效期
+            stringRedisTemplate.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+            UserContextHolder.removeUser();
+        }
+        return i;
     }
 
     /**
