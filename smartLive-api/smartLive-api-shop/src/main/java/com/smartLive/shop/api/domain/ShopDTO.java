@@ -34,7 +34,7 @@ public class ShopDTO extends BaseEntity implements Serializable
 
     /** 商铺类型的id */
     @Excel(name = "商铺类型的id")
-    private String typeId;
+    private Long typeId;
 
     /** 商铺图片，多个图片以','隔开 */
     @Excel(name = "商铺图片，多个图片以','隔开")
@@ -106,11 +106,12 @@ public class ShopDTO extends BaseEntity implements Serializable
         this.name = name;
     }
 
-    public String getTypeId() {
+
+    public Long getTypeId() {
         return typeId;
     }
 
-    public void setTypeId(String typeId) {
+    public void setTypeId(Long typeId) {
         this.typeId = typeId;
     }
 

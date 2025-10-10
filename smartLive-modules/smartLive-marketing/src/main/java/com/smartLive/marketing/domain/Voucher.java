@@ -76,10 +76,22 @@ public class Voucher extends BaseEntity implements Serializable
      */
     @TableField(exist = false)
     private LocalDateTime endTime;
+    //店铺名称
     @TableField(exist = false)
     private String shopName;
+    //店铺类型
+    @TableField(exist = false)
+    private Long typeId;
 
-    public void setId(Long id) 
+    public Long getTypeId() {
+        return typeId;
+    }
+
+    public void setTypeId(Long typeId) {
+        this.typeId = typeId;
+    }
+
+    public void setId(Long id)
     {
         this.id = id;
     }

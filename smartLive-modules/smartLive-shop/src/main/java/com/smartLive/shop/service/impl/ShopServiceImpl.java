@@ -431,14 +431,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Override
     public List<Shop> searchShopsByShopQuery(Shop shopQuery) {
         log.info("查询店铺信息的条件是：{}", shopQuery);
-        List<Shop> list = query()
-                .like(shopQuery.getAddress() != null, "address", shopQuery.getAddress())
-                .like(shopQuery.getName() != null, "name", shopQuery.getName())
-                .eq(shopQuery.getTypeId() != null, "type_id", shopQuery.getTypeId())
-                .eq(shopQuery.getArea() != null, "area", shopQuery.getArea())
-                .le(shopQuery.getAvgPrice() != null, "avg_price", shopQuery.getAvgPrice())
-                .like(shopQuery.getOpenHours() != null, "open_hours", shopQuery.getOpenHours()).list();
-        return list;
+        List<Shop> list = query().list();
+                        return list;
     }
 
     @Override
@@ -513,6 +507,18 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
        wrapper .orderByAsc("distance");
         return list(wrapper);
+    }
+
+    /**
+     * 根据商铺id查询商铺信息
+     *
+     * @param shopId 商铺id
+     * @return 商铺信息
+     */
+    @Override
+    public R<Shop> getShopById(Long shopId) {
+        Shop shop = query().eq("id", shopId).one();
+        return R.ok(shop);
     }
 
     /**

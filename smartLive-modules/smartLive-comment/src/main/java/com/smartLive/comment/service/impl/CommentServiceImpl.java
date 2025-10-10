@@ -1,19 +1,31 @@
 package com.smartLive.comment.service.impl;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
+import com.smartLive.blog.api.dto.BlogDto;
+import com.smartLive.comment.domain.CommentDTO;
+import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.api.RemoteShopService;
+import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
+import com.smartLive.user.api.domain.BlogDTO;
 import com.smartLive.user.api.domain.User;
+import io.swagger.v3.core.util.Json;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import com.smartLive.comment.mapper.CommentMapper;
 import com.smartLive.comment.domain.Comment;
@@ -27,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @date 2025-09-21
  */
 @Service
+@Slf4j
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService
 {
     @Autowired
@@ -40,6 +53,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Autowired
     private RemoteShopService remoteShopService;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
     /**
      * 查询评论
      * 
@@ -133,6 +149,16 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             c.setNickName(user.getData().getNickName());
             c.setUserIcon(user.getData().getIcon());
         });
+        if(list.size()==0){
+            return Result.ok(list);
+        }
+        //获取是否有ai生成评论
+        String key = RedisConstants.CACHE_AI_COMMENT_KEY + comment.getSourceType() +":"+ comment.getSourceId();
+        String JsonStr = stringRedisTemplate.opsForValue().get(key);
+        if(JsonStr != null){
+            Comment commentDTO = JSON.parseObject(JsonStr, Comment.class);
+            list.add(commentDTO);
+        }
         return Result.ok(list);
     }
 
@@ -172,5 +198,41 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
                 List<Comment> list = page.getRecords();
         return Result.ok(list);
+    }
+
+    /**
+     * 获取评论列表
+     *
+     * @return
+     */
+    @Override
+    public List<Comment> getCommentList() {
+        List<Comment> list = query().list();
+        list.stream().forEach(c -> {
+            if(c.getSourceType()==1){
+                R<BlogDto> blog = remoteBlogService.getBlogById(c.getSourceId());
+                if((blog.getData().getTitle()!=null))
+                c.setSourceName(blog.getData().getTitle());
+            }else if(c.getSourceType()==2){
+                R<ShopDTO> shop = remoteShopService.getShopById(c.getSourceId());
+                if((shop.getData().getName()!=null))
+                c.setSourceName(shop.getData().getName());
+            }
+        });
+        return list;
+    }
+
+    /**
+     * 保存ai自动创建的评论
+     *
+     * @param commentDTO
+     * @return
+     */
+    @Override
+    public Result saveAiCreateComment(CommentDTO commentDTO) {
+        String key = RedisConstants. CACHE_AI_COMMENT_KEY+commentDTO.getSourceType()+":"+commentDTO.getSourceId();
+        stringRedisTemplate.opsForValue().set(key, JSON.toJSONString(commentDTO));
+        stringRedisTemplate.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
+        return Result.ok();
     }
 }

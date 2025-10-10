@@ -1,5 +1,6 @@
 package com.smartLive.blog.api.factory;
 
+import com.smartLive.blog.api.dto.BlogDto;
 import com.smartLive.common.core.domain.R;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,11 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
             @Override
             public R<Boolean> updateCommentById(Long blogId) {
                 return R.fail("评论失败");
+            }
+
+            @Override
+            public R<BlogDto> getBlogById(Long id) {
+                return R.fail("查询博客信息失败");
             }
         };
     }

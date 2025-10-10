@@ -4,6 +4,7 @@ import java.util.List;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 
+import com.smartLive.comment.domain.CommentDTO;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
@@ -125,5 +126,14 @@ public class CommentController extends BaseController
     @GetMapping("/of/me")
     public Result getCommentOfMe(Integer current){
         return commentService.getCommentOfMe(current);
+    }
+    @GetMapping("/comment/list")
+    List<Comment> getCommentList(){
+        return commentService.getCommentList();
+    }
+
+    @PostMapping("/comment/saveAiCreateComment")
+    public Result saveAiCreateComment(@RequestBody CommentDTO commentDTO){
+        return commentService.saveAiCreateComment(commentDTO);
     }
 }

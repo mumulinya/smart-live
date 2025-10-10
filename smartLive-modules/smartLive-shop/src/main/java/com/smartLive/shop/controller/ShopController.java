@@ -176,5 +176,8 @@ public class ShopController extends BaseController {
         return R.ok(shopService.getShopByCondition(shop));
     }
 
-
+    @GetMapping("/shop/getShopById/{shopId}")
+    public R<Shop> getShopById(@PathVariable("shopId") Long shopId ){
+        return shopService.getShopById(shopId);
+    }
 }

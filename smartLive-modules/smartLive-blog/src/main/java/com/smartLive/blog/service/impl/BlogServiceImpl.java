@@ -416,6 +416,17 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
+     * 查询博客详情
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public R<Blog> getBlogById(Long id) {
+        Blog blog = blogMapper.selectBlogById(id);
+        return R.ok(blog);
+    }
+    /**
      * 清空缓存
      *
      * @param blogId

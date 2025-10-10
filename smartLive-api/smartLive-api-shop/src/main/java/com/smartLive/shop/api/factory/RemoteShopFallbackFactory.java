@@ -48,6 +48,15 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
                 return R.fail("查询商铺类型列表失败");
             }
 
+            /**
+             * 根据商家Id查询商家信息
+             *
+             * @param shopId
+             */
+            @Override
+            public R<ShopDTO> getShopById(Long shopId) {
+                return R.fail("查询商家信息失败");
+            }
         };
     }
 }

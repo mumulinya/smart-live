@@ -27,4 +27,9 @@ public class RedisConstants {
     public static final String FEED_KEY = "feed:";
     public static final String SHOP_GEO_KEY = "shop:geo:";
     public static final String USER_SIGN_KEY = "sign:";
+
+    public static final String CACHE_COMMENT_KEY = "cache:comment:";
+
+    public static final String CACHE_AI_COMMENT_KEY = "cache:aiComment:";
+    public static final long CACHE_AI_COMMENT_TTL = 600L;
 }

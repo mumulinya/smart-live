@@ -34,8 +34,7 @@ import com.smartLive.common.core.web.page.TableDataInfo;
  */
 @RestController
 @RequestMapping("/voucher")
-public class VoucherController extends BaseController
-{
+public class VoucherController extends BaseController {
     @Autowired
     private IVoucherService voucherService;
     @Autowired
@@ -46,8 +45,7 @@ public class VoucherController extends BaseController
      */
     @RequiresPermissions("marketing:voucher:list")
     @GetMapping("/list")
-    public TableDataInfo list(Voucher voucher)
-    {
+    public TableDataInfo list(Voucher voucher) {
         startPage();
         List<Voucher> list = voucherService.selectVoucherList(voucher);
         return getDataTable(list);
@@ -59,8 +57,7 @@ public class VoucherController extends BaseController
     @RequiresPermissions("marketing:voucher:export")
     @Log(title = "优惠券", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, Voucher voucher)
-    {
+    public void export(HttpServletResponse response, Voucher voucher) {
         List<Voucher> list = voucherService.selectVoucherList(voucher);
         ExcelUtil<Voucher> util = new ExcelUtil<Voucher>(Voucher.class);
         util.exportExcel(response, list, "优惠券数据");
@@ -71,8 +68,7 @@ public class VoucherController extends BaseController
      */
     @RequiresPermissions("marketing:voucher:query")
     @GetMapping(value = "/{id}")
-    public AjaxResult getInfo(@PathVariable("id") Long id)
-    {
+    public AjaxResult getInfo(@PathVariable("id") Long id) {
         return success(voucherService.selectVoucherById(id));
     }
 
@@ -82,8 +78,7 @@ public class VoucherController extends BaseController
     @RequiresPermissions("marketing:voucher:add")
     @Log(title = "优惠券", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody Voucher voucher)
-    {
+    public AjaxResult add(@RequestBody Voucher voucher) {
         return toAjax(voucherService.insertVoucher(voucher));
     }
 
@@ -93,8 +88,7 @@ public class VoucherController extends BaseController
     @RequiresPermissions("marketing:voucher:edit")
     @Log(title = "优惠券", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody Voucher voucher)
-    {
+    public AjaxResult edit(@RequestBody Voucher voucher) {
         return toAjax(voucherService.updateVoucher(voucher));
     }
 
@@ -103,14 +97,14 @@ public class VoucherController extends BaseController
      */
     @RequiresPermissions("marketing:voucher:remove")
     @Log(title = "优惠券", businessType = BusinessType.DELETE)
-	@DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable Long[] ids)
-    {
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids) {
         return toAjax(voucherService.deleteVoucherByIds(ids));
     }
 
     /**
      * 新增秒杀券
+     *
      * @param voucher 优惠券信息，包含秒杀信息
      * @return 优惠券id
      */
@@ -122,6 +116,7 @@ public class VoucherController extends BaseController
 
     /**
      * 查询店铺的优惠券列表
+     *
      * @param shopId 店铺id
      * @return 优惠券列表
      */
@@ -129,8 +124,10 @@ public class VoucherController extends BaseController
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
         return voucherService.queryVoucherOfShop(shopId);
     }
+
     /**
      * 更新优惠券库存
+     *
      * @param voucherId 优惠券id
      * @return
      */
@@ -138,17 +135,14 @@ public class VoucherController extends BaseController
     public R<Boolean> updateVoucherStatus(@PathVariable("voucherId") Long voucherId) {
         return seckillVoucherService.updateSeckillVoucherByVoucherId(voucherId);
     }
+
     @PostMapping("/listSeckillVoucherByVoucher")
     public List<Voucher> listSeckillVoucher(@RequestBody Voucher voucher) {
         return voucherService.listSeckillVoucher(voucher);
     }
-    @PostMapping("/listVoucherByVoucher")
-    public List<Voucher> listVoucher(@RequestBody Voucher voucher) {
-        return voucherService.listVoucher(voucher);
-    }
 
     @GetMapping("/listVoucher")
-    List<Voucher> listVoucher(){
-        return voucherService.list();
+    public List<Voucher> listVoucher() {
+        return voucherService.listVoucher();
     }
 }

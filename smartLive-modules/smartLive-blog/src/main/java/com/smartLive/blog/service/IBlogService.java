@@ -127,4 +127,11 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     List<Blog> queryMyBlog(Integer current);
+
+/**
+     * 查询博客详情
+     * @param id
+     * @return
+     */
+    R<Blog> getBlogById(Long id);
 }

@@ -82,7 +82,7 @@ public interface IVoucherService extends IService<Voucher>
      * @return
      */
 
-    List<Voucher> listVoucher(Voucher voucher);
+    List<Voucher> listVoucher();
 
     /**
      * 查询店铺的秒杀优惠券列表

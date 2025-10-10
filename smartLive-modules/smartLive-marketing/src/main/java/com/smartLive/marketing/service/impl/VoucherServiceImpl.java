@@ -154,17 +154,18 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     /**
      * 查询店铺的优惠券列表
      *
-     * @param voucher
+     * @param
      * @return
      */
     @Override
-    public List<Voucher> listVoucher(Voucher voucher) {
-        Long shopId = voucher.getShopId();
-        if(voucher.getShopName()!= null){
-            R<ShopDTO> shop = remoteShopService.getShopByShopName(voucher.getShopName());
-            shopId = shop.getData().getId();
-        }
-        return query().eq(shopId != null,"shop_id", shopId).list();
+    public List<Voucher> listVoucher( ) {
+        List<Voucher> list = query().list();
+        list.forEach(voucher -> {
+            ShopDTO shopDTO = remoteShopService.getShopById(voucher.getShopId()).getData();
+            voucher.setShopName(shopDTO.getName());
+            voucher.setTypeId(shopDTO.getTypeId());
+        });
+        return list;
     }
 
     /**

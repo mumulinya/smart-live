@@ -37,4 +37,12 @@ public interface RemoteShopService {
      */
     @GetMapping("/shop-type/getShopListByType")
     public R<List<ShopTypeDTO>> getShopTypeList();
+
+
+    /**
+     * 根据商家Id查询商家信息
+     */
+    @GetMapping("/shop/getShopById/{shopId}")
+    public R<ShopDTO> getShopById(@PathVariable("shopId") Long shopId);
+
 }

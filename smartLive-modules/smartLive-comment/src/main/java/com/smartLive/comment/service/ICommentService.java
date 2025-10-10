@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.comment.domain.Comment;
+import com.smartLive.comment.domain.CommentDTO;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
 
@@ -83,4 +84,17 @@ public interface ICommentService  extends IService<Comment>
      * @return
      */
     Result getCommentOfMe(Integer current);
+
+    /**
+     * 获取评论列表
+     * @return
+     */
+    List<Comment> getCommentList();
+
+    /**
+     * 保存ai自动创建的评论
+     * @param commentDTO
+     * @return
+     */
+    Result saveAiCreateComment(CommentDTO commentDTO);
 }

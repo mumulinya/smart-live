@@ -196,4 +196,9 @@ public class BlogController extends BaseController
     public R<Boolean> updateCommentById(@PathVariable("id") Long blogId){
         return blogService.updateCommentById(blogId);
     }
+
+    @GetMapping("/blog/getBlogById/{id}")
+    R<Blog> getBlogById( @PathVariable("id")Long id){
+        return blogService.getBlogById(id);
+    }
 }

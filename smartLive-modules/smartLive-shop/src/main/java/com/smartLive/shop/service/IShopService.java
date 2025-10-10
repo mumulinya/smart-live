@@ -127,6 +127,14 @@ public interface IShopService extends IService<Shop> {
      * @return 搜索结果
      */
     List<Shop> getShopByCondition(Shop shop);
+
+    /**
+     * 根据商铺id查询商铺信息
+     *
+     * @param shopId 商铺id
+     * @return 商铺信息
+     */
+    R<Shop> getShopById(Long shopId);
 }
 
 
