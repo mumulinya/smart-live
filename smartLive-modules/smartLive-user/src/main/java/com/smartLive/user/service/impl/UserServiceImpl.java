@@ -10,12 +10,21 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.api.domain.UserDTO;
+import com.smartLive.user.domain.Follow;
+import com.smartLive.user.domain.Stats;
+import com.smartLive.user.domain.UserInfo;
+import com.smartLive.user.service.IFollowService;
+import com.smartLive.user.service.IUserInfoService;
+import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -39,6 +48,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private IFollowService followService;
+
+    @Autowired
+    private IUserInfoService userInfoService;
+
+    @Autowired
+    private RemoteBlogService remoteBlogService;
 
     /**
      * 查询用户
@@ -174,6 +191,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //根据用户id查询用户  where id in (5,2) order by field (id,5,2)
         String idStr = StrUtil.join(",",userIdList);
         List<User> userList = query().in("id", userIdList).last("order by field(id," + idStr + ")").list();
+        userList = userList.stream().map(user -> {
+            UserInfo userInfo = userInfoService.getByUserId(user.getId());
+            if(userInfo != null){
+                user.setIntroduce(userInfo.getIntroduce());
+            }
+            return user;
+        }).collect(Collectors.toList());
         return R.ok(userList);
     }
 
@@ -184,8 +208,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 用户
      */
     @Override
-    public R<User> queryUserById(Long id) {
+    public User queryUserById(Long id) {
         User user = getById(id);
-        return R.ok(user);
+        if(user!= null){
+            user.setIsFollow((Boolean) followService.isFollowed(id).getData());
+        }
+        return (user);
+    }
+
+    /**
+     * 获取用户统计信息
+     *
+     * @param userId 用户id
+     * @return 用户统计信息
+     */
+    @Override
+    public Stats getStats(Long userId) {
+        //获取粉丝数
+        Integer fansCount = followService.query().eq("follow_user_id", userId).count();
+        //获取关注数
+        Integer followCount = followService.query().eq("user_id", userId).count();
+        //获取博客数
+        Integer blogCount = remoteBlogService.getBlogCount(userId).getData();
+        Stats stats= Stats.builder()
+                .blogCount(blogCount)
+                .followCount(followCount)
+                .fansCount(fansCount)
+                .likeCount(0)
+                .build();
+        return stats;
     }
 }

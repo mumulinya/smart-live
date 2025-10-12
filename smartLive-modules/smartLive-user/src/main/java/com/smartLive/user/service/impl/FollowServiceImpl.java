@@ -243,6 +243,9 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Result.fail(userSuccess.getMsg());
         }
         List<User> userList = userSuccess.getData();
+        userList.forEach(user->{
+            user.setIsFollow((Boolean) isFollowed(user.getId()).getData());
+        });
         return Result.ok(userList);
     }
 

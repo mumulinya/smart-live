@@ -201,4 +201,9 @@ public class BlogController extends BaseController
     R<Blog> getBlogById( @PathVariable("id")Long id){
         return blogService.getBlogById(id);
     }
+    @GetMapping("/blog/getBlogCount/{userId}")
+    R<Integer> getBlogCount(@PathVariable("userId")Long userId){
+        Integer count = blogService.getBlogCount(userId);
+        return R.ok(count);
+    }
 }

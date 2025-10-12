@@ -5,6 +5,7 @@ import java.util.List;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.user.domain.Stats;
 import com.smartLive.user.domain.User;
 
 /**
@@ -88,5 +89,12 @@ public interface IUserService extends IService<User>
      * @param id 用户id
      * @return 用户
      */
-    R<User> queryUserById(Long id);
+    User queryUserById(Long id);
+
+    /**
+     * 获取用户统计信息
+     * @param userId 用户id
+     * @return 用户统计信息
+     */
+    Stats getStats(Long userId);
 }

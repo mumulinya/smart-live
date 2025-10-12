@@ -20,6 +20,11 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
             public R<BlogDto> getBlogById(Long id) {
                 return R.fail("查询博客信息失败");
             }
+
+            @Override
+            public R<Integer> getBlogCount(Long userId) {
+                return R.fail("查询博客数量失败");
+            }
         };
     }
 }

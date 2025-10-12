@@ -24,4 +24,8 @@ public interface RemoteBlogService {
 
     @GetMapping("/blog/getBlogById/{id}")
     R<BlogDto> getBlogById( @PathVariable("id")Long id);
+
+    @GetMapping("/blog/getBlogCount/{userId}")
+    R<Integer> getBlogCount(@PathVariable("userId")Long userId);
+
 }

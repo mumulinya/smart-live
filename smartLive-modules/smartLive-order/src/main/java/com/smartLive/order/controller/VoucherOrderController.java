@@ -4,16 +4,10 @@ import java.util.List;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 
+import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.web.domain.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
@@ -109,13 +103,33 @@ public class VoucherOrderController extends BaseController
      */
     @PostMapping("/seckill/{id}")
     public Result seckillVoucher(@PathVariable("id") Long voucherId) {
-        return voucherOrderService.seckillVoucher(voucherId);
+        //获取当前用户id
+        Long userId = UserContextHolder.getUser().getId();
+        return voucherOrderService.seckillVoucher(voucherId, userId);
     }
     /**
      * 购买优惠券
      */
     @PostMapping("/buy/{id}")
     public Result buyVoucher(@PathVariable("id") Long voucherId) {
-        return voucherOrderService.buyVoucher(voucherId);
+        //获取当前用户id
+        Long userId = UserContextHolder.getUser().getId();
+        return voucherOrderService.buyVoucher(voucherId, userId);
+    }
+
+
+    /**
+     * 秒杀优惠券
+     */
+    @PostMapping("/orderSeckillVoucher")
+    public Result orderSeckillVoucher(@RequestParam("id") Long voucherId,@RequestParam("userId") Long userId) {
+        return voucherOrderService.seckillVoucher(voucherId, userId);
+    }
+    /**
+     * 购买优惠券
+     */
+    @PostMapping("/orderVoucher")
+    public Result orderVoucher(@RequestParam("id") Long voucherId,@RequestParam("userId") Long userId) {
+        return voucherOrderService.buyVoucher(voucherId, userId);
     }
 }

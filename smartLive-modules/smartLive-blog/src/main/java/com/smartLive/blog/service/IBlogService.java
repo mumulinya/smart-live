@@ -134,4 +134,11 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     R<Blog> getBlogById(Long id);
+    /**
+     * 查询用户博客数量
+     * @param userId
+     * @return
+     */
+
+    Integer getBlogCount(Long userId);
 }

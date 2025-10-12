@@ -67,7 +67,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param voucherId
      * @return
      */
-    Result seckillVoucher(Long voucherId);
+    Result seckillVoucher(Long voucherId, Long userId);
 
     /**
      *实现一人一单
@@ -81,5 +81,5 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param voucherId
      * @return
      */
-    Result buyVoucher(Long voucherId);
+    Result buyVoucher(Long voucherId, Long userId);
 }

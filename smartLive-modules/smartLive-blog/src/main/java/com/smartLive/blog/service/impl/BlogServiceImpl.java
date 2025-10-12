@@ -426,6 +426,22 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Blog blog = blogMapper.selectBlogById(id);
         return R.ok(blog);
     }
+
+    /**
+     * 查询用户博客数量
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public Integer getBlogCount(Long userId) {
+        //查询数量
+        Long count = query().eq("user_id", userId).count();
+
+        Integer blogCount = count.intValue(); // 直接转换，超出范围会截断
+        return blogCount;
+    }
+
     /**
      * 清空缓存
      *

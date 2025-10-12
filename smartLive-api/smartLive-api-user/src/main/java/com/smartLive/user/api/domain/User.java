@@ -62,5 +62,7 @@ public class User implements Serializable {
      */
     private LocalDateTime updateTime;
 
+    private Boolean isFollow;
+    private String introduce;
 
 }

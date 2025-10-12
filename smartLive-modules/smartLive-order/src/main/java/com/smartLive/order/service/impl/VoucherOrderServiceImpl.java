@@ -231,9 +231,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return
      */
     @Override
-    public Result seckillVoucher(Long voucherId) {
-        //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
+    public Result seckillVoucher(Long voucherId, Long userId) {
         //获取订单id
         Long orderId = redisIdWorker.nextId("order");
         //1.执行lua脚本
@@ -320,9 +318,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return
      */
     @Override
-    public Result buyVoucher(Long voucherId) {
-        //1.获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
+    public Result buyVoucher(Long voucherId, Long userId) {
         //2.判断当前用户是否购买过
         Integer count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
         if(count>0){

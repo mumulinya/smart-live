@@ -137,7 +137,7 @@ public class UserController extends BaseController
      */
     @GetMapping("/{id}")
     public Result getUserById(@PathVariable("id") Long userId) {
-        return Result.ok(userService.getById(userId));
+        return Result.ok(userService.queryUserById(userId));
     }
 
     //获取用户信息
@@ -157,7 +157,8 @@ public class UserController extends BaseController
     //根据用户id查询用户信息
     @GetMapping("/user/{id}")
     R<User> queryUserById(@PathVariable("id") Long id){
-        return userService.queryUserById(id);
+        User user = userService.queryUserById(id);
+        return R.ok(user);
     }
 
     /**
@@ -168,6 +169,10 @@ public class UserController extends BaseController
         Long userId = UserContextHolder.getUser().getId();
         user.setId(userId);
         return Result.ok(userService.updateUser(user));
+    }
+    @GetMapping("/stats/{userId}")
+    public Result getStats(@PathVariable("userId") Long userId){
+        return Result.ok(userService.getStats(userId));
     }
 
 

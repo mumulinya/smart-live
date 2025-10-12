@@ -1,12 +1,17 @@
 package com.smartLive.user.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 用户对象 tb_user
@@ -15,6 +20,9 @@ import com.smartLive.common.core.web.domain.BaseEntity;
  * @date 2025-09-21
  */
 @TableName("tb_user")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class User extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -38,6 +46,13 @@ public class User extends BaseEntity
     /** 人物头像 */
     @Excel(name = "人物头像")
     private String icon;
+
+    @TableField(exist = false)
+    private Boolean isFollow;
+
+    /** 个性签名 */
+    @TableField(exist = false)
+    private String introduce;
 
     public void setId(Long id) 
     {
