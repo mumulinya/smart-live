@@ -196,6 +196,9 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Result.fail(userSuccess.getMsg());
         }
         List<User> userList = userSuccess.getData();
+        userList.forEach(user -> {
+            user.setIsFollow((Boolean) isFollowed(user.getId()).getData());
+        });
         List<UserDTO> userDTOList = userList.stream().map(user -> BeanUtil.copyProperties(user, UserDTO.class)).collect(Collectors.toList());
         return Result.ok(userDTOList);
     }

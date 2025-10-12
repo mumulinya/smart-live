@@ -47,8 +47,8 @@ public class FollowController {
      * @param userId 用户id
      * @return
      */
-    @GetMapping("/common/{id}")
-    public Result common(@PathVariable("id") Long userId){
+    @GetMapping("/common")
+    public Result common(@RequestParam("userId") Long userId,@RequestParam("current") Integer current){
         return followServiceImpl.common(userId);
     }
 

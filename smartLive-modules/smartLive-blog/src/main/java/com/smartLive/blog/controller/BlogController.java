@@ -178,7 +178,7 @@ public class BlogController extends BaseController
     @GetMapping("/of/user")
     public Result queryBlogByUserId(
             @RequestParam(value = "current", defaultValue = "1") Integer current,
-            @RequestParam("id") Long userId) {
+            @RequestParam("userId") Long userId) {
         return blogService.queryBlogByUserId(current, userId);
     }
     /**
@@ -205,5 +205,15 @@ public class BlogController extends BaseController
     R<Integer> getBlogCount(@PathVariable("userId")Long userId){
         Integer count = blogService.getBlogCount(userId);
         return R.ok(count);
+    }
+    /**
+     * 获取博客点赞数
+     * @param userId
+     * @return
+     */
+    @GetMapping("/blog/getLikeCount/{userId}")
+    R<Integer> getLikeCount( @PathVariable("userId")Long userId){
+        return R.ok(blogService.getLikeCount(userId));
+
     }
 }

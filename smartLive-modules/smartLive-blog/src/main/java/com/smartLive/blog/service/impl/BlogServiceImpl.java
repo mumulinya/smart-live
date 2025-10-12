@@ -186,7 +186,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     public Result queryHotBlog(Integer current) {
         //从redis查询热门博客
-        String key= RedisConstants.CACHE_HOT_BLOG_KEY;
+        String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
         String blogJson = stringRedisTemplate.opsForList().leftPop(key);
         if (blogJson != null) {
             //存在
@@ -197,7 +197,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         // 根据用户查询
         Page<Blog> page = query()
                 .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         // 获取当前页数据
         List<Blog> records = page.getRecords();
         // 查询blog有关的用户信息
@@ -298,7 +298,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public Result queryBlogByUserId(Integer current, Long userId) {
         Page<Blog> page = query()
                 .eq("user_id", userId)
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+                .orderByAsc("create_time")
+                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<Blog> records = page.getRecords();
         records.forEach(blog ->{
             isBlogLiked(blog);
@@ -403,7 +404,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         UserDTO user = UserContextHolder.getUser();
         // 根据用户查询
         Page<Blog> page = query()
-                .eq("user_id", user.getId()).page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+                .eq("user_id", user.getId())
+                .orderByDesc("create_time")
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
         List<Blog> blogList = page.getRecords();
         blogList.forEach(blog ->{
@@ -440,6 +443,19 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
         Integer blogCount = count.intValue(); // 直接转换，超出范围会截断
         return blogCount;
+    }
+
+    /**
+     * 查询用户博客点赞数量
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public Integer getLikeCount(Long userId) {
+        List<Blog> blogList = query().eq("user_id", userId).list();
+        Integer likeCount = blogList.stream().mapToInt(blog -> blog.getLiked()).sum();
+        return likeCount;
     }
 
     /**

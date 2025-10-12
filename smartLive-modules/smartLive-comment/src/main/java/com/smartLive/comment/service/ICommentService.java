@@ -97,4 +97,10 @@ public interface ICommentService  extends IService<Comment>
      * @return
      */
     Result saveAiCreateComment(CommentDTO commentDTO);
+    /**
+     * 获取用户发表的评论数
+     * @param userId
+     * @return
+     */
+    Integer getCommentCount(Long userId);
 }

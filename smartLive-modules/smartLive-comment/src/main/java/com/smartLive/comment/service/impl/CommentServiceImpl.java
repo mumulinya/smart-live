@@ -195,7 +195,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         Long userId = UserContextHolder.getUser().getId();
         Page<Comment> page = query().eq("user_id", userId)
                 .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
                 List<Comment> list = page.getRecords();
         return Result.ok(list);
     }
@@ -234,5 +234,17 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         stringRedisTemplate.opsForValue().set(key, JSON.toJSONString(commentDTO));
         stringRedisTemplate.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
         return Result.ok();
+    }
+
+    /**
+     * 获取用户发表的评论数
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public Integer getCommentCount(Long userId) {
+        int commentCount = query().eq("user_id", userId).count().intValue();
+        return commentCount;
     }
 }

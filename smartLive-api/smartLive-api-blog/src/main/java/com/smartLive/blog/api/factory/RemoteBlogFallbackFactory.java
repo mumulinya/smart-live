@@ -25,6 +25,18 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
             public R<Integer> getBlogCount(Long userId) {
                 return R.fail("查询博客数量失败");
             }
+
+            /**
+             * 获取博客点赞数
+             *
+             * @param userId
+             * @return
+             */
+            @Override
+            public R<Integer> getLikeCount(Long userId) {
+
+                return R.fail("查询点赞数失败");
+            }
         };
     }
 }

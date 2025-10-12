@@ -13,6 +13,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
+import com.smartLive.comment.api.RemoteCommentService;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
@@ -56,6 +57,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private RemoteBlogService remoteBlogService;
+
+    @Autowired
+    private RemoteCommentService remoteCommentService;
 
     /**
      * 查询用户
@@ -106,19 +110,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setUpdateTime(DateUtils.getNowDate());
         int i = userMapper.updateUser(user);
         if(i>0){
-            System.out.println("进入");
             String tokenKey = UserContextHolder.getUser().getToken();
             User userById = getById(user.getId());
             UserDTO userDTO= BeanUtil.copyProperties(userById, UserDTO.class);
             //存储
-            System.out.println("tokenKey为"+tokenKey);
             Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
                     CopyOptions.create()
                             //忽略空值
                             .setIgnoreNullValue(true)
                             //把userDto字段值转为字符串
                             .setFieldValueEditor((fieldName, fieldValue) -> fieldValue == null ? "" : fieldValue.toString()));
-            System.out.println("userMap为"+userMap);
             //更新之前的数据
             stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
             //设置token有效期
@@ -230,11 +231,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Integer followCount = followService.query().eq("user_id", userId).count();
         //获取博客数
         Integer blogCount = remoteBlogService.getBlogCount(userId).getData();
+        //获取点赞数
+        Integer likeCount = remoteBlogService.getLikeCount(userId).getData();
+        //获取发表评论数量
+        Integer commentCount = remoteCommentService.getCommentCount(userId).getData();
         Stats stats= Stats.builder()
                 .blogCount(blogCount)
                 .followCount(followCount)
                 .fansCount(fansCount)
-                .likeCount(0)
+                .likeCount(likeCount)
+                .commentCount(commentCount)
                 .build();
         return stats;
     }

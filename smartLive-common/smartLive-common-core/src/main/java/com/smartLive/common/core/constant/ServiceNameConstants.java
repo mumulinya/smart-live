@@ -42,4 +42,8 @@ public class ServiceNameConstants
      * 博客模块的serviceid
      */
     public static final String BLOG_SERVICE = "smartLive-blog";
+    /**
+     * 评论模块的serviceid
+     */
+    public static final String COMMENT_SERVICE = "smartLive-comment";
 }

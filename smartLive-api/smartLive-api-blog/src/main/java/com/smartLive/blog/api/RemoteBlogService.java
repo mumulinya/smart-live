@@ -22,10 +22,27 @@ public interface RemoteBlogService {
     @PostMapping("/blog/updateCommentById/{id}")
     public R<Boolean> updateCommentById(@PathVariable("id") Long blogId);
 
+    /**
+     * 获取博客详情
+     * @param id
+     * @return
+     */
     @GetMapping("/blog/getBlogById/{id}")
     R<BlogDto> getBlogById( @PathVariable("id")Long id);
 
+    /**
+     * 获取博客数
+     * @param userId
+     * @return
+     */
     @GetMapping("/blog/getBlogCount/{userId}")
     R<Integer> getBlogCount(@PathVariable("userId")Long userId);
 
+    /**
+     * 获取博客点赞数
+     * @param userId
+     * @return
+     */
+    @GetMapping("/blog/getLikeCount/{userId}")
+    R<Integer> getLikeCount( @PathVariable("userId")Long userId);
 }

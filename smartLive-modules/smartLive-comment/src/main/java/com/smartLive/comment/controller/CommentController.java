@@ -136,4 +136,14 @@ public class CommentController extends BaseController
     public Result saveAiCreateComment(@RequestBody CommentDTO commentDTO){
         return commentService.saveAiCreateComment(commentDTO);
     }
+
+    /**
+     * 获取评论数量
+     * @param userId
+     * @return
+     */
+    @GetMapping("/comment/getCommentCount/{userId}")
+    R<Integer> getCommentCount( @PathVariable("userId")Long userId){
+        return R.ok(commentService.getCommentCount(userId));
+    }
 }
