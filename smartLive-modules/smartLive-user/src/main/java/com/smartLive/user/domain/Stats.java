@@ -15,4 +15,7 @@ public class Stats {
     private Integer fansCount;
     private Integer likeCount;
     private Integer commentCount;
+    private Integer orderCount;
+    private Integer collectCount;
+    private Integer commonFollowCount;
 }

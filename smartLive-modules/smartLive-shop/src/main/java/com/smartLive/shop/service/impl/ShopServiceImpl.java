@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
@@ -519,6 +520,28 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public R<Shop> getShopById(Long shopId) {
         Shop shop = query().eq("id", shopId).one();
         return R.ok(shop);
+    }
+
+    /**
+     * 根据商铺id列表查询商铺信息列表
+     *
+     * @param ids 商铺id列表
+     * @return 商铺列表
+     */
+    @Override
+    public List<Shop> getShopList(List<Long> ids) {
+
+        //根据用户id查询用户  where id in (5,2) order by field (id,5,2)
+        String idStr = StrUtil.join(",",ids);
+        List<Shop> orderList = query().in("id", ids).last("order by field(id," + idStr + ")").list();
+//        userList = userList.stream().map(user -> {
+//            UserInfo userInfo = userInfoService.getByUserId(user.getId());
+//            if(userInfo != null){
+//                user.setIntroduce(userInfo.getIntroduce());
+//            }
+//            return user;
+//        }).collect(Collectors.toList());
+        return orderList;
     }
 
     /**

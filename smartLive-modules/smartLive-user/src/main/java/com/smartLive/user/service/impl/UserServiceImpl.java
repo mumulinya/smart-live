@@ -19,11 +19,14 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.order.api.RemoteOrderService;
+import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartLive.user.domain.Follow;
 import com.smartLive.user.domain.Stats;
 import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.service.IFollowService;
+import com.smartLive.user.service.IFollowShopService;
 import com.smartLive.user.service.IUserInfoService;
 import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +63,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private RemoteCommentService remoteCommentService;
+
+    @Autowired
+    private RemoteOrderService remoteOrderService;
+
+    @Autowired
+    private IFollowShopService followShopService;
+
 
     /**
      * 查询用户
@@ -212,6 +222,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public User queryUserById(Long id) {
         User user = getById(id);
         if(user!= null){
+            UserInfo userInfo = userInfoService.getByUserId(id);
+            if (userInfo != null){
+                user.setIntroduce(userInfo.getIntroduce());
+                user.setCity(userInfo.getCity());
+            }
             user.setIsFollow((Boolean) followService.isFollowed(id).getData());
         }
         return (user);
@@ -226,21 +241,44 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Stats getStats(Long userId) {
         //获取粉丝数
-        Integer fansCount = followService.query().eq("follow_user_id", userId).count();
+        Integer fansCount = followService.query().eq("follow_user_id", userId).count().intValue();
         //获取关注数
-        Integer followCount = followService.query().eq("user_id", userId).count();
+        Integer followCount = followService.query().eq("user_id", userId).count().intValue();
+        //当前用户id
+        Long currentUserId = UserContextHolder.getUser().getId();
+        //获取共同关注数
+        Integer commonFollowCount = followService.lambdaQuery()
+                .eq(Follow::getUserId, currentUserId)
+                .in(Follow::getFollowUserId,
+                        followService.lambdaQuery()
+                                .select(Follow::getFollowUserId)
+                                .eq(Follow::getUserId, userId)
+                                .list()
+                                .stream()
+                                .map(Follow::getFollowUserId)
+                                .collect(Collectors.toList())
+                )
+                .count()
+                .intValue();
         //获取博客数
         Integer blogCount = remoteBlogService.getBlogCount(userId).getData();
         //获取点赞数
         Integer likeCount = remoteBlogService.getLikeCount(userId).getData();
         //获取发表评论数量
         Integer commentCount = remoteCommentService.getCommentCount(userId).getData();
+        //获取订单数量
+        Integer orderCount = remoteOrderService.getOrderCount(userId).getData();
+        //获取收藏数量
+        Integer collectCount = followShopService.getCollectCount(userId);
         Stats stats= Stats.builder()
                 .blogCount(blogCount)
                 .followCount(followCount)
+                .commonFollowCount(commonFollowCount)
                 .fansCount(fansCount)
                 .likeCount(likeCount)
                 .commentCount(commentCount)
+                .orderCount(orderCount)
+                .collectCount(collectCount)
                 .build();
         return stats;
     }

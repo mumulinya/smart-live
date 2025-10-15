@@ -7,9 +7,11 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.domain.Blog;
 import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
@@ -228,13 +230,14 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public Result getFans(Long followUserId) {
+    public Result getFans(Long followUserId,Integer current) {
         //获取粉丝id
         List<Long> userIdList = query()
                 .select("user_id")
                 .eq("follow_user_id", followUserId)
-                .list()
-                .stream()
+                .orderByDesc("create_time") // 添加排序
+                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
+                .getRecords()                .stream()
                 .map(Follow::getUserId)  // 假设 follow 是你的实体类
                 .collect(Collectors.toList());
         //根据id查询用户
@@ -259,11 +262,13 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public Result getFollows(Long userId) {
+    public Result getFollows(Long userId,Integer current) {
         List<Long> followUserIdList = query()
                 .select("follow_user_id")
                 .eq("user_id", userId)
-                .list()
+                .orderByDesc("create_time") // 添加排序
+                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
+                .getRecords()
                 .stream()
                 .map(Follow::getFollowUserId)  // 假设 follow 是你的实体类
                 .collect(Collectors.toList());

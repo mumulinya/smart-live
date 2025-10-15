@@ -60,14 +60,14 @@ public class FollowController {
 
     //获取粉丝列表
     @GetMapping("/fans")
-    public Result getFans(){
+    public Result getFans(@RequestParam("current") Integer current){
         Long followUserId = UserContextHolder.getUser().getId();
-        return followServiceImpl.getFans(followUserId);
+        return followServiceImpl.getFans(followUserId,current);
     }
     //获取关注列表
     @GetMapping("/follows")
-    public Result getFollows(){
+    public Result getFollows(@RequestParam("current") Integer current){
         Long userId = UserContextHolder.getUser().getId();
-        return followServiceImpl.getFollows(userId);
+        return followServiceImpl.getFollows(userId,current);
     }
 }

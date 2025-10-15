@@ -180,4 +180,9 @@ public class ShopController extends BaseController {
     public R<Shop> getShopById(@PathVariable("shopId") Long shopId ){
         return shopService.getShopById(shopId);
     }
+
+    @GetMapping("/shop/shopListByIds")
+     public R<List<Shop>> listShopByIds(@RequestParam("shopIdList") List<Long> shopIdList){
+        return R.ok(shopService.getShopList(shopIdList));
+    }
 }

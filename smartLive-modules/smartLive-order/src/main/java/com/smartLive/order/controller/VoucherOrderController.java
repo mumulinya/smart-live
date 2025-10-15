@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -131,5 +132,62 @@ public class VoucherOrderController extends BaseController
     @PostMapping("/orderVoucher")
     public Result orderVoucher(@RequestParam("id") Long voucherId,@RequestParam("userId") Long userId) {
         return voucherOrderService.buyVoucher(voucherId, userId);
+    }
+
+    /**
+     * 获取当前用户订单列表
+     */
+    @GetMapping("/of/me")
+    public Result queryMyVoucherOrderList(@RequestParam(value = "current", defaultValue = "1") Integer current) {
+        //获取当前用户id
+        Long userId = UserContextHolder.getUser().getId();
+        List<VoucherOrder> voucherOrderList = voucherOrderService.queryMyVoucherOrderList(userId, current);
+        return Result.ok(voucherOrderList);
+    }
+    /**
+     * 支付订单
+     */
+     @PostMapping("/pay/{id}")
+    public Result pay(@PathVariable("id") Long id) {
+        //获取当前用户id
+        Long userId = UserContextHolder.getUser().getId();
+        return voucherOrderService.pay(id, userId);
+    }
+
+    /**
+     * 支付订单
+     */
+    @PostMapping("/use/{id}")
+    public Result use(@PathVariable("id") Long id) {
+        //获取当前用户id
+        Long userId = UserContextHolder.getUser().getId();
+        return voucherOrderService.use(id, userId);
+    }
+    /**
+     * 取消订单
+     */
+    @PostMapping("/cancel/{id}")
+    public Result cancel(@PathVariable("id") Long id) {
+        //获取当前用户id
+        Long userId = UserContextHolder.getUser().getId();
+        return voucherOrderService.cancel(id, userId);
+    }
+    /**
+     * 退款订单
+     */
+    @PostMapping("/refund/{id}")
+    public Result refund(@PathVariable("id") Long id) {
+        //获取当前用户id
+        Long userId = UserContextHolder.getUser().getId();
+        return voucherOrderService.refund(id, userId);
+    }
+    /**
+     * 获取订单数量
+     * @param userId
+     * @return
+     */
+    @GetMapping("/getOrderCount/{userId}")
+    R<Integer> getCommentCount(@PathVariable("userId")Long userId){
+        return R.ok(voucherOrderService.getOrderCount(userId));
     }
 }

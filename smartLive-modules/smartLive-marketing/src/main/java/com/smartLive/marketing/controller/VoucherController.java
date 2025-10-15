@@ -67,7 +67,7 @@ public class VoucherController extends BaseController {
      * 获取优惠券详细信息
      */
     @RequiresPermissions("marketing:voucher:query")
-    @GetMapping(value = "/{id}")
+//    @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {
         return success(voucherService.selectVoucherById(id));
     }
@@ -125,6 +125,11 @@ public class VoucherController extends BaseController {
         return voucherService.queryVoucherOfShop(shopId);
     }
 
+    @GetMapping(value = "/{id}")
+    public Result getVoucherById(@PathVariable("id") Long id) {
+        return Result.ok(voucherService.selectVoucherById(id));
+    }
+
     /**
      * 更新优惠券库存
      *
@@ -145,4 +150,5 @@ public class VoucherController extends BaseController {
     public List<Voucher> listVoucher() {
         return voucherService.listVoucher();
     }
+
 }

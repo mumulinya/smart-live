@@ -6,10 +6,7 @@ import com.smartLive.shop.api.domain.ShopTypeDTO;
 import com.smartLive.shop.api.factory.RemoteShopFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -44,5 +41,9 @@ public interface RemoteShopService {
      */
     @GetMapping("/shop/getShopById/{shopId}")
     public R<ShopDTO> getShopById(@PathVariable("shopId") Long shopId);
+
+    @GetMapping("/shop/shopListByIds")
+    R<List<ShopDTO>> getShopList(@RequestParam("shopIdList") List<Long> shopIdList);
+
 
 }

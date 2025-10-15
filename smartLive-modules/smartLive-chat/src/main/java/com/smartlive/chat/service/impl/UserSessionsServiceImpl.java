@@ -1,6 +1,7 @@
 package com.smartlive.chat.service.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -87,7 +88,11 @@ public class UserSessionsServiceImpl  extends ServiceImpl<UserSessionsMapper, Us
                 c.setLastTime(chatMessages.getCreateTime());
             }
         });
-        return userSessionsList;
+        // 按lastTime降序排序（最新的在前）
+        List<UserSessions> sortedList = userSessionsList.stream()
+                .sorted((s1, s2) -> s2.getLastTime().compareTo(s1.getLastTime()))
+                .collect(Collectors.toList());
+        return sortedList;
     }
 
     /**

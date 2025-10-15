@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -20,6 +21,7 @@ import java.io.Serializable;
 @TableName("tb_shop")
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class ShopDTO extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -80,6 +82,8 @@ public class ShopDTO extends BaseEntity implements Serializable
     private Double distance;
     //查找关键字
     private String keyword;
+
+    private Boolean isFollow;
 
 
     public String getKeyword() {

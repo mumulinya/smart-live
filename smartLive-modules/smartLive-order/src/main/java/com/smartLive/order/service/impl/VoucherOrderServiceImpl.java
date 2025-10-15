@@ -1,11 +1,18 @@
 package com.smartLive.order.service.impl;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.smartLive.common.core.constant.OrderStatusConstants;
+import com.smartLive.common.core.constant.PayTypeConstants;
+import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.marketing.api.RemoteMarketingService;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -296,7 +303,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         //获取当前用户id
         Long userId = voucherOrder.getUserId();
         //判断当前用户是否购买过
-        Integer count = query().eq("user_id", userId).eq("voucher_id", voucherOrder.getVoucherId()).count();
+        Integer count = query().eq("user_id", userId).eq("voucher_id", voucherOrder.getVoucherId()).count().intValue();
         if(count>0){
             //用户已经购买过了
             log.error("用户已经购买过了");
@@ -320,7 +327,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Override
     public Result buyVoucher(Long voucherId, Long userId) {
         //2.判断当前用户是否购买过
-        Integer count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
+        Integer count = query().eq("user_id", userId).eq("voucher_id", voucherId).count().intValue();
         if(count>0){
             //用户已经购买过了
             log.error("用户已经购买过了");
@@ -334,5 +341,122 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         save(voucherOrder);
         //6.返回订单id
         return Result.ok(voucherOrder.getId());
+    }
+
+    /**
+     * 获取当前用户订单列表
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public List<VoucherOrder> queryMyVoucherOrderList(Long userId,Integer current) {
+        Page<VoucherOrder> result = query()
+                .eq("user_id", userId)
+                .orderByDesc("create_time")
+                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
+        List<VoucherOrder> list = result.getRecords();
+        return list;
+    }
+
+    /**
+     * 支付订单
+     *
+     * @param id
+     * @param userId
+     * @return
+     */
+    @Override
+    public Result pay(Long id, Long userId) {
+        VoucherOrder voucherOrder = query().eq("id", id).eq("user_id", userId).one();
+        if(voucherOrder==null){
+            return Result.fail("订单不存在");
+        }
+        voucherOrder.setPayTime(DateUtils.getNowDate());
+        voucherOrder.setStatus(OrderStatusConstants.PAID);
+        voucherOrder.setPayType(PayTypeConstants.BALANCE);
+        int i = updateVoucherOrder(voucherOrder);
+        if(i>0){
+            return Result.ok("付款成功");
+        }
+        return Result.fail("付款失败");
+    }
+
+    /**
+     * 取消订单
+     *
+     * @param id
+     * @param userId
+     * @return
+     */
+    @Override
+    public Result cancel(Long id, Long userId) {
+        VoucherOrder voucherOrder = query().eq("id", id).eq("user_id", userId).one();
+        if(voucherOrder==null){
+            return Result.fail("订单不存在");
+        }
+        voucherOrder.setStatus(OrderStatusConstants.CANCELLED);
+        int i = updateVoucherOrder(voucherOrder);
+        if(i>0){
+            return Result.ok("已经取消");
+        }
+        return Result.fail("取消失败");
+    }
+
+    /**
+     * 退款订单
+     *
+     * @param id
+     * @param userId
+     * @return
+     */
+    @Override
+    public Result refund(Long id, Long userId) {
+        VoucherOrder voucherOrder = query().eq("id", id).eq("user_id", userId).one();
+        if(voucherOrder==null){
+            return Result.fail("订单不存在");
+        }
+        voucherOrder.setRefundTime(DateUtils.getNowDate());
+        voucherOrder.setStatus(OrderStatusConstants.REFUNDED);
+        int i = updateVoucherOrder(voucherOrder);
+        if(i>0){
+            return Result.ok("退款成功");
+        }
+        return Result.fail("退款失败");
+    }
+
+    /**
+     * 使用订单
+     *
+     * @param id
+     * @param userId
+     * @return
+     */
+    @Override
+    public Result use(Long id, Long userId) {
+        VoucherOrder voucherOrder = query().eq("id", id).eq("user_id", userId).one();
+        if(voucherOrder==null){
+            return Result.fail("订单不存在");
+        }
+        voucherOrder.setUseTime(DateUtils.getNowDate());
+        voucherOrder.setStatus(OrderStatusConstants.VERIFIED);
+        int i = updateVoucherOrder(voucherOrder);
+        if(i>0){
+            return Result.ok("使用成功");
+        }
+        return Result.fail("使用失败");
+    }
+
+    /**
+     * 获取订单数量
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public Integer getOrderCount(Long userId) {
+        int orderCount = query().eq("user_id", userId).count().intValue();
+        System.out.println("订单数量为:"+orderCount);
+        return orderCount;
     }
 }

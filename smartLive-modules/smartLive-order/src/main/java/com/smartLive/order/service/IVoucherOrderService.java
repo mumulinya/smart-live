@@ -82,4 +82,49 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @return
      */
     Result buyVoucher(Long voucherId, Long userId);
+
+    /**
+     * 获取当前用户订单列表
+     * @return
+     */
+    List<VoucherOrder> queryMyVoucherOrderList(Long userId,Integer current);
+
+    /**
+     * 支付订单
+     * @param id
+     * @param userId
+     * @return
+     */
+    Result pay(Long id, Long userId);
+
+    /**
+     * 退款订单
+     * @param id
+     * @param userId
+     * @return
+     */
+    Result cancel(Long id, Long userId);
+
+    /**
+     * 退款订单
+     * @param id
+     * @param userId
+     * @return
+     */
+    Result refund(Long id, Long userId);
+
+    /**
+     * 使用订单
+     * @param id
+     * @param userId
+     * @return
+     */
+    Result use(Long id, Long userId);
+
+    /**
+     * 获取订单数量
+     * @param userId
+     * @return
+     */
+    Integer getOrderCount(Long userId);
 }

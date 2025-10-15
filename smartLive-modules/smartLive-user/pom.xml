@@ -72,7 +72,7 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.4.3</version>
+            <version>3.5.4.1</version>
         </dependency>
 
         <!--hutool-->
@@ -96,6 +96,18 @@
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-comment</artifactId>
+            <version>3.6.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-order</artifactId>
+            <version>3.6.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-shop</artifactId>
             <version>3.6.6</version>
             <scope>compile</scope>
         </dependency>

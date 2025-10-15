@@ -7,6 +7,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.smartLive.common.core.annotation.Excel;
@@ -19,6 +22,9 @@ import com.smartLive.common.core.web.domain.BaseEntity;
  * @date 2025-09-21
  */
 @TableName("tb_voucher_order")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class VoucherOrder extends BaseEntity  implements Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -37,11 +43,11 @@ public class VoucherOrder extends BaseEntity  implements Serializable
 
     /** 支付方式 1：余额支付；2：支付宝；3：微信 */
     @Excel(name = "支付方式 1：余额支付；2：支付宝；3：微信")
-    private String payType;
+    private Integer payType;
 
     /** 订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款 */
     @Excel(name = "订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款")
-    private String status;
+    private Integer status;
 
     /** 支付时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -57,100 +63,9 @@ public class VoucherOrder extends BaseEntity  implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Excel(name = "退款时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date refundTime;
+    /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd")
+    private Date createTime;
 
-    public void setId(Long id) 
-    {
-        this.id = id;
-    }
-
-    public Long getId() 
-    {
-        return id;
-    }
-
-    public void setUserId(Long userId) 
-    {
-        this.userId = userId;
-    }
-
-    public Long getUserId() 
-    {
-        return userId;
-    }
-
-    public void setVoucherId(Long voucherId) 
-    {
-        this.voucherId = voucherId;
-    }
-
-    public Long getVoucherId() 
-    {
-        return voucherId;
-    }
-
-    public void setPayType(String payType) 
-    {
-        this.payType = payType;
-    }
-
-    public String getPayType() 
-    {
-        return payType;
-    }
-
-    public void setStatus(String status) 
-    {
-        this.status = status;
-    }
-
-    public String getStatus() 
-    {
-        return status;
-    }
-
-    public void setPayTime(Date payTime) 
-    {
-        this.payTime = payTime;
-    }
-
-    public Date getPayTime() 
-    {
-        return payTime;
-    }
-
-    public void setUseTime(Date useTime) 
-    {
-        this.useTime = useTime;
-    }
-
-    public Date getUseTime() 
-    {
-        return useTime;
-    }
-
-    public void setRefundTime(Date refundTime) 
-    {
-        this.refundTime = refundTime;
-    }
-
-    public Date getRefundTime() 
-    {
-        return refundTime;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("id", getId())
-            .append("userId", getUserId())
-            .append("voucherId", getVoucherId())
-            .append("payType", getPayType())
-            .append("status", getStatus())
-            .append("createTime", getCreateTime())
-            .append("payTime", getPayTime())
-            .append("useTime", getUseTime())
-            .append("refundTime", getRefundTime())
-            .append("updateTime", getUpdateTime())
-            .toString();
-    }
 }

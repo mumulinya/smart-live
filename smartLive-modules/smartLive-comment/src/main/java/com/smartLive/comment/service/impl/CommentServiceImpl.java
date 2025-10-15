@@ -145,9 +145,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         List<Comment> list = page.getRecords();
         list.stream().forEach(c -> {
             Long id = c.getUserId();
-            R<User> user = remoteAppUserService.queryUserById(id);
-            c.setNickName(user.getData().getNickName());
-            c.setUserIcon(user.getData().getIcon());
+            R<User> re = remoteAppUserService.queryUserById(id);
+            User user = re.getData();
+            if (user != null){
+                c.setNickName(user.getNickName());
+                c.setUserIcon(user.getIcon());
+            }
         });
         if(list.size()==0){
             return Result.ok(list);

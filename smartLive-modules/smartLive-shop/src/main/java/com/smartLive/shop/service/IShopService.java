@@ -135,6 +135,14 @@ public interface IShopService extends IService<Shop> {
      * @return 商铺信息
      */
     R<Shop> getShopById(Long shopId);
+
+    /**
+     * 根据商铺id列表查询商铺信息列表
+     *
+     * @param ids 商铺id列表
+     * @return 商铺列表
+     */
+    List<Shop> getShopList(List<Long> ids);
 }
 
 

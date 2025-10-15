@@ -53,6 +53,9 @@ public class User extends BaseEntity
     /** 个性签名 */
     @TableField(exist = false)
     private String introduce;
+    /** 城市 */
+    @TableField(exist = false)
+    private String city;
 
     public void setId(Long id) 
     {
