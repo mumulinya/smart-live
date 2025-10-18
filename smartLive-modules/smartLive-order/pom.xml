@@ -83,6 +83,12 @@
             <version>5.7.17</version>
         </dependency>
 
+        <!--amqp-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-marketing</artifactId>

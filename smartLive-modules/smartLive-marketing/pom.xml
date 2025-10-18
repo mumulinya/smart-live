@@ -82,9 +82,20 @@
             <artifactId>hutool-all</artifactId>
             <version>5.7.17</version>
         </dependency>
+        <!--amqp-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-shop</artifactId>
+            <version>3.6.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-order</artifactId>
             <version>3.6.6</version>
             <scope>compile</scope>
         </dependency>

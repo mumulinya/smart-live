@@ -95,6 +95,13 @@ public class ShopController extends BaseController {
     public AjaxResult remove(@PathVariable String[] ids) {
         return toAjax(shopService.deleteShopByIds(ids));
     }
+    /**
+     * 刷新缓存
+     */
+    @GetMapping("/flushCache")
+    public AjaxResult flushCache() {
+        return success(shopService.flushCache());
+    }
 
     /**
      * 根据商铺类型分页查询商铺信息

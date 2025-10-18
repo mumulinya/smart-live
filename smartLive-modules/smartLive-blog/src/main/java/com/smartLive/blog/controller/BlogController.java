@@ -64,6 +64,14 @@ public class BlogController extends BaseController
     }
 
     /**
+     * 刷新缓存
+     */
+    @GetMapping("/flushCache")
+    public AjaxResult flushCache() {
+        return success(blogService.flushCache());
+    }
+
+    /**
      * 获取博客详细信息
      */
     @RequiresPermissions("business:blog:query")

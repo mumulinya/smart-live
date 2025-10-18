@@ -143,6 +143,13 @@ public interface IShopService extends IService<Shop> {
      * @return 商铺列表
      */
     List<Shop> getShopList(List<Long> ids);
+
+    /**
+     * 刷新商铺缓存
+     *
+     * @return 刷新结果
+     */
+    String flushCache();
 }
 
 

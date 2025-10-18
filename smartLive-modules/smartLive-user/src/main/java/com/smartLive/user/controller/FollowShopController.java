@@ -24,8 +24,6 @@ public class FollowShopController {
     @Resource
     private IFollowShopService followShopService;
 
-    @Resource
-    private IFollowService followServiceImpl;
     /**
      * 关注或取关
      * @param

@@ -99,40 +99,7 @@ public class VoucherOrderController extends BaseController
     {
         return toAjax(voucherOrderService.deleteVoucherOrderByIds(ids));
     }
-    /**
-     * 秒杀优惠券
-     */
-    @PostMapping("/seckill/{id}")
-    public Result seckillVoucher(@PathVariable("id") Long voucherId) {
-        //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
-        return voucherOrderService.seckillVoucher(voucherId, userId);
-    }
-    /**
-     * 购买优惠券
-     */
-    @PostMapping("/buy/{id}")
-    public Result buyVoucher(@PathVariable("id") Long voucherId) {
-        //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
-        return voucherOrderService.buyVoucher(voucherId, userId);
-    }
 
-
-    /**
-     * 秒杀优惠券
-     */
-    @PostMapping("/orderSeckillVoucher")
-    public Result orderSeckillVoucher(@RequestParam("id") Long voucherId,@RequestParam("userId") Long userId) {
-        return voucherOrderService.seckillVoucher(voucherId, userId);
-    }
-    /**
-     * 购买优惠券
-     */
-    @PostMapping("/orderVoucher")
-    public Result orderVoucher(@RequestParam("id") Long voucherId,@RequestParam("userId") Long userId) {
-        return voucherOrderService.buyVoucher(voucherId, userId);
-    }
 
     /**
      * 获取当前用户订单列表

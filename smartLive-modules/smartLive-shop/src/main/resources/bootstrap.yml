@@ -7,6 +7,12 @@ spring:
   application:
     # 应用名称
     name: smartLive-shop
+  rabbitmq:
+    username: smart-live
+    password: 123167
+    host: 192.168.182.20
+    virtual-host: smart-live
+    port: 5672
   profiles:
     # 环境配置
     active: dev

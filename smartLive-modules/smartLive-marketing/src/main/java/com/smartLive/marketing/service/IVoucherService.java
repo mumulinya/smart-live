@@ -77,8 +77,23 @@ public interface IVoucherService extends IService<Voucher>
     void addSeckillVoucher(Voucher voucher);
 
     /**
+     * 秒杀优惠券
+     * @param voucherId
+     * @return
+     */
+    Result seckillVoucher(Long voucherId, Long userId);
+
+
+    /**
+     * 购买优惠券
+     * @param voucherId
+     * @return
+     */
+    Result buyVoucher(Long voucherId, Long userId);
+
+    /**
      * 查询店铺的优惠券列表
-     * @param voucher
+     * @param
      * @return
      */
 

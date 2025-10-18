@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.blog.api.dto.BlogDto;
 import com.smartLive.comment.domain.CommentDTO;
+import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
@@ -19,11 +20,9 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
-import com.smartLive.user.api.domain.BlogDTO;
 import com.smartLive.user.api.domain.User;
-import io.swagger.v3.core.util.Json;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -56,6 +55,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
     /**
      * 查询评论
      * 
@@ -140,7 +142,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public Result listComment(Comment comment,Integer current) {
         Page<Comment> page = query().eq("source_id", comment.getSourceId())
                 .eq("source_type", comment.getSourceType())
-                .orderByDesc("liked")
+                .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Comment> list = page.getRecords();
         list.stream().forEach(c -> {
@@ -178,11 +180,15 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         int i = commentMapper.insertComment(comment);
         Long id = comment.getSourceId();
         if(i > 0&& comment.getSourceType()==1){
-            //更新博客评论数
-            remoteBlogService.updateCommentById(id);
+            //更新博客评论数,发送rabbitMq消息
+            log.info("发送rabbitMq消息给blog");
+            rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME,MqConstants.BLOG_COMMENT_ROUTING,id);
+//            remoteBlogService.updateCommentById(id);
         }else if(i > 0 && comment.getSourceType()==2){
             //更新店铺评论数
-            remoteShopService.updateCommentById(id);
+//            remoteShopService.updateCommentById(id);
+            log.info("发送rabbitMq消息给shop");
+            rabbitTemplate.convertAndSend(MqConstants.SHOP_EXCHANGE_NAME,MqConstants.SHOP_COMMENT_ROUTING,id);
         }
         return Result.ok(i);
     }

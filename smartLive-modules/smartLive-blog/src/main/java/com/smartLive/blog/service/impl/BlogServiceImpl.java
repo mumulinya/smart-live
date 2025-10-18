@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.domain.Blog;
 import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
+import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
@@ -19,6 +20,7 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.BlogDTO;
 import com.smartLive.user.api.domain.User;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -46,6 +48,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Autowired
     private RemoteAppUserService remoteAppUserService;
@@ -323,7 +328,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         //推送笔记id给所有粉丝
         BlogDTO blogDTO = BeanUtil.copyProperties(blog, BlogDTO.class);
-        remoteAppUserService.sendBlogToFollowers(blogDTO);
+        //发送rabbitMq消息 推送笔记id给粉丝
+        rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME, MqConstants.BLOG_FEED_ROUTING, blogDTO);
         //返回id
         return Result.ok(blog.getId());
     }
@@ -456,6 +462,17 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         List<Blog> blogList = query().eq("user_id", userId).list();
         Integer likeCount = blogList.stream().mapToInt(blog -> blog.getLiked()).sum();
         return likeCount;
+    }
+
+    /**
+     * 刷新缓存
+     *
+     * @return
+     */
+    @Override
+    public String flushCache() {
+        stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY);
+        return null;
     }
 
     /**

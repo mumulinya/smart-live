@@ -12,6 +12,7 @@ import com.smartLive.user.api.domain.User;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.service.IChatMessagesService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import com.smartlive.chat.mapper.UserSessionsMapper;
 import com.smartlive.chat.domain.UserSessions;
@@ -32,8 +33,11 @@ public class UserSessionsServiceImpl  extends ServiceImpl<UserSessionsMapper, Us
     @Autowired
     private RemoteAppUserService remoteAppUserService;
 
-    @Autowired
-    private IChatMessagesService chatMessagesService;
+    private final IChatMessagesService chatMessagesService;
+
+    public UserSessionsServiceImpl(@Lazy IChatMessagesService chatMessagesService) {
+        this.chatMessagesService = chatMessagesService;
+    }
 
     /**
      * 查询用户会话列表

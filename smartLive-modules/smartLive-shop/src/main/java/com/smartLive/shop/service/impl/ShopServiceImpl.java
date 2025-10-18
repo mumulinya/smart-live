@@ -21,12 +21,15 @@ import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.shop.domain.ShopType;
+import com.smartLive.shop.service.IShopTypeService;
 import com.smartLive.shop.until.CacheClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.domain.geo.GeoReference;
@@ -49,6 +52,9 @@ import javax.annotation.Resource;
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
     @Autowired
     private ShopMapper shopMapper;
+
+    @Autowired
+    private IShopTypeService shopTypeService;
 
     /**
      * 查询店铺
@@ -81,7 +87,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Override
     public int insertShop(Shop shop) {
         shop.setCreateTime(DateUtils.getNowDate());
-        flashRedisCache( shop.getTypeId());
+        flashShopListRedisCache(shop.getTypeId());
         return shopMapper.insertShop(shop);
     }
 
@@ -94,6 +100,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Override
     public int updateShop(Shop shop) {
         shop.setUpdateTime(DateUtils.getNowDate());
+        flashShopRedisCache(shop.getId());
         return shopMapper.updateShop(shop);
     }
 
@@ -166,7 +173,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         // 写入数据库
         updateById(shop);
         // 删除缓存
-        removeRedis(id);
+        flashShopRedisCache(id);
         return null;
     }
 
@@ -306,15 +313,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         unLock(lockKey);
         return shop;
 
-    }
-
-    /**
-     * 删除redis缓存
-     *
-     * @param id
-     */
-    public void removeRedis(Long id) {
-        stringRedisTemplate.delete(RedisConstants.CACHE_SHOP_KEY + id);
     }
 
     /**
@@ -468,6 +466,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public R<Boolean> updateCommentById(Long shopId) {
         //更新评论数量
         boolean update = update().setSql("comments = comments + 1").eq("id", shopId).update();
+        flashShopRedisCache(shopId);
         return R.ok(update);
     }
 
@@ -545,12 +544,62 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 清空缓存
+     * 刷新商铺缓存
+     *
+     * @return 刷新结果
+     */
+    @Override
+    public String flushCache() {
+        //缓存店铺数据
+        String key = RedisConstants.CACHE_SHOP_lIST_KEY+"*";
+        //删除所有店铺缓存
+        stringRedisTemplate.delete(key);
+        List<ShopType> shopTypeList = shopTypeService.list();
+        shopTypeList.forEach(shopType -> {
+            List<Shop> shopList = query().eq("type_id", shopType.getId()).list();
+            //缓存
+            stringRedisTemplate.opsForValue().set(RedisConstants.CACHE_SHOP_lIST_KEY+shopType.getId(), JSONUtil.toJsonStr(shopList));
+        });
+
+
+        //缓存店铺坐标数据
+        List<Shop> list = list();
+        //删除所有店铺的坐标缓存
+        stringRedisTemplate.delete(stringRedisTemplate.keys(RedisConstants.SHOP_GEO_KEY+"*"));
+        //把店铺分组 按照typeId分组 id一致放到一个集合
+        Map<Long, List<Shop>> map = list.stream().collect(Collectors.groupingBy(Shop::getTypeId));
+        //分批放入redis里面
+        for (Map.Entry<Long, List<Shop>> entry : map.entrySet()) {
+            //获取类型id
+            Long typeId = entry.getKey();
+            String shopGeoKey = RedisConstants.SHOP_GEO_KEY + typeId;
+            //获取同类型的店铺
+            List<Shop> shopList = entry.getValue();
+            //方法一 循环写入
+            for (Shop shop : shopList) {
+                //写入redis  GEOADD key 经度 纬度 member
+                stringRedisTemplate.opsForGeo().add(shopGeoKey, new Point(shop.getX(), shop.getY()), shop.getId().toString());
+            }
+        }
+        return "刷新成功";
+    }
+
+    /**
+     * 清空店铺列表缓存
      *
      * @param typeId
      */
-    private void flashRedisCache(Long typeId) {
+    private void flashShopListRedisCache(Long typeId) {
         //清空缓存
         stringRedisTemplate.delete(RedisConstants.CACHE_SHOP_lIST_KEY+typeId);
+    }
+
+    /**
+     * 清空店铺缓存
+     *
+     * @param id
+     */
+    private void flashShopRedisCache(Long id){
+        stringRedisTemplate.delete(RedisConstants.CACHE_SHOP_KEY+id);
     }
 }

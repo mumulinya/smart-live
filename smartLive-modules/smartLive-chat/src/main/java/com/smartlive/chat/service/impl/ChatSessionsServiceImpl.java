@@ -31,8 +31,11 @@ public class ChatSessionsServiceImpl extends ServiceImpl<ChatSessionsMapper, Cha
     private ChatSessionsMapper chatSessionsMapper;
     @Autowired
     private RemoteAppUserService remoteAppUserService;
-    @Autowired
-    private IUserSessionsService userSessionsService;
+    private final IUserSessionsService userSessionsService;
+
+    public ChatSessionsServiceImpl(IUserSessionsService userSessionsService) {
+        this.userSessionsService = userSessionsService;
+    }
     /**
      * 查询私聊会话
      * 

@@ -1,7 +1,6 @@
 package com.smartlive.chat.controller;
 
 import java.util.List;
-import javax.servlet.http.HttpServletResponse;
 
 import com.smartLive.common.core.web.domain.Result;
 import com.smartlive.chat.service.IChatMessagesService;
@@ -20,8 +19,6 @@ import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
-import com.smartLive.common.core.utils.poi.ExcelUtil;
-import com.smartLive.common.core.web.page.TableDataInfo;
 
 /**
  * 用户聊天消息Controller

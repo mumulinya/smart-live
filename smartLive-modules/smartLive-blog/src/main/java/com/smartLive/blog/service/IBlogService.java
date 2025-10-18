@@ -148,4 +148,10 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     Integer getLikeCount(Long userId);
+
+    /**
+     * 刷新缓存
+     * @return
+     */
+    String flushCache();
 }

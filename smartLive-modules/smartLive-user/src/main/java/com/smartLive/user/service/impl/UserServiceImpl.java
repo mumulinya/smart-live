@@ -244,22 +244,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Integer fansCount = followService.query().eq("follow_user_id", userId).count().intValue();
         //获取关注数
         Integer followCount = followService.query().eq("user_id", userId).count().intValue();
-        //当前用户id
+        // 当前用户id
         Long currentUserId = UserContextHolder.getUser().getId();
-        //获取共同关注数
-        Integer commonFollowCount = followService.lambdaQuery()
-                .eq(Follow::getUserId, currentUserId)
-                .in(Follow::getFollowUserId,
-                        followService.lambdaQuery()
-                                .select(Follow::getFollowUserId)
-                                .eq(Follow::getUserId, userId)
-                                .list()
-                                .stream()
-                                .map(Follow::getFollowUserId)
-                                .collect(Collectors.toList())
-                )
-                .count()
-                .intValue();
+
+         // 先查询目标用户的关注列表
+        List<Follow> targetUserFollows = followService.lambdaQuery()
+                .select(Follow::getFollowUserId)
+                .eq(Follow::getUserId, userId)
+                .list();
+         // 提取关注用户ID列表
+        List<Long> targetUserFollowIds = targetUserFollows.stream()
+                .map(Follow::getFollowUserId)
+                .collect(Collectors.toList());
+         int commonFollowCount;
+         // 如果目标用户没有关注任何人，直接返回0
+        if (targetUserFollowIds.isEmpty()) {
+            commonFollowCount = 0;
+        } else {
+            // 查询共同关注数
+            commonFollowCount = followService.lambdaQuery()
+                    .eq(Follow::getUserId, currentUserId)
+                    .in(Follow::getFollowUserId, targetUserFollowIds)
+                    .count()
+                    .intValue();
+        }
         //获取博客数
         Integer blogCount = remoteBlogService.getBlogCount(userId).getData();
         //获取点赞数

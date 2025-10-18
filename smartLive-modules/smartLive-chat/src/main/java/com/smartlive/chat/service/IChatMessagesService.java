@@ -60,4 +60,5 @@ public interface IChatMessagesService extends IService<ChatMessages>
      * @return 结果
      */
     public int deleteChatMessagesById(Long id);
+
 }
