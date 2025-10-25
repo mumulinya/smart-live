@@ -2,6 +2,8 @@ package com.smartLive.order.listener;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.smartLive.common.core.constant.MqConstants;
+import com.smartLive.common.core.constant.OrderStatusConstants;
+import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.marketing.api.dto.VoucherDTO;
 import com.smartLive.order.domain.VoucherOrder;
 import com.smartLive.order.service.IVoucherOrderService;
@@ -37,5 +39,25 @@ public class OrderVoucherListener {
     ))
     public void handleBuyVoucherOrder(VoucherOrder voucherOrder){
         voucherOrderService.save(voucherOrder);
+    }
+
+    //支付延迟监听
+    @RabbitListener(bindings=@QueueBinding(
+            value = @Queue(name = MqConstants.ORDER_DELAY_QUEUE,declare = "true"),
+            exchange = @Exchange(name = MqConstants.ORDER_DELAY_EXCHANGE_NAME,delayed = "true"),
+            key = MqConstants.ORDER_DELAY_ROUTING
+    ))
+    public void handlePayOrder(Long id){
+        VoucherOrder voucherOrder = voucherOrderService.getById(id);
+        //检测订单状态，判断订单是否支付
+        if(voucherOrder.getStatus()== OrderStatusConstants.PAID||voucherOrder==null){
+           //订单不存在或者订单已经支付
+            return;
+        }
+        //订单未支付
+        if(voucherOrder.getStatus()== OrderStatusConstants.UNPAID){
+            //取消订单,恢复库存
+            voucherOrderService.cancel(id);
+        }
     }
 }

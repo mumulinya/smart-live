@@ -45,6 +45,12 @@ public class VoucherController extends BaseController {
         return getDataTable(list);
     }
 
+
+    @GetMapping("/voucherList")
+    public AjaxResult voucherList(Voucher voucher) {
+        List<Voucher> list = voucherService.selectVoucherList(voucher);
+        return success(list);
+    }
     /**
      * 导出优惠券列表
      */
@@ -94,6 +100,23 @@ public class VoucherController extends BaseController {
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids) {
         return toAjax(voucherService.deleteVoucherByIds(ids));
+    }
+
+
+    /**
+     * 全量发布代金券信息
+     */
+    @PostMapping("/allPublish")
+    public AjaxResult allPublish() {
+        return success(voucherService.allPublish());
+    }
+
+    /**
+     * 发布代金券信息
+     */
+    @PostMapping("/publish/{ids}")
+    public AjaxResult allPublish(@PathVariable String[] ids) {
+        return success(voucherService.publish(ids));
     }
 
     /**
@@ -168,7 +191,13 @@ public class VoucherController extends BaseController {
     public R<Boolean> updateVoucherStatus(@PathVariable("voucherId") Long voucherId) {
         return seckillVoucherService.updateSeckillVoucherByVoucherId(voucherId);
     }
-
+    /**
+     * 恢复秒杀券库存
+     */
+    @PostMapping("/recover/{id}")
+    R<Boolean> recoverVoucherStock(@PathVariable("id") Long voucherId){
+        return seckillVoucherService.recoverVoucherStock(voucherId);
+    }
     @PostMapping("/listSeckillVoucherByVoucher")
     public List<Voucher> listSeckillVoucher(@RequestBody Voucher voucher) {
         return voucherService.listSeckillVoucher(voucher);

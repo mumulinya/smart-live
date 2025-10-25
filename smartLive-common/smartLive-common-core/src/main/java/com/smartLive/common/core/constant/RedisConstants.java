@@ -26,12 +26,30 @@ public class RedisConstants {
     public static final String FOLLOW_USER_KEY = "follow:user:";
 
     public static final String FOLLOW_SHOP_KEY = "follow:shop:";
+    /**
+     * 推送新闻
+     */
     public static final String FEED_KEY = "feed:";
+    /**
+     * 商店地理位置
+     */
     public static final String SHOP_GEO_KEY = "shop:geo:";
     public static final String USER_SIGN_KEY = "sign:";
 
     public static final String CACHE_COMMENT_KEY = "cache:comment:";
-
+    /**
+     * 缓存AI评论
+     */
     public static final String CACHE_AI_COMMENT_KEY = "cache:aiComment:";
     public static final long CACHE_AI_COMMENT_TTL = 600L;
+   /**
+    * 搜索历史
+    */
+    public static final String SEARCH_HISTORY_KEY = "search:history:";
+    public static final Integer SEARCH_HISTORY_TTL = 30;//30天
+    /**
+     * 热门搜索
+     */
+    public static final String SEARCH_HOT_KEYWORDS = "search:hot:keywords";
+    public static final Integer SEARCH_HOT_TTL = 24;//24小时
 }

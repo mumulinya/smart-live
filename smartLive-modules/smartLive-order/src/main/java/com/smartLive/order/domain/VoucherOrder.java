@@ -8,11 +8,12 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 
@@ -31,7 +32,8 @@ public class VoucherOrder extends BaseEntity  implements Serializable
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.INPUT)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     /** 下单的用户id */
@@ -51,21 +53,21 @@ public class VoucherOrder extends BaseEntity  implements Serializable
     private Integer status;
 
     /** 支付时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "支付时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date payTime;
 
     /** 核销时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "核销时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date useTime;
 
     /** 退款时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "退款时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date refundTime;
     /** 创建时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date createTime;
     /** 店铺id */

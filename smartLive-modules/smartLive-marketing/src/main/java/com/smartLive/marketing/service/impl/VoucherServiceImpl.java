@@ -3,9 +3,11 @@ package com.smartLive.marketing.service.impl;
 import java.util.Collections;
 import java.util.List;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.constant.*;
+import com.smartLive.common.core.domain.EsBatchInsertRequest;
+import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
@@ -15,6 +17,10 @@ import com.smartLive.marketing.until.RedisIdWorker;
 import com.smartLive.order.api.dto.VoucherOrderDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +42,7 @@ import javax.annotation.Resource;
  * @date 2025-09-21
  */
 @Service
+@Slf4j
 public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> implements IVoucherService
 {
     @Autowired
@@ -78,12 +85,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     {
         Voucher voucher = voucherMapper.selectVoucherById(id);
         if (voucher != null){
-            SeckillVoucher seckillVoucher = seckillVoucherService.query().eq("voucher_id", voucher.getId()).one();
-            if(voucher.getType()==1){
-                voucher.setStock(seckillVoucher.getStock());
-            }
-            voucher.setBeginTime(seckillVoucher.getBeginTime());
-            voucher.setEndTime(seckillVoucher.getEndTime());
+            querySeckill(voucher);
         }
         return voucher;
     }
@@ -99,16 +101,23 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     {
         List<Voucher> voucherList = voucherMapper.selectVoucherList(voucher);
         voucherList.forEach(v -> {
-            SeckillVoucher seckillVoucher = seckillVoucherService.query().eq("voucher_id", v.getId()).one();
-            if(v.getType()==1){
-                v.setStock(seckillVoucher.getStock());
-            }
-            v.setBeginTime(seckillVoucher.getBeginTime());
-            v.setEndTime(seckillVoucher.getEndTime());
+           querySeckill(v);
         });
         return voucherList;
     }
 
+    /**
+     * 查询代金券的秒杀信息
+     * @param v
+     */
+    void querySeckill(Voucher v){
+        SeckillVoucher seckillVoucher = seckillVoucherService.query().eq("voucher_id", v.getId()).one();
+        if(v.getType()==1){
+            v.setStock(seckillVoucher.getStock());
+            v.setBeginTime(seckillVoucher.getBeginTime());
+            v.setEndTime(seckillVoucher.getEndTime());
+        }
+    }
     /**
      * 新增优惠券
      * 
@@ -127,14 +136,6 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         }
         //保存优惠券
         int i = voucherMapper.insertVoucher(voucher);
-        if(i>0){
-            SeckillVoucher seckillVoucher = new SeckillVoucher();
-            seckillVoucher.setVoucherId(voucher.getId());
-            seckillVoucher.setBeginTime(voucher.getBeginTime());
-            seckillVoucher.setEndTime(voucher.getEndTime());
-            seckillVoucher.setCreateTime(DateUtils.getNowDate());
-            seckillVoucherService.save(seckillVoucher);
-        }
         return i;
     }
 
@@ -171,7 +172,20 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     @Override
     public int deleteVoucherByIds(Long[] ids)
     {
-        return voucherMapper.deleteVoucherByIds(ids);
+        //        int i = userMapper.deleteShopByIds(ids);
+//        //删除es数据
+//        if (i > 0) {
+        for (Long id : ids) {
+            log.info("删除es数据：{}", id);
+            EsInsertRequest esInsertRequest = new EsInsertRequest();
+            esInsertRequest.setId(id);
+            esInsertRequest.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+            esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
+            //发起rabbitMq信息删除
+            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_VOUCHER_DELETE,esInsertRequest);
+        }
+//        }
+        return 1;
     }
 
     /**
@@ -216,13 +230,17 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             }
         }
         //创建订单
-
         VoucherOrderDTO voucherOrder = new VoucherOrderDTO();
         voucherOrder.setId(orderId);
         voucherOrder.setUserId(userId);
         voucherOrder.setVoucherId(voucherId);
         //发送消息
         rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_SECKILL_ROUTING, voucherOrder);
+        //发送延迟消息，检测订单支付状态
+        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
+            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
+            return message;
+        });
         //获取事务代理对象
         proxy= (IVoucherService) AopContext.currentProxy();
         //3 返回订单id
@@ -244,8 +262,12 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         voucherOrder.setUserId(userId);
         voucherOrder.setVoucherId(voucherId);
         //5.发送消息创建订单
-        //发送消息
         rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_BUY_ROUTING, voucherOrder);
+        //发送延迟消息，检测订单支付状态
+        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
+            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
+            return message;
+        });
 //        save(voucherOrder);
         //6.返回订单id
         return Result.ok(voucherOrder.getId());
@@ -295,11 +317,18 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     public List<Voucher> listVoucher( ) {
         List<Voucher> list = query().list();
         list.forEach(voucher -> {
-            ShopDTO shopDTO = remoteShopService.getShopById(voucher.getShopId()).getData();
-            voucher.setShopName(shopDTO.getName());
-            voucher.setTypeId(shopDTO.getTypeId());
+            queryVoucherShopMessage(voucher);
         });
         return list;
+    }
+    /**
+     * 查询代金券店铺信息
+     * @param voucher
+     */
+    void queryVoucherShopMessage(Voucher voucher){
+        ShopDTO shopDTO = remoteShopService.getShopById(voucher.getShopId()).getData();
+        voucher.setShopName(shopDTO.getName());
+        voucher.setTypeId(shopDTO.getTypeId());
     }
 
     /**
@@ -316,5 +345,68 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             shopId = shop.getData().getId();
         }
         return query().eq(shopId != null,"shop_id", shopId).eq("type", 1).list();
+    }
+    /**
+     * 全部发布
+     *
+     * @return 全部发布结果
+     */
+    @Override
+    public String allPublish() {
+        int page = PageConstants.PAGE_NUMBER;
+        int pageSize = PageConstants.ES_PAGE_SIZE; // 每页50条
+        while (true) {
+            // 分页查询
+            List<Voucher> vouchers = query()
+                    .page(new Page<>(page, pageSize))
+                    .getRecords();
+            if (vouchers.isEmpty()) {
+                break;
+            }
+            vouchers.forEach(voucher -> {
+                querySeckill(voucher);
+                queryVoucherShopMessage(voucher);
+            });
+            // 创建请求并发送
+            EsBatchInsertRequest request = new EsBatchInsertRequest();
+            request.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+            request.setData(vouchers);
+            request.setDataType(EsDataTypeConstants.VOUCHER);
+            rabbitTemplate.convertAndSend(
+                    MqConstants.ES_EXCHANGE,
+                    MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT,
+                    request
+            );
+            log.info("发送第 {} 页，{} 条数据", page, vouchers.size());
+            page++;
+        }
+        return "数据发布完成";
+    }
+
+
+    /**
+     * 发布
+     *
+     * @param
+     * @return 发布结果
+     */
+    @Override
+    public String publish(String[] ids) {
+        for (String id : ids) {
+            Voucher voucher = query().eq("id", id).one();
+            if (voucher== null){
+                continue;
+            }
+            querySeckill(voucher);
+            queryVoucherShopMessage(voucher);
+            EsInsertRequest esInsertRequest = new EsInsertRequest();
+            esInsertRequest.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+            esInsertRequest.setData(voucher);
+            esInsertRequest.setId(voucher.getId());
+            esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
+            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
+
+        }
+        return "发布成功";
     }
 }

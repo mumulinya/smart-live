@@ -106,4 +106,19 @@ public interface IVoucherService extends IService<Voucher>
      */
 
     List<Voucher> listSeckillVoucher(Voucher voucher);
+
+    /**
+     * 全部发布
+     *
+     * @return 全部发布结果
+     */
+    String allPublish();
+
+    /**
+     * 发布
+     *
+     * @param
+     * @return 发布结果
+     */
+    String publish( String[] ids);
 }

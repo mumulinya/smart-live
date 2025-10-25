@@ -9,6 +9,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(contextId = "remoteMarketingService", value = ServiceNameConstants.MARKETING_SERVICE, fallbackFactory = RemoteMarketingFallbackFactory.class)
 public interface RemoteMarketingService {
@@ -19,5 +20,10 @@ public interface RemoteMarketingService {
      R<Boolean> updateVoucherById(@PathVariable("id") Long voucherId);
 
     @GetMapping("/voucher/{id}")
-    Result getVoucherById(@PathVariable("id") Long voucherId);
+    R<VoucherDTO> getVoucherById(@PathVariable("id") Long voucherId);
+    /**
+     * 恢复库存
+     */
+    @PostMapping("/voucher/recover/{id}")
+    R<Boolean> recoverVoucherStock(@PathVariable("id") Long voucherId);
 }

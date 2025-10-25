@@ -93,14 +93,21 @@ public interface ICommentService  extends IService<Comment>
 
     /**
      * 保存ai自动创建的评论
-     * @param commentDTO
+     * @param comments
      * @return
      */
-    Result saveAiCreateComment(CommentDTO commentDTO);
+    Result saveAiCreateComment(List<CommentDTO> comments);
     /**
      * 获取用户发表的评论数
      * @param userId
      * @return
      */
     Integer getCommentCount(Long userId);
+
+    /**
+     * 创建ai自动创建的评论
+     * @param
+     * @return
+     */
+    void aiCreateComment( );
 }

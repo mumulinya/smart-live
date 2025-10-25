@@ -163,7 +163,11 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     @Override
     public Result isFollowed(Long followUserId) {
         //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
+        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        if (user==null){
+            return Result.fail("请登录");
+        }
+        Long userId =user.getId();
         String key = RedisConstants.FOLLOW_USER_KEY + userId;
 //        //判断是否关注 从数据库中查询
 //        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();

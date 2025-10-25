@@ -2,6 +2,7 @@ package com.smartlive.chat.handle;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.client.MessageProperties;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartlive.chat.domain.ChatMessages;
@@ -9,16 +10,22 @@ import com.smartlive.chat.dto.ChatMessageEvent;
 import com.smartlive.chat.service.IChatMessagesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -201,10 +208,25 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 messageEvent.setSessionId(sessionId);
                 messageEvent.setMessageId(chatMessage.getId());
                 messageEvent.setCreateTime(new Date());
-
+                //创建correlationData
+                CorrelationData cd=new CorrelationData(UUID.randomUUID().toString());
+                cd.getFuture().addCallback(new ListenableFutureCallback<CorrelationData.Confirm>() {
+                    @Override
+                    public void onFailure(Throwable ex) {
+                        log.error("❌ 消息发送失败：{}", ex.getMessage());
+                    }
+                    @Override
+                    public void onSuccess(CorrelationData.Confirm result) {
+                        if (result.isAck()) {
+                            log.info("✅ 消息已确认，sessionId: {}", sessionId);
+                        } else {
+                            log.error("❌ 消息发送失败，sessionId: {},错误原因为：{}", sessionId, result.getReason());
+                        }
+                    }
+                });
                 // 发送到会话队列
                 String routingKey = "session.chat." + sessionId;
-                rabbitTemplate.convertAndSend("session.chat.topic", routingKey, messageEvent);
+                rabbitTemplate.convertAndSend("session.chat.topic", routingKey, messageEvent,cd);
                 log.info("✅ 消息已发送到会话队列，sessionId: {}", sessionId);
 
             } else {

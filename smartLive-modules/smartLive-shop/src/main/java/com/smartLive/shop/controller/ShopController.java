@@ -35,7 +35,7 @@ public class ShopController extends BaseController {
     private IShopService shopService;
 
     /**
-     * 查询店铺列表
+     * 分页查询店铺列表
      */
     @RequiresPermissions("business:shop:list")
     @GetMapping("/list")
@@ -45,6 +45,14 @@ public class ShopController extends BaseController {
         return getDataTable(list);
     }
 
+    /**
+     * 查询店铺列表
+     */
+    @GetMapping("/shopList")
+    public AjaxResult shopList(Shop shop) {
+        List<Shop> list = shopService.selectShopList(shop);
+        return success(list);
+    }
     /**
      * 导出店铺列表
      */
@@ -103,6 +111,21 @@ public class ShopController extends BaseController {
         return success(shopService.flushCache());
     }
 
+    /**
+     * 全量发布店铺
+     */
+    @PostMapping("/allPublish")
+    public AjaxResult allPublish() {
+        return success(shopService.allPublish());
+    }
+
+    /**
+     * 发布店铺
+     */
+    @PostMapping("/publish/{ids}")
+    public AjaxResult allPublish(@PathVariable String[] ids) {
+        return success(shopService.publish(ids));
+    }
     /**
      * 根据商铺类型分页查询商铺信息
      *

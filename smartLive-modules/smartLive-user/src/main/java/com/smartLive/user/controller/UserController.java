@@ -45,7 +45,7 @@ public class UserController extends BaseController
     private StringRedisTemplate stringRedisTemplate;
 
     /**
-     * 查询用户列表
+     * 分页查询用户列表
      */
     @RequiresPermissions("user:user:list")
     @GetMapping("/list")
@@ -54,6 +54,13 @@ public class UserController extends BaseController
         startPage();
         List<User> list = userService.selectUserList(user);
         return getDataTable(list);
+    }
+
+    @GetMapping("/userList")
+    public AjaxResult userList(User user)
+    {
+        List<User> list = userService.selectUserList(user);
+        return success(list);
     }
 
     /**
@@ -110,6 +117,22 @@ public class UserController extends BaseController
     public AjaxResult remove(@PathVariable Long[] ids)
     {
         return toAjax(userService.deleteUserByIds(ids));
+    }
+
+    /**
+     * 全量发布用户信息
+     */
+    @PostMapping("/allPublish")
+    public AjaxResult allPublish() {
+        return success(userService.allPublish());
+    }
+
+    /**
+     * 发布用户信息
+     */
+    @PostMapping("/publish/{ids}")
+    public AjaxResult allPublish(@PathVariable String[] ids) {
+        return success(userService.publish(ids));
     }
 
     @GetMapping("/info/{id}")

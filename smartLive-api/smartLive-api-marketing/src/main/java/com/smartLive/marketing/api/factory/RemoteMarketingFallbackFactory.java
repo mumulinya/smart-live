@@ -18,8 +18,18 @@ public class RemoteMarketingFallbackFactory implements FallbackFactory<RemoteMar
             }
 
             @Override
-            public Result getVoucherById(Long voucherId) {
-                return Result.fail("查询优惠券失败");
+            public R<VoucherDTO> getVoucherById(Long voucherId) {
+                return R.fail("查询秒杀券失败");
+            }
+
+            /**
+             * 恢复库存
+             *
+             * @param voucherId
+             */
+            @Override
+            public R<Boolean> recoverVoucherStock(Long voucherId) {
+                return R.fail("恢复库存失败");
             }
         };
     }

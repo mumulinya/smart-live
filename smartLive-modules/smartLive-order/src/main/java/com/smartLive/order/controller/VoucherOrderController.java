@@ -116,9 +116,7 @@ public class VoucherOrderController extends BaseController
      */
      @PostMapping("/pay/{id}")
     public Result pay(@PathVariable("id") Long id) {
-        //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
-        return voucherOrderService.pay(id, userId);
+        return voucherOrderService.pay(id);
     }
 
     /**
@@ -126,27 +124,21 @@ public class VoucherOrderController extends BaseController
      */
     @PostMapping("/use/{id}")
     public Result use(@PathVariable("id") Long id) {
-        //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
-        return voucherOrderService.use(id, userId);
+        return voucherOrderService.use(id);
     }
     /**
      * 取消订单
      */
     @PostMapping("/cancel/{id}")
     public Result cancel(@PathVariable("id") Long id) {
-        //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
-        return voucherOrderService.cancel(id, userId);
+        return voucherOrderService.cancel(id);
     }
     /**
      * 退款订单
      */
     @PostMapping("/refund/{id}")
     public Result refund(@PathVariable("id") Long id) {
-        //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
-        return voucherOrderService.refund(id, userId);
+        return voucherOrderService.refund(id);
     }
     /**
      * 获取订单数量

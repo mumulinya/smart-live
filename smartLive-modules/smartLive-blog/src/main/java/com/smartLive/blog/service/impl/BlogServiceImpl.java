@@ -8,18 +8,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.domain.Blog;
 import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
-import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.common.core.constant.RedisConstants;
-import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.domain.ScrollResult;
-import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.core.domain.*;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.shop.api.RemoteShopService;
+import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.BlogDTO;
 import com.smartLive.user.api.domain.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -40,6 +39,7 @@ import java.util.stream.Collectors;
  * @date 2025-09-21
  */
 @Service
+@Slf4j
 public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IBlogService
 {
     @Autowired
@@ -54,6 +54,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Autowired
     private RemoteAppUserService remoteAppUserService;
+    @Autowired
+    private RemoteShopService remoteShopService;
 
     /**
      * 查询博客
@@ -114,7 +116,20 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public int deleteBlogByIds(Long[] ids)
     {
-        return blogMapper.deleteBlogByIds(ids);
+        //        int i = shopMapper.deleteShopByIds(ids);
+//        //删除es数据
+//        if (i > 0) {
+        for (Long id : ids) {
+            log.info("删除es数据：{}", id);
+            EsInsertRequest esInsertRequest = new EsInsertRequest();
+            esInsertRequest.setId(id);
+            esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+            esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
+            //发起rabbitMq信息删除
+            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
+        }
+//        }
+        return 1;
     }
 
     /**
@@ -146,6 +161,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (blogJson != null) {
             //存在
             Blog blog = JSONUtil.toBean(blogJson, Blog.class);
+            isBlogLiked(blog);
             return Result.ok(blog);
         }
         //根据博客id查询博客信息
@@ -171,6 +187,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         UserDTO user = UserContextHolder.getUser();
         if (user == null) {
             //未登录,不用查询是否点赞
+            blog.setIsLike(false);
             return;
         }
         //获取当前登录用户
@@ -240,6 +257,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public Result likeBlog(Long id) {
         //获取当前登录用户
         UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            //未登录
+            return Result.fail("请登录");
+        }
         Long userId = user.getId();
         //判断当前用户是否已经点赞
         String key = RedisConstants.BLOG_LIKED_KEY + id;
@@ -321,6 +342,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public Result saveBlog(Blog blog) {
         blog.setUserId(UserContextHolder.getUser().getId());
+        R<ShopDTO> result = remoteShopService.getShopById(blog.getShopId());
+        blog.setTypeId(result.getData().getTypeId());
         // 保存探店笔记
         boolean success = save(blog);
         if (!success) {
@@ -473,6 +496,94 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public String flushCache() {
         stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY);
         return null;
+    }
+
+    /**
+     * 查询分类下的博客
+     *
+     * @param typeId
+     * @param current
+     * @return
+     */
+    @Override
+    public Result queryBlogByCategory(Long typeId, Integer current) {
+        Page<Blog> page = query()
+                .eq("type_id", typeId)
+                .orderByDesc("create_time")
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+        List<Blog> blogList = page.getRecords();
+        blogList.forEach(blog ->{
+            //查询blog有关的用户信息
+            queryBlogUser(blog);
+            //查询blog是否被点赞
+            isBlogLiked(blog);
+        });
+        return Result.ok(blogList);
+    }
+    /**
+     * 全部发布博客
+     *
+     * @return 全部发布结果
+     */
+    @Override
+    public String allPublish() {
+        int page = PageConstants.PAGE_NUMBER;
+        int pageSize = PageConstants.ES_PAGE_SIZE; // 每页50条
+        while (true) {
+            // 分页查询
+            List<Blog> blogs = query()
+                    .page(new Page<>(page, pageSize))
+                    .getRecords();
+
+            if (blogs.isEmpty()) {
+                break;
+            }
+            blogs.forEach(blog ->{
+                //查询blog有关的用户信息
+                queryBlogUser(blog);
+                //查询blog是否被点赞
+                isBlogLiked(blog);
+            });
+            // 创建请求并发送
+            EsBatchInsertRequest request = new EsBatchInsertRequest();
+            request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+            request.setData(blogs);
+            request.setDataType(EsDataTypeConstants.BLOG);
+            rabbitTemplate.convertAndSend(
+                    MqConstants.ES_EXCHANGE,
+                    MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
+                    request
+            );
+            log.info("发送第 {} 页，{} 条数据", page, blogs.size());
+            page++;
+        }
+        return "数据发布完成";
+    }
+
+
+    /**
+     * 发布博客
+     *
+     * @param
+     * @return 发布结果
+     */
+    @Override
+    public String publish(String[] ids) {
+        for (String id : ids) {
+            Blog blog = query().eq("id", id).one();
+            if(blog == null){
+                continue;
+            }
+            queryBlogUser( blog);
+            EsInsertRequest esInsertRequest = new EsInsertRequest();
+            esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+            esInsertRequest.setData(blog);
+            esInsertRequest.setId(blog.getId());
+            esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
+            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BLOG_INSERT, esInsertRequest);
+
+        }
+        return "发布成功";
     }
 
     /**

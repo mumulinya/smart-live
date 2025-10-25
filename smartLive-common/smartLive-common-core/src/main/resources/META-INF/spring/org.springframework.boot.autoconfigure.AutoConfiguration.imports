@@ -1,2 +1,3 @@
 com.smartLive.common.core.utils.SpringUtils
-com.smartLive.common.core.config.mqConfig
+com.smartLive.common.core.config.MqConfig
+com.smartLive.common.core.config.RabbitTemplateConfig

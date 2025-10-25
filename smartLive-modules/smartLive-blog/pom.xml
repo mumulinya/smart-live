@@ -95,6 +95,12 @@
             <version>3.6.6</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-shopDTO</artifactId>
+            <version>3.6.6</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
 </project>

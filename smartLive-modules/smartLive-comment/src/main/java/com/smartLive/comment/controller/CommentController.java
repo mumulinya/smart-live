@@ -127,14 +127,25 @@ public class CommentController extends BaseController
     public Result getCommentOfMe(Integer current){
         return commentService.getCommentOfMe(current);
     }
+
+    @PostMapping("/aiCreateComment")
+    public Result aiCreateComment(){
+         commentService.aiCreateComment();
+        return Result.ok("创建成功");
+    }
     @GetMapping("/comment/list")
     List<Comment> getCommentList(){
         return commentService.getCommentList();
     }
 
+    /**
+     * 保存ai创建的评论存入redis
+     * @param comments
+     * @return
+     */
     @PostMapping("/comment/saveAiCreateComment")
-    public Result saveAiCreateComment(@RequestBody CommentDTO commentDTO){
-        return commentService.saveAiCreateComment(commentDTO);
+    public Result saveAiCreateComment(@RequestBody List<CommentDTO> comments){
+        return commentService.saveAiCreateComment(comments);
     }
 
     /**

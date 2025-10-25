@@ -78,34 +78,34 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
     /**
      * 支付订单
      * @param id
-     * @param userId
+     * @param
      * @return
      */
-    Result pay(Long id, Long userId);
+    Result pay(Long id );
 
     /**
      * 退款订单
      * @param id
-     * @param userId
+     * @param
      * @return
      */
-    Result cancel(Long id, Long userId);
+    Result cancel(Long id);
 
     /**
      * 退款订单
      * @param id
-     * @param userId
+     * @param
      * @return
      */
-    Result refund(Long id, Long userId);
+    Result refund(Long id);
 
     /**
      * 使用订单
      * @param id
-     * @param userId
+     * @param
      * @return
      */
-    Result use(Long id, Long userId);
+    Result use(Long id);
 
     /**
      * 获取订单数量

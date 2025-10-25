@@ -154,4 +154,27 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     String flushCache();
+
+    /**
+     * 查询分类下的博客
+     * @param typeId
+     * @param current
+     * @return
+     */
+    Result queryBlogByCategory(Long typeId, Integer current);
+
+    /**
+     * 全部发布博客
+     *
+     * @return 全部发布结果
+     */
+    String allPublish();
+
+    /**
+     * 发布博客
+     *
+     * @param
+     * @return 发布结果
+     */
+    String publish( String[] ids);
 }

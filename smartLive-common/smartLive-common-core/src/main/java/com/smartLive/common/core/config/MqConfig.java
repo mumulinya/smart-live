@@ -1,14 +1,20 @@
 package com.smartLive.common.core.config;
 
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
 @Configuration
-public class mqConfig {
+@Slf4j
+public class MqConfig {
 
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        Jackson2JsonMessageConverter jjm = new Jackson2JsonMessageConverter();
+        jjm.setCreateMessageIds(true);
+        return jjm;
     }
 }

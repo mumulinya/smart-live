@@ -12,6 +12,7 @@ import com.smartlive.chat.domain.UserSessions;
 import com.smartlive.chat.mapper.UserSessionsMapper;
 import com.smartlive.chat.service.IUserSessionsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import com.smartlive.chat.mapper.ChatSessionsMapper;
 import com.smartlive.chat.domain.ChatSessions;
@@ -33,7 +34,7 @@ public class ChatSessionsServiceImpl extends ServiceImpl<ChatSessionsMapper, Cha
     private RemoteAppUserService remoteAppUserService;
     private final IUserSessionsService userSessionsService;
 
-    public ChatSessionsServiceImpl(IUserSessionsService userSessionsService) {
+    public ChatSessionsServiceImpl(@Lazy IUserSessionsService userSessionsService) {
         this.userSessionsService = userSessionsService;
     }
     /**

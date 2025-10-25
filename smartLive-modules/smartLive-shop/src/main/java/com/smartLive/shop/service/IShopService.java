@@ -150,6 +150,20 @@ public interface IShopService extends IService<Shop> {
      * @return 刷新结果
      */
     String flushCache();
+    /**
+     * 全部发布店铺
+     *
+     * @return 全部发布结果
+     */
+    String allPublish();
+
+    /**
+     * 发布店铺
+     *
+     * @param
+     * @return 发布结果
+     */
+    String publish( String[] ids);
 }
 
 

@@ -112,7 +112,13 @@
         </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>
-            <artifactId>smartLive-api-shop</artifactId>
+            <artifactId>smartLive-api-shopDTO</artifactId>
+            <version>3.6.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-follow</artifactId>
             <version>3.6.6</version>
             <scope>compile</scope>
         </dependency>

@@ -63,6 +63,13 @@ public class BlogController extends BaseController
         util.exportExcel(response, list, "博客数据");
     }
 
+    @GetMapping("/blogList")
+    public AjaxResult blogList(Blog blog)
+    {
+        List<Blog> list = blogService.selectBlogList(blog);
+        return success(list);
+    }
+
     /**
      * 刷新缓存
      */
@@ -114,6 +121,22 @@ public class BlogController extends BaseController
         return toAjax(blogService.deleteBlogByIds(ids));
     }
 
+    /**
+     * 全量发布博客
+     */
+    @PostMapping("/allPublish")
+    public AjaxResult allPublish() {
+        return success(blogService.allPublish());
+    }
+
+    /**
+     * 发布博客
+     */
+    @PostMapping("/publish/{ids}")
+    public AjaxResult allPublish(@PathVariable String[] ids) {
+        return success(blogService.publish(ids));
+    }
+
 
     /**
      * 发布博文
@@ -155,6 +178,10 @@ public class BlogController extends BaseController
     public Result queryHotBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
 
         return blogService.queryHotBlog(current);
+    }
+    @GetMapping("/category/{typeId}")
+    public Result queryBlogByCategory(@PathVariable("typeId") Long typeId,@RequestParam(value = "current", defaultValue = "1") Integer current) {
+        return blogService.queryBlogByCategory(typeId,current);
     }
     /**
      * 查询博文详情

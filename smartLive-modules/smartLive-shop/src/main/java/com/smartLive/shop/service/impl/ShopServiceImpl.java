@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
@@ -14,17 +15,21 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.smartLive.common.core.constant.RedisConstants;
-import com.smartLive.common.core.constant.RedisData;
-import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.constant.*;
+import com.smartLive.common.core.domain.EsBatchInsertRequest;
+import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.domain.shop.ShopDTO;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.PageUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.search.api.RemoteSearchService;
 import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.service.IShopTypeService;
 import com.smartLive.shop.until.CacheClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
@@ -55,6 +60,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Autowired
     private IShopTypeService shopTypeService;
+    @Autowired
+    private RemoteSearchService remoteSearchService;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     /**
      * 查询店铺
@@ -112,7 +121,20 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public int deleteShopByIds(String[] ids) {
-        return shopMapper.deleteShopByIds(ids);
+//        int i = shopMapper.deleteShopByIds(ids);
+//        //删除es数据
+//        if (i > 0) {
+            for (String id : ids) {
+                log.info("删除es数据：{}", id);
+                EsInsertRequest esInsertRequest = new EsInsertRequest();
+                esInsertRequest.setId(Long.valueOf(id));
+                esInsertRequest.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
+                esInsertRequest.setDataType(EsDataTypeConstants.SHOP);
+                //发起rabbitMq信息删除
+                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_SHOP_DELETE,esInsertRequest);
+            }
+//        }
+        return 1;
     }
 
     /**
@@ -601,5 +623,66 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     private void flashShopRedisCache(Long id){
         stringRedisTemplate.delete(RedisConstants.CACHE_SHOP_KEY+id);
+    }
+
+    /**
+     * 全部发布店铺
+     *
+     * @return 全部发布结果
+     */
+    @Override
+    public String allPublish() {
+            int page = PageConstants.PAGE_NUMBER;
+            int pageSize = PageConstants.ES_PAGE_SIZE; // 每页50条
+            while (true) {
+                // 分页查询
+                List<Shop> shops = query()
+                        .page(new Page<>(page, pageSize))
+                        .getRecords();
+                if (shops.isEmpty()) {
+                    break;
+                }
+                shops.forEach(
+                        shop -> {
+                            shop.setLocation(shop.getY() + "," + shop.getX());
+                        }
+                );
+                // 创建请求并发送
+                EsBatchInsertRequest request = new EsBatchInsertRequest();
+                request.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
+                request.setData(shops);
+                request.setDataType(EsDataTypeConstants.SHOP);
+                rabbitTemplate.convertAndSend(
+                        MqConstants.ES_EXCHANGE,
+                        MqConstants.ES_ROUTING_SHOP_BATCH_INSERT,
+                        request
+                );
+                log.info("发送第 {} 页，{} 条数据", page, shops.size());
+                page++;
+            }
+            return "数据发布完成";
+        }
+
+
+    /**
+     * 发布店铺
+     *
+     * @param
+     * @return 发布结果
+     */
+    @Override
+    public String publish(String[] ids) {
+        for (String id : ids) {
+            Shop shop = query().eq("id", id).one();
+            EsInsertRequest esInsertRequest = new EsInsertRequest();
+            esInsertRequest.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
+            shop.setLocation(shop.getY() + "," + shop.getX());
+            esInsertRequest.setData(shop);
+            esInsertRequest.setId(shop.getId());
+            esInsertRequest.setDataType(EsDataTypeConstants.SHOP);
+            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_INSERT, esInsertRequest);
+
+        }
+        return "发布成功";
     }
 }

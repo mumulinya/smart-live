@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -22,6 +23,7 @@ import java.io.Serializable;
 @TableName("tb_shop")
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class Shop extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -60,7 +62,7 @@ public class Shop extends BaseEntity implements Serializable
 
     /** 均价，取整数 */
     @Excel(name = "均价，取整数")
-    private String avgPrice;
+    private Integer avgPrice;
 
     /** 销量 */
     @Excel(name = "销量")
@@ -80,7 +82,23 @@ public class Shop extends BaseEntity implements Serializable
 
     @TableField(exist = false)
     private Double distance;
+    @TableField(exist = false)
+    private String location;
 
+    private void updateLocation() {
+        if (this.y != null && this.x != null) {
+            this.location = this.y + "," + this.x;
+        }
+    }
+
+    // getter和setter
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
     public Long getId() {
         return id;
     }
@@ -135,6 +153,8 @@ public class Shop extends BaseEntity implements Serializable
 
     public void setX(Double x) {
         this.x = x;
+        updateLocation();
+
     }
 
     public Double getY() {
@@ -143,16 +163,8 @@ public class Shop extends BaseEntity implements Serializable
 
     public void setY(Double y) {
         this.y = y;
+        updateLocation();
     }
-
-    public String getAvgPrice() {
-        return avgPrice;
-    }
-
-    public void setAvgPrice(String avgPrice) {
-        this.avgPrice = avgPrice;
-    }
-
     public Integer getSold() {
         return sold;
     }

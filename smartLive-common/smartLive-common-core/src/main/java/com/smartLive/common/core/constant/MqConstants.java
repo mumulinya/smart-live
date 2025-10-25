@@ -8,7 +8,11 @@ public class MqConstants {
     public static final String  ORDER_BUY_QUEUE = "order.buy.queue";
     public static final String  ORDER_BUY_ROUTING = "order.buy.voucher";
 
-    //博客交换机
+    //支付延迟交换机
+    public static final String  ORDER_DELAY_EXCHANGE_NAME = "order.delay.direct";
+    public static final String  ORDER_DELAY_QUEUE = "order.delay.queue";
+    public static final String  ORDER_DELAY_ROUTING = "order.delay.voucher";
+    public static final Integer DELAY_TIME = 15 * 60000; // 15分钟 = 900000 毫秒    // 博客交换机
     public static final String  BLOG_EXCHANGE_NAME = "blog.direct";
     public static final String  BLOG_FEED_QUEUE = "blog.feed.queue";
     public static final String  BLOG_FEED_ROUTING = "blog.feed.user";
@@ -25,4 +29,44 @@ public class MqConstants {
     public static final String  USER_FOLLOW_QUEUE = "user.follow.queue";
     public static final String  USER_FOLLOW_ROUTING = "user.follow.add";
 
+    //ai交换机
+    public static final String AI_EXCHANGE_NAME = "ai.direct";
+    public static final String AI_COMMENT_QUEUE = "ai.comment.queue";
+    public static final String AI_COMMENT_ROUTING = "ai.comment.create";
+
+    //搜索交换机
+    // ==================== 公共交换机 ====================
+    /**
+     * ES数据同步通用交换机（所有类型的插入/删除都用这个交换机）
+     */
+    public static final String ES_EXCHANGE = "es.sync.exchange";
+
+
+    // ==================== 队列名称（按操作类型划分） ====================
+    /** 单条插入队列（所有类型共用） */
+    public static final String ES_INSERT_QUEUE = "es.sync.insert.queue";
+    /** 批量插入队列（所有类型共用） */
+    public static final String ES_BATCH_INSERT_QUEUE = "es.sync.batch.insert.queue";
+    /** 删除队列（所有类型共用） */
+    public static final String ES_DELETE_QUEUE = "es.sync.delete.queue";
+
+
+    // ==================== 路由键（按“类型+操作”划分） ====================
+    // 单条插入路由键
+    public static final String ES_ROUTING_VOUCHER_INSERT = "es.voucher.insert";
+    public static final String ES_ROUTING_USER_INSERT = "es.user.insert";
+    public static final String ES_ROUTING_SHOP_INSERT = "es.shop.insert";
+    public static final String ES_ROUTING_BLOG_INSERT = "es.blog.insert";
+
+    // 批量插入路由键
+    public static final String ES_ROUTING_VOUCHER_BATCH_INSERT = "es.voucher.batch.insert";
+    public static final String ES_ROUTING_USER_BATCH_INSERT = "es.user.batch.insert";
+    public static final String ES_ROUTING_SHOP_BATCH_INSERT = "es.shop.batch.insert";
+    public static final String ES_ROUTING_BLOG_BATCH_INSERT = "es.blog.batch.insert";
+
+    // 删除路由键
+    public static final String ES_ROUTING_VOUCHER_DELETE = "es.voucher.delete";
+    public static final String ES_ROUTING_USER_DELETE = "es.user.delete";
+    public static final String ES_ROUTING_SHOP_DELETE = "es.shop.delete";
+    public static final String ES_ROUTING_BLOG_DELETE = "es.blog.delete";
 }

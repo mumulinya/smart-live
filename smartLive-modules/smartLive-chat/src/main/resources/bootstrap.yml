@@ -13,6 +13,17 @@ spring:
     host: 192.168.182.20
     virtual-host: smart-live
     port: 5672
+    listener:
+        simple:
+          prefetch: 1
+          # 消息确认模式
+          acknowledge-mode: auto   #none：关闭ack  manual：手动ack  auto：自动ack
+          retry:
+            enabled: true # 是否开启重试
+            initial-interval: 1000ms # 第一次重试时间间隔
+            multiplier: 1 # 重试时间间隔倍数
+            max-attempts: 5 # 最大重试次数
+            stateless: true # 是否无状态
   profiles:
     # 环境配置
     active: dev

@@ -25,4 +25,10 @@ public interface ISeckillVoucherService extends IService<SeckillVoucher> {
      */
     R<Boolean> updateSeckillVoucherByVoucherId(Long voucherId);
 
+    /**
+     * 恢复秒杀券优惠券库存
+     * @param voucherId
+     * @return
+     */
+    R<Boolean> recoverVoucherStock(Long voucherId);
 }

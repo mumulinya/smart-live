@@ -6,6 +6,7 @@ import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.follow.domain.Follow;
@@ -164,7 +165,11 @@ public class FollowShopServiceImpl extends ServiceImpl<FollowShopMapper, FollowS
     @Override
     public Result isFollowed(Long shopId) {
         //获取当前用户id
-        Long userId = UserContextHolder.getUser().getId();
+        UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            return Result.ok(false);
+        }
+        Long userId = user.getId();
         String key = RedisConstants.FOLLOW_SHOP_KEY + userId;
         //判断是否关注 从redis的set集合中查询
         Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, shopId.toString());

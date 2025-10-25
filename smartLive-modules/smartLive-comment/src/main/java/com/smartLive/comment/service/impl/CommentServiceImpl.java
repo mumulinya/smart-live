@@ -1,7 +1,8 @@
 package com.smartLive.comment.service.impl;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSON;
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.blog.api.dto.BlogDto;
+import com.smartLive.comment.domain.AIGenerateRequest;
 import com.smartLive.comment.domain.CommentDTO;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
@@ -234,14 +236,22 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     /**
      * 保存ai自动创建的评论
      *
-     * @param commentDTO
+     * @param comments
      * @return
      */
     @Override
-    public Result saveAiCreateComment(CommentDTO commentDTO) {
-        String key = RedisConstants. CACHE_AI_COMMENT_KEY+commentDTO.getSourceType()+":"+commentDTO.getSourceId();
-        stringRedisTemplate.opsForValue().set(key, JSON.toJSONString(commentDTO));
-        stringRedisTemplate.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
+    public Result saveAiCreateComment(List<CommentDTO> comments) {
+        if(comments.size()==0){
+            return Result.fail("请传入数据");
+        }
+        //清空redis缓存
+        stringRedisTemplate.delete(RedisConstants.CACHE_AI_COMMENT_KEY);
+        comments.forEach(commentDTO -> {
+            String key = RedisConstants. CACHE_AI_COMMENT_KEY+commentDTO.getSourceType()+":"+commentDTO.getSourceId();
+            stringRedisTemplate.opsForValue().set(key, JSON.toJSONString(commentDTO));
+            //设置过期时间
+//            stringRedisTemplate.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
+        });
         return Result.ok();
     }
 
@@ -255,5 +265,35 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public Integer getCommentCount(Long userId) {
         int commentCount = query().eq("user_id", userId).count().intValue();
         return commentCount;
+    }
+
+    /**
+     * 创建ai自动创建的评论
+     *
+     * @param
+     * @return
+     */
+    @Override
+    public void aiCreateComment() {
+        // 获取有评论的博客和店铺的id（保持顺序的去重）
+        List<AIGenerateRequest> list = query().list().stream()
+                .collect(Collectors.groupingBy(
+                        Comment::getSourceType,
+                        Collectors.mapping(
+                                Comment::getSourceId,
+                                Collectors.collectingAndThen(
+                                        Collectors.toCollection(LinkedHashSet::new),
+                                        ArrayList::new
+                                )
+                        )
+                ))
+                .entrySet().stream()
+                .map(entry -> new AIGenerateRequest(
+                        entry.getKey(),
+                        entry.getValue()
+                ))
+                .collect(Collectors.toList());
+        //发送rabbitMq消息给ai服务
+        rabbitTemplate.convertAndSend(MqConstants.AI_EXCHANGE_NAME,MqConstants.AI_COMMENT_ROUTING,list);
     }
 }

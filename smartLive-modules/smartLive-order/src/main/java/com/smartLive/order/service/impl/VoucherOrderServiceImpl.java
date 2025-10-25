@@ -23,6 +23,7 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.api.dto.VoucherDTO;
 import com.smartLive.order.until.RedisIdWorker;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -47,6 +48,7 @@ import javax.annotation.Resource;
  * @date 2025-09-21
  */
 @Service
+@Slf4j
 public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, VoucherOrder> implements IVoucherOrderService
 {
     @Autowired
@@ -84,11 +86,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     {
         List<VoucherOrder> voucherOrderList = voucherOrderMapper.selectVoucherOrderList(voucherOrder);
         voucherOrderList.forEach(v -> {
-            Object data = remoteMarketingService.getVoucherById(v.getVoucherId()).getData();
-            // 使用 ObjectMapper 将 LinkedHashMap 转换为 VoucherDTO
-            ObjectMapper objectMapper = new ObjectMapper();
-            VoucherDTO voucherDTO = objectMapper.convertValue(data, VoucherDTO.class);
-            v.setShopId(voucherDTO.getShopId());
+            VoucherDTO voucher  = remoteMarketingService.getVoucherById(v.getVoucherId()).getData();
+            v.setShopId(voucher.getShopId());
         });
         return voucherOrderList;
     }
@@ -146,8 +145,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Autowired
     private RemoteMarketingService remoteMarketingService;
-    @Resource
-    private RedisIdWorker redisIdWorker;
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -236,6 +233,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<VoucherOrder> list = result.getRecords();
+        log.info("查询当前用户订单列表:{}", list);
         return list;
     }
 
@@ -243,12 +241,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * 支付订单
      *
      * @param id
-     * @param userId
+     * @param
      * @return
      */
     @Override
-    public Result pay(Long id, Long userId) {
-        VoucherOrder voucherOrder = query().eq("id", id).eq("user_id", userId).one();
+    public Result pay(Long id) {
+        VoucherOrder voucherOrder = getById(id);
         if(voucherOrder==null){
             return Result.fail("订单不存在");
         }
@@ -266,18 +264,25 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * 取消订单
      *
      * @param id
-     * @param userId
+     * @param
      * @return
      */
     @Override
-    public Result cancel(Long id, Long userId) {
-        VoucherOrder voucherOrder = query().eq("id", id).eq("user_id", userId).one();
+    public Result cancel(Long id) {
+        VoucherOrder voucherOrder = getById(id);
         if(voucherOrder==null){
             return Result.fail("订单不存在");
         }
         voucherOrder.setStatus(OrderStatusConstants.CANCELLED);
         int i = updateVoucherOrder(voucherOrder);
         if(i>0){
+            VoucherDTO vo = remoteMarketingService.getVoucherById(voucherOrder.getVoucherId()).getData();
+            if (vo.getType()==1){
+                log.info("秒杀券,准备恢复库存");
+                    //秒杀券
+                    //恢复库存
+                    remoteMarketingService.recoverVoucherStock(voucherOrder.getVoucherId());
+            }
             return Result.ok("已经取消");
         }
         return Result.fail("取消失败");
@@ -287,12 +292,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * 退款订单
      *
      * @param id
-     * @param userId
+     * @param
      * @return
      */
     @Override
-    public Result refund(Long id, Long userId) {
-        VoucherOrder voucherOrder = query().eq("id", id).eq("user_id", userId).one();
+    public Result refund(Long id) {
+        VoucherOrder voucherOrder = getById(id);
         if(voucherOrder==null){
             return Result.fail("订单不存在");
         }
@@ -309,12 +314,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * 使用订单
      *
      * @param id
-     * @param userId
+     * @param
      * @return
      */
     @Override
-    public Result use(Long id, Long userId) {
-        VoucherOrder voucherOrder = query().eq("id", id).eq("user_id", userId).one();
+    public Result use(Long id) {
+        VoucherOrder voucherOrder = getById(id);
         if(voucherOrder==null){
             return Result.fail("订单不存在");
         }

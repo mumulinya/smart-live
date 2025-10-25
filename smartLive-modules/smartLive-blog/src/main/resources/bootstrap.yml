@@ -13,6 +13,13 @@ spring:
     host: 192.168.182.20
     virtual-host: smart-live
     port: 5672
+    publisher-confirm-type: correlated #开启publisher confirm机制 并设置confirm的类型
+    publisher-returns: true #开启return模式( 消息从 exchange –> queue 投递失败则会返回一个 returnCallback；)
+    connection-timeout: 1s # 连接超时时间
+    template:
+      retry:
+        enabled: true # 开启重试
+        multiplier: 2 # 重试乘数
   profiles:
     # 环境配置
     active: dev

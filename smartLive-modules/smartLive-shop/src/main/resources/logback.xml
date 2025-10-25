@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
     <!-- 日志存放路径 -->
-	<property name="log.path" value="logs/smartLive-shop" />
+	<property name="log.path" value="logs/smartLive-shopDTO" />
    <!-- 日志输出格式 -->
     <!-- 彩色日志格式 -->
     <property name="log.pattern" value="%d{HH:mm:ss.SSS} | %thread | %highlight(%-5level) | %cyan(%logger{40}) | %msg%n"/>
@@ -63,7 +63,7 @@
 	<!-- Spring日志级别控制  -->
 	<logger name="org.springframework" level="info" />
     <!-- mybatis日志级别控制  -->
-	<logger name="com.smartLive.shop.mapper" level="debug" />
+	<logger name="com.smartLive.shopDTO.mapper" level="debug" />
 	<root level="info">
 		<appender-ref ref="console" />
 	</root>

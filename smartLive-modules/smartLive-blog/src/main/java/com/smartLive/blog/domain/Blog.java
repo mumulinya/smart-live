@@ -33,6 +33,8 @@ public class Blog extends BaseEntity implements Serializable
     /** 商户id */
     @Excel(name = "商户id")
     private Long shopId;
+    /** 博客类型id */
+    private Long typeId;
 
     /** 用户id */
     @Excel(name = "用户id")

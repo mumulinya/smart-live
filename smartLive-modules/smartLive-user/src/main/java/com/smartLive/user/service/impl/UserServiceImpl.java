@@ -11,14 +11,18 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.comment.api.RemoteCommentService;
-import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.domain.EsBatchInsertRequest;
+import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.follow.api.RemoteFollowService;
 import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.user.api.domain.UserDTO;
@@ -29,6 +33,8 @@ import com.smartLive.user.service.IFollowService;
 import com.smartLive.user.service.IFollowShopService;
 import com.smartLive.user.service.IUserInfoService;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -45,6 +51,7 @@ import static com.smartLive.common.core.constant.SystemConstants.USER_NICK_NAME_
  * @date 2025-09-21
  */
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService
 {
     @Autowired
@@ -69,6 +76,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private IFollowShopService followShopService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private RemoteFollowService remoteFollowService;
 
 
     /**
@@ -148,7 +160,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public int deleteUserByIds(Long[] ids)
     {
-        return userMapper.deleteUserByIds(ids);
+//        int i = userMapper.deleteShopByIds(ids);
+//        //删除es数据
+//        if (i > 0) {
+        for (Long id : ids) {
+            log.info("删除es数据：{}", id);
+            EsInsertRequest esInsertRequest = new EsInsertRequest();
+            esInsertRequest.setId(id);
+            esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+            esInsertRequest.setDataType(EsDataTypeConstants.USER);
+            //发起rabbitMq信息删除
+            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
+        }
+//        }
+        return 1;
     }
 
     /**
@@ -222,16 +247,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public User queryUserById(Long id) {
         User user = getById(id);
         if(user!= null){
-            UserInfo userInfo = userInfoService.getByUserId(id);
-            if (userInfo != null){
-                user.setIntroduce(userInfo.getIntroduce());
-                user.setCity(userInfo.getCity());
-            }
-            user.setIsFollow((Boolean) followService.isFollowed(id).getData());
+            queryUserInfo(user);
+            user.setIsFollow((Boolean) remoteFollowService.isFollowed(id).getData());
         }
         return (user);
     }
 
+    /**
+     * 查询用户info信息
+     *
+     * @param user 用户
+     */
+  private void  queryUserInfo(User user){
+      UserInfo userInfo = userInfoService.getByUserId(user.getId());
+      if (userInfo != null){
+          user.setIntroduce(userInfo.getIntroduce());
+          user.setCity(userInfo.getCity());
+      }
+    }
     /**
      * 获取用户统计信息
      *
@@ -245,8 +278,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //获取关注数
         Integer followCount = followService.query().eq("user_id", userId).count().intValue();
         // 当前用户id
-        Long currentUserId = UserContextHolder.getUser().getId();
-
+        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        Long currentUserId = null;
+        if(user!= null){
+            currentUserId = user.getId();
+        }
          // 先查询目标用户的关注列表
         List<Follow> targetUserFollows = followService.lambdaQuery()
                 .select(Follow::getFollowUserId)
@@ -289,5 +325,69 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .collectCount(collectCount)
                 .build();
         return stats;
+    }
+
+    /**
+     * 全部发布
+     *
+     * @return 全部发布结果
+     */
+    @Override
+    public String allPublish() {
+        int page = PageConstants.PAGE_NUMBER;
+        int pageSize = PageConstants.ES_PAGE_SIZE; // 每页50条
+        while (true) {
+            // 分页查询
+            List<User> users = query()
+                    .page(new Page<>(page, pageSize))
+                    .getRecords();
+            if (users.isEmpty()) {
+                break;
+            }
+            users.forEach(
+                    user -> {
+                        queryUserInfo(user);
+                    }
+            );
+            // 创建请求并发送
+            EsBatchInsertRequest request = new EsBatchInsertRequest();
+            request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+            request.setData(users);
+            request.setDataType(EsDataTypeConstants.USER);
+            rabbitTemplate.convertAndSend(
+                    MqConstants.ES_EXCHANGE,
+                    MqConstants.ES_ROUTING_USER_BATCH_INSERT,
+                    request
+            );
+            log.info("发送第 {} 页，{} 条数据", page, users.size());
+            page++;
+        }
+        return "数据发布完成";
+    }
+
+
+    /**
+     * 发布
+     *
+     * @param
+     * @return 发布结果
+     */
+    @Override
+    public String publish(String[] ids) {
+        for (String id : ids) {
+            User user = query().eq("id", id).one();
+            if (user== null){
+                continue;
+            }
+            queryUserInfo(user);
+            EsInsertRequest esInsertRequest = new EsInsertRequest();
+            esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+            esInsertRequest.setData(user);
+            esInsertRequest.setId(user.getId());
+            esInsertRequest.setDataType(EsDataTypeConstants.USER);
+            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
+
+        }
+        return "发布成功";
     }
 }

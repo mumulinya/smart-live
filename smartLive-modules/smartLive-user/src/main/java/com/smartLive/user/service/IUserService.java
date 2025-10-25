@@ -97,4 +97,18 @@ public interface IUserService extends IService<User>
      * @return 用户统计信息
      */
     Stats getStats(Long userId);
-}
+
+    /**
+     * 全部发布
+     *
+     * @return 全部发布结果
+     */
+    String allPublish();
+
+    /**
+     * 发布
+     *
+     * @param
+     * @return 发布结果
+     */
+    String publish( String[] ids);}
