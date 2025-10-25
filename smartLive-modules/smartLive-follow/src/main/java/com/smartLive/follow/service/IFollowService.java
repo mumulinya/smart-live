@@ -105,4 +105,20 @@ public interface IFollowService extends IService<Follow>
      * @return
      */
     Result getFollows(Long userId,Integer current);
+    /**
+     * 获取关注数
+     * @return
+     */
+    Integer getFollowCount(Long userId);
+    /**
+     * 获取粉丝数
+     * @return
+     */
+    Integer getFanCount(Long userId);
+    /**
+     * 获取共同关注数
+     * @return
+     */
+
+    Integer getCommonFollowCount(Long userId, Long currentUserId);
 }

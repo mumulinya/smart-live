@@ -1,13 +1,6 @@
 package com.smartLive.user.listener;
 
-import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.user.api.domain.BlogDTO;
-import com.smartLive.user.service.IFollowService;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Component;
 
 @Component

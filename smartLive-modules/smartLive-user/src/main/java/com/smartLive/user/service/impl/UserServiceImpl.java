@@ -21,18 +21,13 @@ import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.follow.api.RemoteFollowService;
 import com.smartLive.order.api.RemoteOrderService;
-import com.smartLive.shop.api.RemoteShopService;
+
 import com.smartLive.user.api.domain.UserDTO;
-import com.smartLive.user.domain.Follow;
 import com.smartLive.user.domain.Stats;
 import com.smartLive.user.domain.UserInfo;
-import com.smartLive.user.service.IFollowService;
-import com.smartLive.user.service.IFollowShopService;
 import com.smartLive.user.service.IUserInfoService;
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,9 +55,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
-    private IFollowService followService;
-
-    @Autowired
     private IUserInfoService userInfoService;
 
     @Autowired
@@ -73,9 +65,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private RemoteOrderService remoteOrderService;
-
-    @Autowired
-    private IFollowShopService followShopService;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -274,35 +263,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Stats getStats(Long userId) {
         //获取粉丝数
-        Integer fansCount = followService.query().eq("follow_user_id", userId).count().intValue();
+        Integer fanCount = (Integer) remoteFollowService.getFanCount(userId).getData();
         //获取关注数
-        Integer followCount = followService.query().eq("user_id", userId).count().intValue();
+        Integer followCount = (Integer) remoteFollowService.getFollowCount(userId).getData();
         // 当前用户id
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
         Long currentUserId = null;
+        Integer commonFollowCount= 0;
         if(user!= null){
             currentUserId = user.getId();
-        }
-         // 先查询目标用户的关注列表
-        List<Follow> targetUserFollows = followService.lambdaQuery()
-                .select(Follow::getFollowUserId)
-                .eq(Follow::getUserId, userId)
-                .list();
-         // 提取关注用户ID列表
-        List<Long> targetUserFollowIds = targetUserFollows.stream()
-                .map(Follow::getFollowUserId)
-                .collect(Collectors.toList());
-         int commonFollowCount;
-         // 如果目标用户没有关注任何人，直接返回0
-        if (targetUserFollowIds.isEmpty()) {
-            commonFollowCount = 0;
-        } else {
-            // 查询共同关注数
-            commonFollowCount = followService.lambdaQuery()
-                    .eq(Follow::getUserId, currentUserId)
-                    .in(Follow::getFollowUserId, targetUserFollowIds)
-                    .count()
-                    .intValue();
+            //获取共同关注数
+             commonFollowCount = (Integer) remoteFollowService.getCommonFollowCount(userId,currentUserId).getData();
         }
         //获取博客数
         Integer blogCount = remoteBlogService.getBlogCount(userId).getData();
@@ -313,12 +284,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //获取订单数量
         Integer orderCount = remoteOrderService.getOrderCount(userId).getData();
         //获取收藏数量
-        Integer collectCount = followShopService.getCollectCount(userId);
+        Integer collectCount = (Integer) remoteFollowService.getFollowShopCount(userId).getData();
         Stats stats= Stats.builder()
                 .blogCount(blogCount)
                 .followCount(followCount)
                 .commonFollowCount(commonFollowCount)
-                .fansCount(fansCount)
+                .fansCount(fanCount)
                 .likeCount(likeCount)
                 .commentCount(commentCount)
                 .orderCount(orderCount)

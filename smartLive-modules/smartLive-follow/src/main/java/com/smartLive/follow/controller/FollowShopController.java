@@ -52,4 +52,14 @@ public class  FollowShopController {
     public Result getFollows(@RequestParam("userId") Long userId,@RequestParam("current") Integer current){
         return followShopService.getFollowShops(userId, current);
     }
+    /**
+     * 获取用户关注店铺数量
+     * @param userId 用户id
+     * @return
+     */
+    @GetMapping("/getFollowShopCount/{id}")
+    Result getFollowShopCount(@PathVariable("id") Long userId){
+        Integer followShopCount=followShopService.getCollectCount(userId);
+        return Result.ok(followShopCount);
+    }
 }
