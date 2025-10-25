@@ -1,10 +1,7 @@
 package com.smartLive.search.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smartLive.common.core.domain.blog.Blog;
-import com.smartLive.common.core.domain.markteing.Voucher;
-import com.smartLive.common.core.domain.shop.ShopDTO;
-import com.smartLive.common.core.domain.user.User;
+import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.search.domain.BlogDoc;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
@@ -13,7 +10,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class EsTool {
@@ -113,10 +109,10 @@ public class EsTool {
 
     public static String[] getDefaultSearchFields(String indexName) {
         switch (indexName) {
-            case "blog_index": return new String[]{"title", "content", "name"};
-            case "shop_index": return new String[]{"name", "area", "address"};
-            case "user_index": return new String[]{"nickName", "introduce", "city"};
-            case "voucher_index": return new String[]{"title", "subTitle", "rules", "shopName"};
+            case EsIndexNameConstants.BLOG_INDEX_NAME: return new String[]{"title", "content", "name"};
+            case EsIndexNameConstants.SHOP_INDEX_NAME: return new String[]{"name", "area", "address"};
+            case EsIndexNameConstants.USER_INDEX_NAME: return new String[]{"nickName", "introduce", "city"};
+            case EsIndexNameConstants.VOUCHER_INDEX_NAME: return new String[]{"title", "subTitle", "shopName"};
             default: return new String[]{};
         }
     }
@@ -125,13 +121,13 @@ public class EsTool {
      */
     public static List<? extends Object> convertSearchResult(String indexName, SearchResponse response) throws Exception {
         switch (indexName) {
-            case "blog_index":
+            case EsIndexNameConstants.BLOG_INDEX_NAME:
                 return ResponseConverter.convertToBlogList(response);
-            case "shop_index":
+            case EsIndexNameConstants.SHOP_INDEX_NAME:
                 return ResponseConverter.convertToShopList(response);
-            case "user_index":
+            case EsIndexNameConstants.USER_INDEX_NAME:
                 return ResponseConverter.convertToUserList(response);
-            case "voucher_index":
+            case EsIndexNameConstants.VOUCHER_INDEX_NAME:
                 return ResponseConverter.convertToVoucherList(response);
             default:
                 // 返回原始命中数据
@@ -142,64 +138,6 @@ public class EsTool {
                 return result;
         }
     }
-    /**
-     * 根据索引名称获取对应的ID生成器
-     */
-    public static Function<Object, String> getIdGeneratorByIndex(String indexName) {
-        switch (indexName) {
-            case "shop_index":
-                return data -> {
-                    if (data instanceof ShopDTO) {
-                        return ((ShopDTO) data).getId().toString();
-                    } else if (data instanceof ShopDoc) {
-                        return ((ShopDoc) data).getId().toString();
-                    } else if (data instanceof Map) {
-                        // 处理 LinkedHashMap 等 Map 类型
-                        Object id = ((Map<?, ?>) data).get("id");
-                        if (id != null) {
-                            return id.toString();
-                        } else {
-                            throw new IllegalArgumentException("Map中未找到id字段");
-                        }
-                    }
-                    throw new IllegalArgumentException("不支持的店铺数据类型: " + (data != null ? data.getClass().getName() : "null"));
-                };
-
-            case "blog_index":
-                return data -> {
-                    if (data instanceof Blog) {
-                        return ((Blog) data).getId().toString();
-                    } else if (data instanceof BlogDoc) {
-                        return ((BlogDoc) data).getId().toString();
-                    }
-                    throw new IllegalArgumentException("不支持的博客数据类型");
-                };
-
-            case "user_index":
-                return data -> {
-                    if (data instanceof User) {
-                        return ((User) data).getId().toString();
-                    } else if (data instanceof UserDoc) {
-                        return ((UserDoc) data).getId().toString();
-                    }
-                    throw new IllegalArgumentException("不支持的用庺数据类型");
-                };
-
-            case "voucher_index":
-                return data -> {
-                    if (data instanceof Voucher) {
-                        return ((Voucher) data).getId().toString();
-                    } else if (data instanceof VoucherDoc) {
-                        return ((VoucherDoc) data).getId().toString();
-                    }
-                    throw new IllegalArgumentException("不支持的代金券数据类型");
-                };
-
-            default:
-                return Object::toString;
-        }
-    }
-
     /**
      * 批量转换LinkedHashMap列表到指定类型
      */

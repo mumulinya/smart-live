@@ -1,5 +1,6 @@
 package com.smartLive.search.controller;
 
+import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.follow.api.RemoteFollowService;
@@ -69,7 +70,7 @@ public class SearchController {
      */
     @GetMapping("/blogs")
     public ResponseEntity<Object> searchBlogs( FilterSearchRequest request) {
-        return search("blog_index", request.getKeyword(), request.getPage(), request.getSize());
+        return search(EsIndexNameConstants.BLOG_INDEX_NAME, request.getKeyword(), request.getPage(), request.getSize());
     }
 
     /**
@@ -93,7 +94,7 @@ public class SearchController {
      */
     @GetMapping("/users")
     public ResponseEntity<Object> searchUsers( FilterSearchRequest request) {
-        return search("user_index", request.getKeyword(), request.getPage(), request.getSize());
+        return search(EsIndexNameConstants.USER_INDEX_NAME, request.getKeyword(), request.getPage(), request.getSize());
     }
 
     /**
@@ -101,7 +102,7 @@ public class SearchController {
      */
     @PostMapping("/vouchers")
     public ResponseEntity<Object> searchVouchers(@RequestBody FilterSearchRequest request) {
-            return searchWithFilter("voucher_index", request);
+            return searchWithFilter(EsIndexNameConstants.VOUCHER_INDEX_NAME, request);
     }
 
     /**
@@ -128,21 +129,7 @@ public class SearchController {
     @PostMapping("/history")
     public Result addSearchHistory(@RequestBody SearchHistoryDTO dto) {
         try {
-            String key = RedisConstants.SEARCH_HISTORY_KEY + dto.getUserId();
-            double score = System.currentTimeMillis();
-
-            // 先删除已存在的相同关键词
-            stringRedisTemplate.opsForZSet().remove(key, dto.getKeyword());
-
-            // 再添加新的记录
-            stringRedisTemplate.opsForZSet().add(key, dto.getKeyword(), score);
-
-            // 保持最近10条
-            stringRedisTemplate.opsForZSet().removeRange(key, 0, -11);
-
-            // 设置30天过期
-            stringRedisTemplate.expire(key, 30, TimeUnit.DAYS);
-
+            searchService.insertSearchHistory(dto.getUserId(), dto.getKeyword());
             return Result.ok();
         } catch (Exception e) {
             log.error("添加搜索历史失败, userId: {}, keyword: {}",

@@ -1,5 +1,6 @@
 package com.smartLive.search.service.Impl;
 
+import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.search.domain.req.FilterSearchRequest;
 import com.smartLive.search.service.ISearchService;
@@ -19,6 +20,7 @@ import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.xcontent.XContentType;
@@ -41,59 +43,6 @@ public class SearchServiceImpl implements ISearchService {
     private RestHighLevelClient client;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-
-    // ==================== 插入数据方法 ====================
-
-    /**
-     * 插入或更新文档
-     */
-    @Override
-    public boolean insertOrUpdate(String indexName, String id, Object data) throws IOException {
-        IndexRequest request = new IndexRequest(indexName);
-        request.id(id);
-
-        Map<String, Object> jsonMap = EsTool.convertToJsonMap(data);
-        request.source(jsonMap, XContentType.JSON);
-        log.info("插入数据：{}", jsonMap);
-        IndexResponse response = client.index(request, RequestOptions.DEFAULT);
-        return response.status().getStatus() == 201 || response.status().getStatus() == 200;
-    }
-
-    /**
-     * 批量插入
-     */
-    @Override
-    public boolean batchInsert(String indexName, List<? extends Object> dataList,
-                               Function<Object, String> idGenerator) throws IOException {
-        log.info("批量插入数据");
-        BulkRequest bulkRequest = new BulkRequest();
-//         dataList = ConvertToDocListTool.convertToDocList(indexName, (List<Object>) dataList);
-        for (Object data : dataList) {
-            log.info("数据：{}", data);
-            String id = idGenerator.apply(data);
-            IndexRequest request = new IndexRequest(indexName).id(id);
-            Map<String, Object> jsonMap = EsTool.convertToJsonMap(data);
-            log.info("插入数据：{}", jsonMap);
-            request.source(jsonMap, XContentType.JSON);
-            bulkRequest.add(request);
-        }
-
-        BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
-        log.info("批量插入结果：{}", response.status().getStatus());
-        return !response.hasFailures();
-    }
-
-    /**
-     * 删除文档
-     */
-    @Override
-    public boolean delete(String indexName, String id) throws IOException {
-        DeleteRequest request = new DeleteRequest(indexName, id);
-        DeleteResponse response = client.delete(request, RequestOptions.DEFAULT);
-        return response.status().getStatus() == 200;
-    }
-
-
     /**
      * 简单搜索
      */
@@ -113,6 +62,8 @@ public class SearchServiceImpl implements ISearchService {
         sourceBuilder.size(size);
 
         request.source(sourceBuilder);
+        //设置高亮
+        request.source().highlighter(createHighlightBuilder(indexName));
         return client.search(request, RequestOptions.DEFAULT);
     }
 
@@ -121,7 +72,7 @@ public class SearchServiceImpl implements ISearchService {
      */
     @Override
     public SearchResponse searchShops(FilterSearchRequest searchRequest) throws IOException {
-        SearchRequest request = new SearchRequest("shop_index");
+        SearchRequest request = new SearchRequest(EsIndexNameConstants.SHOP_INDEX_NAME);
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
@@ -132,7 +83,6 @@ public class SearchServiceImpl implements ISearchService {
                   .point(searchRequest.getLat(), searchRequest.getLon())
                   .distance(searchRequest.getDistance()));
       }
-
         // 关键词搜索
         if (searchRequest.getKeyword() != null && !searchRequest.getKeyword().trim().isEmpty()) {
             boolQuery.must(QueryBuilders.multiMatchQuery(searchRequest.getKeyword(), "name", "area", "address"));
@@ -162,11 +112,12 @@ public class SearchServiceImpl implements ISearchService {
                    .order(SortOrder.ASC)
                    .unit(DistanceUnit.METERS));
        }
-
+        //进行分页
         sourceBuilder.from((searchRequest.getPage() - 1) * searchRequest.getSize());
         sourceBuilder.size(searchRequest.getSize());
-
         request.source(sourceBuilder);
+        //设置高亮
+        request.source().highlighter(createHighlightBuilder(EsIndexNameConstants.SHOP_INDEX_NAME));
         return client.search(request, RequestOptions.DEFAULT);
     }
 
@@ -195,13 +146,27 @@ public class SearchServiceImpl implements ISearchService {
                 }
             }
         }
-
         sourceBuilder.query(boolQuery);
         sourceBuilder.from((page - 1) * size);
         sourceBuilder.size(size);
-
         request.source(sourceBuilder);
+        //设置高亮
+        request.source().highlighter(createHighlightBuilder(indexName));
         return client.search(request, RequestOptions.DEFAULT);
+    }
+    /**
+     * 创建高亮构建器
+     */
+    public HighlightBuilder createHighlightBuilder(String indexName){
+        //设置高亮
+        HighlightBuilder highlightBuilder=new HighlightBuilder();
+        String[] fields = EsTool.getDefaultSearchFields(indexName);
+        for (String field : fields) {
+            highlightBuilder.field(field);
+            highlightBuilder.preTags("<span  style='color: red; font-size: inherit;'>");
+            highlightBuilder.postTags("</span >");
+        }
+        return highlightBuilder;
     }
     /**
      * 插入用户搜索历史
@@ -225,6 +190,7 @@ public class SearchServiceImpl implements ISearchService {
     /**
      * 记录搜索关键字
      */
+    @Override
     public Boolean recordSearch(String keyword){
         String key = RedisConstants.SEARCH_HOT_KEYWORDS;
         stringRedisTemplate.opsForZSet().incrementScore(key, keyword, 1);

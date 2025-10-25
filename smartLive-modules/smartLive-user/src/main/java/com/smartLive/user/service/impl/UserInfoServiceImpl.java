@@ -10,6 +10,7 @@ import com.smartLive.user.mapper.UserInfoMapper;
 import com.smartLive.user.service.IUserInfoService;
 import com.smartLive.user.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +22,12 @@ import java.util.Date;
 @Service
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> implements IUserInfoService {
 
-    @Autowired
     private IUserService userService;
+
+    //使用懒加载，避免循环引用
+    public UserInfoServiceImpl(@Lazy IUserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public UserInfo getByUserId(Long userId) {

@@ -9,26 +9,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 public interface ISearchService {
-
-    // ==================== 插入数据方法 ====================
-
-    /**
-     * 插入或更新文档
-     */
-    boolean insertOrUpdate(String indexName, String id, Object data) throws IOException;
-
-    /**
-     * 批量插入
-     */
-    boolean batchInsert(String indexName, List<? extends Object> dataList,
-                        Function<Object, String> idGenerator) throws IOException;
-
-    /**
-     * 删除文档
-     */
-    boolean delete(String indexName, String id) throws IOException;
-
-
     /**
      * 简单搜索
      */
