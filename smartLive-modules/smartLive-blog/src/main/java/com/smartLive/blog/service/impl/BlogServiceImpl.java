@@ -104,7 +104,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public int updateBlog(Blog blog)
     {
         blog.setUpdateTime(DateUtils.getNowDate());
-        return blogMapper.updateBlog(blog);
+        int i = blogMapper.updateBlog(blog);
+        if(i > 0){
+            //更新es数据
+            publish(new String[]{blog.getId().toString()});
+        }
+        return i;
     }
 
     /**

@@ -159,6 +159,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             seckillVoucher.setEndTime(voucher.getEndTime());
             seckillVoucher.setUpdateTime(DateUtils.getNowDate());
             seckillVoucherService.updateById(seckillVoucher);
+            //更新es数据
+            publish(new String[]{voucher.getId().toString()});
         }
         return i;
     }

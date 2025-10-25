@@ -8,6 +8,8 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.mapper.UserInfoMapper;
 import com.smartLive.user.service.IUserInfoService;
+import com.smartLive.user.service.IUserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,9 @@ import java.util.Date;
  */
 @Service
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> implements IUserInfoService {
+
+    @Autowired
+    private IUserService userService;
 
     @Override
     public UserInfo getByUserId(Long userId) {
@@ -60,7 +65,12 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
             updateWrapper.set("level", userInfo.getLevel());
         }
         updateWrapper.set("update_time", new Date());
-        return update(updateWrapper);
+        boolean update = update(updateWrapper);
+        if (update){
+            //更新用户信息成功，更新es数据
+           userService.publish(new String[]{userId.toString()});
+        }
+        return update;
     }
 
     @Override

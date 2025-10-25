@@ -109,8 +109,14 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Override
     public int updateShop(Shop shop) {
         shop.setUpdateTime(DateUtils.getNowDate());
-        flashShopRedisCache(shop.getId());
-        return shopMapper.updateShop(shop);
+        int i = shopMapper.updateShop(shop);
+        if(i > 0){
+            Long shopId = shop.getId();
+            flashShopRedisCache(shopId);
+            //更新es数据
+            publish(new String[]{shopId.toString()});
+        }
+        return i;
     }
 
     /**
@@ -177,26 +183,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             return Result.fail("店铺不存在");
         }
         return Result.ok(shop);
-    }
-
-    /**
-     * 更新商铺数据
-     *
-     * @param shop 商铺数据
-     * @return 商铺id
-     */
-    @Override
-    @Transactional
-    public Result updateShopById(Shop shop) {
-        Long id = shop.getId();
-        if (id == null) {
-            return Result.fail("店铺id不能为空");
-        }
-        // 写入数据库
-        updateById(shop);
-        // 删除缓存
-        flashShopRedisCache(id);
-        return null;
     }
 
 

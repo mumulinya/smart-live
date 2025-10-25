@@ -72,14 +72,6 @@ public interface IShopService extends IService<Shop> {
     Result queryById(Long id);
 
     /**
-     * 更新商铺数据
-     *
-     * @param shop 商铺数据
-     * @return 商铺id
-     */
-    Result updateShopById(Shop shop);
-
-    /**
      * 根据类型分页查询商铺信息
      *
      * @param typeId  商铺类型
