@@ -75,7 +75,7 @@ public class BlogController extends BaseController
      */
     @GetMapping("/flushCache")
     public AjaxResult flushCache() {
-        return success(blogService.flushCache());
+        return success(blogService.flashCache());
     }
 
     /**

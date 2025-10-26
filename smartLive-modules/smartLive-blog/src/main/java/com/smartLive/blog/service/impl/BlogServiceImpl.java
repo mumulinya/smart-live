@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -91,7 +92,14 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public int insertBlog(Blog blog)
     {
         blog.setCreateTime(DateUtils.getNowDate());
-        return blogMapper.insertBlog(blog);
+        int i = blogMapper.insertBlog(blog);
+        if(i > 0){
+            //添加es数据
+            publish(new String[]{blog.getId().toString()});
+            //更新redis缓存
+            stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
+        }
+        return i;
     }
 
     /**
@@ -132,6 +140,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
             //发起rabbitMq信息删除
             rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
+            //更新redis缓存
+            flashRedisBlogCache(id);
+            flashRedisBlogListCache();
         }
 //        }
         return 1;
@@ -214,27 +225,27 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public Result queryHotBlog(Integer current) {
         //从redis查询热门博客
         String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
-        String blogJson = stringRedisTemplate.opsForList().leftPop(key);
-        if (blogJson != null) {
-            //存在
-            List<Blog> blogs = JSONUtil.toList(blogJson, Blog.class);
-            return Result.ok(blogs);
+        List<Blog> blogList = getBlogListFromRedis(key);
+        if (blogList != null) {
+            return Result.ok(blogList);
         }
-
         // 根据用户查询
         Page<Blog> page = query()
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         // 获取当前页数据
-        List<Blog> records = page.getRecords();
-        // 查询blog有关的用户信息
-        records.forEach(blog ->{
-            queryBlogUser(blog);
-            isBlogLiked(blog);
-        });
-        //把查询结果写入redis
-        stringRedisTemplate.opsForList().leftPush(key, JSONUtil.toJsonStr(records));
-        return Result.ok(records);
+         blogList = page.getRecords();
+        if(blogList!= null&&blogList.size()>0){
+            // 查询blog有关的用户信息
+            blogList.forEach(blog ->{
+                queryBlogUser(blog);
+                isBlogLiked(blog);
+            });
+            //把查询结果写入redis
+//            stringRedisTemplate.opsForList().leftPush(key, JSONUtil.toJsonStr(blogList));
+            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
+        }
+        return Result.ok(blogList);
     }
 
     /**
@@ -288,7 +299,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             }
         }
         //清空缓存
-       flashRedisCache( id);
+        flashRedisBlogCache( id);
         return Result.ok("点赞成功");
     }
 
@@ -358,6 +369,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         BlogDTO blogDTO = BeanUtil.copyProperties(blog, BlogDTO.class);
         //发送rabbitMq消息 推送笔记id给粉丝
         rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME, MqConstants.BLOG_FEED_ROUTING, blogDTO);
+        //添加es数据
+        publish(new String[]{blog.getId().toString()});
+        //更新redis缓存
+        stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
         //返回id
         return Result.ok(blog.getId());
     }
@@ -423,7 +438,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public R<Boolean> updateCommentById(Long blogId) {
         boolean update = update().setSql("comments = comments + 1").eq("id", blogId).update();
         //清空缓存
-        flashRedisCache(blogId);
+        flashRedisBlogCache(blogId);
         return update ? R.ok() : R.fail();
     }
 
@@ -498,8 +513,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public String flushCache() {
+    public String flashCache() {
         stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY);
+        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_KEY);
+        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_TYPE_KEY);
         return null;
     }
 
@@ -512,18 +529,47 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Result queryBlogByCategory(Long typeId, Integer current) {
+        //从redis查询分类博客
+        String key= RedisConstants.CACHE_BLOG_TYPE_KEY + typeId+":"+ current;
+        List<Blog> blogList = getBlogListFromRedis(key);
+        if (blogList != null) {
+            return Result.ok(blogList);
+        }
         Page<Blog> page = query()
                 .eq("type_id", typeId)
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        List<Blog> blogList = page.getRecords();
-        blogList.forEach(blog ->{
-            //查询blog有关的用户信息
-            queryBlogUser(blog);
-            //查询blog是否被点赞
-            isBlogLiked(blog);
-        });
+        // 获取当前页数据
+        blogList = page.getRecords();
+        if(blogList!= null&&blogList.size()>0){
+            // 查询blog有关的用户信息
+            blogList.forEach(blog ->{
+                queryBlogUser(blog);
+                isBlogLiked(blog);
+            });
+            //把查询结果写入redis
+            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
+        }
         return Result.ok(blogList);
+    }
+    /**
+     * 从redis中获取博客列表
+     *
+     * @param key
+     * @return
+     */
+    private List<Blog> getBlogListFromRedis(String key) {
+        String blogJson = stringRedisTemplate.opsForValue().get(key);
+        if (blogJson != null) {
+            //存在
+            List<Blog> blogs = JSONUtil.toList(blogJson, Blog.class);
+            //获取用户是否点赞
+            blogs.forEach(blog ->{
+                isBlogLiked(blog);
+            });
+            return blogs;
+        }
+        return null;
     }
     /**
      * 全部发布博客
@@ -592,14 +638,21 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 清空缓存
+     * 清空当前博客缓存
      *
      * @param blogId
      */
-    private void flashRedisCache(Long blogId) {
-        ///清空缓存
-        stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY);
+    private void flashRedisBlogCache(Long blogId) {
         //清空缓存
         stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_KEY+blogId);
+    }
+    /**
+     * 清空博客列表缓存
+     *
+     * @param
+     */
+    private void flashRedisBlogListCache() {
+        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_TYPE_KEY);
+        stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY);
     }
 }

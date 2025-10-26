@@ -153,7 +153,7 @@ public interface IBlogService extends IService<Blog>
      * 刷新缓存
      * @return
      */
-    String flushCache();
+    String flashCache();
 
     /**
      * 查询分类下的博客

@@ -24,6 +24,16 @@ spring:
     # 环境配置
     active: dev
   cloud:
+    sentinel:
+        enabled: true
+        transport:
+          dashboard: localhost:8718  #sentinel的控制台地址
+          port: 8720
+        http-method-specify: true #是否设置请求方式
+        eager: true
+        filter:
+          enabled: true
+          order: -100
     nacos:
       discovery:
         # 服务注册地址
