@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 public class ResponseConverter {
+
+    private ResponseConverter() {
+    }
     
     /**
      * 将ES搜索结果转换为博客列表

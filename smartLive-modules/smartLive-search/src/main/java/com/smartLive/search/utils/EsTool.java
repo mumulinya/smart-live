@@ -16,6 +16,11 @@ public class EsTool {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+
+    private EsTool() {
+
+    }
+
     /**
      * 将数据对象转换为JSON格式的Map
      */

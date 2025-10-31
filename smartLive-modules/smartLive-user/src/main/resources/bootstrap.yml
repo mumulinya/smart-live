@@ -1,6 +1,13 @@
 # Tomcat
 server:
-  port: 9209
+  port: 9201
+
+#arthas
+arthas:
+  tunnel-server: ws://127.0.0.1:7777/ws
+  app-name: ${spring.application.name}
+  http-port: 9301
+  telnet-port: 9401
 
 # Spring
 spring: 
@@ -13,6 +20,7 @@ spring:
     host: 192.168.182.20
     virtual-host: smart-live
     port: 5672
+
   profiles:
     # 环境配置
     active: dev

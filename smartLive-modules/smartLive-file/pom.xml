@@ -59,7 +59,11 @@
             <artifactId>minio</artifactId>
             <version>${minio.version}</version>
         </dependency>
-        
+        <!--arthas-->
+        <dependency>
+            <groupId>com.taobao.arthas</groupId>
+            <artifactId>arthas-spring-boot-starter</artifactId>
+        </dependency>
         <!-- smartLive Api System -->
         <dependency>
             <groupId>com.smartLive</groupId>

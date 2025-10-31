@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.marketing.service.IVoucherService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +28,14 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
 
     @Autowired
     StringRedisTemplate stringRedisTemplate;
-    @Autowired
     IVoucherService voucherService;
 
     @Autowired
     RabbitTemplate rabbitTemplate;
+
+    public SeckillVoucherServiceImpl(@Lazy IVoucherService voucherService){
+        this.voucherService=voucherService;
+    }
 
     /**
      * 修改秒杀优惠券信息

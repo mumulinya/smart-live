@@ -1,7 +1,12 @@
 # Tomcat
 server:
-  port: 9500
-
+  port: 9204
+#arthas
+arthas:
+  tunnel-server: ws://127.0.0.1:7777/ws
+  app-name: ${spring.application.name}
+  http-port: 9304
+  telnet-port: 9404
 # Spring
 spring:
   redis:
