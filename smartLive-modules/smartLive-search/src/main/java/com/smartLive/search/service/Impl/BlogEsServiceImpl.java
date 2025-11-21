@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 @Service
@@ -26,6 +27,9 @@ public class BlogEsServiceImpl implements IBlogEsService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ExecutorService executorService;
 
     /**
      * 博客数据校验（特有的校验逻辑）
@@ -64,24 +68,29 @@ public class BlogEsServiceImpl implements IBlogEsService {
     }
 
     @Override
-    public boolean batchInsert(String indexName, List<BlogDoc> dataList, Function<BlogDoc, String> idGenerator) throws IOException {
+    public boolean batchInsert(String indexName, List<BlogDoc> dataList, Function<BlogDoc, String> idGenerator){
         if (dataList.isEmpty()) {
             log.warn("博客批量插入数据为空：index={}", indexName);
+            return false;
+        }
+        try {
+            BulkRequest bulkRequest = new BulkRequest();
+            for (BlogDoc data : dataList) {
+                // 1. 逐条校验
+                validateBlog(data);
+                // 2. 生成ID并添加到批量请求
+                String id = idGenerator.apply(data);
+                String json = objectMapper.writeValueAsString(data);
+                bulkRequest.add(new IndexRequest(indexName).id(id).source(json, XContentType.JSON));
+            }
+            // 3. 执行批量操作
+            esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+            log.info("线程{}博客批量插入成功：index={}, 数量={}",Thread.currentThread().getName(),indexName, dataList.size());
             return true;
+        }catch (Exception e){
+            log.error("线程{}博客批量插入失败：index={}, 数量={}",Thread.currentThread().getName(),indexName, dataList.size(),e);
+            return false;
         }
-        BulkRequest bulkRequest = new BulkRequest();
-        for (BlogDoc data : dataList) {
-            // 1. 逐条校验
-            validateBlog(data);
-            // 2. 生成ID并添加到批量请求
-            String id = idGenerator.apply(data);
-            String json = objectMapper.writeValueAsString(data);
-            bulkRequest.add(new IndexRequest(indexName).id(id).source(json, XContentType.JSON));
-        }
-        // 3. 执行批量操作
-        esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-        log.info("博客批量插入成功：index={}, 数量={}", indexName, dataList.size());
-        return true;
     }
 
     @Override

@@ -26,11 +26,11 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +52,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private ExecutorService executorService;
 
     @Autowired
     private RemoteAppUserService remoteAppUserService;
@@ -129,22 +132,34 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public int deleteBlogByIds(Long[] ids)
     {
-        //        int i = shopMapper.deleteShopByIds(ids);
-//        //删除es数据
-//        if (i > 0) {
+        int i = blogMapper.deleteBlogByIds(ids);
+        //删除es数据
+        if (i > 0) {
+        CountDownLatch latch=new CountDownLatch(ids.length);
         for (Long id : ids) {
-            log.info("删除es数据：{}", id);
-            EsInsertRequest esInsertRequest = new EsInsertRequest();
-            esInsertRequest.setId(id);
-            esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-            esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
-            //发起rabbitMq信息删除
-            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
-            //更新redis缓存
-            flashRedisBlogCache(id);
-            flashRedisBlogListCache();
+            executorService.submit(()->{
+               log.info("删除es数据：{}", id);
+               EsInsertRequest esInsertRequest = new EsInsertRequest();
+               esInsertRequest.setId(id);
+               esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+               esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
+               //发起rabbitMq信息删除
+               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
+               //更新redis缓存
+               flashRedisBlogCache(id);
+               latch.countDown();
+           });
         }
-//        }
+        try {
+            //等等所有任务完成
+            log.info("等待所有任务完成");
+            latch.await();
+            log.info("所有任务完成");
+            flashRedisBlogListCache();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        }
         return 1;
     }
 
@@ -579,33 +594,76 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public String allPublish() {
         int page = PageConstants.PAGE_NUMBER;
-        int pageSize = PageConstants.ES_PAGE_SIZE; // 每页50条
+        int pageSize =5; // 每页50条
         while (true) {
             // 分页查询
             List<Blog> blogs = query()
                     .page(new Page<>(page, pageSize))
                     .getRecords();
-
             if (blogs.isEmpty()) {
                 break;
             }
-            blogs.forEach(blog ->{
-                //查询blog有关的用户信息
-                queryBlogUser(blog);
-                //查询blog是否被点赞
-                isBlogLiked(blog);
+            //使用多线程批量插入
+            int finalPage = page;
+            executorService.execute(() -> {
+                //查询userId列表
+                List<Long> userIds = blogs.stream()
+                        .map(Blog::getUserId)
+                        .filter(Objects::nonNull) // 防止有 null 的 userId 导致报错
+                        .distinct()               // 去重，避免重复查询同一个 ID
+                        .collect(Collectors.toList());
+
+                // 定义结果 Map，默认为空
+                Map<Long, User> userMap = Collections.emptyMap();
+
+                // 2. 只有当 ID 列表不为空时才发起远程调用，节省资源
+                if (!userIds.isEmpty()) {
+                    // 批量查询用户信息
+                    R<List<User>> response = remoteAppUserService.getUserList(userIds);
+                    // 3. 安全获取 List 数据 (防止远程调用返回 null 或者 data 为 null)
+                    List<User> userList = (response != null && response.getData() != null)
+                            ? response.getData()
+                            : Collections.emptyList();
+                    // 4. 将 List<User> 转换为 Map<Long, User>
+                    userMap = userList.stream().collect(Collectors.toMap(
+                            User::getId,               // Key: 用户 ID
+                            Function.identity(),       // Value: User 对象本身
+                            (v1, v2) -> v1             // MergeFunction: 如果远程服务返回了重复 ID 的数据，取第一个，防止报错
+                    ));
+                }
+                Map<Long, User> finalUserMap = userMap;
+                blogs.forEach(blog ->{
+                    //查询blog有关的用户信息
+                    User user = finalUserMap.get(blog.getUserId());
+                    blog.setName(user.getNickName());
+                    blog.setIcon(user.getIcon());
+                });
+                // 创建请求并发送
+                EsBatchInsertRequest request = new EsBatchInsertRequest();
+                request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+                request.setData(blogs);
+                request.setDataType(EsDataTypeConstants.BLOG);
+                rabbitTemplate.convertAndSend(
+                        MqConstants.ES_EXCHANGE,
+                        MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
+                        request
+                );
+                log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, blogs.size());
             });
-            // 创建请求并发送
-            EsBatchInsertRequest request = new EsBatchInsertRequest();
-            request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-            request.setData(blogs);
-            request.setDataType(EsDataTypeConstants.BLOG);
-            rabbitTemplate.convertAndSend(
-                    MqConstants.ES_EXCHANGE,
-                    MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
-                    request
-            );
-            log.info("发送第 {} 页，{} 条数据", page, blogs.size());
+//            blogs.forEach(blog ->{
+//                //查询blog有关的用户信息
+//                queryBlogUser(blog);
+//            });
+//            // 创建请求并发送
+//            EsBatchInsertRequest request = new EsBatchInsertRequest();
+//            request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+//            request.setData(blogs);
+//            request.setDataType(EsDataTypeConstants.BLOG);
+//            rabbitTemplate.convertAndSend(
+//                    MqConstants.ES_EXCHANGE,
+//                    MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
+//                    request
+//            );
             page++;
         }
         return "数据发布完成";
@@ -621,18 +679,20 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public String publish(String[] ids) {
         for (String id : ids) {
-            Blog blog = query().eq("id", id).one();
-            if(blog == null){
-                continue;
-            }
-            queryBlogUser( blog);
-            EsInsertRequest esInsertRequest = new EsInsertRequest();
-            esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-            esInsertRequest.setData(blog);
-            esInsertRequest.setId(blog.getId());
-            esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
-            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BLOG_INSERT, esInsertRequest);
-
+          executorService.submit(() -> {
+              log.info("线程{}，开始发布博客{}",Thread.currentThread().getName(),id);
+              Blog blog = query().eq("id", id).one();
+              if(blog == null){
+                  return;
+              }
+              queryBlogUser(blog);
+              EsInsertRequest esInsertRequest = new EsInsertRequest();
+              esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+              esInsertRequest.setData(blog);
+              esInsertRequest.setId(blog.getId());
+              esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
+              rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BLOG_INSERT, esInsertRequest);
+          });
         }
         return "发布成功";
     }

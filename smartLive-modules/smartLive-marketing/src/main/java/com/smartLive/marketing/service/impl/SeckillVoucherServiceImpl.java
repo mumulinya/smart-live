@@ -1,5 +1,6 @@
 package com.smartLive.marketing.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.R;
@@ -14,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * <p>
@@ -76,5 +79,17 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
             voucherService.publish(new String[]{voucherId.toString()});
         }
         return R.ok( update);
+    }
+
+    /**
+     * 根据优惠券id列表查询秒杀券
+     *
+     * @param voucherIds
+     * @return
+     */
+    @Override
+    public List<SeckillVoucher> listSeckillVoucher(List<Long> voucherIds) {
+        List<SeckillVoucher> list = list(new QueryWrapper<SeckillVoucher>().in("voucher_id", voucherIds));
+        return list;
     }
 }

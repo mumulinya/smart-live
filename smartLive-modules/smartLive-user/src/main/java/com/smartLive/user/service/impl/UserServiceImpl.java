@@ -3,6 +3,7 @@ package com.smartLive.user.service.impl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -69,6 +70,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
+    private ExecutorService executorService;
+    @Autowired
     private RemoteFollowService remoteFollowService;
 
 
@@ -121,21 +124,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setUpdateTime(DateUtils.getNowDate());
         int i = userMapper.updateUser(user);
         if(i>0){
-            String tokenKey = UserContextHolder.getUser().getToken();
-            User userById = getById(user.getId());
-            UserDTO userDTO= BeanUtil.copyProperties(userById, UserDTO.class);
-            //存储
-            Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
-                    CopyOptions.create()
-                            //忽略空值
-                            .setIgnoreNullValue(true)
-                            //把userDto字段值转为字符串
-                            .setFieldValueEditor((fieldName, fieldValue) -> fieldValue == null ? "" : fieldValue.toString()));
-            //更新之前的数据
-            stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
-            //设置token有效期
-            stringRedisTemplate.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
-            UserContextHolder.removeUser();
+            com.smartLive.common.core.domain.UserDTO dto = UserContextHolder.getUser();
+            //更新用户缓存信息
+            if(dto!=null){
+                String tokenKey = dto.getToken();
+                User userById = getById(user.getId());
+                UserDTO userDTO= BeanUtil.copyProperties(userById, UserDTO.class);
+                //存储
+                Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
+                        CopyOptions.create()
+                                //忽略空值
+                                .setIgnoreNullValue(true)
+                                //把userDto字段值转为字符串
+                                .setFieldValueEditor((fieldName, fieldValue) -> fieldValue == null ? "" : fieldValue.toString()));
+                //更新之前的数据
+                stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
+                //设置token有效期
+                stringRedisTemplate.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+                UserContextHolder.removeUser();
+            }
             //更新es数据
             publish(new String[]{user.getId().toString()});
         }
@@ -155,13 +162,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 //        //删除es数据
 //        if (i > 0) {
         for (Long id : ids) {
-            log.info("删除es数据：{}", id);
-            EsInsertRequest esInsertRequest = new EsInsertRequest();
-            esInsertRequest.setId(id);
-            esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-            esInsertRequest.setDataType(EsDataTypeConstants.USER);
-            //发起rabbitMq信息删除
-            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
+            executorService.submit(()->{
+                log.info("线程：{}开始删除es数据id：{}",Thread.currentThread().getName(),id);
+                EsInsertRequest esInsertRequest = new EsInsertRequest();
+                esInsertRequest.setId(id);
+                esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+                esInsertRequest.setDataType(EsDataTypeConstants.USER);
+                //发起rabbitMq信息删除
+                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
+            });
         }
 //        }
         return 1;
@@ -277,6 +286,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             //获取共同关注数
              commonFollowCount = (Integer) remoteFollowService.getCommonFollowCount(userId,currentUserId).getData();
         }
+        //使用线程池＋future来实现
         //获取博客数
         Integer blogCount = remoteBlogService.getBlogCount(userId).getData();
         //获取点赞数
@@ -317,22 +327,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             if (users.isEmpty()) {
                 break;
             }
-            users.forEach(
-                    user -> {
-                        queryUserInfo(user);
-                    }
-            );
-            // 创建请求并发送
-            EsBatchInsertRequest request = new EsBatchInsertRequest();
-            request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-            request.setData(users);
-            request.setDataType(EsDataTypeConstants.USER);
-            rabbitTemplate.convertAndSend(
-                    MqConstants.ES_EXCHANGE,
-                    MqConstants.ES_ROUTING_USER_BATCH_INSERT,
-                    request
-            );
-            log.info("发送第 {} 页，{} 条数据", page, users.size());
+            int finalPage = page;
+
+            executorService.submit(()->{
+                log.info("线程：{}开始处理第 {} 页数据",Thread.currentThread().getName(), finalPage);
+                List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
+                List<UserInfo> userInfos = userInfoService.listByUserIds(userIds);
+                Map<Long,UserInfo> userInfoMap= userInfos.stream().collect(Collectors.toMap(UserInfo::getUserId, userInfo -> userInfo));
+               users.forEach(
+                       user -> {
+                           UserInfo userInfo = userInfoMap.get(user.getId());
+                           if(userInfo != null){
+                               user.setIntroduce(userInfo.getIntroduce());
+                               user.setCity(userInfo.getCity());
+                           }
+//                           queryUserInfo(user);
+                       }
+               );
+               // 创建请求并发送
+               EsBatchInsertRequest request = new EsBatchInsertRequest();
+               request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+               request.setData(users);
+               request.setDataType(EsDataTypeConstants.USER);
+               rabbitTemplate.convertAndSend(
+                       MqConstants.ES_EXCHANGE,
+                       MqConstants.ES_ROUTING_USER_BATCH_INSERT,
+                       request
+               );
+               log.info("发送第 {} 页，{} 条数据", finalPage, users.size());
+           });
             page++;
         }
         return "数据发布完成";
@@ -348,18 +371,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public String publish(String[] ids) {
         for (String id : ids) {
-            User user = query().eq("id", id).one();
-            if (user== null){
-                continue;
-            }
-            queryUserInfo(user);
-            EsInsertRequest esInsertRequest = new EsInsertRequest();
-            esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-            esInsertRequest.setData(user);
-            esInsertRequest.setId(user.getId());
-            esInsertRequest.setDataType(EsDataTypeConstants.USER);
-            rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
-
+            executorService.submit(()->{
+                log.info("线程：{}发布用户id：{}",Thread.currentThread().getName(), id);
+                User user = query().eq("id", id).one();
+                if (user== null){
+                    return;
+                }
+                queryUserInfo(user);
+                EsInsertRequest esInsertRequest = new EsInsertRequest();
+                esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+                esInsertRequest.setData(user);
+                esInsertRequest.setId(user.getId());
+                esInsertRequest.setDataType(EsDataTypeConstants.USER);
+                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
+            });
         }
         return "发布成功";
     }

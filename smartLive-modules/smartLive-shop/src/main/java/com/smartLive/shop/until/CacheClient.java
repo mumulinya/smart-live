@@ -111,7 +111,8 @@ public class CacheClient {
 
                 }finally {
                     //释放锁
-                    unLock(lockKey);                    }
+                    unLock(lockKey);
+                }
             });
         }
         //返回过期的数据
@@ -119,6 +120,61 @@ public class CacheClient {
 
     }
 
+
+    /**
+     * 逻辑过期来解决缓存击穿+缓存穿透
+     * @param id
+     * @return
+     */
+    public <R,ID> R queryWithLogicalExpireAndPassThrough(String keyPrefix, ID id,Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit)  {
+        String key = keyPrefix + id;
+        //从缓存里获取商铺缓存
+        String json = stringRedisTemplate.opsForValue().get(key);
+        R r=null;
+        //判断是否存在
+        if(StrUtil.isNotBlank(json)){
+            //把json转换成对象
+            RedisData redisData = JSONUtil.toBean(json, RedisData.class);
+             r = JSONUtil.toBean((JSONObject) redisData.getData(), type);
+            //判断是否过期
+            if(redisData.getExpireTime().isAfter(LocalDateTime.now())){
+                //未过期，直接返回数据
+                return r;
+            }
+        }
+        //判断命中的是否是空值
+        if (json != null){
+            //空值，直接返回
+            return null;
+        }
+        //TODO 过期，缓存重建
+        //获取互斥锁
+        String lockKey = RedisConstants.LOCK_SHOP_KEY + id;
+        boolean isLock = tryLock(lockKey);
+        if (isLock){
+            //取锁成功，开启独立线程,进行缓存重建
+            CACHE_REBUILD_EXECUTOR.submit(() -> {
+                try {
+                    //查询数据库
+                    R r1 = dbFallback.apply(id);
+                    if(r1 == null){
+                        //防止缓存穿透,将空值存入redis
+                        stringRedisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+                    }else{
+                        //写入redis
+                        this.setWithLogicalExpire(key, r1,time, unit);
+                    }
+                }catch (Exception e){
+                    log.error(e.getMessage());
+                }finally {
+                    //释放锁
+                    unLock(lockKey);                    }
+            });
+        }
+        //返回过期的数据
+        return r;
+
+    }
 
     /**
      * 获取redis锁

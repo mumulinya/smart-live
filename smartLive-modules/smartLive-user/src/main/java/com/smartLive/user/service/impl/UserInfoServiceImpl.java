@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 用户信息Service实现类
@@ -151,5 +152,17 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         userInfo.setLevel(level);
         userInfo.setUpdateTime(new Date());
         return updateById(userInfo);
+    }
+
+    /**
+     * 根据用户ID列表查询用户信息列表
+     *
+     * @param userIds
+     */
+    @Override
+    public List<UserInfo> listByUserIds(List<Long> userIds) {
+        QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("user_id", userIds);
+        return list(queryWrapper);
     }
 }

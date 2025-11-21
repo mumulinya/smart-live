@@ -44,6 +44,4 @@ public interface RemoteShopService {
 
     @GetMapping("/shop/shopListByIds")
     R<List<ShopDTO>> getShopList(@RequestParam("shopIdList") List<Long> shopIdList);
-
-
 }
