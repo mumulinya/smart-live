@@ -1,0 +1,90 @@
+# SkyWalking 指标分析器默认配置文件
+# 适配 JVM、系统、HTTP 等基础指标解析
+rules:
+  # JVM 内存指标解析
+  - name: jvm_memory_usage
+    metricPrefix: jvm.memory
+    labels:
+      - name: region
+        value: "${label:region}"
+      - name: service
+        value: "${service_name}"
+    expression: "${metric_value}"
+    aggregations:
+      - SUM
+      - AVG
+      - MAX
+      - MIN
+
+  # JVM 线程指标解析
+  - name: jvm_thread_count
+    metricPrefix: jvm.threads
+    labels:
+      - name: state
+        value: "${label:state}"
+      - name: service
+        value: "${service_name}"
+    expression: "${metric_value}"
+    aggregations:
+      - SUM
+      - AVG
+
+  # 系统 CPU 使用率解析
+  - name: system_cpu_usage
+    metricPrefix: system.cpu
+    labels:
+      - name: service
+        value: "${service_name}"
+    expression: "${metric_value} * 100"  # 转换为百分比
+    aggregations:
+      - AVG
+      - MAX
+      - MIN
+
+  # 系统内存使用率解析
+  - name: system_memory_usage
+    metricPrefix: system.memory
+    labels:
+      - name: service
+        value: "${service_name}"
+    expression: "${metric_value} * 100"  # 转换为百分比
+    aggregations:
+      - AVG
+      - MAX
+      - MIN
+
+  # HTTP 请求指标解析
+  - name: http_request_count
+    metricPrefix: http.requests
+    labels:
+      - name: method
+        value: "${label:method}"
+      - name: status
+        value: "${label:status}"
+      - name: service
+        value: "${service_name}"
+    expression: "${metric_value}"
+    aggregations:
+      - SUM
+
+  # HTTP 请求延迟指标解析
+  - name: http_request_latency
+    metricPrefix: http.latency
+    labels:
+      - name: method
+        value: "${label:method}"
+      - name: service
+        value: "${service_name}"
+    expression: "${metric_value}"
+    unit: ms
+    aggregations:
+      - AVG
+      - MAX
+      - MIN
+
+# 指标保留策略（可选）
+retentionPolicies:
+  - metricName: "*"
+    duration: 7d  # 所有指标默认保留7天
+  - metricName: "http_request_latency"
+    duration: 30d  # 延迟指标保留30天
