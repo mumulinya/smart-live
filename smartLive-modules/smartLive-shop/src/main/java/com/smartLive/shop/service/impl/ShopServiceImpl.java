@@ -564,6 +564,27 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
+     * 获取商铺总数
+     *
+     * @return 商铺总数
+     */
+    @Override
+    public Integer getShopTotal() {
+        return query().count().intValue();
+    }
+
+    /**
+     * 获取最近商铺
+     *
+     * @param limit 获取数量
+     * @return 最近商铺
+     */
+    @Override
+    public List<Shop> getRecentShops(Integer limit) {
+        return query().orderByDesc("create_time").last("limit " + limit).list();
+    }
+
+    /**
      * 刷新商铺缓存
      *
      * @return 刷新结果

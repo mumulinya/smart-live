@@ -17,4 +17,10 @@ public interface RemoteOrderService {
      */
     @GetMapping("/voucher-order/getOrderCount/{userId}")
     R<Integer> getOrderCount( @PathVariable("userId")Long userId);
+    /**
+     * 获取订单总数
+     * @return
+     */
+    @GetMapping("/voucher-order/getOrderTotal")
+    R<Integer> getOrderTotal();
 }

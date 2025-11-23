@@ -156,6 +156,19 @@ public interface IShopService extends IService<Shop> {
      * @return 发布结果
      */
     String publish( String[] ids);
+    /**
+     * 获取商铺总数
+     *
+     * @return 商铺总数
+     */
+    Integer getShopTotal();
+    /**
+     * 获取最近商铺
+     *
+     * @param limit 获取数量
+     * @return 最近商铺
+     */
+    List<Shop> getRecentShops(Integer limit);
 }
 
 

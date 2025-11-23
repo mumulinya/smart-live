@@ -37,6 +37,15 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
 
                 return R.fail("查询点赞数失败");
             }
-        };
-    }
+            /**
+             * 获取博客总数
+             *
+             * @return
+             */
+            @Override
+            public R<Integer> getBlogTotal() {
+                return R.fail("查询博客总数失败");
+            }
+    };
+ }
 }

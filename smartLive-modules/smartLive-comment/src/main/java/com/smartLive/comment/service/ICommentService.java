@@ -110,4 +110,9 @@ public interface ICommentService  extends IService<Comment>
      * @return
      */
     void aiCreateComment( );
+    /**
+     * 获取评论总数
+     * @return
+     */
+    Integer getCommentTotal();
 }

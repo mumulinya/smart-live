@@ -113,4 +113,9 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @return
      */
     Integer getOrderCount(Long userId);
+    /**
+     * 获取订单总数
+     * @return
+     */
+    Integer getOrderTotal();
 }

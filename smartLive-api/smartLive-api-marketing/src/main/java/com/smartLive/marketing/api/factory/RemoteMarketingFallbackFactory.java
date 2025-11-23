@@ -31,6 +31,14 @@ public class RemoteMarketingFallbackFactory implements FallbackFactory<RemoteMar
             public R<Boolean> recoverVoucherStock(Long voucherId) {
                 return R.fail("恢复库存失败");
             }
+
+            /**
+             * 获取代金券总数
+             */
+            @Override
+            public R<Integer> getCouponTotal() {
+                return R.fail("查询代金券总数失败");
+            }
         };
     }
 }

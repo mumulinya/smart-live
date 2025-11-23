@@ -63,6 +63,22 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
                 return R.fail("查询店铺列表失败");
             }
 
+            /**
+             * 获取商家总数
+             */
+            @Override
+            public R<Integer> getShopTotal() {
+                return R.fail("查询商家总数失败");
+            }
+            /**
+             * 获取最近商家列表
+             *
+             * @param limit
+             */
+            @Override
+            public R<List<ShopDTO>> getRecentShops(Integer limit) {
+                return R.fail("获取最近商家列表失败");
+            }
         };
     }
 }

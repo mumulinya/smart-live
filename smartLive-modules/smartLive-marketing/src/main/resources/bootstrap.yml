@@ -13,6 +13,12 @@ spring:
     # 应用名称
     name: smartLive-marketing
   rabbitmq:
+    connection-timeout: 10000 # 连接超时时间（毫秒）
+    template:
+      retry:
+        enabled: true #开启重试
+    publisher-confirm-type: correlated # 开启发生着确认模式，可选值：correlated、none、manual
+    publisher-returns: true # 开启返回确认
     username: smart-live
     password: 123167
     host: 192.168.182.20

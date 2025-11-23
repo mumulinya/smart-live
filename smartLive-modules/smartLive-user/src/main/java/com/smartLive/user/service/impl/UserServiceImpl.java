@@ -3,7 +3,9 @@ package com.smartLive.user.service.impl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -273,41 +275,88 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public Stats getStats(Long userId) {
+        CountDownLatch countDownLatch = new CountDownLatch(8);
         //获取粉丝数
-        Integer fanCount = (Integer) remoteFollowService.getFanCount(userId).getData();
+        Future<Integer> fanCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询粉丝数",Thread.currentThread().getName());
+            Integer fanCount = (Integer) remoteFollowService.getFanCount(userId).getData();
+            countDownLatch.countDown();
+            return fanCount;
+        });
         //获取关注数
-        Integer followCount = (Integer) remoteFollowService.getFollowCount(userId).getData();
+        Future<Integer> followCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询关注数",Thread.currentThread().getName());
+            Integer followCount = (Integer) remoteFollowService.getFollowCount(userId).getData();
+            countDownLatch.countDown();
+            return followCount;
+        });
         // 当前用户id
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
-        Long currentUserId = null;
-        Integer commonFollowCount= 0;
-        if(user!= null){
-            currentUserId = user.getId();
-            //获取共同关注数
-             commonFollowCount = (Integer) remoteFollowService.getCommonFollowCount(userId,currentUserId).getData();
-        }
+        Future<Integer> commonFollowCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询共同关注数",Thread.currentThread().getName());
+            Integer commonFollowCount = 0;
+            if (user != null) {
+                Long currentUserId = user.getId();
+                //获取共同关注数
+                commonFollowCount = (Integer) remoteFollowService.getCommonFollowCount(userId, currentUserId).getData();
+            }
+            countDownLatch.countDown();
+            return commonFollowCount;
+        });
         //使用线程池＋future来实现
         //获取博客数
-        Integer blogCount = remoteBlogService.getBlogCount(userId).getData();
+        Future<Integer> blogCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询博客数",Thread.currentThread().getName());
+            Integer blogCount =  remoteBlogService.getBlogCount(userId).getData();
+            countDownLatch.countDown();
+            return blogCount;
+        });
         //获取点赞数
-        Integer likeCount = remoteBlogService.getLikeCount(userId).getData();
+        Future<Integer> likeCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询点赞数",Thread.currentThread().getName());
+            Integer likeCount = remoteBlogService.getLikeCount(userId).getData();
+            countDownLatch.countDown();
+            return likeCount;
+        });
         //获取发表评论数量
-        Integer commentCount = remoteCommentService.getCommentCount(userId).getData();
+        Future<Integer> commentCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询发表评论数",Thread.currentThread().getName());
+            Integer commentCount =  remoteCommentService.getCommentCount(userId).getData();
+            countDownLatch.countDown();
+            return commentCount;
+        });
         //获取订单数量
-        Integer orderCount = remoteOrderService.getOrderCount(userId).getData();
+        Future<Integer> orderCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询订单数",Thread.currentThread().getName());
+            Integer orderCount =  remoteOrderService.getOrderCount(userId).getData();
+            countDownLatch.countDown();
+            return orderCount;
+        });
         //获取收藏数量
-        Integer collectCount = (Integer) remoteFollowService.getFollowShopCount(userId).getData();
-        Stats stats= Stats.builder()
-                .blogCount(blogCount)
-                .followCount(followCount)
-                .commonFollowCount(commonFollowCount)
-                .fansCount(fanCount)
-                .likeCount(likeCount)
-                .commentCount(commentCount)
-                .orderCount(orderCount)
-                .collectCount(collectCount)
-                .build();
-        return stats;
+        Future<Integer> collectCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询收藏数",Thread.currentThread().getName());
+            Integer collectCount = (Integer) remoteFollowService.getFollowShopCount(userId).getData();
+            countDownLatch.countDown();
+            return collectCount;
+        });
+        try {
+            log.info("开始获取用户统计信息");
+            countDownLatch.await();
+            log.info("获取用户统计信息结束");
+            Stats stats= Stats.builder()
+                    .blogCount(blogCountFuture.get())
+                    .followCount(followCountFuture.get())
+                    .commonFollowCount(commonFollowCountFuture.get())
+                    .fansCount(fanCountFuture.get())
+                    .likeCount(likeCountFuture.get())
+                    .commentCount(commentCountFuture.get())
+                    .orderCount(orderCountFuture.get())
+                    .collectCount(collectCountFuture.get())
+                    .build();
+            return stats;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 店铺对象 tb_shop
@@ -18,7 +20,6 @@ import java.io.Serializable;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_shop")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -31,54 +32,44 @@ public class ShopDTO extends BaseEntity implements Serializable
     private Long id;
 
     /** 商铺名称 */
-    @Excel(name = "商铺名称")
     private String name;
 
     /** 商铺类型的id */
-    @Excel(name = "商铺类型的id")
     private Long typeId;
 
     /** 商铺图片，多个图片以','隔开 */
-    @Excel(name = "商铺图片，多个图片以','隔开")
     private String images;
 
     /** 商圈，例如陆家嘴 */
-    @Excel(name = "商圈，例如陆家嘴")
     private String area;
 
     /** 地址 */
-    @Excel(name = "地址")
     private String address;
 
     /** 经度 */
-    @Excel(name = "经度")
     private Double x;
 
     /** 维度 */
-    @Excel(name = "维度")
     private Double y;
 
     /** 均价，取整数 */
-    @Excel(name = "均价，取整数")
     private String avgPrice;
 
     /** 销量 */
-    @Excel(name = "销量")
     private Integer sold;
 
     /** 评论数量 */
-    @Excel(name = "评论数量")
     private Integer comments;
 
     /** 评分，1~5分，乘10保存，避免小数 */
-    @Excel(name = "评分，1~5分，乘10保存，避免小数")
     private Integer score;
 
     /** 营业时间，例如 10:00-22:00 */
-    @Excel(name = "营业时间，例如 10:00-22:00")
     private String openHours;
 
-    @TableField(exist = false)
+    /** 创建时间 */
+    private Date createTime;
+
     private Double distance;
     //查找关键字
     private String keyword;
@@ -212,7 +203,7 @@ public class ShopDTO extends BaseEntity implements Serializable
         return "ShopDTO{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", typeId='" + typeId + '\'' +
+                ", typeId=" + typeId +
                 ", images='" + images + '\'' +
                 ", area='" + area + '\'' +
                 ", address='" + address + '\'' +
@@ -223,8 +214,10 @@ public class ShopDTO extends BaseEntity implements Serializable
                 ", comments=" + comments +
                 ", score=" + score +
                 ", openHours='" + openHours + '\'' +
+                ", createTime=" + createTime +
                 ", distance=" + distance +
                 ", keyword='" + keyword + '\'' +
+                ", isFollow=" + isFollow +
                 '}';
     }
 }

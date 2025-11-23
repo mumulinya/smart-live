@@ -26,4 +26,9 @@ public interface RemoteMarketingService {
      */
     @PostMapping("/voucher/recover/{id}")
     R<Boolean> recoverVoucherStock(@PathVariable("id") Long voucherId);
+    /**
+     * 获取代金券总数
+     */
+    @GetMapping("/voucher/total")
+    R<Integer> getCouponTotal();
 }

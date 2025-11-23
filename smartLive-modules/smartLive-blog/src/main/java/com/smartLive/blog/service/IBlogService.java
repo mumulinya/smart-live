@@ -177,4 +177,9 @@ public interface IBlogService extends IService<Blog>
      * @return 发布结果
      */
     String publish( String[] ids);
+    /**
+     * 获取博客总数
+     * @return
+     */
+    Integer getBlogTotal();
 }

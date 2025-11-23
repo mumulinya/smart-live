@@ -523,6 +523,16 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
+     * 获取博客总数
+     *
+     * @return
+     */
+    @Override
+    public Integer getBlogTotal() {
+        return query().count().intValue();
+    }
+
+    /**
      * 刷新缓存
      *
      * @return

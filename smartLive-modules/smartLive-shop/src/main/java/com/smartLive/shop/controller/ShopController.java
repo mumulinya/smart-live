@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.domain.shop.ShopDTO;
 import com.smartLive.common.core.web.domain.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -214,5 +215,19 @@ public class ShopController extends BaseController {
     @GetMapping("/shop/shopListByIds")
      public R<List<Shop>> listShopByIds(@RequestParam("shopIdList") List<Long> shopIdList){
         return R.ok(shopService.getShopList(shopIdList));
+    }
+    /**
+     * 获取商家总数
+     */
+    @GetMapping("/shop/getShopTotal")
+    public R<Integer> getShopTotal() {
+        return R.ok(shopService.getShopTotal());
+    }
+    /**
+     * 获取最近创建商家
+     */
+    @GetMapping("/shop/getRecentShops")
+    public R<List<Shop>> getRecentShops(@RequestParam("limit") Integer limit){
+        return R.ok(shopService.getRecentShops(limit));
     }
 }

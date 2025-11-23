@@ -44,4 +44,14 @@ public interface RemoteShopService {
 
     @GetMapping("/shop/shopListByIds")
     R<List<ShopDTO>> getShopList(@RequestParam("shopIdList") List<Long> shopIdList);
+    /**
+     * 获取商家总数
+     */
+    @GetMapping("/shop/getShopTotal")
+    public R<Integer> getShopTotal();
+    /**
+     * 获取最近创建商家
+     */
+    @GetMapping("/shop/getRecentShops")
+    public R<List<ShopDTO>> getRecentShops(@RequestParam("limit") Integer limit);
 }

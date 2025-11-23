@@ -344,4 +344,14 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         System.out.println("订单数量为:"+orderCount);
         return orderCount;
     }
+
+    /**
+     * 获取订单总数
+     *
+     * @return
+     */
+    @Override
+    public Integer getOrderTotal() {
+        return query().count().intValue();
+    }
 }

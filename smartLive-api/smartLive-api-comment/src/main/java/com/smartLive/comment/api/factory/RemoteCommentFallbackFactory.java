@@ -18,8 +18,14 @@ public class RemoteCommentFallbackFactory implements FallbackFactory<RemoteComme
             public R<Integer> getCommentCount(Long userId) {
                 return R.fail("查询评论数失败");
             }
-
+            /**
+             * 获取评论总数
+             * @return
+             */
+            @Override
+            public R<Integer> getCommentTotal() {
+                return R.fail("查询评论总数失败");
+            }
         };
-
     }
 }

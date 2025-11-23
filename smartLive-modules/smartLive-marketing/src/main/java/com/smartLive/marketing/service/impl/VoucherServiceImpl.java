@@ -359,6 +359,17 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         }
         return query().eq(shopId != null,"shop_id", shopId).eq("type", 1).list();
     }
+
+    /**
+     * 获取优惠券总数
+     *
+     * @return 优惠券总数
+     */
+    @Override
+    public Integer getCouponTotal() {
+        return query().eq("type", 0).count().intValue();
+    }
+
     /**
      * 全部发布
      *

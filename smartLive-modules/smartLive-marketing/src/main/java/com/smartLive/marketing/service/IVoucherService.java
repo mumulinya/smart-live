@@ -121,4 +121,10 @@ public interface IVoucherService extends IService<Voucher>
      * @return 发布结果
      */
     String publish( String[] ids);
+    /**
+     * 获取优惠券总数
+     *
+     * @return 优惠券总数
+     */
+    Integer getCouponTotal();
 }

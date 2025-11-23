@@ -268,6 +268,16 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
+     * 获取评论总数
+     *
+     * @return
+     */
+    @Override
+    public Integer getCommentTotal() {
+        return query().count().intValue();
+    }
+
+    /**
      * 创建ai自动创建的评论
      *
      * @param

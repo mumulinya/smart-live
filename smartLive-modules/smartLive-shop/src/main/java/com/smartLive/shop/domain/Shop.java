@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 店铺对象 tb_shop
@@ -79,6 +81,10 @@ public class Shop extends BaseEntity implements Serializable
     /** 营业时间，例如 10:00-22:00 */
     @Excel(name = "营业时间，例如 10:00-22:00")
     private String openHours;
+
+    /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
 
     @TableField(exist = false)
     private Double distance;

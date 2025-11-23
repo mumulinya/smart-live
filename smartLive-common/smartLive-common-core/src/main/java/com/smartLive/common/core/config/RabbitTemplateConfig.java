@@ -6,6 +6,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -13,6 +15,9 @@ public class RabbitTemplateConfig implements CommandLineRunner {
 
     private final RabbitTemplate rabbitTemplate;
 
+    /**
+     * 监听消息发送失败
+     */
     @Override
     public void run(String... args) throws Exception {
         rabbitTemplate.setReturnsCallback(returns -> {
@@ -29,5 +34,18 @@ public class RabbitTemplateConfig implements CommandLineRunner {
                 log.error("消息发送失败消息过期时间:{}", returns.getMessage().getMessageProperties().getExpiration());
             }
         });
+    }
+
+    @PostConstruct
+    public void init() {
+        rabbitTemplate.setReturnsCallback(returns -> {
+            log.error("监听到了消息return callback");
+            log.error("exchange:{}", returns.getExchange());
+            log.error("replyCode:{}", returns.getReplyCode());
+            log.error("replyText:{}", returns.getReplyText());
+            log.error("message:{}", returns.getMessage());
+            log.error("routingKey:{}", returns.getRoutingKey());
+        }
+        );
     }
 }

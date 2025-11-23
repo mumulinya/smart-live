@@ -45,4 +45,9 @@ public interface RemoteBlogService {
      */
     @GetMapping("/blog/getLikeCount/{userId}")
     R<Integer> getLikeCount( @PathVariable("userId")Long userId);
+    /**
+     * 获取博客总数
+     */
+    @GetMapping("/blog/getBlogTotal")
+    R<Integer> getBlogTotal();
 }

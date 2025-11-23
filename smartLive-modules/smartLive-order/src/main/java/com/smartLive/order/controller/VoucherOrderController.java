@@ -149,4 +149,12 @@ public class VoucherOrderController extends BaseController
     R<Integer> getCommentCount(@PathVariable("userId")Long userId){
         return R.ok(voucherOrderService.getOrderCount(userId));
     }
+    /**
+     * 获取订单总数
+     * @return
+     */
+    @GetMapping("/getOrderTotal")
+    R<Integer> getOrderTotal(){
+        return R.ok(voucherOrderService.getOrderTotal());
+    }
 }

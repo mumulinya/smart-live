@@ -18,7 +18,14 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
             public R<Integer> getOrderCount(Long userId) {
                 return R.fail("查询订单数失败");
             }
-
+            /**
+             * 获取订单总数
+             * @return
+             */
+            @Override
+            public R<Integer> getOrderTotal() {
+                return R.fail("查询订单总数失败");
+            }
         };
 
     }

@@ -249,6 +249,12 @@ public class BlogController extends BaseController
     @GetMapping("/blog/getLikeCount/{userId}")
     R<Integer> getLikeCount( @PathVariable("userId")Long userId){
         return R.ok(blogService.getLikeCount(userId));
-
+    }
+    /**
+     * 获取博客总数
+     */
+    @GetMapping("/blog/getBlogTotal")
+    R<Integer> getBlogTotal() {
+        return R.ok(blogService.getBlogTotal());
     }
 }

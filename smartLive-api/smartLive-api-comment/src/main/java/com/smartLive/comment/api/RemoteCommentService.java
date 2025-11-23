@@ -20,4 +20,10 @@ public interface RemoteCommentService {
      */
     @GetMapping("/comment/getCommentCount/{userId}")
     R<Integer> getCommentCount( @PathVariable("userId")Long userId);
+    /**
+     * 获取评论总数
+     * @return
+     */
+    @GetMapping("/comment/getCommentTotal")
+    R<Integer> getCommentTotal();
 }

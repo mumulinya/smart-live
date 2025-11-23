@@ -157,4 +157,12 @@ public class CommentController extends BaseController
     R<Integer> getCommentCount( @PathVariable("userId")Long userId){
         return R.ok(commentService.getCommentCount(userId));
     }
+    /**
+     * 获取评论总数
+     * @return
+     */
+    @GetMapping("/comment/getCommentTotal")
+    R<Integer> getCommentTotal(){
+        return R.ok(commentService.getCommentTotal());
+    }
 }
