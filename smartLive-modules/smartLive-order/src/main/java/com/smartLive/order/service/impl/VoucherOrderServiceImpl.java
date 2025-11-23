@@ -11,9 +11,11 @@ import java.util.concurrent.Executors;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.utils.MqMessageSendUtils;
 import com.smartLive.marketing.api.RemoteMarketingService;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -208,6 +210,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         if(count>0){
             //用户已经购买过了
             log.error("用户已经购买过了");
+            return;
         }
         //5.扣减库存
         R<Boolean> r = remoteMarketingService.updateVoucherById(voucherOrder.getVoucherId());
@@ -215,9 +218,18 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         if(!success){
             //扣减失败
             log.error("库存不足");
+            return;
         }
         //6.创建订单
-        save(voucherOrder);
+        boolean save = save(voucherOrder);
+        if(!save){
+            //创建失败
+            log.error("创建订单失败");
+            return;
+        }else{
+            //发送延迟消息，检测订单支付状态
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,voucherOrder.getId(),(MqConstants.DELAY_TIME));
+        }
     }
 
     /**

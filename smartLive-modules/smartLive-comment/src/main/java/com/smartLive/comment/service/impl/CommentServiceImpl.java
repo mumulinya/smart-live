@@ -18,6 +18,7 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
@@ -184,13 +185,15 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         if(i > 0&& comment.getSourceType()==1){
             //更新博客评论数,发送rabbitMq消息
             log.info("发送rabbitMq消息给blog");
-            rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME,MqConstants.BLOG_COMMENT_ROUTING,id);
+//            rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME,MqConstants.BLOG_COMMENT_ROUTING,id);
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.BLOG_EXCHANGE_NAME,MqConstants.BLOG_COMMENT_ROUTING,id);
 //            remoteBlogService.updateCommentById(id);
         }else if(i > 0 && comment.getSourceType()==2){
             //更新店铺评论数
 //            remoteShopService.updateCommentById(id);
             log.info("发送rabbitMq消息给shop");
-            rabbitTemplate.convertAndSend(MqConstants.SHOP_EXCHANGE_NAME,MqConstants.SHOP_COMMENT_ROUTING,id);
+//            rabbitTemplate.convertAndSend(MqConstants.SHOP_EXCHANGE_NAME,MqConstants.SHOP_COMMENT_ROUTING,id);
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.SHOP_EXCHANGE_NAME,MqConstants.SHOP_COMMENT_ROUTING,id);
         }
         return Result.ok(i);
     }

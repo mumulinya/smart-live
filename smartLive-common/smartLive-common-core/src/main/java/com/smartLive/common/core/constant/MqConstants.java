@@ -12,7 +12,8 @@ public class MqConstants {
     public static final String  ORDER_DELAY_EXCHANGE_NAME = "order.delay.direct";
     public static final String  ORDER_DELAY_QUEUE = "order.delay.queue";
     public static final String  ORDER_DELAY_ROUTING = "order.delay.voucher";
-    public static final Integer DELAY_TIME = 15 * 60000; // 15分钟 = 900000 毫秒    // 博客交换机
+    public static final Integer DELAY_TIME = 15 * 60000; // 15分钟 = 900000 毫秒
+    // 博客交换机
     public static final String  BLOG_EXCHANGE_NAME = "blog.direct";
     public static final String  BLOG_FEED_QUEUE = "blog.feed.queue";
     public static final String  BLOG_FEED_ROUTING = "blog.feed.user";
@@ -33,6 +34,10 @@ public class MqConstants {
     public static final String AI_EXCHANGE_NAME = "ai.direct";
     public static final String AI_COMMENT_QUEUE = "ai.comment.queue";
     public static final String AI_COMMENT_ROUTING = "ai.comment.create";
+    //私聊交换机
+    public static final String CHAT_EXCHANGE_NAME = "chat.topic";
+    public static final String CHAT_MESSAGE_QUEUE = "chat.message.queue";
+    public static final String CHAT_MESSAGE_ROUTING = "chat.session.";
 
     // ==================== ES 交换机 ====================
     public static final String ES_EXCHANGE = "es.sync.exchange";

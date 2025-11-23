@@ -12,6 +12,7 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.*;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
@@ -144,7 +145,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
                esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
                //发起rabbitMq信息删除
-               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
+//               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
+               MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
                //更新redis缓存
                flashRedisBlogCache(id);
                latch.countDown();
@@ -383,7 +385,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         //推送笔记id给所有粉丝
         BlogDTO blogDTO = BeanUtil.copyProperties(blog, BlogDTO.class);
         //发送rabbitMq消息 推送笔记id给粉丝
-        rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME, MqConstants.BLOG_FEED_ROUTING, blogDTO);
+//        rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME, MqConstants.BLOG_FEED_ROUTING, blogDTO);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.BLOG_EXCHANGE_NAME, MqConstants.BLOG_FEED_ROUTING, blogDTO);
         //添加es数据
         publish(new String[]{blog.getId().toString()});
         //更新redis缓存
@@ -653,11 +656,15 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
                 request.setData(blogs);
                 request.setDataType(EsDataTypeConstants.BLOG);
-                rabbitTemplate.convertAndSend(
+//                rabbitTemplate.convertAndSend(
+//                        MqConstants.ES_EXCHANGE,
+//                        MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
+//                        request
+//                );
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate,
                         MqConstants.ES_EXCHANGE,
                         MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
-                        request
-                );
+                        request);
                 log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, blogs.size());
             });
 //            blogs.forEach(blog ->{
@@ -701,7 +708,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
               esInsertRequest.setData(blog);
               esInsertRequest.setId(blog.getId());
               esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
-              rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BLOG_INSERT, esInsertRequest);
+//              rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BLOG_INSERT, esInsertRequest);
+              MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+                      MqConstants.ES_EXCHANGE,
+                      MqConstants.ES_ROUTING_BLOG_INSERT,
+                      esInsertRequest);
           });
         }
         return "发布成功";

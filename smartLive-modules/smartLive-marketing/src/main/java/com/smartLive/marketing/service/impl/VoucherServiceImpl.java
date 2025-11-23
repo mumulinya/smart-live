@@ -15,6 +15,7 @@ import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.domain.SeckillVoucher;
 import com.smartLive.marketing.service.ISeckillVoucherService;
@@ -42,7 +43,7 @@ import javax.annotation.Resource;
 
 /**
  * 优惠券Service业务层处理
- * 
+ *
  * @author ruoyi
  * @date 2025-09-21
  */
@@ -83,7 +84,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
     /**
      * 查询优惠券
-     * 
+     *
      * @param id 优惠券主键
      * @return 优惠券
      */
@@ -99,7 +100,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
     /**
      * 查询优惠券列表
-     * 
+     *
      * @param voucher 优惠券
      * @return 优惠券
      */
@@ -108,7 +109,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     {
         List<Voucher> voucherList = voucherMapper.selectVoucherList(voucher);
         voucherList.forEach(v -> {
-           querySeckill(v);
+            querySeckill(v);
         });
         return voucherList;
     }
@@ -127,7 +128,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     }
     /**
      * 新增优惠券
-     * 
+     *
      * @param voucher 优惠券
      * @return 结果
      */
@@ -148,7 +149,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
     /**
      * 修改优惠券
-     * 
+     *
      * @param voucher 优惠券
      * @return 结果
      */
@@ -174,7 +175,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
     /**
      * 批量删除优惠券
-     * 
+     *
      * @param ids 需要删除的优惠券主键
      * @return 结果
      */
@@ -185,17 +186,18 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 //        //删除es数据
 //        if (i > 0) {
         for (Long id : ids) {
-           executorService.submit(()->{
-               log.info("线程“{}删除es数据id为：{}", id);
-               EsInsertRequest esInsertRequest = new EsInsertRequest();
-               esInsertRequest.setId(id);
-               esInsertRequest.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
-               esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
-               //发起rabbitMq信息删除es数据
-               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_VOUCHER_DELETE,esInsertRequest);
-               //发起rabbitmq信息删除milvus数据
+            executorService.submit(()->{
+                log.info("线程“{}删除es数据id为：{}", id);
+                EsInsertRequest esInsertRequest = new EsInsertRequest();
+                esInsertRequest.setId(id);
+                esInsertRequest.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+                esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
+                //发起rabbitMq信息删除es数据
+//               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_VOUCHER_DELETE,esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_DELETE, esInsertRequest);
+                //发起rabbitmq信息删除milvus数据
 //               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE,MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,esInsertRequest);
-           });
+            });
         }
 //        }
         return 1;
@@ -203,7 +205,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
     /**
      * 删除优惠券信息
-     * 
+     *
      * @param id 优惠券主键
      * @return 结果
      */
@@ -248,12 +250,14 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         voucherOrder.setUserId(userId);
         voucherOrder.setVoucherId(voucherId);
         //发送消息
-        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_SECKILL_ROUTING, voucherOrder);
+//        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_SECKILL_ROUTING, voucherOrder);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_SECKILL_ROUTING,voucherOrder);
         //发送延迟消息，检测订单支付状态
-        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
-            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
-            return message;
-        });
+//        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
+//            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
+//            return message;
+//        });
+//        MqMessageSendUtils.sendSessionMessage(rabbitTemplate,MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,voucherOrder.getId(),(MqConstants.DELAY_TIME));
         //获取事务代理对象
         proxy= (IVoucherService) AopContext.currentProxy();
         //3 返回订单id
@@ -275,12 +279,14 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         voucherOrder.setUserId(userId);
         voucherOrder.setVoucherId(voucherId);
         //5.发送消息创建订单
-        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_BUY_ROUTING, voucherOrder);
-        //发送延迟消息，检测订单支付状态
-        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
-            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
-            return message;
-        });
+//        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_BUY_ROUTING, voucherOrder);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_BUY_ROUTING,voucherOrder);
+//        //发送延迟消息，检测订单支付状态
+//        MqMessageSendUtils.sendSessionMessage(rabbitTemplate,MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,voucherOrder.getId(),(MqConstants.DELAY_TIME));
+//        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
+//            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
+//            return message;
+//        });
 //        save(voucherOrder);
         //6.返回订单id
         return Result.ok(voucherOrder.getId());
@@ -434,7 +440,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             int finalPage = page;
             executorService.submit(()->{
                 log.info("线程：{}开始发布的优惠券{}页", Thread.currentThread().getName(), finalPage);
-               vouchers.forEach(voucher -> {
+                vouchers.forEach(voucher -> {
                     SeckillVoucher seckillVoucher = finalSeckillVoucherMap.get(voucher.getId());
                     if (seckillVoucher != null) {
                         voucher.setBeginTime(seckillVoucher.getBeginTime());
@@ -448,26 +454,27 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                     }
 //                   querySeckill(voucher);
 //                   queryVoucherShopMessage(voucher);
-               });
-               // 创建请求并发送
-               EsBatchInsertRequest request = new EsBatchInsertRequest();
-               request.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
-               request.setData(vouchers);
-               request.setDataType(EsDataTypeConstants.VOUCHER);
-               // 发送rabbitmq消息数据插入es
-               rabbitTemplate.convertAndSend(
-                       MqConstants.ES_EXCHANGE,
-                       MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT,
-                       request
-               );
-               //发送rabbitmq消息数据插入Milvus
+                });
+                // 创建请求并发送
+                EsBatchInsertRequest request = new EsBatchInsertRequest();
+                request.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+                request.setData(vouchers);
+                request.setDataType(EsDataTypeConstants.VOUCHER);
+                // 发送rabbitmq消息数据插入es
+//               rabbitTemplate.convertAndSend(
+//                       MqConstants.ES_EXCHANGE,
+//                       MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT,
+//                       request
+//               );
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT, request);
+                //发送rabbitmq消息数据插入Milvus
 //               rabbitTemplate.convertAndSend(
 //                       MqConstants.MILVUS_EXCHANGE,
 //                       MqConstants.MILVUS_ROUTING_VOUCHER_BATCH_INSERT,
 //                       request
 //               );
-               log.info("发送第 {} 页，{} 条数据", finalPage, vouchers.size());
-           });
+                log.info("发送第 {} 页，{} 条数据", finalPage, vouchers.size());
+            });
             page++;
         }
         return "数据发布完成";
@@ -483,24 +490,25 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     @Override
     public String publish(String[] ids) {
         for (String id : ids) {
-           executorService.submit(()->{
-               log.info("线程：{}开始发布id为{}的优惠券", Thread.currentThread().getName(), id);
-               Voucher voucher = query().eq("id", id).one();
-               if (voucher== null){
-                   return;
-               }
-               querySeckill(voucher);
-               queryVoucherShopMessage(voucher);
-               EsInsertRequest esInsertRequest = new EsInsertRequest();
-               esInsertRequest.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
-               esInsertRequest.setData(voucher);
-               esInsertRequest.setId(voucher.getId());
-               esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
-               //发送rabbitmq消息数据插入es
-               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
-               //发送rabbitmq消息数据插入Milvus
+            executorService.submit(()->{
+                log.info("线程：{}开始发布id为{}的优惠券", Thread.currentThread().getName(), id);
+                Voucher voucher = query().eq("id", id).one();
+                if (voucher== null){
+                    return;
+                }
+                querySeckill(voucher);
+                queryVoucherShopMessage(voucher);
+                EsInsertRequest esInsertRequest = new EsInsertRequest();
+                esInsertRequest.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+                esInsertRequest.setData(voucher);
+                esInsertRequest.setId(voucher.getId());
+                esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
+                //发送rabbitmq消息数据插入es
+//               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
+                //发送rabbitmq消息数据插入Milvus
 //               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_INSERT, esInsertRequest);
-           });
+            });
         }
         return "发布成功";
     }

@@ -1,10 +1,15 @@
 package com.smartlive.chat.consumer;
 
+import com.smartLive.common.core.constant.MqConstants;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.dto.ChatMessageEvent;
 import com.smartlive.chat.handle.ChatWebSocketHandler;
 import com.smartlive.chat.service.IChatMessagesService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.ExchangeTypes;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,8 +30,19 @@ public class SessionChatConsumer {
     /**
      * 监听所有会话队列
      */
-    @RabbitListener(queues = "chat.message.queue")
-    public void consumeAllSessionMessages(ChatMessageEvent messageEvent) throws IOException {
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(
+                            value = MqConstants.CHAT_MESSAGE_QUEUE,
+                            durable = "true"          // 持久化，原来你写的 declare="true" 是错的，这里应该是 durable
+                    ),
+                    exchange = @Exchange(
+                            value = MqConstants.CHAT_EXCHANGE_NAME,
+                            type = ExchangeTypes.TOPIC // 一定要指定为 topic
+                    ),
+                    key = MqConstants.CHAT_MESSAGE_ROUTING+"*"            // 匹配所有 session.chat.xxx 的路由
+            )
+    )    public void consumeAllSessionMessages(ChatMessageEvent messageEvent) throws IOException {
         // 直接从消息体中获取 sessionId
         Long sessionId = messageEvent.getSessionId();
         log.info("✅ 收到会话消息: sessionId={}", sessionId);

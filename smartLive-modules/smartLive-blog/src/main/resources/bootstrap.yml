@@ -13,6 +13,7 @@ spring:
     # 应用名称
     name: smartLive-blog
   rabbitmq:
+
     username: smart-live
     password: 123167
     host: 192.168.182.20

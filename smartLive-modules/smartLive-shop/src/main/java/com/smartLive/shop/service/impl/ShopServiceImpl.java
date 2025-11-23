@@ -22,6 +22,7 @@ import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.shop.ShopDTO;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.MqMessageSendUtils; // 新增导入工具类
 import com.smartLive.common.core.utils.PageUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.core.web.domain.Result;
@@ -49,7 +50,7 @@ import javax.annotation.Resource;
 
 /**
  * 店铺Service业务层处理
- * 
+ *
  * @author mumulin
  * @date 2025-09-21
  */
@@ -137,20 +138,22 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 //        int i = shopMapper.deleteShopByIds(ids);
 //        //删除es数据
 //        if (i > 0) {
-            for (String id : ids) {
-               executorService.submit(()->{
-                   log.info("线程{}，开始删除店铺{}", Thread.currentThread().getName(), id);
-                   EsInsertRequest esInsertRequest = new EsInsertRequest();
-                   esInsertRequest.setId(Long.valueOf(id));
-                   esInsertRequest.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
-                   esInsertRequest.setDataType(EsDataTypeConstants.SHOP);
-                   //发起rabbitMq信息删除es数据
-                   rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_SHOP_DELETE,esInsertRequest);
-                   //发起rabbitmq信息删除milvus数据
-                   rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE,MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,esInsertRequest);
-                   flashShopListRedisCache(shopMapper.selectShopById(id).getTypeId());
-               });
-            }
+        for (String id : ids) {
+            executorService.submit(()->{
+                log.info("线程{}，开始删除店铺{}", Thread.currentThread().getName(), id);
+                EsInsertRequest esInsertRequest = new EsInsertRequest();
+                esInsertRequest.setId(Long.valueOf(id));
+                esInsertRequest.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
+                esInsertRequest.setDataType(EsDataTypeConstants.SHOP);
+                //发起rabbitMq信息删除es数据
+//                   rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_SHOP_DELETE,esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_DELETE, esInsertRequest);
+                //发起rabbitmq信息删除milvus数据
+//                   rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE,MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_DELETE, esInsertRequest);
+                flashShopListRedisCache(shopMapper.selectShopById(id).getTypeId());
+            });
+        }
 //        }
         return 1;
     }
@@ -451,7 +454,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public List<Shop> searchShopsByShopQuery(Shop shopQuery) {
         log.info("查询店铺信息的条件是：{}", shopQuery);
         List<Shop> list = query().list();
-                        return list;
+        return list;
     }
 
     @Override
@@ -500,7 +503,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public List<Shop> getShopByCondition(Shop shop) {
         QueryWrapper<Shop> wrapper = new QueryWrapper<>();
         String distanceSql = "ST_Distance_Sphere(point(x, y), point(" + shop.getX() + ", " + shop.getY() + ")) as distance";
-         wrapper.select("*, " + distanceSql);
+        wrapper.select("*, " + distanceSql);
         // 1. 分类条件
         if (shop.getTypeId() != null) {
             wrapper.eq("type_id", shop.getTypeId());
@@ -525,7 +528,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             wrapper.apply("ST_Distance_Sphere(point(x, y), point({0}, {1})) <= {2}",
                     shop.getX(), shop.getY(), 200000);
         }
-       wrapper .orderByAsc("distance");
+        wrapper .orderByAsc("distance");
         return list(wrapper);
     }
 
@@ -651,47 +654,49 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public String allPublish() {
-            int page = PageConstants.PAGE_NUMBER;
-            int pageSize = PageConstants.ES_PAGE_SIZE; // 每页50条
-            while (true) {
-                // 分页查询
-                List<Shop> shops = query()
-                        .page(new Page<>(page, pageSize))
-                        .getRecords();
-                if (shops.isEmpty()) {
-                    break;
-                }
-                int finalPage = page;
-                //使用多线程来处理
-                executorService.submit(()->{
-                    shops.forEach(
-                            shop -> {
-                                shop.setLocation(shop.getY() + "," + shop.getX());
-                            }
-                    );
-                    // 创建请求并发送
-                    EsBatchInsertRequest request = new EsBatchInsertRequest();
-                    request.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
-                    request.setData(shops);
-                    request.setDataType(EsDataTypeConstants.SHOP);
-                    //发送rabbitmq消息数据插入es
-                    rabbitTemplate.convertAndSend(
-                            MqConstants.ES_EXCHANGE,
-                            MqConstants.ES_ROUTING_SHOP_BATCH_INSERT,
-                            request
-                    );
-                    //发送rabbitmq消息数据插入Milvus
-                    rabbitTemplate.convertAndSend(
-                            MqConstants.MILVUS_EXCHANGE,
-                            MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT,
-                            request
-                    );
-                    log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, shops.size());
-                });
-                page++;
+        int page = PageConstants.PAGE_NUMBER;
+        int pageSize = PageConstants.ES_PAGE_SIZE; // 每页50条
+        while (true) {
+            // 分页查询
+            List<Shop> shops = query()
+                    .page(new Page<>(page, pageSize))
+                    .getRecords();
+            if (shops.isEmpty()) {
+                break;
             }
-            return "数据发布完成";
+            int finalPage = page;
+            //使用多线程来处理
+            executorService.submit(()->{
+                shops.forEach(
+                        shop -> {
+                            shop.setLocation(shop.getY() + "," + shop.getX());
+                        }
+                );
+                // 创建请求并发送
+                EsBatchInsertRequest request = new EsBatchInsertRequest();
+                request.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
+                request.setData(shops);
+                request.setDataType(EsDataTypeConstants.SHOP);
+                //发送rabbitmq消息数据插入es
+//                    rabbitTemplate.convertAndSend(
+//                            MqConstants.ES_EXCHANGE,
+//                            MqConstants.ES_ROUTING_SHOP_BATCH_INSERT,
+//                            request
+//                    );
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_BATCH_INSERT, request);
+                //发送rabbitmq消息数据插入Milvus
+//                    rabbitTemplate.convertAndSend(
+//                            MqConstants.MILVUS_EXCHANGE,
+//                            MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT,
+//                            request
+//                    );
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT, request);
+                log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, shops.size());
+            });
+            page++;
         }
+        return "数据发布完成";
+    }
 
 
     /**
@@ -713,9 +718,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 esInsertRequest.setId(shop.getId());
                 esInsertRequest.setDataType(EsDataTypeConstants.SHOP);
                 //发送rabbitmq消息数据插入es
-                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_INSERT, esInsertRequest);
+//                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_INSERT, esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_INSERT, esInsertRequest);
                 //发送rabbitmq消息数据插入Milvus
-                rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_INSERT, esInsertRequest);
+//                rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_INSERT, esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_INSERT, esInsertRequest);
             });
         }
         return "发布成功";

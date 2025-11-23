@@ -24,6 +24,7 @@ import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.MqMessageSendUtils; // 新增导入工具类
 import com.smartLive.follow.api.RemoteFollowService;
 import com.smartLive.order.api.RemoteOrderService;
 
@@ -44,7 +45,7 @@ import static com.smartLive.common.core.constant.SystemConstants.USER_NICK_NAME_
 
 /**
  * 用户Service业务层处理
- * 
+ *
  * @author mumulin
  * @date 2025-09-21
  */
@@ -79,7 +80,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 查询用户
-     * 
+     *
      * @param id 用户主键
      * @return 用户
      */
@@ -91,7 +92,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 查询用户列表
-     * 
+     *
      * @param user 用户
      * @return 用户
      */
@@ -103,7 +104,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 新增用户
-     * 
+     *
      * @param user 用户
      * @return 结果
      */
@@ -116,7 +117,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 修改用户
-     * 
+     *
      * @param user 用户
      * @return 结果
      */
@@ -153,7 +154,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 批量删除用户
-     * 
+     *
      * @param ids 需要删除的用户主键
      * @return 结果
      */
@@ -171,7 +172,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
                 esInsertRequest.setDataType(EsDataTypeConstants.USER);
                 //发起rabbitMq信息删除
-                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
+//                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_DELETE, esInsertRequest);
             });
         }
 //        }
@@ -180,7 +182,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 删除用户信息
-     * 
+     *
      * @param id 用户主键
      * @return 结果
      */
@@ -260,12 +262,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      *
      * @param user 用户
      */
-  private void  queryUserInfo(User user){
-      UserInfo userInfo = userInfoService.getByUserId(user.getId());
-      if (userInfo != null){
-          user.setIntroduce(userInfo.getIntroduce());
-          user.setCity(userInfo.getCity());
-      }
+    private void  queryUserInfo(User user){
+        UserInfo userInfo = userInfoService.getByUserId(user.getId());
+        if (userInfo != null){
+            user.setIntroduce(userInfo.getIntroduce());
+            user.setCity(userInfo.getCity());
+        }
     }
     /**
      * 获取用户统计信息
@@ -383,28 +385,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
                 List<UserInfo> userInfos = userInfoService.listByUserIds(userIds);
                 Map<Long,UserInfo> userInfoMap= userInfos.stream().collect(Collectors.toMap(UserInfo::getUserId, userInfo -> userInfo));
-               users.forEach(
-                       user -> {
-                           UserInfo userInfo = userInfoMap.get(user.getId());
-                           if(userInfo != null){
-                               user.setIntroduce(userInfo.getIntroduce());
-                               user.setCity(userInfo.getCity());
-                           }
+                users.forEach(
+                        user -> {
+                            UserInfo userInfo = userInfoMap.get(user.getId());
+                            if(userInfo != null){
+                                user.setIntroduce(userInfo.getIntroduce());
+                                user.setCity(userInfo.getCity());
+                            }
 //                           queryUserInfo(user);
-                       }
-               );
-               // 创建请求并发送
-               EsBatchInsertRequest request = new EsBatchInsertRequest();
-               request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-               request.setData(users);
-               request.setDataType(EsDataTypeConstants.USER);
-               rabbitTemplate.convertAndSend(
-                       MqConstants.ES_EXCHANGE,
-                       MqConstants.ES_ROUTING_USER_BATCH_INSERT,
-                       request
-               );
-               log.info("发送第 {} 页，{} 条数据", finalPage, users.size());
-           });
+                        }
+                );
+                // 创建请求并发送
+                EsBatchInsertRequest request = new EsBatchInsertRequest();
+                request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+                request.setData(users);
+                request.setDataType(EsDataTypeConstants.USER);
+//               rabbitTemplate.convertAndSend(
+//                       MqConstants.ES_EXCHANGE,
+//                       MqConstants.ES_ROUTING_USER_BATCH_INSERT,
+//                       request
+//               );
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_BATCH_INSERT, request);
+                log.info("发送第 {} 页，{} 条数据", finalPage, users.size());
+            });
             page++;
         }
         return "数据发布完成";
@@ -432,7 +435,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 esInsertRequest.setData(user);
                 esInsertRequest.setId(user.getId());
                 esInsertRequest.setDataType(EsDataTypeConstants.USER);
-                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
+//                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
             });
         }
         return "发布成功";
