@@ -1,10 +1,8 @@
 package com.smartLive.comment.service.impl;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -18,7 +16,7 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.MqMessageSendUtils;
+import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;

@@ -5,25 +5,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.UserDTO;
-import com.smartLive.common.core.utils.MqMessageSendUtils;
+import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.dto.ChatMessageEvent;
 import com.smartlive.chat.service.IChatMessagesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -228,7 +225,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 String routingKey = MqConstants.CHAT_MESSAGE_ROUTING + sessionId;
 //                rabbitTemplate.convertAndSend("session.chat.topic", routingKey, messageEvent,cd);
 //                //使用消息重发机制发送消息
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.CHAT_EXCHANGE_NAME,routingKey, messageEvent);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.CHAT_EXCHANGE_NAME,routingKey, messageEvent,MqConstants.DEAD_LETTER_EXCHANGE_NAME, MqConstants.DEAD_LETTER_ROUTING,3);
                 log.info("✅ 消息已发送到会话队列，sessionId: {}", sessionId);
 
             } else {

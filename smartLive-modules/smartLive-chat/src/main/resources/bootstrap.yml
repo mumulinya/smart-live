@@ -34,7 +34,7 @@ spring:
             enabled: true # 是否开启重试
             initial-interval: 1000ms # 第一次重试时间间隔
             multiplier: 1 # 重试时间间隔倍数
-            max-attempts: 5 # 最大重试次数
+            max-attempts: 3 # 最大重试次数
             stateless: true # 是否无状态
   profiles:
     # 环境配置

@@ -13,7 +13,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
@@ -24,7 +23,7 @@ import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.MqMessageSendUtils; // 新增导入工具类
+import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils; // 新增导入工具类
 import com.smartLive.follow.api.RemoteFollowService;
 import com.smartLive.order.api.RemoteOrderService;
 

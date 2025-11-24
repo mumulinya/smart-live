@@ -12,7 +12,7 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.*;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.MqMessageSendUtils;
+import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;

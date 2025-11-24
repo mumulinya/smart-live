@@ -1,4 +1,4 @@
-package com.smartLive.common.core.utils;
+package com.smartLive.common.core.utils.rabbitMq;
 
 import com.smartLive.common.core.domain.RetryCorrelationData;
 import lombok.extern.slf4j.Slf4j;
@@ -11,48 +11,58 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 死信队列发送工具类
+ */
 @Slf4j
-public class MqMessageSendUtils {
+public class MqDeadLetterSendUtils {
+
     // 定义一个全局的调度线程池
     private static final ScheduledExecutorService retryExecutor = Executors.newScheduledThreadPool(5);
 
     /**
-     * 原来的无延迟方法：默认当成普通消息
+     * 普通交换机
      */
     public static void sendMqMessage(RabbitTemplate rabbitTemplate,
-                                          String exchange,
-                                          String routingKey,
-                                          Object messageEvent) {
+                                     String exchange,
+                                     String routingKey,
+                                     Object messageEvent) {
         // 这里直接调用带 delay 的方法，delay 传 null 或 0
         sendMqMessage(rabbitTemplate, exchange, routingKey, messageEvent, null);
     }
 
     /**
-     * 新增：支持可选延迟时间
+     * 延迟交换机
+     *
      */
     public static void sendMqMessage(RabbitTemplate rabbitTemplate,
-                                          String exchange,
-                                          String routingKey,
-                                          Object messageEvent,
-                                          Integer delayTime) {
+                                     String exchange,
+                                     String routingKey,
+                                     Object messageEvent,
+                                     Integer delayTime) {
         // 初始化自定义的 CorrelationData，多传一个 delayTime
         RetryCorrelationData cd = new RetryCorrelationData(
                 UUID.randomUUID().toString(),
                 messageEvent,
                 exchange,
                 routingKey,
-                delayTime   // ⭐ 新增字段
+                delayTime,
+                3
+                // ⭐ 新增字段
         );
 
         sendWithRetry(rabbitTemplate, cd);
     }
-
-    private static void sendWithRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
+    /**
+     * 发送消息并绑定消息回调
+     */
+    public static void sendWithRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
         // 绑定回调
         cd.getFuture().addCallback(new ListenableFutureCallback<>() {
             @Override
             public void onFailure(Throwable ex) {
                 log.error("❌ 发送异常: {}", ex.getMessage());
+                // 进行消息重发
                 handleRetry(rabbitTemplate, cd);
             }
 
@@ -62,6 +72,7 @@ public class MqMessageSendUtils {
                     log.info("收到ConfirmCallback ack 消息发送成功");
                 } else {
                     log.error("收到ConfirmCallback ack 消息发送失败！reason：{}", result.getReason());
+                    //进行消息重发
                     handleRetry(rabbitTemplate, cd);
                 }
             }
@@ -72,10 +83,10 @@ public class MqMessageSendUtils {
         Integer delayTime = cd.getDelayTime();
         // ⭐ 这里判断有没有传延迟时间：
         if (delayTime != null && delayTime > 0) {
-            // 有延迟 → 延迟队列消息
+            // 有延迟 → 延迟死信队列消息
             rabbitTemplate.convertAndSend(
-                    cd.getExchange(),
-                    cd.getRoutingKey(),
+                    cd.getDeadExchange(),
+                    cd.getDeadRoutingKey(),
                     cd.getMessage(),
                     message -> {
                         message.getMessageProperties().setDelay(delayTime);
@@ -84,10 +95,10 @@ public class MqMessageSendUtils {
                     cd  // 带上 CorrelationData 用于 confirm 回调
             );
         } else {
-            // 无延迟 → 普通队列消息
+            // 无延迟 → 死信队列消息
             rabbitTemplate.convertAndSend(
-                    cd.getExchange(),
-                    cd.getRoutingKey(),
+                    cd.getDeadExchange(),
+                    cd.getDeadRoutingKey(),
                     cd.getMessage(),
                     cd
             );
@@ -95,19 +106,19 @@ public class MqMessageSendUtils {
     }
 
     // 重试处理逻辑
-    private static void handleRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
+    public static void handleRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
         if (cd.getRetryCount() < cd.getMaxRetries()) {
             cd.setRetryCount(cd.getRetryCount() + 1);
 
-            // 延迟 2 秒后执行重发
+            // 延迟 2 分钟后执行重发
             retryExecutor.schedule(() -> {
                 log.info("🔄 执行第 {} 次重试发送...", cd.getRetryCount());
                 sendWithRetry(rabbitTemplate, cd);
-            }, 2, TimeUnit.SECONDS);
+            }, 2, TimeUnit.MINUTES);
 
         } else {
-            log.error("⛔ 重试次数耗尽，消息发送最终失败。请记录到死信表或人工处理。ID: {}", cd.getId());
+            log.error("重试次数耗尽，消息发送最终失败。请记录到死信表或人工处理。ID: {}", cd.getId());
+            log.info("发送失败的数据为{}", cd.getMessage());
         }
     }
 }
-

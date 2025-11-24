@@ -1,30 +1,19 @@
 package com.smartLive.order.service.impl;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
-import com.smartLive.common.core.utils.MqMessageSendUtils;
+import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
 import com.smartLive.marketing.api.RemoteMarketingService;
-import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.api.dto.VoucherDTO;
-import com.smartLive.order.until.RedisIdWorker;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -32,7 +21,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -40,7 +28,6 @@ import com.smartLive.order.mapper.VoucherOrderMapper;
 import com.smartLive.order.domain.VoucherOrder;
 import com.smartLive.order.service.IVoucherOrderService;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 /**
@@ -147,9 +134,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Autowired
     private RemoteMarketingService remoteMarketingService;
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private RedissonClient redissonClient;

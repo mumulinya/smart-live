@@ -2,13 +2,11 @@ package com.smartLive.shop.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
@@ -20,10 +18,8 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.domain.shop.ShopDTO;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.MqMessageSendUtils; // 新增导入工具类
-import com.smartLive.common.core.utils.PageUtils;
+import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils; // 新增导入工具类
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.search.api.RemoteSearchService;
@@ -44,7 +40,6 @@ import org.springframework.stereotype.Service;
 import com.smartLive.shop.mapper.ShopMapper;
 import com.smartLive.shop.domain.Shop;
 import com.smartLive.shop.service.IShopService;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 

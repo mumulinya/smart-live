@@ -15,7 +15,7 @@ import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.MqMessageSendUtils;
+import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.domain.SeckillVoucher;
 import com.smartLive.marketing.service.ISeckillVoucherService;
@@ -24,9 +24,6 @@ import com.smartLive.order.api.dto.VoucherOrderDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -251,7 +248,12 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         voucherOrder.setVoucherId(voucherId);
         //发送消息
 //        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_SECKILL_ROUTING, voucherOrder);
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_SECKILL_ROUTING,voucherOrder);
+//        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_SECKILL_ROUTING,voucherOrder);
+//        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_SECKILL_ROUTING,voucherOrder,MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME, MqConstants.ORDER_DEAD_LETTER_ROUTING,3);
+        executorService.submit(()->{
+            log.info("线程“{}创建秒杀订单id为：{}", Thread.currentThread().getName(), orderId);
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_SECKILL_ROUTING,voucherOrder,MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME, MqConstants.ORDER_DEAD_LETTER_ROUTING,3);
+        });
         //发送延迟消息，检测订单支付状态
 //        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
 //            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
@@ -280,7 +282,12 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         voucherOrder.setVoucherId(voucherId);
         //5.发送消息创建订单
 //        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_BUY_ROUTING, voucherOrder);
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_BUY_ROUTING,voucherOrder);
+//        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_BUY_ROUTING,voucherOrder);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_BUY_ROUTING,voucherOrder,MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME, MqConstants.ORDER_DEAD_LETTER_ROUTING,3);
+        executorService.submit(()->{
+            log.info("线程“{}创建普通订单id为：{}", Thread.currentThread().getName(), orderId);
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_BUY_ROUTING,voucherOrder,MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME, MqConstants.ORDER_DEAD_LETTER_ROUTING,3);
+        });
 //        //发送延迟消息，检测订单支付状态
 //        MqMessageSendUtils.sendSessionMessage(rabbitTemplate,MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,voucherOrder.getId(),(MqConstants.DELAY_TIME));
 //        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
