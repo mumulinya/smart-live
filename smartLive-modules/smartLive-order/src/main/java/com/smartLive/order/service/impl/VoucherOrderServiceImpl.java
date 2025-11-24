@@ -173,7 +173,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         try {
             proxy.createVoucherOrder(voucherOrder);
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("创建订单失败",e);
         }finally {
             //释放锁
             lock.unlock();

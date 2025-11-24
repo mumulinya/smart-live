@@ -4,6 +4,8 @@ import com.smartLive.common.core.domain.RetryCorrelationData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.util.UUID;
@@ -15,10 +17,16 @@ import java.util.concurrent.TimeUnit;
  * Mq消息发送工具类
  */
 @Slf4j
+@Component
 public class MqMessageSendUtils {
     // 定义一个全局的调度线程池
-    private static final ScheduledExecutorService retryExecutor = Executors.newScheduledThreadPool(5);
+//    private static final ScheduledExecutorService retryExecutor = Executors.newScheduledThreadPool(5);
 
+      private static ScheduledExecutorService scheduledExecutorService;
+    @Autowired
+    public void setScheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+        this.scheduledExecutorService = scheduledExecutorService;
+    }
     /**
      * 普通交换机
      */
@@ -149,9 +157,9 @@ public class MqMessageSendUtils {
     private static void handleRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
         if (cd.getRetryCount() < cd.getMaxRetries()) {
             cd.setRetryCount(cd.getRetryCount() + 1);
-
+             log.info("scheduledExecutorService为{}",scheduledExecutorService);
             // 延迟 2 秒后执行重发
-            retryExecutor.schedule(() -> {
+            scheduledExecutorService.schedule(() -> {
                 log.info("🔄 执行第 {} 次重试发送...", cd.getRetryCount());
                 sendWithRetry(rabbitTemplate, cd);
             }, 2, TimeUnit.SECONDS);
