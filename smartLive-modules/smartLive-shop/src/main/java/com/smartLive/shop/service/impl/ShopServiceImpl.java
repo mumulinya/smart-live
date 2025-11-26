@@ -384,7 +384,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public Result queryShopByType(Integer typeId, Integer current,String sortBy, Double x, Double y) {
         //判断是否根据坐标查询
         if (x == null && y == null) {
-            String key = RedisConstants.SHOP_GEO_KEY + typeId;
+            String key = RedisConstants.CACHE_SHOP_KEY + typeId + ":" + current+sortBy;
             String shopJson = stringRedisTemplate.opsForList().leftPop(key);
             if(shopJson != null){
                 List<Shop> shops = JSONUtil.toList(shopJson, Shop.class);

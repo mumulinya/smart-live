@@ -33,7 +33,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="typeId != null  and typeId != ''"> and type_id = #{typeId}</if>
             <if test="images != null  and images != ''"> and images = #{images}</if>
             <if test="area != null  and area != ''"> and area = #{area}</if>
-            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="address != null  and address != ''"> and address like concat('%', #{address}, '%')</if>
             <if test="x != null  and x != ''"> and x = #{x}</if>
             <if test="y != null  and y != ''"> and y = #{y}</if>
             <if test="avgPrice != null  and avgPrice != ''"> and avg_price = #{avgPrice}</if>
@@ -43,7 +43,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="openHours != null  and openHours != ''"> and open_hours = #{openHours}</if>
         </where>
     </select>
-    
+
     <select id="selectShopById" parameterType="String" resultMap="ShopResult">
         <include refid="selectShopVo"/>
         where id = #{id}

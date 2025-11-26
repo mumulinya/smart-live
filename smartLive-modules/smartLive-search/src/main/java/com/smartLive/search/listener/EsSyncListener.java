@@ -13,6 +13,7 @@ import com.smartLive.search.service.IBlogEsService;
 import com.smartLive.search.service.IShopEsService;
 import com.smartLive.search.service.IUserEsService;
 import com.smartLive.search.service.IVoucherEsService;
+import com.smartLive.search.strategy.EsSyncStrategy;
 import com.smartLive.search.utils.EsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -26,27 +27,32 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public class EsSyncListener {
 
     // 注入4个实体的Service
-    @Autowired
-    private IVoucherEsService voucherEsService;
-    @Autowired
-    private IUserEsService userEsService;
-    @Autowired
-    private IShopEsService shopEsService;
-    @Autowired
-    private IBlogEsService blogEsService;
+    private Map<String, EsSyncStrategy> esStrategyMap;
     @Autowired
     private ExecutorService executorService;
+
+    //基于 Spring 容器管理的策略分发模式
+    @Autowired
+    public EsSyncListener(List<EsSyncStrategy> strategies) {
+        this.esStrategyMap = strategies.stream()
+                .collect(Collectors.toMap(
+                        EsSyncStrategy::getDataType,  // 使用 dataType 作为键
+                        Function.identity()               // 策略对象作为值
+                ));
+    }
 
     // ==================== 单条插入 ====================
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE,type= ExchangeTypes.FANOUT),
+                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
                     key = MqConstants.ES_ROUTING_VOUCHER_INSERT),
             @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
@@ -60,54 +66,20 @@ public class EsSyncListener {
     })
     public void handleSingleInsert(EsInsertRequest request) {
        executorService.submit(()->{
-           log.info("线程{}接收单条插入请求: {}",Thread.currentThread().getName(),request);
+           log.info("Es接收单条插入请求: {}", request);
+           // 1. 获取策略
+           EsSyncStrategy strategy = esStrategyMap.get(request.getDataType());
+           if (strategy == null) {
+               log.error("Es单条插入失败：未找到策略 dataType={}", request.getDataType());
+               return;
+           }
            try {
-               // 1. 转换数据为实体类
-               Object convertedData = convertData(request.getDataType(), (Map<String, Object>) request.getData());
-               if (convertedData == null) {
-                   log.error("单条插入失败：未知dataType={}", request.getDataType());
-                   return;
-               }
-               // 2. 根据数据类型调用对应的Service
-               // 替换原来的 switch 表达式为传统 switch 语句
-               boolean success = false; // 定义变量接收结果
-               switch (request.getDataType()) {
-                   case EsDataTypeConstants.VOUCHER:
-                       success = voucherEsService.insertOrUpdate(
-                               request.getIndexName(),
-                               request.getId().toString(),
-                               (VoucherDoc) convertedData
-                       );
-                       break;
-                   case EsDataTypeConstants.USER:
-                       success = userEsService.insertOrUpdate(
-                               request.getIndexName(),
-                               request.getId().toString(),
-                               (UserDoc) convertedData
-                       );
-                       break;
-                   case EsDataTypeConstants.SHOP:
-                       success = shopEsService.insertOrUpdate(
-                               request.getIndexName(),
-                               request.getId().toString(),
-                               (ShopDoc) convertedData
-                       );
-                       break;
-                   case EsDataTypeConstants.BLOG:
-                       success = blogEsService.insertOrUpdate(
-                               request.getIndexName(),
-                               request.getId().toString(),
-                               (BlogDoc) convertedData
-                       );
-                       break;
-                   default:
-                       log.error("未知dataType：{}", request.getDataType());
-                       success = false; // 默认失败
-               }
-               log.info("单条插入结果: {}", success);
+               // 2. 直接委托给策略执行
+               boolean success = strategy.insertOrUpdate(request.getIndexName(),request.getId().toString(), request.getData());
+               log.info("Es单条插入结果: {}, type={}", success, request.getDataType());
            } catch (Exception e) {
-               log.error("单条插入失败", e);
-           } 
+               log.error("Es单条插入异常", e);
+           }
        });
     }
 
@@ -128,52 +100,18 @@ public class EsSyncListener {
     })
     public void handleBatchInsert(EsBatchInsertRequest request) {
         executorService.submit(()->{
-            log.info("线程{}接收批量插入请求: {}",Thread.currentThread().getName(),request);
+            log.info("Es接收批量插入请求: {}", request);
+            log.info("esStrategyMap为：{}", esStrategyMap);
+            EsSyncStrategy strategy = esStrategyMap.get(request.getDataType());
+            if (strategy == null) {
+                log.error("Es批量插入失败：未找到策略 dataType={}", request.getDataType());
+                return;
+            }
             try {
-                // 1. 转换数据列表为实体类列表
-                List<?> convertedList = convertDataList(request.getDataType(), (List<Object>) request.getData());
-                if (convertedList == null) {
-                    log.error("批量插入失败：未知dataType={}", request.getDataType());
-                    return;
-                }
-                // 2. 根据数据类型调用对应的Service
-                boolean success = false;
-                switch (request.getDataType()) {
-                    case EsDataTypeConstants.VOUCHER:
-                        success = voucherEsService.batchInsert(
-                                request.getIndexName(),
-                                (List<VoucherDoc>) convertedList,
-                                data -> data.getId().toString() // Long转String
-                        );
-                        break;
-                    case EsDataTypeConstants.USER:
-                        success = userEsService.batchInsert(
-                                request.getIndexName(),
-                                (List<UserDoc>) convertedList,
-                                data -> data.getId().toString()
-                        );
-                        break;
-                    case EsDataTypeConstants.SHOP:
-                        success = shopEsService.batchInsert(
-                                request.getIndexName(),
-                                (List<ShopDoc>) convertedList,
-                                data -> data.getId().toString()
-                        );
-                        break;
-                    case EsDataTypeConstants.BLOG:
-                        success = blogEsService.batchInsert(
-                                request.getIndexName(),
-                                (List<BlogDoc>) convertedList,
-                                data -> data.getId().toString()
-                        );
-                        break;
-                    default:
-                        log.error("未知dataType：{}", request.getDataType());
-                        success = false;
-                }
-                log.info("批量插入结果: {}", success);
+                boolean success = strategy.batchInsert(request.getIndexName(),(List<Object>) request.getData());
+                log.info("Es批量插入结果: {}, type={}", success, request.getDataType());
             } catch (Exception e) {
-                log.error("批量插入失败", e);
+                log.error("Es批量插入异常", e);
             }
         });
     }
@@ -195,51 +133,18 @@ public class EsSyncListener {
     })
     public void handleDelete(EsInsertRequest request) {
        executorService.submit(()->{
-           log.info("线程{}接收删除请求: id={}",Thread.currentThread().getName(),request.getId());
+           log.info("Es接收删除请求: id={}", request.getId());
+           EsSyncStrategy strategy = esStrategyMap.get(request.getDataType());
+           if (strategy == null) {
+               log.error("Es删除失败：未找到策略 dataType={}", request.getDataType());
+               return;
+           }
            try {
-               boolean success = false;
-               switch (request.getDataType()) {
-                   case EsDataTypeConstants.VOUCHER:
-                       success = voucherEsService.delete(request.getIndexName(), request.getId().toString());
-                       break;
-                   case EsDataTypeConstants.USER:
-                       success = userEsService.delete(request.getIndexName(), request.getId().toString());
-                       break;
-                   case EsDataTypeConstants.SHOP:
-                       success = shopEsService.delete(request.getIndexName(), request.getId().toString());
-                       break;
-                   case EsDataTypeConstants.BLOG:
-                       success = blogEsService.delete(request.getIndexName(), request.getId().toString());
-                       break;
-                   default:
-                       log.error("未知dataType：{}", request.getDataType());
-                       success = false;
-               }
-               log.info("删除结果: {}", success);
+               boolean success = strategy.delete(request.getIndexName(),request.getId().toString());
+               log.info("Es删除结果: {}", success);
            } catch (Exception e) {
-               log.error("删除失败", e);
+               log.error("Es删除异常", e);
            }
            });
-    }
-
-    // ==================== 数据转换工具方法 ====================
-    private Object convertData(String dataType, Map<String, Object> dataMap) {
-        switch (dataType) {
-            case EsDataTypeConstants.VOUCHER: return EsTool.convertToObject(dataMap, VoucherDoc.class);
-            case EsDataTypeConstants.USER: return EsTool.convertToObject(dataMap, UserDoc.class);
-            case EsDataTypeConstants.SHOP: return EsTool.convertToObject(dataMap, ShopDoc.class);
-            case EsDataTypeConstants.BLOG: return EsTool.convertToObject(dataMap, BlogDoc.class);
-            default: return null;
-        }
-    }
-
-    private List<?> convertDataList(String dataType, List<Object> dataList) {
-        switch (dataType) {
-            case EsDataTypeConstants.VOUCHER: return EsTool.convertList(dataList, VoucherDoc.class);
-            case EsDataTypeConstants.USER: return EsTool.convertList(dataList, UserDoc.class);
-            case EsDataTypeConstants.SHOP: return EsTool.convertList(dataList, ShopDoc.class);
-            case EsDataTypeConstants.BLOG: return EsTool.convertList(dataList, BlogDoc.class);
-            default: return null;
-        }
     }
 }

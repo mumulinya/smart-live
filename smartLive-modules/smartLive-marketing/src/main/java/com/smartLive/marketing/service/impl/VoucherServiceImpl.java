@@ -353,8 +353,10 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      */
     void queryVoucherShopMessage(Voucher voucher){
         ShopDTO shopDTO = remoteShopService.getShopById(voucher.getShopId()).getData();
-        voucher.setShopName(shopDTO.getName());
-        voucher.setTypeId(shopDTO.getTypeId());
+        if(shopDTO != null){
+            voucher.setShopName(shopDTO.getName());
+            voucher.setTypeId(shopDTO.getTypeId());
+        }
     }
 
     /**
@@ -475,11 +477,11 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 //               );
                 MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT, request);
                 //发送rabbitmq消息数据插入Milvus
-//               rabbitTemplate.convertAndSend(
-//                       MqConstants.MILVUS_EXCHANGE,
-//                       MqConstants.MILVUS_ROUTING_VOUCHER_BATCH_INSERT,
-//                       request
-//               );
+               rabbitTemplate.convertAndSend(
+                       MqConstants.MILVUS_EXCHANGE,
+                       MqConstants.MILVUS_ROUTING_VOUCHER_BATCH_INSERT,
+                       request
+               );
                 log.info("发送第 {} 页，{} 条数据", finalPage, vouchers.size());
             });
             page++;
@@ -499,8 +501,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         for (String id : ids) {
             executorService.submit(()->{
                 log.info("线程：{}开始发布id为{}的优惠券", Thread.currentThread().getName(), id);
-                Voucher voucher = query().eq("id", id).one();
+                Voucher voucher = getById(Long.parseLong(id));
                 if (voucher== null){
+                    log.info("优惠券不存在");
                     return;
                 }
                 querySeckill(voucher);
@@ -510,11 +513,12 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 esInsertRequest.setData(voucher);
                 esInsertRequest.setId(voucher.getId());
                 esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
+                log.info("发送的优惠券信息为{}", voucher);
                 //发送rabbitmq消息数据插入es
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
                 MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
                 //发送rabbitmq消息数据插入Milvus
-//               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_INSERT, esInsertRequest);
+               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_INSERT, esInsertRequest);
             });
         }
         return "发布成功";
