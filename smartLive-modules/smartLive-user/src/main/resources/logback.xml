@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
     <!-- 日志存放路径 -->
-	<property name="log.path" value="logs/smartLive-system" />
+	<property name="log.path" value="logs/smartLive-user" />
     <!-- 彩色日志格式 -->
     <property name="log.pattern" value="%d{HH:mm:ss.SSS} | %thread | %highlight(%-5level) | %cyan(%logger{40}) | %msg%n"/>
     <!-- 控制台输出 -->

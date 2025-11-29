@@ -5,13 +5,14 @@ import com.smartLive.search.service.IShopEsService;
 import com.smartLive.search.strategy.EsSyncStrategy;
 import com.smartLive.search.utils.EsTool;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@Service
+@Component("shop")
 public class ShopEsStrategy implements EsSyncStrategy {
     @Autowired
     IShopEsService shopEsService;

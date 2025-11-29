@@ -5,13 +5,14 @@ import com.smartLive.search.service.IVoucherEsService;
 import com.smartLive.search.strategy.EsSyncStrategy;
 import com.smartLive.search.utils.EsTool;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@Service
+@Component("voucher")
 public class VoucherEsStrategy implements EsSyncStrategy {
     @Autowired
     IVoucherEsService voucherEsService;

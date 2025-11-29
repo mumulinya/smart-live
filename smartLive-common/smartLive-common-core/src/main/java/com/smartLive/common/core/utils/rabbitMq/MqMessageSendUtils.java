@@ -1,6 +1,9 @@
 package com.smartLive.common.core.utils.rabbitMq;
 
+import com.smartLive.common.core.constant.MqConstants;
+import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.RetryCorrelationData;
+import com.smartLive.common.core.domain.order.VoucherOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -165,16 +168,10 @@ public class MqMessageSendUtils {
             }, 2, TimeUnit.SECONDS);
 
         } else {
-            log.error("重试次数耗尽，消息发送失败。消息进入死信队列。ID: {}", cd.getId());
-            if(cd.getDeadExchange() != null){
-                //发送消息给死信交换机，记录失败信息
-                rabbitTemplate.convertAndSend(
-                        cd.getDeadExchange(),
-                        cd.getDeadRoutingKey(),
-                        cd.getMessage()
-                );
-            }else{
-                log.error("未配置死信交换机,手动记录数据{}",cd.getMessage());
+            log.error("❌ 消息发送彻底失败，执行本地补偿和持久化。ID: {}", cd.getId());
+            // TODO: 判断这个消息是否是秒杀订单消息
+            if(cd.getRoutingKey().equals(MqConstants.ORDER_SECKILL_ROUTING)){
+                log.error("订单消息发送失败");
             }
         }
     }

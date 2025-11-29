@@ -32,7 +32,9 @@ public class OrderVoucherListener {
                     //配置死信交换机和死信路由键
                     arguments = {
                             @Argument(name = "x-dead-letter-exchange", value = MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = MqConstants.ORDER_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-routing-key", value = MqConstants.ORDER_DEAD_LETTER_ROUTING),
+                            //设置惰性队列
+                            @Argument(name = "x-queue-mode", value = "lazy")
                     }
             ),
             exchange = @Exchange(name = MqConstants.ORDER_EXCHANGE_NAME),

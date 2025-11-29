@@ -5,13 +5,14 @@ import com.smartLive.search.service.IUserEsService;
 import com.smartLive.search.strategy.EsSyncStrategy;
 import com.smartLive.search.utils.EsTool;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@Service
+@Component("user")
 public class UserEsStrategy implements EsSyncStrategy {
     @Autowired
     IUserEsService userEsService;

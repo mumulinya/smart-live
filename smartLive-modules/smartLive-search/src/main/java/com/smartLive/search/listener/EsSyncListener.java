@@ -33,36 +33,31 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class EsSyncListener {
-
-    // 注入4个实体的Service
+    @Autowired
     private Map<String, EsSyncStrategy> esStrategyMap;
     @Autowired
     private ExecutorService executorService;
 
     //基于 Spring 容器管理的策略分发模式
-    @Autowired
-    public EsSyncListener(List<EsSyncStrategy> strategies) {
-        this.esStrategyMap = strategies.stream()
-                .collect(Collectors.toMap(
-                        EsSyncStrategy::getDataType,  // 使用 dataType 作为键
-                        Function.identity()               // 策略对象作为值
-                ));
-    }
+//    @Autowired
+//    public EsSyncListener(List<EsSyncStrategy> strategies) {
+//        this.esStrategyMap = strategies.stream()
+//                .collect(Collectors.toMap(
+//                        EsSyncStrategy::getDataType,  // 使用 dataType 作为键
+//                        Function.identity()               // 策略对象作为值
+//                ));
+//    }
 
     // ==================== 单条插入 ====================
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_VOUCHER_INSERT),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_USER_INSERT),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_SHOP_INSERT),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_BLOG_INSERT)
+                    key = {
+                            MqConstants.ES_ROUTING_VOUCHER_INSERT,
+                            MqConstants.ES_ROUTING_USER_INSERT,
+                            MqConstants.ES_ROUTING_SHOP_INSERT,
+                            MqConstants.ES_ROUTING_BLOG_INSERT
+                    })
     })
     public void handleSingleInsert(EsInsertRequest request) {
        executorService.submit(()->{
@@ -87,16 +82,12 @@ public class EsSyncListener {
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_SHOP_BATCH_INSERT),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_USER_BATCH_INSERT),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_BLOG_BATCH_INSERT),
+                    key = {
+                            MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT,
+                            MqConstants.ES_ROUTING_SHOP_BATCH_INSERT,
+                            MqConstants.ES_ROUTING_USER_BATCH_INSERT,
+                            MqConstants.ES_ROUTING_BLOG_BATCH_INSERT
+                    })
     })
     public void handleBatchInsert(EsBatchInsertRequest request) {
         executorService.submit(()->{
@@ -120,16 +111,12 @@ public class EsSyncListener {
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_DELETE_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_VOUCHER_DELETE),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_DELETE_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_USER_DELETE),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_DELETE_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_BLOG_DELETE),
-            @QueueBinding(value = @Queue(name = MqConstants.ES_DELETE_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_SHOP_DELETE),
+                    key = {
+                            MqConstants.ES_ROUTING_VOUCHER_DELETE,
+                            MqConstants.ES_ROUTING_USER_DELETE,
+                            MqConstants.ES_ROUTING_BLOG_DELETE,
+                            MqConstants.ES_ROUTING_SHOP_DELETE
+                    })
     })
     public void handleDelete(EsInsertRequest request) {
        executorService.submit(()->{
