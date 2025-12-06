@@ -1,9 +1,7 @@
 package com.smartLive.common.core.utils.rabbitMq;
 
 import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.RetryCorrelationData;
-import com.smartLive.common.core.domain.order.VoucherOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

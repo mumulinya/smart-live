@@ -244,6 +244,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
         List<Blog> blogList = getBlogListFromRedis(key);
         if (blogList != null) {
+            blogList.forEach(blog ->{
+                isBlogLiked(blog);
+            });
             return Result.ok(blogList);
         }
         // 根据用户查询
@@ -256,7 +259,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             // 查询blog有关的用户信息
             blogList.forEach(blog ->{
                 queryBlogUser(blog);
-                isBlogLiked(blog);
             });
             //把查询结果写入redis
 //            stringRedisTemplate.opsForList().leftPush(key, JSONUtil.toJsonStr(blogList));
@@ -316,7 +318,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             }
         }
         //清空缓存
-        flashRedisBlogCache( id);
+        flashRedisBlogCache(id);
+        flashRedisBlogListCache();
         return Result.ok("点赞成功");
     }
 
@@ -561,9 +564,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         String key= RedisConstants.CACHE_BLOG_TYPE_KEY + typeId+":"+ current;
         List<Blog> blogList = getBlogListFromRedis(key);
         if (blogList != null) {
+                blogList.forEach(blog -> isBlogLiked(blog));
             return Result.ok(blogList);
         }
         Page<Blog> page = query()
+                .select("images","liked","user_id","title","id")
                 .eq("type_id", typeId)
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
@@ -726,6 +731,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private void flashRedisBlogCache(Long blogId) {
         //清空缓存
         stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_KEY+blogId);
+        flashRedisBlogListCache();
     }
     /**
      * 清空博客列表缓存

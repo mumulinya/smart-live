@@ -68,8 +68,8 @@ public class ShopDTO extends BaseEntity implements Serializable
     private String openHours;
 
     /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-
     private Double distance;
     //查找关键字
     private String keyword;

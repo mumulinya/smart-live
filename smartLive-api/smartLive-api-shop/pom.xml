@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     
-    <artifactId>smartLive-api-shopDTO</artifactId>
+    <artifactId>smartLive-api-shop</artifactId>
 
     <description>
         smartLive-api-shop系统接口模块
