@@ -1,0 +1,15 @@
+# 基础镜像
+FROM  openjdk:8-jre
+# sentinelor
+MAINTAINER smartLive
+
+# 挂载目录
+VOLUME /home/smartLive
+# 创建目录
+RUN mkdir -p /home/smartLive
+# 指定路径
+WORKDIR /home/smartLive
+# 复制jar文件到路径
+COPY ./jar/smartLive-sentinel.jar /home/smartLive/smartLive-sentinel.jar
+# 启动认证服务
+ENTRYPOINT ["java","-jar","smartLive-sentinel.jar"]

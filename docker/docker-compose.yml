@@ -49,6 +49,131 @@ services:
       - ./redis/conf/redis.conf:/home/smartLive/redis/redis.conf
       - ./redis/data:/data
     command: redis-server /home/smartLive/redis/redis.conf
+  smartLive-rabbitmq:
+      container_name: smartLive-rabbitmq
+      image: docker.m.daocloud.io/rabbitmq:3.12-management
+      build:
+        context: ./rabbitmq
+      environment:
+        - RABBITMQ_DEFAULT_USER=admin
+        - RABBITMQ_DEFAULT_PASS=123167
+        - RABBITMQ_DEFAULT_VHOST=/
+      ports:
+        - "5672:5672"
+        - "15672:15672"
+      volumes:
+        - ./rabbitmq/data:/var/lib/rabbitmq
+        - ./rabbitmq/logs:/var/log/rabbitmq
+        - ./rabbitmq/plugins:/plugins
+      healthcheck:
+        test: [ "CMD", "rabbitmq-diagnostics", "check_running" ]
+        interval: 30s
+        timeout: 20s
+        retries: 3
+      networks:
+        - rabbitmq_network
+      restart: unless-stopped
+
+  smartLive-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.16
+    container_name: smartLive-elasticsearch
+    build:
+      context: ./elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data  # 数据持久化
+      - ./elasticsearch/plugins:/usr/share/elasticsearch/plugins  # 插件持久化，包含IK
+    networks:
+      - elastic-net
+  smartLive-kibana:
+      image: docker.elastic.co/kibana/kibana:7.17.16
+      container_name: smartLive-kibana
+      environment:
+        - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      ports:
+        - "5601:5601"
+      depends_on:
+        - smartLive-elasticsearch
+      networks:
+        - elastic-ne
+
+  smartLive-etcd:
+    container_name: smartLive-milvus-etcd
+    image: quay.io/coreos/etcd:v3.5.5
+    build:
+      context: ./milvus/etcd
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - ./milvus/etcd/data:/etcd
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    healthcheck:
+      test: [ "CMD", "etcdctl", "endpoint", "health" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - milvus
+  smartLive-minio:
+      container_name: smartLive-milvus-minio
+      image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+      build:
+        context: ./milvus/minio
+      environment:
+        - MINIO_ROOT_USER=minioadmin
+        - MINIO_ROOT_PASSWORD=minioadmin
+      ports:
+        - "9001:9001"
+        - "9000:9000"
+      volumes:
+        - ./milvus/minio/data:/minio_data
+      command: minio server /minio_data --console-address ":9001"
+      healthcheck:
+        test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+        interval: 30s
+        timeout: 20s
+        retries: 3
+      networks:
+        - milvus
+      restart: unless-stopped
+  smartLive-milvus:
+      container_name: smartLive-milvus
+      image: milvusdb/milvus:v2.3.4
+      build:
+        context: ./milvus/milvus
+      command: [ "milvus", "run", "standalone" ]
+      environment:
+        - ETCD_ENDPOINTS=etcd:2379
+        - MINIO_ADDRESS=minio:9000
+      volumes:
+        - ./milvus/milvus/data:/var/lib/milvus
+      ports:
+        - "19530:19530"
+        - "9091:9091"
+      depends_on:
+        smartLive-etcd:
+          condition: service_healthy
+        smartLive-minio:
+          condition: service_healthy
+      healthcheck:
+        test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
+        interval: 30s
+        start_period: 90s
+        timeout: 20s
+        retries: 3
+      networks:
+        - milvus
+      restart: unless-stopped
+
   smartLive-nginx:
     container_name: smartLive-nginx
     image: nginx
@@ -82,55 +207,249 @@ services:
       context: ./smartLive/auth
       dockerfile: dockerfile
     ports:
-      - "9200:9200"
+      - "9900:9900"
     depends_on:
       - smartLive-redis
     links:
       - smartLive-redis
-  smartLive-modules-system:
-    container_name: smartLive-modules-system
+  smartLive-sentinel:
+    container_name: smartLive-sentinel
     build:
-      context: ./smartLive/modules/system
+      context: ./smartLive/sentinel
+      dockerfile: dockerfile
+    ports:
+      - "8718:8718"
+  smartLive-modules-ai:
+    container_name: smartLive-modules-ai
+    build:
+      context: ./smartLive/modules/ai
       dockerfile: dockerfile
     ports:
       - "9201:9201"
     depends_on:
       - smartLive-redis
       - smartLive-mysql
+      - smartLive-rabbitmq
     links:
       - smartLive-redis
       - smartLive-mysql
-  smartLive-modules-gen:
-    container_name: smartLive-modules-gen
+      - smartLive-rabbitmq
+  smartLive-modules-blog:
+    container_name: smartLive-modules-blog
     build:
-      context: ./smartLive/modules/gen
+      context: ./smartLive/modules/blog
       dockerfile: dockerfile
     ports:
-      - "9202:9202"
+      - "9214:9214"
     depends_on:
+      - smartLive-redis
       - smartLive-mysql
+      - smartLive-rabbitmq
     links:
+      - smartLive-redis
       - smartLive-mysql
-  smartLive-modules-job:
-    container_name: smartLive-modules-job
+      - smartLive-rabbitmq
+  smartLive-modules-chat:
+    container_name: smartLive-modules-chat
     build:
-      context: ./smartLive/modules/job
+      context: ./smartLive/modules/chat
       dockerfile: dockerfile
     ports:
-      - "9203:9203"
+      - "9213:9213"
     depends_on:
+      - smartLive-redis
       - smartLive-mysql
+      - smartLive-rabbitmq
     links:
+      - smartLive-redis
       - smartLive-mysql
+      - smartLive-rabbitmq
+  smartLive-modules-comment:
+    container_name: smartLive-modules-comment
+    build:
+      context: ./smartLive/modules/comment
+      dockerfile: dockerfile
+    ports:
+      - "9212:9212"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
   smartLive-modules-file:
     container_name: smartLive-modules-file
     build:
       context: ./smartLive/modules/file
       dockerfile: dockerfile
     ports:
-      - "9300:9300"
+      - "9211:9211"
     volumes:
-    - ./smartLive/uploadPath:/home/smartLive/uploadPath
+      - ./smartLive/uploadPath:/home/smartLive/uploadPath
+    depends_on:
+      - smartLive-minio
+    links:
+      - smartLive-minio
+  smartLive-modules-follow:
+    container_name: smartLive-modules-follow
+    build:
+      context: ./smartLive/modules/follow
+      dockerfile: dockerfile
+    ports:
+      - "9210:9210"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+  smartLive-modules-gen:
+    container_name: smartLive-modules-gen
+    build:
+      context: ./smartLive/modules/gen
+      dockerfile: dockerfile
+    ports:
+      - "9209:9209"
+    depends_on:
+      - smartLive-mysql
+    links:
+      - smartLive-mysql
+  smartLive-modules-index:
+    container_name: smartLive-modules-index
+    build:
+      context: ./smartLive/modules/index
+      dockerfile: dockerfile
+    ports:
+      - "9215:9215"
+    depends_on:
+      - smartLive-redis
+      - smartLive-rabbitmq
+    links:
+      - smartLive-redis
+      - smartLive-rabbitmq
+  smartLive-modules-job:
+    container_name: smartLive-modules-job
+    build:
+      context: ./smartLive/modules/job
+      dockerfile: dockerfile
+    ports:
+      - "9208:9208"
+    depends_on:
+      - smartLive-mysql
+    links:
+      - smartLive-mysql
+  smartLive-modules-map:
+    container_name: smartLive-modules-map
+    build:
+      context: ./smartLive/modules/map
+      dockerfile: dockerfile
+    ports:
+      - "9207:9207"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+      - smartLive-elasticsearch
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+      - smartLive-elasticsearch
+  smartLive-modules-marketing:
+    container_name: smartLive-modules-marketing
+    build:
+      context: ./smartLive/modules/marketing
+      dockerfile: dockerfile
+    ports:
+      - "9206:9206"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+  smartLive-modules-order:
+    container_name: smartLive-modules-order
+    build:
+      context: ./smartLive/modules/order
+      dockerfile: dockerfile
+    ports:
+      - "9205:9205"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+  smartLive-modules-search:
+    container_name: smartLive-modules-search
+    build:
+      context: ./smartLive/modules/search
+      dockerfile: dockerfile
+    ports:
+      - "9204:9204"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+      - smartLive-elasticsearch
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+      - smartLive-elasticsearch
+  smartLive-modules-shop:
+    container_name: smartLive-modules-shop
+    build:
+      context: ./smartLive/modules/shop
+      dockerfile: dockerfile
+    ports:
+      - "9203:9203"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+  smartLive-modules-system:
+    container_name: smartLive-modules-system
+    build:
+      context: ./smartLive/modules/system
+      dockerfile: dockerfile
+    ports:
+      - "9202:9202"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+  smartLive-modules-user:
+    container_name: smartLive-modules-user
+    build:
+      context: ./smartLive/modules/user
+      dockerfile: dockerfile
+    ports:
+      - "9201:9201"
+    depends_on:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+    links:
+      - smartLive-redis
+      - smartLive-mysql
+      - smartLive-rabbitmq
+
   smartLive-visual-monitor:
     container_name: smartLive-visual-monitor
     build:

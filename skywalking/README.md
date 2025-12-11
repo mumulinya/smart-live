@@ -8,4 +8,5 @@ cd apache-skywalking-apm-bin/bin
 ./webappService.sh
 第二步：在 IDE 中配置并启动项目
 IntelliJ 的 VM options:  -javaagent:D:/smart-live/smart-live-Cloud/skywalking/skywalking-agent/skywalking-agent.jar
-IntelliJ 的 环境变量: SW_AGENT_NAME=smartLive-follow;SW_AGENT_COLLECTOR_BACKEND_SERVICES=127.0.0.1:11800
+IntelliJ 的 环境变量: SW_AGENT_NAME=smar
+tLive-follow;SW_AGENT_COLLECTOR_BACKEND_SERVICES=127.0.0.1:11800

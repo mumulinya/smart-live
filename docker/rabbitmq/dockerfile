@@ -1,0 +1,12 @@
+# 基础镜像
+FROM docker.m.daocloud.io/rabbitmq:3.12-management
+# author
+MAINTAINER smartLive
+
+# 挂载目录
+VOLUME /home/smartLive/rabbitmq
+# 创建目录
+RUN mkdir -p /home/smartLive/rabbitmq
+# 指定路径
+WORKDIR /home/smartLive/rabbitmq
+

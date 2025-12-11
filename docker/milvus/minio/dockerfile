@@ -1,0 +1,12 @@
+# 基础镜像
+FROM minio/minio:RELEASE.2023-03-20T20-16-18Z
+# author
+MAINTAINER smartLive
+
+# 挂载目录
+VOLUME /home/smartLive/milvus/minio
+# 创建目录
+RUN mkdir -p /home/smartLive/milvus/minio
+# 指定路径
+WORKDIR /home/smartLive/milvus/minio
+

@@ -1,0 +1,12 @@
+# 基础镜像
+FROM docker.elastic.co/elasticsearch/elasticsearch:7.17.16
+# author
+MAINTAINER smartLive
+
+# 挂载目录
+VOLUME /home/smartLive/elasticsearch
+# 创建目录
+RUN mkdir -p /home/smartLive/elasticsearch
+# 指定路径
+WORKDIR /home/smartLive/elasticsearch
+
