@@ -15,7 +15,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectUserVo">
-        select id, phone, password, nick_name, icon, create_time, update_time from tb_user
+        select id, phone, password, nick_name, icon, create_time, update_time from user
     </sql>
 
     <select id="selectUserList" parameterType="com.smartLive.user.domain.User" resultMap="UserResult">
@@ -34,7 +34,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <insert id="insertUser" parameterType="com.smartLive.user.domain.User" useGeneratedKeys="true" keyProperty="id">
-        insert into tb_user
+        insert into user
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="phone != null and phone != ''">phone,</if>
             <if test="password != null">password,</if>
@@ -54,7 +54,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <update id="updateUser" parameterType="com.smartLive.user.domain.User">
-        update tb_user
+        update user
         <trim prefix="SET" suffixOverrides=",">
             <if test="phone != null and phone != ''">phone = #{phone},</if>
             <if test="password != null">password = #{password},</if>
@@ -67,11 +67,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <delete id="deleteUserById" parameterType="Long">
-        delete from tb_user where id = #{id}
+        delete from user where id = #{id}
     </delete>
 
     <delete id="deleteUserByIds" parameterType="String">
-        delete from tb_user where id in 
+        delete from user where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

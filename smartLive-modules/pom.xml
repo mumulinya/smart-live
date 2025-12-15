@@ -20,6 +20,10 @@
         <module>smartLive-marketing</module>
         <module>smartLive-comment</module>
         <module>smartLive-chat</module>
+        <module>smartLive-follow</module>
+        <module>smartLive-index</module>
+        <module>smartLive-search</module>
+        <module>smartLive-map</module>
     </modules>
 
     <artifactId>smartLive-modules</artifactId>

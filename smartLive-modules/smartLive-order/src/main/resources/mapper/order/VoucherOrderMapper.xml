@@ -18,7 +18,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectVoucherOrderVo">
-        select id, user_id, voucher_id, pay_type, status, create_time, pay_time, use_time, refund_time, update_time from tb_voucher_order
+        select id, user_id, voucher_id, pay_type, status, create_time, pay_time, use_time, refund_time, update_time from voucher_order
     </sql>
 
     <select id="selectVoucherOrderList" parameterType="com.smartLive.order.domain.VoucherOrder" resultMap="VoucherOrderResult">
@@ -40,7 +40,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <insert id="insertVoucherOrder" parameterType="com.smartLive.order.domain.VoucherOrder">
-        insert into tb_voucher_order
+        insert into voucher_order
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">id,</if>
             <if test="userId != null">user_id,</if>
@@ -68,7 +68,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <update id="updateVoucherOrder" parameterType="com.smartLive.order.domain.VoucherOrder">
-        update tb_voucher_order
+        update voucher_order
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null">user_id = #{userId},</if>
             <if test="voucherId != null">voucher_id = #{voucherId},</if>
@@ -84,11 +84,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <delete id="deleteVoucherOrderById" parameterType="Long">
-        delete from tb_voucher_order where id = #{id}
+        delete from voucher_order where id = #{id}
     </delete>
 
     <delete id="deleteVoucherOrderByIds" parameterType="String">
-        delete from tb_voucher_order where id in 
+        delete from voucher_order where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

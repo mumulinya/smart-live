@@ -31,4 +31,15 @@ public interface RemoteMarketingService {
      */
     @GetMapping("/voucher/total")
     R<Integer> getCouponTotal();
+    /**
+     * 秒杀优惠券
+     */
+    @PostMapping("/voucher/orderSeckillVoucher")
+    Result seckillVoucher(@RequestParam("id") Long voucherId, @RequestParam("userId") Long userId);
+
+    /**
+     * 购买优惠券
+     */
+    @PostMapping("/voucher/orderVoucher")
+    Result buyVoucher(@RequestParam("id") Long voucherId, @RequestParam("userId") Long userId);
 }

@@ -21,7 +21,7 @@
     </resultMap>
 
     <sql id="selectCommentVo">
-        select id, user_id, source_type, source_id, parent_id, answer_id, images, content, liked, status, rating, create_time, update_time from tb_comments
+        select id, user_id, source_type, source_id, parent_id, answer_id, images, content, liked, status, rating, create_time, update_time from comments
     </sql>
 
     <select id="selectCommentList" parameterType="com.smartLive.comment.domain.Comment" resultMap="CommentResult">
@@ -46,7 +46,7 @@
     </select>
 
     <insert id="insertComment" parameterType="com.smartLive.comment.domain.Comment" useGeneratedKeys="true" keyProperty="id">
-        insert into tb_comments
+        insert into comments
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userId != null">user_id,</if>
             <if test="sourceType != null">source_type,</if>
@@ -78,7 +78,7 @@
     </insert>
 
     <update id="updateComment" parameterType="com.smartLive.comment.domain.Comment">
-        update tb_comments
+        update comments
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null">user_id = #{userId},</if>
             <if test="sourceType != null">source_type = #{sourceType},</if>
@@ -97,11 +97,11 @@
     </update>
 
     <delete id="deleteCommentById" parameterType="Long">
-        delete from tb_comments where id = #{id}
+        delete from comments where id = #{id}
     </delete>
 
     <delete id="deleteCommentByIds" parameterType="String">
-        delete from tb_comments where id in
+        delete from comments where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

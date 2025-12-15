@@ -26,6 +26,7 @@ public class SmartLiveShopApplication
     public static void main(String[] args)
     {
         SpringApplication.run(SmartLiveShopApplication.class, args);
+        System.out.println("===== SHOP JAR VERSION 2025-01-13 20:30 =====");
         System.out.println("(♥◠‿◠)ﾉﾞ  店铺模块启动成功   ლ(´ڡ`ლ)ﾞ  \n" +
                 " .-------.       ____     __        \n" +
                 " |  _ _   \\      \\   \\   /  /    \n" +

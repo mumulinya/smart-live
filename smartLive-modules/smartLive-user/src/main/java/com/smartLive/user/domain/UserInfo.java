@@ -16,7 +16,7 @@ import com.smartLive.common.core.web.domain.BaseEntity;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_user_info")
+@TableName("user_info")
 public class UserInfo extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;

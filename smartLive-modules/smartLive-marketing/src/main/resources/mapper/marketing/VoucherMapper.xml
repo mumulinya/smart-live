@@ -19,7 +19,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectVoucherVo">
-        select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, create_time, update_time from tb_voucher
+        select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, create_time, update_time from voucher
     </sql>
 
     <select id="selectVoucherList" parameterType="com.smartLive.marketing.domain.Voucher" resultMap="VoucherResult">
@@ -42,7 +42,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <insert id="insertVoucher" parameterType="com.smartLive.marketing.domain.Voucher" useGeneratedKeys="true" keyProperty="id">
-        insert into tb_voucher
+        insert into voucher
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="shopId != null">shop_id,</if>
             <if test="title != null and title != ''">title,</if>
@@ -70,7 +70,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <update id="updateVoucher" parameterType="com.smartLive.marketing.domain.Voucher">
-        update tb_voucher
+        update voucher
         <trim prefix="SET" suffixOverrides=",">
             <if test="shopId != null">shop_id = #{shopId},</if>
             <if test="title != null and title != ''">title = #{title},</if>
@@ -87,11 +87,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <delete id="deleteVoucherById" parameterType="Long">
-        delete from tb_voucher where id = #{id}
+        delete from voucher where id = #{id}
     </delete>
 
     <delete id="deleteVoucherByIds" parameterType="String">
-        delete from tb_voucher where id in 
+        delete from voucher where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>
@@ -101,7 +101,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         SELECT
             v.`id`, v.`shop_id`, v.`title`, v.`sub_title`, v.`rules`, v.`pay_value`,
             v.`actual_value`, v.`type`, sv.`stock` , sv.begin_time , sv.end_time
-        FROM tb_voucher v
+        FROM voucher v
                  LEFT JOIN  tb_seckill_voucher sv ON v.id = sv.voucher_id
         WHERE v.shop_id = #{shopId} AND v.status = 1
     </select>

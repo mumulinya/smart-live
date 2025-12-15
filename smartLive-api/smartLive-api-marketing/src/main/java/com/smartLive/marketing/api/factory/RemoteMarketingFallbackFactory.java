@@ -39,6 +39,28 @@ public class RemoteMarketingFallbackFactory implements FallbackFactory<RemoteMar
             public R<Integer> getCouponTotal() {
                 return R.fail("查询代金券总数失败");
             }
+
+            /**
+             * 秒杀优惠券
+             *
+             * @param voucherId
+             * @param userId
+             */
+            @Override
+            public Result seckillVoucher(Long voucherId, Long userId) {
+                return null;
+            }
+
+            /**
+             * 购买优惠券
+             *
+             * @param voucherId
+             * @param userId
+             */
+            @Override
+            public Result buyVoucher(Long voucherId, Long userId) {
+                return null;
+            }
         };
     }
 }

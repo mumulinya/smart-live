@@ -1,4 +1,4 @@
-version : '3.8'
+version: '3.8'
 services:
   smartLive-nacos:
     container_name: smartLive-nacos
@@ -7,6 +7,12 @@ services:
       context: ./nacos
     environment:
       - MODE=standalone
+      # === 新增以下配置 ===
+      - NACOS_AUTH_ENABLE=false
+      # 下面这个是一个随机生成的 Base64 字符串，你可以直接用，也可以自己生成一个新的
+      - NACOS_AUTH_TOKEN=U2VjcmV0S2V5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5
+      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+      - NACOS_AUTH_IDENTITY_VALUE=security
     volumes:
       - ./nacos/logs/:/home/nacos/logs
       - ./nacos/conf/application.properties:/home/nacos/conf/application.properties
@@ -18,7 +24,7 @@ services:
       - smartLive-mysql
   smartLive-mysql:
     container_name: smartLive-mysql
-    image: mysql:5.7
+    image: mysql:8.0.43
     build:
       context: ./mysql
     ports:
@@ -28,16 +34,15 @@ services:
       - ./mysql/logs:/logs
       - ./mysql/data:/var/lib/mysql
     command: [
-          'mysqld',
-          '--innodb-buffer-pool-size=80M',
-          '--character-set-server=utf8mb4',
-          '--collation-server=utf8mb4_unicode_ci',
-          '--default-time-zone=+8:00',
-          '--lower-case-table-names=1'
-        ]
+      'mysqld',
+      '--innodb-buffer-pool-size=80M',
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+      '--default-time-zone=+8:00',
+      '--lower-case-table-names=1'
+    ]
     environment:
-      MYSQL_DATABASE: 'ry-cloud'
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: 123167
   smartLive-redis:
     container_name: smartLive-redis
     image: redis
@@ -46,34 +51,30 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./redis/conf/redis.conf:/home/smartLive/redis/redis.conf
+      - ./redis/conf/redis.conf:/usr/local/etc/redis/redis.conf
       - ./redis/data:/data
-    command: redis-server /home/smartLive/redis/redis.conf
-  smartLive-rabbitmq:
-      container_name: smartLive-rabbitmq
-      image: docker.m.daocloud.io/rabbitmq:3.12-management
-      build:
-        context: ./rabbitmq
-      environment:
-        - RABBITMQ_DEFAULT_USER=admin
-        - RABBITMQ_DEFAULT_PASS=123167
-        - RABBITMQ_DEFAULT_VHOST=/
-      ports:
-        - "5672:5672"
-        - "15672:15672"
-      volumes:
-        - ./rabbitmq/data:/var/lib/rabbitmq
-        - ./rabbitmq/logs:/var/log/rabbitmq
-        - ./rabbitmq/plugins:/plugins
-      healthcheck:
-        test: [ "CMD", "rabbitmq-diagnostics", "check_running" ]
-        interval: 30s
-        timeout: 20s
-        retries: 3
-      networks:
-        - rabbitmq_network
-      restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
 
+  smartLive-rabbitmq:
+    container_name: smartLive-rabbitmq
+    image: rabbitmq:3.12-management
+    build:
+      context: ./rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=smart-live
+      - RABBITMQ_DEFAULT_PASS=123167
+      - RABBITMQ_DEFAULT_VHOST=smart-live
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq/data:/var/lib/rabbitmq
+      - ./rabbitmq/logs:/var/log/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_running" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
   smartLive-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.16
     container_name: smartLive-elasticsearch
@@ -87,22 +88,17 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - ./elasticsearch/data:/usr/share/elasticsearch/data  # 数据持久化
-      - ./elasticsearch/plugins:/usr/share/elasticsearch/plugins  # 插件持久化，包含IK
-    networks:
-      - elastic-net
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      - ./elasticsearch/plugins:/usr/share/elasticsearch/plugins
   smartLive-kibana:
-      image: docker.elastic.co/kibana/kibana:7.17.16
-      container_name: smartLive-kibana
-      environment:
-        - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      ports:
-        - "5601:5601"
-      depends_on:
-        - smartLive-elasticsearch
-      networks:
-        - elastic-ne
-
+    image: docker.elastic.co/kibana/kibana:7.17.16
+    container_name: smartLive-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://smartLive-elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - smartLive-elasticsearch
   smartLive-etcd:
     container_name: smartLive-milvus-etcd
     image: quay.io/coreos/etcd:v3.5.5
@@ -121,59 +117,64 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-    networks:
-      - milvus
   smartLive-minio:
-      container_name: smartLive-milvus-minio
-      image: minio/minio:RELEASE.2023-03-20T20-16-18Z
-      build:
-        context: ./milvus/minio
-      environment:
-        - MINIO_ROOT_USER=minioadmin
-        - MINIO_ROOT_PASSWORD=minioadmin
-      ports:
-        - "9001:9001"
-        - "9000:9000"
-      volumes:
-        - ./milvus/minio/data:/minio_data
-      command: minio server /minio_data --console-address ":9001"
-      healthcheck:
-        test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-        interval: 30s
-        timeout: 20s
-        retries: 3
-      networks:
-        - milvus
-      restart: unless-stopped
-  smartLive-milvus:
-      container_name: smartLive-milvus
-      image: milvusdb/milvus:v2.3.4
-      build:
-        context: ./milvus/milvus
-      command: [ "milvus", "run", "standalone" ]
-      environment:
-        - ETCD_ENDPOINTS=etcd:2379
-        - MINIO_ADDRESS=minio:9000
-      volumes:
-        - ./milvus/milvus/data:/var/lib/milvus
-      ports:
-        - "19530:19530"
-        - "9091:9091"
+    container_name: smartLive-milvus-minio
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    build:
+      context: ./milvus/minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+    volumes:
+      - ./milvus/minio/data:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+  smartLive-minio-init:
+      image: minio/mc
       depends_on:
-        smartLive-etcd:
-          condition: service_healthy
         smartLive-minio:
           condition: service_healthy
-      healthcheck:
-        test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
-        interval: 30s
-        start_period: 90s
-        timeout: 20s
-        retries: 3
-      networks:
-        - milvus
-      restart: unless-stopped
+      entrypoint: >
+        /bin/sh -c "
+        mc alias set smartlive http://smartLive-minio:9000 minioadmin minioadmin;
+        mc mb -p smartlive/smart-live;
+        mc anonymous set public smartlive/smart-live;
+        echo '✅ bucket smart-live ready';
+        exit 0;
+        "
 
+  smartLive-milvus:
+    container_name: smartLive-milvus
+    image: milvusdb/milvus:v2.3.4
+    build:
+      context: ./milvus/milvus
+    command: [ "milvus", "run", "standalone" ]
+    environment:
+      - ETCD_ENDPOINTS=smartLive-etcd:2379
+      - MINIO_ADDRESS=smartLive-minio:9000
+    volumes:
+      - ./milvus/milvus/data:/var/lib/milvus
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    depends_on:
+      smartLive-etcd:
+        condition: service_healthy
+      smartLive-minio:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
+      interval: 30s
+      start_period: 90s
+      timeout: 20s
+      retries: 3
   smartLive-nginx:
     container_name: smartLive-nginx
     image: nginx
@@ -181,106 +182,121 @@ services:
       context: ./nginx
     ports:
       - "80:80"
+      - "443:443"
+      - "8081:8081"
     volumes:
       - ./nginx/html/dist:/home/smartLive/projects/smartLive-ui
+      - ./nginx/html/html:/home/smartLive/projects/smartLive-html
       - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/logs:/var/log/nginx
       - ./nginx/conf.d:/etc/nginx/conf.d
-    depends_on:
-      - smartLive-gateway
-    links:
-      - smartLive-gateway
   smartLive-gateway:
     container_name: smartLive-gateway
+    image: smartlive-gateway
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/gateway
       dockerfile: dockerfile
     ports:
       - "8080:8080"
-    depends_on:
-      - smartLive-redis
-    links:
-      - smartLive-redis
   smartLive-auth:
     container_name: smartLive-auth
+    image: smartlive-auth
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/auth
       dockerfile: dockerfile
     ports:
       - "9900:9900"
-    depends_on:
-      - smartLive-redis
-    links:
-      - smartLive-redis
   smartLive-sentinel:
     container_name: smartLive-sentinel
+    image: smartlive-sentinel
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/sentinel
       dockerfile: dockerfile
     ports:
       - "8718:8718"
+
   smartLive-modules-ai:
     container_name: smartLive-modules-ai
+    image: smartlive-modules-ai
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_AI_VECTORSTORE_MILVUS_HOST=smartLive-milvus
+      - SPRING_AI_VECTORSTORE_MILVUS_PORT=19530
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
     build:
       context: ./smartLive/modules/ai
       dockerfile: dockerfile
     ports:
-      - "9201:9201"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
+      - "9216:9216" # 已修改：避免与 User 模块的 9201 冲突
   smartLive-modules-blog:
     container_name: smartLive-modules-blog
+    image: smartlive-modules-blog
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
     build:
       context: ./smartLive/modules/blog
       dockerfile: dockerfile
     ports:
       - "9214:9214"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
   smartLive-modules-chat:
     container_name: smartLive-modules-chat
+    image: smartlive-modules-chat
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
     build:
       context: ./smartLive/modules/chat
       dockerfile: dockerfile
     ports:
       - "9213:9213"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
   smartLive-modules-comment:
     container_name: smartLive-modules-comment
+    image: smartlive-modules-comment
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
     build:
       context: ./smartLive/modules/comment
       dockerfile: dockerfile
     ports:
       - "9212:9212"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
+
   smartLive-modules-file:
     container_name: smartLive-modules-file
+    image: smartlive-modules-file
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
     build:
       context: ./smartLive/modules/file
       dockerfile: dockerfile
@@ -288,170 +304,158 @@ services:
       - "9211:9211"
     volumes:
       - ./smartLive/uploadPath:/home/smartLive/uploadPath
-    depends_on:
-      - smartLive-minio
-    links:
-      - smartLive-minio
+
   smartLive-modules-follow:
     container_name: smartLive-modules-follow
+    image: smartlive-modules-follow
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
     build:
       context: ./smartLive/modules/follow
       dockerfile: dockerfile
     ports:
       - "9210:9210"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
+
   smartLive-modules-gen:
     container_name: smartLive-modules-gen
+    image: smartlive-modules-gen
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/modules/gen
       dockerfile: dockerfile
     ports:
       - "9209:9209"
-    depends_on:
-      - smartLive-mysql
-    links:
-      - smartLive-mysql
   smartLive-modules-index:
     container_name: smartLive-modules-index
+    image: smartlive-modules-index
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/modules/index
       dockerfile: dockerfile
     ports:
       - "9215:9215"
-    depends_on:
-      - smartLive-redis
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-rabbitmq
   smartLive-modules-job:
     container_name: smartLive-modules-job
+    image: smartlive-modules-job
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/modules/job
       dockerfile: dockerfile
     ports:
       - "9208:9208"
-    depends_on:
-      - smartLive-mysql
-    links:
-      - smartLive-mysql
   smartLive-modules-map:
     container_name: smartLive-modules-map
+    image: smartlive-modules-map
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/modules/map
       dockerfile: dockerfile
     ports:
       - "9207:9207"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-      - smartLive-elasticsearch
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-      - smartLive-elasticsearch
   smartLive-modules-marketing:
     container_name: smartLive-modules-marketing
+    image: smartlive-modules-marketing
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
     build:
       context: ./smartLive/modules/marketing
       dockerfile: dockerfile
     ports:
       - "9206:9206"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
   smartLive-modules-order:
     container_name: smartLive-modules-order
+    image: smartlive-modules-order
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
     build:
       context: ./smartLive/modules/order
       dockerfile: dockerfile
     ports:
       - "9205:9205"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
   smartLive-modules-search:
     container_name: smartLive-modules-search
+    image: smartlive-modules-search
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_ELASTICSEARCH_HOST=smartLive-elasticsearch
+      - SPRING_ELASTICSEARCH_PORT=9200
     build:
       context: ./smartLive/modules/search
       dockerfile: dockerfile
     ports:
       - "9204:9204"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-      - smartLive-elasticsearch
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-      - smartLive-elasticsearch
   smartLive-modules-shop:
     container_name: smartLive-modules-shop
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
+    image: smartlive-modules-shop
     build:
       context: ./smartLive/modules/shop
       dockerfile: dockerfile
     ports:
       - "9203:9203"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
   smartLive-modules-system:
     container_name: smartLive-modules-system
+    image: smartlive-modules-system
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/modules/system
       dockerfile: dockerfile
     ports:
       - "9202:9202"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-    links:
-      - smartLive-redis
-      - smartLive-mysql
   smartLive-modules-user:
     container_name: smartLive-modules-user
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
+    image: smartlive-modules-user
     build:
       context: ./smartLive/modules/user
       dockerfile: dockerfile
     ports:
       - "9201:9201"
-    depends_on:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-    links:
-      - smartLive-redis
-      - smartLive-mysql
-      - smartLive-rabbitmq
-
   smartLive-visual-monitor:
     container_name: smartLive-visual-monitor
+    image: smartlive-visual-monitor # 已修改：全小写镜像名
+    environment:
+      - SPRING_CLOUD_NACOS_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
     build:
       context: ./smartLive/visual/monitor
       dockerfile: dockerfile

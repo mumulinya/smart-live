@@ -19,7 +19,7 @@ import java.util.Date;
  * @author mumulin
  * @date 2025-10-02
  */
-@TableName("tb_comments")
+@TableName("comments")
 @Data
 public class Comment extends BaseEntity
 {

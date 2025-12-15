@@ -16,7 +16,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author mumulin
  * @date 2025-10-02
  */
-@TableName("tb_comments")
+@TableName("comments")
 @Data
 public class CommentDTO extends BaseEntity
 {

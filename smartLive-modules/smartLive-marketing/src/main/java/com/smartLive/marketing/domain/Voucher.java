@@ -23,7 +23,7 @@ import java.util.Date;
  * @author ruoyi
  * @date 2025-09-21
  */
-@TableName("tb_voucher")
+@TableName("voucher")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

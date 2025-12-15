@@ -22,7 +22,7 @@ import java.util.Date;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_shop")
+@TableName("shop")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

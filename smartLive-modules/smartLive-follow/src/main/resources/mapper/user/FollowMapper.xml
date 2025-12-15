@@ -12,7 +12,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectFollowVo">
-        select id, user_id, follow_user_id, create_time from tb_follow
+        select id, user_id, follow_user_id, create_time from follow
     </sql>
 
     <select id="selectFollowList" parameterType="com.smartLive.follow.domain.Follow" resultMap="FollowResult">
@@ -29,7 +29,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <insert id="insertFollow" parameterType="com.smartLive.follow.domain.Follow" useGeneratedKeys="true" keyProperty="id">
-        insert into tb_follow
+        insert into follow
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userId != null and userId != ''">user_id,</if>
             <if test="followUserId != null and followUserId != ''">follow_user_id,</if>
@@ -43,7 +43,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <update id="updateFollow" parameterType="com.smartLive.follow.domain.Follow">
-        update tb_follow
+        update follow
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null and userId != ''">user_id = #{userId},</if>
             <if test="followUserId != null and followUserId != ''">follow_user_id = #{followUserId},</if>
@@ -53,11 +53,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <delete id="deleteFollowById" parameterType="Long">
-        delete from tb_follow where id = #{id}
+        delete from follow where id = #{id}
     </delete>
 
     <delete id="deleteFollowByIds" parameterType="String">
-        delete from tb_follow where id in 
+        delete from follow where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

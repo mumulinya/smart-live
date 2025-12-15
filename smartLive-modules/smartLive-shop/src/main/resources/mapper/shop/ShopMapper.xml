@@ -23,7 +23,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectShopVo">
-        select id, name, type_id, images, area, address, x, y, avg_price, sold, comments, score, open_hours, create_time, update_time from tb_shop
+        select id, name, type_id, images, area, address, x, y, avg_price, sold, comments, score, open_hours, create_time, update_time from shop
     </sql>
 
     <select id="selectShopList" parameterType="com.smartLive.shop.domain.Shop" resultMap="ShopResult">
@@ -50,7 +50,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <insert id="insertShop" parameterType="com.smartLive.shop.domain.Shop" useGeneratedKeys="true" keyProperty="id">
-        insert into tb_shop
+        insert into shop
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="name != null and name != ''">name,</if>
             <if test="typeId != null and typeId != ''">type_id,</if>
@@ -86,7 +86,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <update id="updateShop" parameterType="com.smartLive.shop.domain.Shop">
-        update tb_shop
+        update shop
         <trim prefix="SET" suffixOverrides=",">
             <if test="name != null and name != ''">name = #{name},</if>
             <if test="typeId != null and typeId != ''">type_id = #{typeId},</if>
@@ -107,11 +107,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <delete id="deleteShopById" parameterType="String">
-        delete from tb_shop where id = #{id}
+        delete from shop where id = #{id}
     </delete>
 
     <delete id="deleteShopByIds" parameterType="String">
-        delete from tb_shop where id in 
+        delete from shop where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

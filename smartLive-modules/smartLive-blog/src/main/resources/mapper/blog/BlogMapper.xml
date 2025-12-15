@@ -19,7 +19,7 @@
     </resultMap>
 
     <sql id="selectBlogVo">
-        select id, shop_id, type_id, user_id, title, images, content, liked, comments, create_time, update_time from tb_blog
+        select id, shop_id, type_id, user_id, title, images, content, liked, comments, create_time, update_time from blog
     </sql>
 
     <select id="selectBlogList" parameterType="com.smartLive.blog.domain.Blog" resultMap="BlogResult">
@@ -42,7 +42,7 @@
     </select>
 
     <insert id="insertBlog" parameterType="com.smartLive.blog.domain.Blog" useGeneratedKeys="true" keyProperty="id">
-        insert into tb_blog
+        insert into blog
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="shopId != null">shop_id,</if>
             <if test="typeId != null">type_id,</if>
@@ -70,7 +70,7 @@
     </insert>
 
     <update id="updateBlog" parameterType="com.smartLive.blog.domain.Blog">
-        update tb_blog
+        update blog
         <trim prefix="SET" suffixOverrides=",">
             <if test="shopId != null">shop_id = #{shopId},</if>
             <if test="typeId != null">type_id = #{typeId},</if>
@@ -87,11 +87,11 @@
     </update>
 
     <delete id="deleteBlogById" parameterType="String">
-        delete from tb_blog where id = #{id}
+        delete from blog where id = #{id}
     </delete>
 
     <delete id="deleteBlogByIds" parameterType="String">
-        delete from tb_blog where id in
+        delete from blog where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

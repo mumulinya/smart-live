@@ -16,7 +16,7 @@ import java.io.Serializable;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_follow")
+@TableName("follow")
 public class Follow extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;

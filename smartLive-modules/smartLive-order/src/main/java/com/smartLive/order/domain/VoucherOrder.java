@@ -23,7 +23,7 @@ import com.smartLive.common.core.web.domain.BaseEntity;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_voucher_order")
+@TableName("voucher_order")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

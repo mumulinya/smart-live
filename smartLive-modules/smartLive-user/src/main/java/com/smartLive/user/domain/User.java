@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_user")
+@TableName("user")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
