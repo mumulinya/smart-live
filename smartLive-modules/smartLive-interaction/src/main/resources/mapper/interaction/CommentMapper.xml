@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smartLive.comment.mapper.CommentMapper">
+
+    <resultMap type="com.smartLive.comment.domain.Comment" id="CommentResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="sourceType"    column="source_type"    />
+        <result property="sourceId"    column="source_id"    />
+        <result property="parentId"    column="parent_id"    />
+        <result property="answerId"    column="answer_id"    />
+        <result property="images"    column="images"    />
+        <result property="content"    column="content"    />
+        <result property="liked"    column="liked"    />
+        <result property="status"    column="status"    />
+        <result property="rating"    column="rating"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCommentVo">
+        select id, user_id, source_type, source_id, parent_id, answer_id, images, content, liked, status, rating, create_time, update_time from comment
+    </sql>
+
+    <select id="selectCommentList" parameterType="com.smartLive.comment.domain.Comment" resultMap="CommentResult">
+        <include refid="selectCommentVo"/>
+        <where>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="sourceType != null "> and source_type = #{sourceType}</if>
+            <if test="sourceId != null "> and source_id = #{sourceId}</if>
+            <if test="parentId != null "> and parent_id = #{parentId}</if>
+            <if test="answerId != null "> and answer_id = #{answerId}</if>
+            <if test="images != null  and images != ''"> and images = #{images}</if>
+            <if test="content != null  and content != ''"> and content = #{content}</if>
+            <if test="liked != null "> and liked = #{liked}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="rating != null "> and rating = #{rating}</if>
+        </where>
+    </select>
+
+    <select id="selectCommentById" parameterType="Long" resultMap="CommentResult">
+        <include refid="selectCommentVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertComment" parameterType="com.smartLive.comment.domain.Comment" useGeneratedKeys="true" keyProperty="id">
+        insert into comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="sourceType != null">source_type,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="parentId != null">parent_id,</if>
+            <if test="answerId != null">answer_id,</if>
+            <if test="images != null">images,</if>
+            <if test="content != null and content != ''">content,</if>
+            <if test="liked != null">liked,</if>
+            <if test="status != null">status,</if>
+            <if test="rating != null">rating,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="sourceType != null">#{sourceType},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="parentId != null">#{parentId},</if>
+            <if test="answerId != null">#{answerId},</if>
+            <if test="images != null">#{images},</if>
+            <if test="content != null and content != ''">#{content},</if>
+            <if test="liked != null">#{liked},</if>
+            <if test="status != null">#{status},</if>
+            <if test="rating != null">#{rating},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateComment" parameterType="com.smartLive.comment.domain.Comment">
+        update comment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="sourceType != null">source_type = #{sourceType},</if>
+            <if test="sourceId != null">source_id = #{sourceId},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="answerId != null">answer_id = #{answerId},</if>
+            <if test="images != null">images = #{images},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
+            <if test="liked != null">liked = #{liked},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="rating != null">rating = #{rating},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCommentById" parameterType="Long">
+        delete from comment where id = #{id}
+    </delete>
+
+    <delete id="deleteCommentByIds" parameterType="String">
+        delete from comment where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

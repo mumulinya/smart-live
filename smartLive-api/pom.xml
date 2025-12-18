@@ -18,6 +18,7 @@
         <module>smartLive-api-search</module>
         <module>smartLive-api-shop</module>
         <module>smartLive-api-follow</module>
+        <module>smartLive-api-interaction</module>
     </modules>
 
     <artifactId>smartLive-api</artifactId>
