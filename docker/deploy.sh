@@ -99,6 +99,19 @@ modules(){
  echo "所有模块已发送启动命令！"
 }
 
+# 4.启动基础业务模块
+baseModules(){
+  echo "正在启动业务微服务..."
+   # 先启动核心：网关、认证、系统
+  docker-compose up -d smartLive-gateway smartLive-auth smartLive-modules-system
+  sleep 5
+
+  docker-compose up -d  smartLive-modules-user smartLive-modules-shop smartLive-modules-search \
+                        smartLive-modules-marketing smartLive-modules-map  \
+                         smartLive-modules-chat  smartLive-modules-blog    \
+  docker-compose up -d smartLive-nginx
+}
+
 # 关闭所有环境/模块
 stop(){
  docker-compose stop
