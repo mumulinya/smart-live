@@ -46,56 +46,7 @@ public class Collection extends BaseEntity implements Serializable
     @Excel(name = "来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。")
     private Long sourceId;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Integer getSourceType() {
-        return sourceType;
-    }
-
-    public void setSourceType(Integer sourceType) {
-        this.sourceType = sourceType;
-    }
-
-    public String getSourceName() {
-        return sourceName;
-    }
-
-    public void setSourceName(String sourceName) {
-        this.sourceName = sourceName;
-    }
-
-    public Long getSourceId() {
-        return sourceId;
-    }
-
-    public void setSourceId(Long sourceId) {
-        this.sourceId = sourceId;
-    }
-
-    @Override
-    public String toString() {
-        return "Follow{" +
-                "id=" + id +
-                ", userId=" + userId +
-                ", sourceType=" + sourceType +
-                ", sourceName='" + sourceName + '\'' +
-                ", sourceId=" + sourceId +
-                '}';
-    }
-
-
+    /** 是否收藏 */
+    @TableField(exist = false)
+    private Boolean isCollection;
 }

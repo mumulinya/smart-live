@@ -1,6 +1,6 @@
-package com.smartLive.search.config;
+package com.smartLive.interaction.config;
 
-import com.smartLive.search.strategy.EsSyncStrategy;
+import com.smartLive.interaction.strategy.follow.FollowBaseStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,17 +9,17 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 /**
- * @Description: EsSyncStrategy工厂类
+ * @Description: 关注策略工厂
  * @Author: lizhong.li
- * @CreateDate: 2020/7/27 16:01
+ * @Date: 2022/9/5 17:01
  */
 @Configuration
-public class EsSyncStrategyFactory {
+public class FollowStrategyFactory {
     @Bean
-    public Map<String, EsSyncStrategy> esStrategyMap(List<EsSyncStrategy> strategies) {
+    public Map<String, FollowBaseStrategy> FollowStrategyMap(List<FollowBaseStrategy> strategies) {
         return strategies.stream()
                 .collect(Collectors.toMap(
-                        EsSyncStrategy::getDataType,  // 使用 dataType 作为键
+                        FollowBaseStrategy::getType,  // 使用 dataType 作为键
                         Function.identity()               // 策略对象作为值
                 ));
     }

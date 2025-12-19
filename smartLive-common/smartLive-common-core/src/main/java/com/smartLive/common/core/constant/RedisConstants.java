@@ -26,13 +26,24 @@ public class RedisConstants {
     public static final Integer CACHE_HOT_BLOG_TTL = 1;//1天
 
     public static final String CACHE_BLOG_TYPE_KEY = "cache:blogType:";
+    /**
+     * 关注
+     */
     public static final String FOLLOW_USER_KEY = "follow:user:";
-
+    public static final String FANS_USER_KEY = "fans:user:";
     public static final String FOLLOW_SHOP_KEY = "follow:shop:";
+    public static final String FANS_SHOP_KEY = "fans:shop:";
     /**
      * 推送新闻
      */
     public static final String FEED_KEY = "feed:";
+    /**
+     * 推送数据
+     */
+    //博文推送
+    public static final String BLOG_FEED_KEY = "blog:feed:";
+    public static final String SECKILL_VOUCHER_FEED_KEY = "seckill:voucher:feed:";
+    public static final String VOUCHER_FEED_KEY = "voucher:feed:";
     /**
      * 商店地理位置
      */

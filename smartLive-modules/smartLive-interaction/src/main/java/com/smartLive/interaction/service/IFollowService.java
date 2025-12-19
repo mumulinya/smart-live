@@ -3,6 +3,7 @@ package com.smartLive.interaction.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.user.api.domain.BlogDTO;
 
@@ -68,25 +69,24 @@ public interface IFollowService extends IService<Follow>
 
     /**
      * 关注或取关
-     * @param followUserId
-     * @param isFollow
+     * @param
      * @return
      */
-    Result follow(Long followUserId, Boolean isFollow);
+    Result follow(Follow follow);
 
     /**
      * 判断是否关注
-     * @param followUserId
+     * @param follow
      * @return
      */
-    Result isFollowed(Long followUserId);
+    Result isFollowed(Follow follow);
 
     /**
-     * 共同关注
-     * @param userId
+     * 共同关注列表
+      * @param follow
      * @return
      */
-    Result common(Long userId);
+    Result common(Follow follow, Integer current);
 
     /**
      * 发送博客给关注者
@@ -95,30 +95,35 @@ public interface IFollowService extends IService<Follow>
     void sendBlogToFollowers(BlogDTO blogDTO);
 
     /**
+     * 推送数据给粉丝
+     */
+    void pushToFollowers(FeedEventDTO feedEventDTO);
+
+    /**
      * 获取粉丝列表
      * @return
      */
-    Result getFans(Long followUserId,Integer current);
+    Result getFans(Follow follow,Integer current);
 
     /**
      * 获取关注列表
      * @return
      */
-    Result getFollows(Long userId,Integer current);
+    Result getFollows(Follow follow,Integer current);
     /**
      * 获取关注数
      * @return
      */
-    Integer getFollowCount(Long userId);
+    Integer getFollowCount(Follow follow);
     /**
      * 获取粉丝数
      * @return
      */
-    Integer getFanCount(Long userId);
+    Integer getFanCount(Follow follow);
     /**
      * 获取共同关注数
      * @return
      */
 
-    Integer getCommonFollowCount(Long userId, Long currentUserId);
+    Integer getCommonFollowCount(Follow follow);
 }

@@ -6,8 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 关注表 follow
@@ -16,77 +20,51 @@ import java.io.Serializable;
  * @date 2025-09-21
  */
 @TableName("follow")
-public class Follow extends BaseEntity implements Serializable
-{
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Follow extends BaseEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** 主键 */
+    /**
+     * 主键
+     */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /** 用户id */
+    /**
+     * 用户id
+     */
     @Excel(name = "用户id")
     private Long userId;
 
-    /** 来源类型  1（店铺）, 2（文章）, 3（团购）等。 */
+    /**
+     * 来源类型  1（店铺）, 2（文章）, 3（团购）等。
+     */
     @Excel(name = "来源类型  1", readConverterExp = "店=铺")
     private Integer sourceType;
 
     @TableField(exist = false)
     private String sourceName;
 
-    /** 来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。 */
+    /**
+     * 来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。
+     */
     @Excel(name = "来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。")
     private Long sourceId;
+    /**
+     * 是否关注
+     */
+    @TableField(exist = false)
+    private Boolean isFollow;
+    /**
+     * 创建时间
+     */
+    @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Integer getSourceType() {
-        return sourceType;
-    }
-
-    public void setSourceType(Integer sourceType) {
+    public Follow(Integer sourceType, Long sourceId) {
         this.sourceType = sourceType;
-    }
-
-    public String getSourceName() {
-        return sourceName;
-    }
-
-    public void setSourceName(String sourceName) {
-        this.sourceName = sourceName;
-    }
-
-    public Long getSourceId() {
-        return sourceId;
-    }
-
-    public void setSourceId(Long sourceId) {
         this.sourceId = sourceId;
-    }
-
-    @Override
-    public String toString() {
-        return "Follow{" +
-                "id=" + id +
-                ", userId=" + userId +
-                ", sourceType=" + sourceType +
-                ", sourceName='" + sourceName + '\'' +
-                ", sourceId=" + sourceId +
-                '}';
     }
 }

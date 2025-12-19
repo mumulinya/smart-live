@@ -42,6 +42,19 @@ public class MqConstants {
     public static final String  SHOP_DEAD_LETTER_QUEUE = "shop.dead.letter.queue";
     public static final String  SHOP_DEAD_LETTER_ROUTING = "shop.dead.letter.routing";
 
+    //互动交换机
+    public static final String  INTERACT_EXCHANGE_NAME = "interact.topic";
+    //紧急数据推送队列
+    public static final String  INTERACT_FEED_URGENT_QUEUE = "interact.feed.urgent.queue";
+    //普通数据推送队列
+    public static final String  INTERACT_FEED_NORMAL_QUEUE = "interact.feed.normal.queue";
+    //博客推送
+    public static final String  INTERACT_FEED_BLOG_ROUTING = "interact.feed.blog";
+    //代金券推送
+    public static final String  INTERACT_FEED_VOUCHER_ROUTING = "interact.feed.voucher";
+    //秒杀代金券推送
+    public static final String  INTERACT_FEED_SECKILL_VOUCHER_ROUTING = "interact.feed.seckill.voucher";
+
 
 
     //用户交换机

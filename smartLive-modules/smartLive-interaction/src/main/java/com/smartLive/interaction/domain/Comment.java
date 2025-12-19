@@ -7,7 +7,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -21,6 +23,8 @@ import java.util.Date;
  */
 @TableName("comments")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Comment extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -83,149 +87,4 @@ public class Comment extends BaseEntity
     /** 是否是AI生成的评论 */
     @TableField(exist = false)
     private Boolean isAIGenerated;
-
-    public String getUserIcon() {
-        return userIcon;
-    }
-
-    public void setUserIcon(String userIcon) {
-        this.userIcon = userIcon;
-    }
-
-    public String getNickName() {
-        return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public void setId(Long id)
-    {
-        this.id = id;
-    }
-
-    public Long getId()
-    {
-        return id;
-    }
-
-    public void setUserId(Long userId)
-    {
-        this.userId = userId;
-    }
-
-    public Long getUserId()
-    {
-        return userId;
-    }
-
-    public void setSourceType(Integer sourceType)
-    {
-        this.sourceType = sourceType;
-    }
-
-    public Integer getSourceType()
-    {
-        return sourceType;
-    }
-
-    public void setSourceId(Long sourceId)
-    {
-        this.sourceId = sourceId;
-    }
-
-    public Long getSourceId()
-    {
-        return sourceId;
-    }
-
-    public void setParentId(Long parentId)
-    {
-        this.parentId = parentId;
-    }
-
-    public Long getParentId()
-    {
-        return parentId;
-    }
-
-    public void setAnswerId(Long answerId)
-    {
-        this.answerId = answerId;
-    }
-
-    public Long getAnswerId()
-    {
-        return answerId;
-    }
-
-    public void setImages(String images)
-    {
-        this.images = images;
-    }
-
-    public String getImages()
-    {
-        return images;
-    }
-
-    public void setContent(String content)
-    {
-        this.content = content;
-    }
-
-    public String getContent()
-    {
-        return content;
-    }
-
-    public void setLiked(Integer liked)
-    {
-        this.liked = liked;
-    }
-
-    public Integer getLiked()
-    {
-        return liked;
-    }
-
-    public void setStatus(String status)
-    {
-        this.status = status;
-    }
-
-    public String getStatus()
-    {
-        return status;
-    }
-
-    public void setRating(Integer rating)
-    {
-        this.rating = rating;
-    }
-
-    public Integer getRating()
-    {
-        return rating;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-                .append("id", getId())
-                .append("userId", getUserId())
-                .append("sourceType", getSourceType())
-                .append("sourceId", getSourceId())
-                .append("parentId", getParentId())
-                .append("answerId", getAnswerId())
-                .append("images", getImages())
-                .append("content", getContent())
-                .append("liked", getLiked())
-                .append("status", getStatus())
-                .append("rating", getRating())
-                .append("createTime", getCreateTime())
-                .append("updateTime", getUpdateTime())
-                .toString();
-    }
 }

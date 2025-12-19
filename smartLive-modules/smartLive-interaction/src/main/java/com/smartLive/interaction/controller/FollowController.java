@@ -1,6 +1,7 @@
 package com.smartLive.interaction.controller;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;
 import com.smartLive.user.api.domain.BlogDTO;
 import org.springframework.web.bind.annotation.*;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 /**
- * 用户关注Controller
+ * 关注Controller
  *
  * @author mumulin
  * @date 2025-09-21
@@ -21,30 +22,30 @@ public class FollowController {
     /**
      * 关注或取关
      * @param
-     * @param isFollow 是否关注
+     * @param
      * @return
      */
-    @PutMapping("/{id}/{isFollow}")
-    public Result follow(@PathVariable("id") Long followUserId, @PathVariable("isFollow") Boolean isFollow) {
-        return followServiceImpl.follow(followUserId, isFollow);
+    @PutMapping()
+    public Result follow(@RequestBody Follow follow) {
+        return followServiceImpl.follow(follow);
     }
     /**
      * 查询是否关注
-     * @param followUserId 用户id
+     * @param follow
      * @return
      */
-    @GetMapping("/isFollow/{id}")
-    public Result isFollowed(@PathVariable("id") Long followUserId){
-        return followServiceImpl.isFollowed(followUserId);
+    @GetMapping("/isFollow")
+    public Result isFollowed(Follow follow){
+        return followServiceImpl.isFollowed(follow);
     }
     /**
-     * 查询共同关注列表
-     * @param userId 用户id
+     * 查询共同关注用户列表
+     * @param follow
      * @return
      */
     @GetMapping("/common")
-    public Result common(@RequestParam("userId") Long userId,@RequestParam("current") Integer current){
-        return followServiceImpl.common(userId);
+    public Result common(Follow follow,@RequestParam("current") Integer current){
+        return followServiceImpl.common(follow,current);
     }
 
     //把博客笔记推送给所有粉丝
@@ -55,44 +56,42 @@ public class FollowController {
 
     //获取粉丝列表
     @GetMapping("/fans")
-    public Result getFans(@RequestParam("current") Integer current){
-        Long followUserId = UserContextHolder.getUser().getId();
-        return followServiceImpl.getFans(followUserId,current);
+    public Result getFans(Follow follow,@RequestParam("current") Integer current){
+        return followServiceImpl.getFans(follow,current);
     }
     //获取关注列表
     @GetMapping("/follows")
-    public Result getFollows(@RequestParam("current") Integer current){
-        Long userId = UserContextHolder.getUser().getId();
-        return followServiceImpl.getFollows(userId,current);
+    public Result getFollows(Follow follow,@RequestParam("current") Integer current){
+        return followServiceImpl.getFollows(follow,current);
     }
     /**
      * 获取关注数
-     * @param userId 用户id
+     * @param follow
      * @return
      */
-    @GetMapping("/getFollowCount/{id}")
-    public Result getFollowCount(@PathVariable("id") Long userId){
-        Integer followCount =followServiceImpl.getFollowCount(userId);
+    @GetMapping("/getFollowCount")
+    public Result getFollowCount(Follow follow){
+        Integer followCount =followServiceImpl.getFollowCount(follow);
         return Result.ok(followCount);
     }
     /**
      * 获取粉丝数
-     * @param userId 用户id
+     * @param follow
      * @return
      */
-    @GetMapping("/getFanCount/{id}")
-    public Result getFanCount(@PathVariable("id") Long userId){
-        Integer fansCount =followServiceImpl.getFanCount(userId);
+    @GetMapping("/getFanCount")
+    public Result getFanCount(Follow follow){
+        Integer fansCount =followServiceImpl.getFanCount(follow);
         return Result.ok(fansCount);
     }
     /**
      * 获取共同关注数
-     * @param userId 用户id, currentUserId 当前用户id
+      * @param follow
      * @return
      */
     @GetMapping("/getCommonFollowCount")
-    public Result getCommonCount(@RequestParam("userId") Long userId,@RequestParam("currentUserId") Long currentUserId){
-         Integer commonCount =followServiceImpl.getCommonFollowCount(userId,currentUserId);
+    public Result getCommonCount(Follow follow){
+         Integer commonCount =followServiceImpl.getCommonFollowCount(follow);
          return Result.ok(commonCount);
     }
 }

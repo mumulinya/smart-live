@@ -1,25 +1,37 @@
 package com.smartLive.interaction.service.impl;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.pagehelper.PageParam;
+import com.smartLive.common.core.constant.FollowTypeConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.enums.BizTypeEnum;
+import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.interaction.api.dto.FeedEventDTO;
+import com.smartLive.interaction.config.FollowStrategyFactory;
 import com.smartLive.interaction.domain.Follow;
+import com.smartLive.interaction.domain.vo.SocialInfoVO;
 import com.smartLive.interaction.mapper.FollowMapper;
 import com.smartLive.interaction.service.IFollowService;
+import com.smartLive.interaction.strategy.follow.FollowBaseStrategy;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.BlogDTO;
 import com.smartLive.user.api.domain.User;
 import com.smartLive.user.api.domain.UserDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -32,6 +44,7 @@ import javax.annotation.Resource;
  * @date 2025-09-21
  */
 @Service
+@Slf4j
 public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> implements IFollowService
 {
     @Autowired
@@ -43,6 +56,11 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
 
     @Autowired
     private RemoteAppUserService remoteAppUserService;
+    /**
+     * 策略模式
+     */
+    @Autowired
+    private Map<String, FollowBaseStrategy> followStrategyMap;
     /**
      * 查询关注
      * 
@@ -120,32 +138,41 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     /**
      * 关注或取关
      *
-     * @param followUserId
-     * @param isFollow
+     * @param
+     * @param
      * @return
      */
     @Override
-    public Result follow(Long followUserId, Boolean isFollow) {
+    public Result follow(Follow follow) {
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
-        String key = RedisConstants.FOLLOW_USER_KEY + userId;
+        // 1. 获取对应的枚举策略
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(follow.getSourceType());
+        if (followType == null) {
+            return Result.fail("关注类型错误");
+        }
+        //2.我的关注列表
+        String myFollowKey = followType.getFollowKeyPrefix() + userId;
+
+        // 3. 对方的粉丝列表
+        String targetFansKey = followType.getFansKeyPrefix() + follow.getSourceId();
         //判断是关注还是取关
-        if(isFollow){
+        if(follow.getIsFollow()){
             //关注
-            Follow follow = new Follow();
             follow.setUserId(userId);
-            follow.setSourceId(followUserId);
             boolean save = save(follow);
             if (save) {
                 //关注成功，添加关注到redis
-                stringRedisTemplate.opsForSet().add(key, followUserId.toString());
+                stringRedisTemplate.opsForZSet().add(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
+                stringRedisTemplate.opsForZSet().add(targetFansKey, userId.toString(), System.currentTimeMillis());
             }
         }else{
             //取关
-            boolean remove = remove(new QueryWrapper<Follow>().eq("user_id", userId).eq("follow_user_id", followUserId));
+            boolean remove = remove(new QueryWrapper<Follow>().eq("user_id", userId).eq("source_type",follow.getSourceType()).eq("source_id", follow.getSourceId()));
             if (remove) {
                 //取关成功，从redis中删除关注
-                stringRedisTemplate.opsForSet().remove(key, followUserId.toString());
+                stringRedisTemplate.opsForZSet().remove(myFollowKey, follow.getSourceId().toString());
+                stringRedisTemplate.opsForZSet().remove(targetFansKey, userId.toString());
             }
         }
         return Result.ok();
@@ -154,56 +181,54 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     /**
      * 判断是否关注
      *
-     * @param followUserId
+     * @param follow
      * @return
      */
     @Override
-    public Result isFollowed(Long followUserId) {
+    public Result isFollowed(Follow follow) {
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
         if (user == null) {
             return Result.ok(false);
         }
         //获取当前用户id
         Long userId = user.getId();
-        String key = RedisConstants.FOLLOW_USER_KEY + userId;
+        // 1. 获取对应的枚举策略
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(follow.getSourceType());
+        if (followType == null) {
+            return Result.fail("关注类型错误");
+        }
+        String key =followType.getFollowKeyPrefix()+userId;
 //        //判断是否关注 从数据库中查询
 //        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
-        //判断是否关注 从redis的set集合中查询
-        Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, followUserId.toString());
-        return Result.ok(isMember);
+        //判断是否关注 从redis的zSet集合中查询
+        Double score = stringRedisTemplate.opsForZSet().score(key, follow.getSourceId().toString());
+        //如果分数不为 null，说明元素存在（已关注）；如果为 null，说明不存在（未关注）
+        Boolean isFollow = (score != null);
+        return Result.ok(isFollow);
     }
 
     /**
-     * 共同关注
+     * 共同关注 userId
      *
-     * @param userId
+     * @param
      * @return
      */
     @Override
-    public Result common(Long userId) {
+    public Result common(Follow follow, Integer current) {
+        FollowTypeEnum followTypeEnum = FollowTypeEnum.getByCode(follow.getSourceType());
+        if (followTypeEnum == null) {
+            return Result.fail("关注类型错误");
+        }
         //获取当前用户id
         Long currentUserId = UserContextHolder.getUser().getId();
-        String key = RedisConstants.FOLLOW_USER_KEY + currentUserId;
-        String key2 = RedisConstants.FOLLOW_USER_KEY + userId;
-        //查询共同关注
-        Set<String> common = stringRedisTemplate.opsForSet().intersect(key, key2);
-        if (common == null || common.isEmpty()) {
-            //没有共同关注
-            return Result.ok(Collections.emptyList());
+        Page<Long> commonFollowPage = queryRedisCommonFollowIdPage(followTypeEnum.getFollowKeyPrefix(), currentUserId, follow.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
+        if (commonFollowPage.getTotal()==0) {
+            return Result.ok(null);
         }
-        //将字符串转换为Long类型
-        List<Long> idList = common.stream().map(Long::valueOf).collect(Collectors.toList());
-        //根据id查询用户
-        R<List<User>> userSuccess = remoteAppUserService.getUserList(idList);
-        if (userSuccess.getCode() != 200) {
-            return Result.fail(userSuccess.getMsg());
-        }
-        List<User> userList = userSuccess.getData();
-        userList.forEach(user -> {
-            user.setIsFollow((Boolean) isFollowed(user.getId()).getData());
-        });
-        List<UserDTO> userDTOList = userList.stream().map(user -> BeanUtil.copyProperties(user, UserDTO.class)).collect(Collectors.toList());
-        return Result.ok(userDTOList);
+        List<Long> idList = commonFollowPage.getRecords();
+        FollowBaseStrategy followBaseStrategy = followStrategyMap.get(followTypeEnum.getKey());
+        List<SocialInfoVO> socialInfoVOList = followBaseStrategy.getFollowList(idList);
+          return Result.ok(socialInfoVOList);
     }
 
     /**
@@ -213,9 +238,12 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Override
     public void sendBlogToFollowers(BlogDTO blogDTO) {
+        //从redis里面读取粉丝列表
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(FollowTypeConstants.USER);
+        String fansKey = followType.getFansKeyPrefix() + blogDTO.getUserId();
         //推送笔记id给所有粉丝
         // 查询笔记作者下的所有粉丝
-        List<Follow> followList = query().eq("follow_user_id", blogDTO.getUserId()).list();
+        List<Follow> followList = query().eq("source_type", FollowTypeConstants.USER).eq("source_id", blogDTO.getUserId()).list();
         for (Follow follow : followList) {
             //获取粉丝id
             Long userId = follow.getUserId();
@@ -226,21 +254,65 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     }
 
     /**
+     * 推送数据给粉丝
+     *
+     * @param feedEventDTO
+     */
+    @Override
+    public void pushToFollowers(FeedEventDTO feedEventDTO) {
+        //从redis里面读取粉丝列表
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(feedEventDTO.getSourceType());
+        if (followType == null) {
+            log.error("推送数据给粉丝失败，未知的关注类型");
+            return;
+        }
+        String fansKey = followType.getFansKeyPrefix() + feedEventDTO.getSourceId();
+        Set<String> userIdSet= stringRedisTemplate.opsForZSet().range(fansKey, 0, -1);
+        List<Long> userIdList = userIdSet.stream().map(Long::valueOf).collect(Collectors.toList());
+        //推送笔记id给所有粉丝
+        // 查询笔记作者下的所有粉丝
+        if(userIdList.isEmpty()){
+            userIdList = query().select("user_id").eq("source_type", feedEventDTO.getSourceType()).eq("source_id", feedEventDTO.getSourceId()).list().stream().map(Follow::getUserId).collect(Collectors.toList());
+        }
+        if(userIdList.isEmpty()){
+            log.info("推送数据给粉丝失败，没有粉丝");
+            return;
+        }
+        for (Long userId : userIdList) {
+            //推送
+            String feedKeyPrefix = BizTypeEnum.getByCode(feedEventDTO.getBizType()).getFeedKeyPrefix();
+            String key = feedKeyPrefix + userId;
+            stringRedisTemplate.opsForZSet().add(key, feedEventDTO.getBizId().toString(), System.currentTimeMillis());
+        }
+    }
+    /**
      * 获取粉丝列表
      *
      * @return
      */
     @Override
-    public Result getFans(Long followUserId,Integer current) {
-        //获取粉丝id
-        List<Long> userIdList = query()
-                .select("user_id")
-                .eq("follow_user_id", followUserId)
-                .orderByDesc("create_time") // 添加排序
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
-                .getRecords()                .stream()
-                .map(Follow::getUserId)  // 假设 follow 是你的实体类
-                .collect(Collectors.toList());
+    public Result getFans(Follow follow,Integer current) {
+        // 1. 获取对应的枚举策略
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(follow.getSourceType());
+        if (followType == null) {
+            return Result.fail("关注类型错误");
+        }
+        //从redis获取
+        Page<Long> fanIdPage = queryRedisIdPage(followType.getFansKeyPrefix(), follow.getSourceId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
+        List<Long> userIdList = fanIdPage.getRecords();
+        //redis获取失败，从数据库获取
+        if (userIdList.isEmpty()) {
+            //获取粉丝id
+            userIdList = query()
+                    .select("user_id")
+                    .eq("source_type",follow.getSourceType())
+                    .eq("source_id", follow.getSourceId())
+                    .orderByDesc("create_time") // 添加排序
+                    .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
+                    .getRecords()                .stream()
+                    .map(Follow::getUserId)  // 假设 follow 是你的实体类
+                    .collect(Collectors.toList());
+        }
         //根据id查询用户
        if(userIdList.isEmpty()){
            return Result.ok(Collections.emptyList());
@@ -251,79 +323,90 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
         List<User> userList = userSuccess.getData();
         userList.forEach(user->{
-            user.setIsFollow((Boolean) isFollowed(user.getId()).getData());
+            user.setIsFollow((Boolean) isFollowed(new Follow(FollowTypeConstants.USER, user.getId())).getData());
         });
         return Result.ok(userList);
     }
 
     /**
-     * 获取关注用户列表
+     * 获取关注列表
      *
-     * @param userId
+     * @param follow
      * @return
      */
     @Override
-    public Result getFollows(Long userId,Integer current) {
-        List<Long> followUserIdList = query()
-                .select("follow_user_id")
-                .eq("user_id", userId)
-                .orderByDesc("create_time") // 添加排序
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
-                .getRecords()
-                .stream()
-                .map(Follow::getSourceId)  // 假设 follow 是你的实体类
-                .collect(Collectors.toList());
-                if(followUserIdList.isEmpty()){
+    public Result getFollows(Follow follow,Integer current) {
+//        // 1. 获取对应的枚举策略
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(follow.getSourceType());
+        if (followType == null) {
+            return Result.fail("关注类型错误");
+        }
+        //根据关注类型从关注策略工程获取bean
+        FollowBaseStrategy followBaseStrategy = followStrategyMap.get(followType.getKey());
+        //从redis获取
+        Page<Long> fanIdPage = queryRedisIdPage(followType.getFollowKeyPrefix(), follow.getUserId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
+        List<Long> sourceIdList = fanIdPage.getRecords();
+        //redis获取失败，从数据库获取
+        if (sourceIdList.isEmpty()) {
+            //获取粉丝id
+            sourceIdList = query()
+                    .select("user_id")
+                    .eq("source_type",follow.getSourceType())
+                    .eq("source_id", follow.getSourceId())
+                    .orderByDesc("create_time") // 添加排序
+                    .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
+                    .getRecords()                .stream()
+                    .map(Follow::getUserId)  // 假设 follow 是你的实体类
+                    .collect(Collectors.toList());
+        }
+                if(sourceIdList.isEmpty()){
                     return Result.ok(Collections.emptyList());
                 }
-                R<List<User>> userSuccess = remoteAppUserService.getUserList(followUserIdList);
-                if (userSuccess.getCode() != 200) {
-                    return Result.fail(userSuccess.getMsg());
-                }
-                List<User> userList = userSuccess.getData();
-        return Result.ok(userList);
+        List<SocialInfoVO> socialInfoVOList = followBaseStrategy.getFollowList(sourceIdList);
+        return Result.ok(socialInfoVOList);
     }
 
     /**
      * 获取关注数
      *
-     * @param userId
+     * @param follow
      * @return
      */
     @Override
-    public Integer getFollowCount(Long userId) {
-        int followCount = query().eq("user_id", userId).count().intValue();
+    public Integer getFollowCount(Follow follow) {
+        int followCount = query().eq("source_type", follow.getSourceType()).eq("source_id",follow.getSourceId()).eq("user_id", follow.getUserId()).count().intValue();
         return followCount;
     }
 
     /**
      * 获取粉丝数
      *
-     * @param userId
+      * @param follow
      * @return
      */
     @Override
-    public Integer getFanCount(Long userId) {
-        int fansCount = query().eq("follow_user_id", userId).count().intValue();
+    public Integer getFanCount(Follow follow) {
+        int fansCount = query().eq("source_type", follow.getSourceType()).eq("source_id", follow.getSourceId()).count().intValue();
         return fansCount;
     }
 
     /**
      * 获取共同关注数
      *
-     * @param userId
-     * @param currentUserId
+     * @param follow
      * @return
      */
     @Override
-    public Integer getCommonFollowCount(Long userId, Long currentUserId) {
-        // 先查询目标用户的关注列表
-        List<Follow> targetUserFollows = lambdaQuery()
-                .select(Follow::getSourceId)
-                .eq(Follow::getUserId, userId)
-                .list();
+    public Integer getCommonFollowCount(Follow follow) {
+        Long currentUserId=UserContextHolder.getUser().getId();
         // 提取关注用户ID列表
-        List<Long> targetUserFollowIds = targetUserFollows.stream()
+        List<Long> targetUserFollowIds = lambdaQuery()
+                .select(Follow::getSourceId)
+                .eq(Follow::getSourceType, follow.getSourceType())
+                .eq(Follow::getSourceId, follow.getSourceId())
+                .eq(Follow::getUserId, follow.getUserId())
+                .list()
+                .stream()
                 .map(Follow::getSourceId)
                 .collect(Collectors.toList());
         int commonFollowCount;
@@ -333,11 +416,103 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         } else {
             // 查询共同关注数
             commonFollowCount = lambdaQuery()
+                    .select(Follow::getSourceId)
+                    .eq(Follow::getSourceType, follow.getSourceType())
+                    .eq(Follow::getSourceId, follow.getSourceId())
                     .eq(Follow::getUserId, currentUserId)
                     .in(Follow::getSourceId, targetUserFollowIds)
                     .count()
                     .intValue();
         }
         return commonFollowCount;
+    }
+    /**
+     * 通用方法：从 Redis ZSet 中分页查询 ID 列表
+     * @param keyPrefix Redis Key 前缀 (如 "follow:user:")
+     * @param userId    用户 ID
+     * @param page      当前页
+     * @param size      每页条数
+     * @return Page<Long> 包含 total 和 ID列表
+     */
+    private Page<Long> queryRedisIdPage(String keyPrefix, Long userId, long page, long size) {
+        String key = keyPrefix + userId;
+
+        // 1. 查总数 (ZCARD)
+        Long total = stringRedisTemplate.opsForZSet().zCard(key);
+        if (total == null || total == 0) {
+            return new Page<>(page, size, 0); // 返回空页
+        }
+
+        // 2. 计算下标 (ZREVRANGE start stop)
+        long start = (page - 1) * size;
+        long end = start + size - 1;
+
+        // 3. 查 ID 集合 (按分数倒序，即时间倒序)
+        Set<String> idStrSet = stringRedisTemplate.opsForZSet().reverseRange(key, start, end);
+        if (CollUtil.isEmpty(idStrSet)) {
+            return new Page<>(page, size, total);
+        }
+
+        // 4. 类型转换 String -> Long
+        List<Long> idList = idStrSet.stream()
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        // 5. 封装成 Page 对象返回
+        Page<Long> idPage = new Page<>(page, size);
+        idPage.setTotal(total);
+        idPage.setRecords(idList);
+
+        return idPage;
+    }
+    /**
+     * 获取共同关注列表
+     *
+     * @param userId1
+     * @param userId2
+     * @param
+     * @return
+     */
+    public Page<Long> queryRedisCommonFollowIdPage(String FollowKeyPrefix, Long userId1, Long userId2, long page, long size) {
+        String key1 = FollowKeyPrefix+ userId1;
+        String key2 = FollowKeyPrefix + userId2;
+
+        // 1. 定义一个临时的目标 Key
+        // 建议加上 distinct 前缀，避免冲突
+        String destKey = "temp:common:" +FollowKeyPrefix+":"+userId1 + ":" + userId2;
+
+        // 2. 【核心】计算交集并存储到 destKey，返回交集的大小 (Total)
+        // 对应 Redis 命令: ZINTERSTORE destKey 2 key1 key2
+        Long total = stringRedisTemplate.opsForZSet().intersectAndStore(key1, key2, destKey);
+
+        if (total == null || total == 0) {
+            return new Page<>(page, size, 0); // 返回空页
+        }
+
+        // 3. 【必须】设置过期时间 (比如 60 秒后自动删除)
+        // 因为共同关注是会变的，而且在这个 Key 只是为了临时分页用
+        stringRedisTemplate.expire(destKey, 60, TimeUnit.SECONDS);
+
+        // 4. 标准的分页查询逻辑 (从临时 Key 里查)
+        long start = (page - 1) * size;
+        long end = start + size - 1;
+
+        // 按分数倒序取 (ZSet 交集默认是将两个元素的分数相加，通常这能反映"两人都比较晚关注"的权重)
+        Set<String> idStrSet = stringRedisTemplate.opsForZSet().reverseRange(destKey, start, end);
+
+        if (CollUtil.isEmpty(idStrSet)) {
+            return new Page<>(page, size, 0); // 返回空页
+        }
+
+        // 5. 转换 ID
+        List<Long> ids = idStrSet.stream().map(Long::valueOf).collect(Collectors.toList());
+
+        // 6. 返回 (这里只返回了 ID，如果前端要头像，后面再去调 User 服务)
+        // 5. 封装成 Page 对象返回
+        Page<Long> idPage = new Page<>(page, size);
+        idPage.setTotal(total);
+        idPage.setRecords(ids);
+
+        return idPage;
     }
 }

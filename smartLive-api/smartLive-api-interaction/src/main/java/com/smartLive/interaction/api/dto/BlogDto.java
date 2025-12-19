@@ -18,7 +18,6 @@ import java.io.Serializable;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_blog")
 @Data
 public class BlogDto extends BaseEntity implements Serializable
 {
