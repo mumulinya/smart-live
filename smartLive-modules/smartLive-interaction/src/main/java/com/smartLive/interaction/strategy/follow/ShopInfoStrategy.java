@@ -1,21 +1,18 @@
-package com.smartLive.interaction.strategy.follow.impl;
+package com.smartLive.interaction.strategy.follow;
 
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.FollowTypeEnum;
-import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.vo.SocialInfoVO;
-import com.smartLive.interaction.strategy.follow.FollowBaseStrategy;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
-import com.smartLive.system.api.RemoteUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("shop")
-public class FollowShopStrategy implements FollowBaseStrategy<ShopDTO> {
+@Component("shopInfo")
+public class ShopInfoStrategy implements InfoFetcherStrategy<ShopDTO> {
 
     @Autowired
     private RemoteShopService remoteShopService;
@@ -24,7 +21,7 @@ public class FollowShopStrategy implements FollowBaseStrategy<ShopDTO> {
      */
     @Override
     public String getType() {
-        return FollowTypeEnum.SHOP.getKey();
+        return FollowTypeEnum.SHOPINFO.getKey();
     }
     /**
      * 获取关注列表

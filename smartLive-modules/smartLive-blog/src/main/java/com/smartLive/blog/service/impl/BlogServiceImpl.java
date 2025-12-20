@@ -539,6 +539,25 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
+     * 获取博客列表
+     *
+     * @param sourceIdList
+     * @return
+     */
+    @Override
+    public List<Blog> getBlogListByIds(List<Long> sourceIdList) {
+        String idStr = StrUtil.join(",", sourceIdList);
+        List<Blog> blogList = query().in("id", sourceIdList).last("order by field(id," + idStr + ")").list();
+        blogList.forEach(blog ->{
+            //查询blog有关的用户信息
+            queryBlogUser(blog);
+            //查询blog是否被点赞
+            isBlogLiked(blog);
+        });
+        return blogList;
+    }
+
+    /**
      * 刷新缓存
      *
      * @return

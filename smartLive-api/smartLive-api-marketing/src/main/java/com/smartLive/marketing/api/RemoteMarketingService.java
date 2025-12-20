@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @FeignClient(contextId = "remoteMarketingService", value = ServiceNameConstants.MARKETING_SERVICE, fallbackFactory = RemoteMarketingFallbackFactory.class)
 public interface RemoteMarketingService {
     /**
@@ -42,4 +44,9 @@ public interface RemoteMarketingService {
      */
     @PostMapping("/voucher/orderVoucher")
     Result buyVoucher(@RequestParam("id") Long voucherId, @RequestParam("userId") Long userId);
+    /**
+     * 获取优惠券列表
+     */
+    @GetMapping("/voucher/getVoucherListByIds")
+    R<List<VoucherDTO>> getVoucherListByIds(List<Long> sourceIdList);
 }

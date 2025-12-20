@@ -9,6 +9,7 @@ import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
@@ -180,18 +181,33 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setCreateTime(DateUtils.getNowDate());
         int i = commentMapper.insertComment(comment);
         Long id = comment.getSourceId();
-        if(i > 0&& comment.getSourceType()==1){
-            //更新博客评论数,发送rabbitMq消息
-            log.info("发送rabbitMq消息给blog");
-//            rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME,MqConstants.BLOG_COMMENT_ROUTING,id);
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.BLOG_EXCHANGE_NAME,MqConstants.BLOG_COMMENT_ROUTING,id);
-//            remoteBlogService.updateCommentById(id);
-        }else if(i > 0 && comment.getSourceType()==2){
-            //更新店铺评论数
-//            remoteShopService.updateCommentById(id);
-            log.info("发送rabbitMq消息给shop");
-//            rabbitTemplate.convertAndSend(MqConstants.SHOP_EXCHANGE_NAME,MqConstants.SHOP_COMMENT_ROUTING,id);
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.SHOP_EXCHANGE_NAME,MqConstants.SHOP_COMMENT_ROUTING,id);
+        if(i > 0){
+            //发信息给mq更新数据评论
+            ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(comment.getSourceType());
+            if(resourceTypeEnum != null){
+                log.info("发送rabbitMq消息给{}",resourceTypeEnum.getMqPattern());
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_COMMENT_EXCHANGE_NAME,MqConstants.INTERACT_PREFIX_CREATE_COMMENT+resourceTypeEnum.getCommentKeyPrefix(),comment);
+            }
+        }
+        return Result.ok(i);
+    }
+
+    /**
+     * 删除评论
+     *
+     * @param comment
+     * @return
+     */
+    @Override
+    public Result deleteComment(Comment comment) {
+        boolean i = removeById(comment.getId());
+        if(i){
+            //发信息给mq更新数据评论
+            ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(comment.getSourceType());
+            if(resourceTypeEnum != null){
+                log.info("发送rabbitMq消息给{}",resourceTypeEnum.getMqPattern());
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_COMMENT_EXCHANGE_NAME,MqConstants.INTERACT_PREFIX_DELETE_COMMENT+resourceTypeEnum.getCommentKeyPrefix(),comment);
+            }
         }
         return Result.ok(i);
     }
@@ -306,5 +322,17 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .collect(Collectors.toList());
         //发送rabbitMq消息给ai服务
         rabbitTemplate.convertAndSend(MqConstants.AI_EXCHANGE_NAME,MqConstants.AI_COMMENT_ROUTING,list);
+    }
+
+    /**
+     * 获取评论列表
+     *
+     * @param sourceIdList
+     * @return
+     */
+    @Override
+    public List<Comment> getCommentListByIds(List<Long> sourceIdList) {
+        List<Comment> list = query().in("id", sourceIdList).list();
+        return list;
     }
 }

@@ -1,10 +1,9 @@
-package com.smartLive.interaction.strategy.follow.impl;
+package com.smartLive.interaction.strategy.follow;
 
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.user.User;
 import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.interaction.domain.vo.SocialInfoVO;
-import com.smartLive.interaction.strategy.follow.FollowBaseStrategy;
 import com.smartLive.user.api.RemoteAppUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,8 +11,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("user")
-public class FollowUserStrategy implements FollowBaseStrategy<User> {
+@Component("userInfo")
+public class UserInfoStrategy implements InfoFetcherStrategy<User> {
     @Autowired
     private RemoteAppUserService remoteAppUserService;
     /**
@@ -21,7 +20,7 @@ public class FollowUserStrategy implements FollowBaseStrategy<User> {
      */
     @Override
     public String getType() {
-        return  FollowTypeEnum.USER.getKey();
+        return  FollowTypeEnum.USERINFO.getKey();
     }
     /**
      * 获取关注列表

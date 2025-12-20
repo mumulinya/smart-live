@@ -257,4 +257,11 @@ public class BlogController extends BaseController
     R<Integer> getBlogTotal() {
         return R.ok(blogService.getBlogTotal());
     }
+    /**
+     * 获取博客列表
+     */
+    @GetMapping("/blog/getBlogListByIds")
+    R<List<Blog>> getBlogListByIds(List<Long> sourceIdList){
+        return R.ok(blogService.getBlogListByIds(sourceIdList));
+    }
 }

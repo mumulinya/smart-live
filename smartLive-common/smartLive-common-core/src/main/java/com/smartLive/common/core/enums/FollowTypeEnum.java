@@ -9,8 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum FollowTypeEnum {
     // 定义类型，同时绑定对应的 Redis Key 前缀
-    USER(FollowTypeConstants.USER, "user","用户关注",RedisConstants.FOLLOW_USER_KEY, RedisConstants.FANS_USER_KEY),
-    SHOP(FollowTypeConstants.SHOP, "shop","店铺关注",RedisConstants.FOLLOW_SHOP_KEY, RedisConstants.FANS_SHOP_KEY);
+    USERINFO(FollowTypeConstants.USER, "userInfo","用户关注",RedisConstants.FOLLOW_USER_KEY, RedisConstants.FANS_USER_KEY),
+    SHOPINFO(FollowTypeConstants.SHOP, "shopInfo","店铺关注",RedisConstants.FOLLOW_SHOP_KEY, RedisConstants.FANS_SHOP_KEY);
     private final Integer code;
     private final String key;
     private final String desc;

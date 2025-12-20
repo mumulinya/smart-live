@@ -1,7 +1,7 @@
 package com.smartLive.interaction.controller;
-import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.service.ICollectionShopService;
+import com.smartLive.interaction.domain.Collection;
+import com.smartLive.interaction.service.ICollectionService;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
@@ -15,46 +15,39 @@ import javax.annotation.Resource;
 @RequestMapping("/collection")
 public class CollectionController {
     @Resource
-    private ICollectionShopService collectionShopService;
+    private ICollectionService collectionShopService;
     /**
-     * 关注或取关
+     * 收藏或取消收藏
      * @param
-     * @param isFollow 是否关注
+     * @param
      * @return
      */
-    @PutMapping("/{shopId}/{isFollow}")
-    public Result follow(@PathVariable("shopId") Long shopId, @PathVariable("isFollow") Boolean isFollow) {
-        return collectionShopService.follow(shopId, isFollow);
+    @PutMapping()
+    public Result collection(Collection collection) {
+        return collectionShopService.collection(collection);
     }
     /**
-     * 查询是否关注
-     * @param followUserId 用户id
+     * 查询是否收藏
+      * @param
      * @return
      */
-    @GetMapping("/isFollow/{id}")
-    public Result isFollowed(@PathVariable("id") Long followUserId){
-        return collectionShopService.isCollection(followUserId);
+    @GetMapping("/isCollection")
+    public Result isCollection(Collection collection){
+        return collectionShopService.isCollection(collection);
     }
-
-    //获取粉丝列表
-    @GetMapping("/fans")
-    public Result getFans(){
-        Long followUserId = UserContextHolder.getUser().getId();
-        return null;
-    }
-    //获取关注店铺列表
-    @GetMapping("/followShops")
-    public Result getFollows(@RequestParam("userId") Long userId,@RequestParam("current") Integer current){
-        return collectionShopService.getCollectionShops(userId, current);
+    //获取收藏列表
+    @GetMapping("/collectionList")
+    public Result getFollows(Collection collection,@RequestParam("current") Integer current){
+        return collectionShopService.getCollectionList(collection, current);
     }
     /**
-     * 获取用户关注店铺数量
-     * @param userId 用户id
+     * 获取用户收藏的数量
+     * @param
      * @return
      */
-    @GetMapping("/getFollowShopCount/{id}")
-    Result getFollowShopCount(@PathVariable("id") Long userId){
-        Integer followShopCount=collectionShopService.getCollectCount(userId);
+    @GetMapping("/getCollentCount")
+    Result getFollowShopCount(Collection collection){
+        Integer followShopCount=collectionShopService.getCollectCount(collection);
         return Result.ok(followShopCount);
     }
 }

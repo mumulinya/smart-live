@@ -75,6 +75,12 @@ public interface ICommentService extends IService<Comment>
      * @return
      */
     Result addComment(Comment comment);
+    /**
+     * 删除评论
+     * @param comment
+     * @return
+     */
+    Result deleteComment(Comment comment);
 
     /**
      * 获取我的评论
@@ -113,4 +119,11 @@ public interface ICommentService extends IService<Comment>
      * @return
      */
     Integer getCommentTotal();
+
+    /**
+     * 获取评论列表
+     * @param sourceIdList
+     * @return
+     */
+    List<Comment> getCommentListByIds(List<Long> sourceIdList);
 }

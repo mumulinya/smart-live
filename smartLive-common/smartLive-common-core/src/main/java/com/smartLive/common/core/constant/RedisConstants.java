@@ -20,7 +20,7 @@ public class RedisConstants {
     public static final Long LOCK_SHOP_TTL = 10L;
 
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";
-    public static final String BLOG_LIKED_KEY = "blog:liked:";
+//    public static final String BLOG_LIKED_KEY = "blog:liked:";
     public static final String CACHE_BLOG_KEY = "cache:blog:";
     public static final String CACHE_HOT_BLOG_KEY = "cache:hotBlog:";
     public static final Integer CACHE_HOT_BLOG_TTL = 1;//1天
@@ -42,8 +42,38 @@ public class RedisConstants {
      */
     //博文推送
     public static final String BLOG_FEED_KEY = "blog:feed:";
+    //秒杀代金券推送
     public static final String SECKILL_VOUCHER_FEED_KEY = "seckill:voucher:feed:";
+    //优惠券推送
     public static final String VOUCHER_FEED_KEY = "voucher:feed:";
+
+    /**
+     *  点赞数据
+     */
+    //博文点赞
+    public static final String BLOG_LIKED_KEY = "BLOG:liked:";
+    //评论点赞
+    public static final String COMMENT_LIKED_KEY = "comment:liked:";
+    /**
+     * 收藏数据
+     */
+    //博文收藏
+    public static final String BLOG_COLLECT_KEY = "blog:collect:";
+    //代金券收藏
+    public static final String VOUCHER_COLLECT_KEY = "voucher:collect:";
+    //评论收藏
+    public static final String COMMENT_COLLECT_KEY = "comment:collect:";
+    /**
+     * 评论数据
+     */
+    //博客的评论
+    public static final String BLOG_COMMENT_KEY = "blog:comment:";
+    //代金券的评论
+    public static final String VOUCHER_COMMENT_KEY = "voucher:comment:";
+    //店铺的评论
+    public static final String SHOP_COMMENT_KEY = "shop:comment:";
+    //评论的评论
+    public static final String COMMENT_COMMENT_KEY = "comment:comment:";
     /**
      * 商店地理位置
      */

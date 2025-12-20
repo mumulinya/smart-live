@@ -392,6 +392,17 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     }
 
     /**
+     * 获取优惠券列表
+     *
+     * @param sourceIdList 优惠券id列表
+     * @return 优惠券列表
+     */
+    @Override
+    public List<Voucher> getVoucherListByIds(List<Long> sourceIdList) {
+        return query().in("id", sourceIdList).list();
+    }
+
+    /**
      * 全部发布
      *
      * @return 全部发布结果

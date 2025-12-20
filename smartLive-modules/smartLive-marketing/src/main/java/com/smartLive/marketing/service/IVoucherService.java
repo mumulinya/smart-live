@@ -127,4 +127,11 @@ public interface IVoucherService extends IService<Voucher>
      * @return 优惠券总数
      */
     Integer getCouponTotal();
+    /**
+     * 获取优惠券列表
+     *
+     * @param sourceIdList 优惠券id列表
+     * @return 优惠券列表
+     */
+    List<Voucher> getVoucherListByIds(List<Long> sourceIdList);
 }

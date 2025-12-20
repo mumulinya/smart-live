@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.List;
+
 
 @FeignClient(contextId = "remoteBlogService", value = ServiceNameConstants.BLOG_SERVICE, fallbackFactory = RemoteBlogFallbackFactory.class)
 public interface RemoteBlogService {
@@ -50,4 +52,9 @@ public interface RemoteBlogService {
      */
     @GetMapping("/blog/getBlogTotal")
     R<Integer> getBlogTotal();
+    /**
+     * 获取博客列表
+     */
+    @GetMapping("/blog/getBlogListByIds")
+    R<List<BlogDto>> getBlogListByIds(List<Long> sourceIdList);
 }

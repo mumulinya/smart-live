@@ -35,7 +35,7 @@ public class Collection extends BaseEntity implements Serializable
     @Excel(name = "用户id")
     private Long userId;
 
-    /** 来源类型  1（店铺）, 2（文章）, 3（团购）等。 */
+    /** 来源类型  1（文章）, 3（评论）, 4（代金券）等。 */
     @Excel(name = "来源类型  1", readConverterExp = "店=铺")
     private Integer sourceType;
 

@@ -182,4 +182,10 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     Integer getBlogTotal();
+    /**
+     * 获取博客列表
+     * @param sourceIdList
+     * @return
+     */
+    List<Blog> getBlogListByIds(List<Long> sourceIdList);
 }

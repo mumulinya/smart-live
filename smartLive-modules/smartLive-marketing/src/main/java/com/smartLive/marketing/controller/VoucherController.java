@@ -214,4 +214,11 @@ public class VoucherController extends BaseController {
     R<Integer> getCouponTotal(){
         return R.ok(voucherService.getCouponTotal());
     }
+    /**
+     * 获取优惠券列表
+     */
+    @GetMapping("/getVoucherListByIds")
+    R<List<Voucher>> getVoucherListByIds(List<Long> sourceIdList){
+        return R.ok(voucherService.getVoucherListByIds(sourceIdList));
+    }
 }
