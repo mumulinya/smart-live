@@ -21,7 +21,7 @@ public class ShopInfoStrategy implements InfoFetcherStrategy<ShopDTO> {
      */
     @Override
     public String getType() {
-        return FollowTypeEnum.SHOPINFO.getKey();
+        return FollowTypeEnum.SHOPINFO.getStrategyName();
     }
     /**
      * 获取关注列表

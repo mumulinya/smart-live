@@ -5,6 +5,10 @@ import com.smartLive.common.core.domain.R;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import com.smartLive.blog.api.RemoteBlogService;
+
+import java.util.List;
+import java.util.Map;
+
 @Component
 public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogService> {
 
@@ -46,6 +50,26 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
             public R<Integer> getBlogTotal() {
                 return R.fail("查询博客总数失败");
             }
-    };
+
+            /**
+             * 获取博客列表
+             *
+             * @param sourceIdList
+             */
+            @Override
+            public R<List<BlogDto>> getBlogListByIds(List<Long> sourceIdList) {
+                return R.fail("查询博客列表失败");
+            }
+
+            /**
+             * 批量更新点赞数
+             *
+             * @param updateMap
+             */
+            @Override
+            public R<Boolean> updateLikeCountBatch(Map<Long, Integer> updateMap) {
+                return R.fail("批量更新点赞数失败");
+            }
+        };
  }
 }

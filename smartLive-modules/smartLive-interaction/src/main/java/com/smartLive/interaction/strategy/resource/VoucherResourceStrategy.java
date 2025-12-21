@@ -22,7 +22,7 @@ public abstract  class VoucherResourceStrategy implements ResourceFetcherStrateg
      */
     @Override
     public String getType() {
-        return ResourceTypeEnum.VOUCHERRESOURCE.getKey();
+        return ResourceTypeEnum.VOUCHERRESOURCE.getStrategyName();
     }
 
     /**

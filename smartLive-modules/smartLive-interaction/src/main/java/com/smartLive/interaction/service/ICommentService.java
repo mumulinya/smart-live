@@ -5,6 +5,7 @@ import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.CommentDTO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 评论Service接口
@@ -12,11 +13,10 @@ import java.util.List;
  * @author mumulin
  * @date 2025-09-21
  */
-public interface ICommentService extends IService<Comment>
-{
+public interface ICommentService extends IService<Comment> {
     /**
      * 查询评论
-     * 
+     *
      * @param id 评论主键
      * @return 评论
      */
@@ -24,7 +24,7 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 查询评论列表
-     * 
+     *
      * @param comment 评论
      * @return 评论集合
      */
@@ -32,7 +32,7 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 新增评论
-     * 
+     *
      * @param comment 评论
      * @return 结果
      */
@@ -40,7 +40,7 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 修改评论
-     * 
+     *
      * @param comment 评论
      * @return 结果
      */
@@ -48,7 +48,7 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 批量删除评论
-     * 
+     *
      * @param ids 需要删除的评论主键集合
      * @return 结果
      */
@@ -56,7 +56,7 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 删除评论信息
-     * 
+     *
      * @param id 评论主键
      * @return 结果
      */
@@ -64,19 +64,23 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 获取评论列表
+     *
      * @param comment
      * @return
      */
-    Result listComment(Comment comment,Integer current);
+    Result listComment(Comment comment, Integer current);
 
     /**
      * 新增评论
+     *
      * @param comment
      * @return
      */
     Result addComment(Comment comment);
+
     /**
      * 删除评论
+     *
      * @param comment
      * @return
      */
@@ -84,6 +88,7 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 获取我的评论
+     *
      * @param current
      * @return
      */
@@ -91,18 +96,22 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 获取评论列表
+     *
      * @return
      */
     List<Comment> getCommentList();
 
     /**
      * 保存ai自动创建的评论
+     *
      * @param comments
      * @return
      */
     Result saveAiCreateComment(List<CommentDTO> comments);
+
     /**
      * 获取用户发表的评论数
+     *
      * @param userId
      * @return
      */
@@ -110,20 +119,32 @@ public interface ICommentService extends IService<Comment>
 
     /**
      * 创建ai自动创建的评论
+     *
      * @param
      * @return
      */
-    void aiCreateComment( );
+    void aiCreateComment();
+
     /**
      * 获取评论总数
+     *
      * @return
      */
     Integer getCommentTotal();
 
     /**
      * 获取评论列表
+     *
      * @param sourceIdList
      * @return
      */
     List<Comment> getCommentListByIds(List<Long> sourceIdList);
+
+    /**
+     * 批量更新点赞数
+     *
+     * @param updateMap
+     * @return
+     */
+    Boolean updateLikeCountBatch(Map<Long, Integer> updateMap);
 }

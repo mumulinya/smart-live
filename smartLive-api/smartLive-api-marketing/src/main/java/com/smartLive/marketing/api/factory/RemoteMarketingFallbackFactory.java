@@ -7,6 +7,8 @@ import com.smartLive.marketing.api.dto.VoucherDTO;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class RemoteMarketingFallbackFactory implements FallbackFactory<RemoteMarketingService> {
     @Override
@@ -60,6 +62,16 @@ public class RemoteMarketingFallbackFactory implements FallbackFactory<RemoteMar
             @Override
             public Result buyVoucher(Long voucherId, Long userId) {
                 return null;
+            }
+
+            /**
+             * 获取优惠券列表
+             *
+             * @param sourceIdList
+             */
+            @Override
+            public R<List<VoucherDTO>> getVoucherListByIds(List<Long> sourceIdList) {
+                return R.fail("查询优惠券列表失败");
             }
         };
     }

@@ -23,7 +23,7 @@ public abstract  class CommentResourceStrategy implements ResourceFetcherStrateg
      */
     @Override
     public String getType() {
-        return ResourceTypeEnum.COMMENTRESOURCE.getKey();
+        return ResourceTypeEnum.COMMENTRESOURCE.getStrategyName();
     }
 
     /**

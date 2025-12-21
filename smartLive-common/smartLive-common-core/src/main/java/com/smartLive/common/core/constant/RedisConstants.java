@@ -50,10 +50,20 @@ public class RedisConstants {
     /**
      *  点赞数据
      */
-    //博文点赞
+    //博文点赞列表
     public static final String BLOG_LIKED_KEY = "BLOG:liked:";
+    //博客点赞总数
+    public static final String BLOG_LIKED_COUNT_KEY = "blog:liked:count:";
+    //博客点赞脏数据列表
+    public static final String BLOG_LIKED_DIRTY_KEY = "blog:liked:dirty:";
+
+
     //评论点赞
     public static final String COMMENT_LIKED_KEY = "comment:liked:";
+    //评论点赞总数
+    public static final String COMMENT_LIKED_COUNT_KEY = "comment:liked:count:";
+    //评论点赞脏数据列表
+    public static final String COMMENT_LIKED_DIRTY_KEY = "comment:liked:dirty";
     /**
      * 收藏数据
      */

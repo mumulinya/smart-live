@@ -206,7 +206,7 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
             return Result.fail("关注类型错误");
         }
         //根据关注类型从关注策略工程获取bean
-        ResourceFetcherStrategy resourceFetcherStrategy = resourceStrategyMap.get(resourceType.getKey());
+        ResourceFetcherStrategy resourceFetcherStrategy = resourceStrategyMap.get(resourceType.getStrategyName());
         //从redis获取
         Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(resourceType.getCollectKeyPrefix(), userId, current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();

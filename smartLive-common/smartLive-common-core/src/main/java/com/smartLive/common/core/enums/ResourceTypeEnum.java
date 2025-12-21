@@ -14,33 +14,35 @@ public enum ResourceTypeEnum {
 
     // 1. 博客：支持评论、收藏、点赞。MQ后缀用 "blog" -> comment.create.blog
     BLOGRESOURCE(ResourceTypeConstants.BLOG, "blogSource", "博客资源", "blog",
-            RedisConstants.BLOG_COMMENT_KEY, RedisConstants.BLOG_COLLECT_KEY, RedisConstants.BLOG_LIKED_KEY),
+            RedisConstants.BLOG_COMMENT_KEY, RedisConstants.BLOG_COLLECT_KEY, RedisConstants.BLOG_LIKED_KEY, RedisConstants.BLOG_LIKED_COUNT_KEY, RedisConstants.BLOG_LIKED_DIRTY_KEY),
 
     // 2. 店铺：只支持评论(评分)。MQ后缀用 "shop" -> comment.create.shop
     // 注意：之前讨论过店铺通常不点赞不收藏，所以后面填 null
     SHOPRESOURCE(ResourceTypeConstants.SHOP, "shopSource", "店铺资源", "shop",
-            RedisConstants.SHOP_COMMENT_KEY, null, null),
+            RedisConstants.SHOP_COMMENT_KEY, null, null, null, null),
 
     // 3. 优惠券：MQ后缀用 "voucher"
     VOUCHERRESOURCE(ResourceTypeConstants.VOUCHER, "voucherSource", "优惠券资源", "voucher",
-            RedisConstants.VOUCHER_COMMENT_KEY, RedisConstants.VOUCHER_COLLECT_KEY, null),
+            RedisConstants.VOUCHER_COMMENT_KEY, RedisConstants.VOUCHER_COLLECT_KEY, null, null, null),
 
     // 4. 评论(嵌套评论)：MQ后缀用 "comment" (如果有这种需求的话)
     COMMENTRESOURCE(ResourceTypeConstants.COMMENT, "commentSource", "评论资源", "comment",
-            RedisConstants.COMMENT_COMMENT_KEY, RedisConstants.COMMENT_COLLECT_KEY, RedisConstants.COMMENT_LIKED_KEY);
+            RedisConstants.COMMENT_COMMENT_KEY, RedisConstants.COMMENT_COLLECT_KEY, RedisConstants.COMMENT_LIKED_KEY, RedisConstants.COMMENT_LIKED_COUNT_KEY, RedisConstants.COMMENT_LIKED_DIRTY_KEY);
 
 
     private final Integer code;
-    private final String key;       // 原有的key (带Source后缀)
+    private final String strategyName;       // 原有的key (带Source后缀)
     private final String desc;
 
     // ✅ 新增字段：专门给 MQ 用的简短后缀
-    private final String mqPattern;
+    private final String bizDomain;
 
     // Redis Key 前缀配置
     private final String commentKeyPrefix;
     private final String collectKeyPrefix;
     private final String likeKeyPrefix;
+    private final String likedCountKeyPrefix;
+    private final String likeDirtyKeyPrefix;
 
     /**
      * 根据 code 获取枚举

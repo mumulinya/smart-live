@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
+import java.util.Map;
 
 
 @FeignClient(contextId = "remoteBlogService", value = ServiceNameConstants.BLOG_SERVICE, fallbackFactory = RemoteBlogFallbackFactory.class)
@@ -57,4 +58,9 @@ public interface RemoteBlogService {
      */
     @GetMapping("/blog/getBlogListByIds")
     R<List<BlogDto>> getBlogListByIds(List<Long> sourceIdList);
+    /**
+     * 批量更新点赞数
+     */
+    @PostMapping("/blog/updateLikeCountBatch")
+    R<Boolean> updateLikeCountBatch(Map<Long, Integer> updateMap);
 }

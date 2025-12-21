@@ -23,7 +23,7 @@ public abstract class BlogResourceStrategy implements ResourceFetcherStrategy {
      */
     @Override
     public String getType() {
-        return ResourceTypeEnum.BLOGRESOURCE.getKey();
+        return ResourceTypeEnum.BLOGRESOURCE.getStrategyName();
     }
 
     /**

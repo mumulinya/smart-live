@@ -20,7 +20,7 @@ public class UserInfoStrategy implements InfoFetcherStrategy<User> {
      */
     @Override
     public String getType() {
-        return  FollowTypeEnum.USERINFO.getKey();
+        return  FollowTypeEnum.USERINFO.getStrategyName();
     }
     /**
      * 获取关注列表

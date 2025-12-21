@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Configuration
 public class FollowStrategyFactory {
     @Bean
-    public Map<String, InfoFetcherStrategy> FollowStrategyMap(List<InfoFetcherStrategy> strategies) {
+    public Map<String, InfoFetcherStrategy>  InfoFetcherStrategyMap(List<InfoFetcherStrategy> strategies) {
         return strategies.stream()
                 .collect(Collectors.toMap(
                         InfoFetcherStrategy::getType,  // 使用 dataType 作为键

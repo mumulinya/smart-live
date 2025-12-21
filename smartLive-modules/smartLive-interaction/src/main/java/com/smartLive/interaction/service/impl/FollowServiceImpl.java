@@ -56,7 +56,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * 策略模式
      */
     @Autowired
-    private Map<String, InfoFetcherStrategy> followStrategyMap;
+    private Map<String, InfoFetcherStrategy> infoFetcherStrategyMap;
 
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
@@ -224,7 +224,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Result.ok(null);
         }
         List<Long> idList = commonFollowPage.getRecords();
-        InfoFetcherStrategy infoFetcherStrategy = followStrategyMap.get(followTypeEnum.getKey());
+        InfoFetcherStrategy infoFetcherStrategy = infoFetcherStrategyMap.get(followTypeEnum.getStrategyName());
         List<SocialInfoVO> socialInfoVOList = infoFetcherStrategy.getFollowList(idList);
           return Result.ok(socialInfoVOList);
     }
@@ -340,7 +340,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Result.fail("关注类型错误");
         }
         //根据关注类型从关注策略工程获取bean
-        InfoFetcherStrategy infoFetcherStrategy = followStrategyMap.get(followType.getKey());
+        InfoFetcherStrategy infoFetcherStrategy = infoFetcherStrategyMap.get(followType.getStrategyName());
         //从redis获取
         Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(followType.getFollowKeyPrefix(), follow.getUserId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();

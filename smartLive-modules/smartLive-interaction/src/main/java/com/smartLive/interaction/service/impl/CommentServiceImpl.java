@@ -1,4 +1,6 @@
 package com.smartLive.interaction.service.impl;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -28,9 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -41,8 +42,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService
-{
+public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService {
     @Autowired
     private CommentMapper commentMapper;
 
@@ -60,77 +60,72 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
     /**
      * 查询评论
-     * 
+     *
      * @param id 评论主键
      * @return 评论
      */
     @Override
-    public Comment selectCommentById(Long id)
-    {
+    public Comment selectCommentById(Long id) {
         return commentMapper.selectCommentById(id);
     }
 
     /**
      * 查询评论列表
-     * 
+     *
      * @param comment 评论
      * @return 评论
      */
     @Override
-    public List<Comment> selectCommentList(Comment comment)
-    {
+    public List<Comment> selectCommentList(Comment comment) {
         return commentMapper.selectCommentList(comment);
     }
 
     /**
      * 新增评论
-     * 
+     *
      * @param comment 评论
      * @return 结果
      */
     @Override
-    public int insertComment(Comment comment)
-    {
+    public int insertComment(Comment comment) {
         comment.setCreateTime(DateUtils.getNowDate());
         return commentMapper.insertComment(comment);
     }
 
     /**
      * 修改评论
-     * 
+     *
      * @param comment 评论
      * @return 结果
      */
     @Override
-    public int updateComment(Comment comment)
-    {
+    public int updateComment(Comment comment) {
         comment.setUpdateTime(DateUtils.getNowDate());
         return commentMapper.updateComment(comment);
     }
 
     /**
      * 批量删除评论
-     * 
+     *
      * @param ids 需要删除的评论主键
      * @return 结果
      */
     @Override
-    public int deleteCommentByIds(Long[] ids)
-    {
+    public int deleteCommentByIds(Long[] ids) {
         return commentMapper.deleteCommentByIds(ids);
     }
 
     /**
      * 删除评论信息
-     * 
+     *
      * @param id 评论主键
      * @return 结果
      */
     @Override
-    public int deleteCommentById(Long id)
-    {
+    public int deleteCommentById(Long id) {
         return commentMapper.deleteCommentById(id);
     }
 
@@ -141,7 +136,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return
      */
     @Override
-    public Result listComment(Comment comment,Integer current) {
+    public Result listComment(Comment comment, Integer current) {
         Page<Comment> page = query().eq("source_id", comment.getSourceId())
                 .eq("source_type", comment.getSourceType())
                 .orderByDesc("create_time")
@@ -151,18 +146,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             Long id = c.getUserId();
             R<User> re = remoteAppUserService.queryUserById(id);
             User user = re.getData();
-            if (user != null){
+            if (user != null) {
                 c.setNickName(user.getNickName());
                 c.setUserIcon(user.getIcon());
             }
         });
-        if(list.size()==0){
+        if (list.size() == 0) {
             return Result.ok(list);
         }
         //获取是否有ai生成评论
-        String key = RedisConstants.CACHE_AI_COMMENT_KEY + comment.getSourceType() +":"+ comment.getSourceId();
+        String key = RedisConstants.CACHE_AI_COMMENT_KEY + comment.getSourceType() + ":" + comment.getSourceId();
         String JsonStr = stringRedisTemplate.opsForValue().get(key);
-        if(JsonStr != null){
+        if (JsonStr != null) {
             Comment commentDTO = JSON.parseObject(JsonStr, Comment.class);
             list.add(commentDTO);
         }
@@ -181,12 +176,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setCreateTime(DateUtils.getNowDate());
         int i = commentMapper.insertComment(comment);
         Long id = comment.getSourceId();
-        if(i > 0){
+        if (i > 0) {
             //发信息给mq更新数据评论
             ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(comment.getSourceType());
-            if(resourceTypeEnum != null){
-                log.info("发送rabbitMq消息给{}",resourceTypeEnum.getMqPattern());
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_COMMENT_EXCHANGE_NAME,MqConstants.INTERACT_PREFIX_CREATE_COMMENT+resourceTypeEnum.getCommentKeyPrefix(),comment);
+            if (resourceTypeEnum != null) {
+                log.info("发送rabbitMq消息给{}", resourceTypeEnum.getBizDomain());
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.INTERACT_COMMENT_EXCHANGE_NAME, MqConstants.INTERACT_PREFIX_CREATE_COMMENT + resourceTypeEnum.getCommentKeyPrefix(), comment);
             }
         }
         return Result.ok(i);
@@ -201,12 +196,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Override
     public Result deleteComment(Comment comment) {
         boolean i = removeById(comment.getId());
-        if(i){
+        if (i) {
             //发信息给mq更新数据评论
             ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(comment.getSourceType());
-            if(resourceTypeEnum != null){
-                log.info("发送rabbitMq消息给{}",resourceTypeEnum.getMqPattern());
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_COMMENT_EXCHANGE_NAME,MqConstants.INTERACT_PREFIX_DELETE_COMMENT+resourceTypeEnum.getCommentKeyPrefix(),comment);
+            if (resourceTypeEnum != null) {
+                log.info("发送rabbitMq消息给{}", resourceTypeEnum.getBizDomain());
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.INTERACT_COMMENT_EXCHANGE_NAME, MqConstants.INTERACT_PREFIX_DELETE_COMMENT + resourceTypeEnum.getCommentKeyPrefix(), comment);
             }
         }
         return Result.ok(i);
@@ -224,7 +219,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         Page<Comment> page = query().eq("user_id", userId)
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
-                List<Comment> list = page.getRecords();
+        List<Comment> list = page.getRecords();
         return Result.ok(list);
     }
 
@@ -237,14 +232,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public List<Comment> getCommentList() {
         List<Comment> list = query().list();
         list.stream().forEach(c -> {
-            if(c.getSourceType()==1){
+            if (c.getSourceType() == 1) {
                 R<BlogDto> blog = remoteBlogService.getBlogById(c.getSourceId());
-                if((blog.getData().getTitle()!=null))
-                c.setSourceName(blog.getData().getTitle());
-            }else if(c.getSourceType()==2){
+                if ((blog.getData().getTitle() != null))
+                    c.setSourceName(blog.getData().getTitle());
+            } else if (c.getSourceType() == 2) {
                 R<ShopDTO> shop = remoteShopService.getShopById(c.getSourceId());
-                if((shop.getData().getName()!=null))
-                c.setSourceName(shop.getData().getName());
+                if ((shop.getData().getName() != null))
+                    c.setSourceName(shop.getData().getName());
             }
         });
         return list;
@@ -258,13 +253,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     @Override
     public Result saveAiCreateComment(List<CommentDTO> comments) {
-        if(comments.size()==0){
+        if (comments.size() == 0) {
             return Result.fail("请传入数据");
         }
         //清空redis缓存
         stringRedisTemplate.delete(RedisConstants.CACHE_AI_COMMENT_KEY);
         comments.forEach(commentDTO -> {
-            String key = RedisConstants. CACHE_AI_COMMENT_KEY+commentDTO.getSourceType()+":"+commentDTO.getSourceId();
+            String key = RedisConstants.CACHE_AI_COMMENT_KEY + commentDTO.getSourceType() + ":" + commentDTO.getSourceId();
             stringRedisTemplate.opsForValue().set(key, JSON.toJSONString(commentDTO));
             //设置过期时间
 //            stringRedisTemplate.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
@@ -321,7 +316,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 ))
                 .collect(Collectors.toList());
         //发送rabbitMq消息给ai服务
-        rabbitTemplate.convertAndSend(MqConstants.AI_EXCHANGE_NAME,MqConstants.AI_COMMENT_ROUTING,list);
+        rabbitTemplate.convertAndSend(MqConstants.AI_EXCHANGE_NAME, MqConstants.AI_COMMENT_ROUTING, list);
     }
 
     /**
@@ -334,5 +329,36 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public List<Comment> getCommentListByIds(List<Long> sourceIdList) {
         List<Comment> list = query().in("id", sourceIdList).list();
         return list;
+    }
+
+    /**
+     * 批量更新点赞数
+     *
+     * @param updateMap
+     * @return
+     */
+    @Override
+    public Boolean updateLikeCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
+        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
+        if (updateMap.size() > 500) {
+            // 分批逻辑 (每500条提交一次)
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateLikeCountBatch(batchMap);
+            }
+        } else {
+            // 数量少直接执行
+            baseMapper.updateLikeCountBatch(updateMap);
+        }
+        return true;
     }
 }

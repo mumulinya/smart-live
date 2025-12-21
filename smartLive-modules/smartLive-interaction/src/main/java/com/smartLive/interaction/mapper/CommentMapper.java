@@ -1,7 +1,11 @@
 package com.smartLive.interaction.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.smartLive.interaction.domain.Comment;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
+
 import java.util.List;
+import java.util.Map;
 
 /**
  * 评论Mapper接口
@@ -58,4 +62,18 @@ public interface CommentMapper extends BaseMapper<Comment>
      * @return 结果
      */
     public int deleteCommentByIds(Long[] ids);
+
+    @Update("<script>" +
+            "UPDATE sys_blog " +
+            "SET like_count = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateLikeCountBatch(@Param("map") Map<Long, Integer> updateMap);
 }

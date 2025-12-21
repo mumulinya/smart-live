@@ -6,6 +6,7 @@ import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 博客Service接口
@@ -188,4 +189,10 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     List<Blog> getBlogListByIds(List<Long> sourceIdList);
+    /**
+     * 批量更新点赞数
+     * @param updateMap
+     * @return
+     */
+    Boolean updateLikeCountBatch(Map<Long, Integer> updateMap);
 }

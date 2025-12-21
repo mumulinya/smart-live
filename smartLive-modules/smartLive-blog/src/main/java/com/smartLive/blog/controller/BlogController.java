@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 博客Controller
@@ -263,5 +264,12 @@ public class BlogController extends BaseController
     @GetMapping("/blog/getBlogListByIds")
     R<List<Blog>> getBlogListByIds(List<Long> sourceIdList){
         return R.ok(blogService.getBlogListByIds(sourceIdList));
+    }
+    /**
+     * 批量更新点赞数
+     */
+    @PostMapping("/blog/updateLikeCountBatch")
+    R<Boolean> updateLikeCountBatch(Map<Long, Integer> updateMap){
+        return R.ok(blogService.updateLikeCountBatch(updateMap));
     }
 }
