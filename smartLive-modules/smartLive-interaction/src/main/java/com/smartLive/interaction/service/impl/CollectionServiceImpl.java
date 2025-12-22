@@ -11,7 +11,7 @@ import com.smartLive.interaction.domain.Collection;
 import com.smartLive.interaction.domain.vo.ResourceVO;
 import com.smartLive.interaction.mapper.CollectionMapper;
 import com.smartLive.interaction.service.ICollectionService;
-import com.smartLive.interaction.strategy.resource.ResourceFetcherStrategy;
+import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,12 +40,9 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
     StringRedisTemplate stringRedisTemplate;
 
     @Autowired
-    private RemoteShopService remoteShopService;
-
-    @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
-    private Map<String, ResourceFetcherStrategy> resourceStrategyMap;
+    private Map<String, ResourceStrategy> resourceStrategyMap;
     /**
      * 查询关注
      * 
@@ -206,7 +203,7 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
             return Result.fail("关注类型错误");
         }
         //根据关注类型从关注策略工程获取bean
-        ResourceFetcherStrategy resourceFetcherStrategy = resourceStrategyMap.get(resourceType.getStrategyName());
+        ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceType.getBizDomain()+"ResourceStrategy");
         //从redis获取
         Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(resourceType.getCollectKeyPrefix(), userId, current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
@@ -231,7 +228,7 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
        if(sourceIdList.isEmpty()){
            return Result.ok(Collections.emptyList());
        }
-        List<ResourceVO> resourceList = resourceFetcherStrategy.getResourceList(sourceIdList);
+        List<ResourceVO> resourceList = resourceStrategy.getResourceList(sourceIdList);
         return Result.ok(resourceList);
     }
     /**

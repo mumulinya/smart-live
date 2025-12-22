@@ -12,22 +12,22 @@ import java.util.Arrays;
  */
 @Getter
 @AllArgsConstructor
-public enum BizTypeEnum {
-
-    // === 内容类 ===
-    BLOG(1, RedisConstants.BLOG_FEED_KEY, "博客"),
-
-    // === 营销/商品类 ===
-    COUPON(2, RedisConstants.VOUCHER_FEED_KEY, "代金券"),
-    GOODS(3, RedisConstants.SECKILL_VOUCHER_FEED_KEY, "秒杀代金券");
+public enum FeedTypeEnum {
+    //博客推送
+    BLOG_FEED(GlobalBizTypeEnum.BLOG.getCode(), RedisConstants.BLOG_FEED_KEY, "博客", GlobalBizTypeEnum.BLOG.getBizDomain()),
+    //代金券推送
+    VOUCHER_FEED(GlobalBizTypeEnum.VOUCHER.getCode(), RedisConstants.VOUCHER_FEED_KEY, "代金券", GlobalBizTypeEnum.VOUCHER.getBizDomain()),
+    //秒杀代金券推送
+    SECKILL_VOUCHER_FEED(GlobalBizTypeEnum.VOUCHER.getCode(), RedisConstants.SECKILL_VOUCHER_FEED_KEY, "秒杀代金券", GlobalBizTypeEnum.VOUCHER.getBizDomain());
     private final Integer code;
-    private final String feedKeyPrefix; // "follow:user:", "follow:shop:"
+    private final String feedKeyPrefix;
     private final String desc;
+    private final String bizDomain; // 用于 MQ 或 Redis Key
 
     /**
      * 根据 code 获取枚举对象 (用于数据库值转枚举)
      */
-    public static BizTypeEnum getByCode(Integer code) {
+    public static FeedTypeEnum getByCode(Integer code) {
         if (code == null) {
             return null;
         }

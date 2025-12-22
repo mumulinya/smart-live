@@ -69,8 +69,8 @@ public interface BlogMapper  extends BaseMapper<Blog>
      * 原理：拼接 UPDATE ... CASE WHEN ... SQL
      */
     @Update("<script>" +
-            "UPDATE sys_blog " +
-            "SET like_count = CASE id " +
+            "UPDATE blog " +
+            "SET liked = CASE id " +
             "  <foreach collection='map.entrySet()' index='key' item='val'> " +
             "    WHEN #{key} THEN #{val} " +
             "  </foreach> " +

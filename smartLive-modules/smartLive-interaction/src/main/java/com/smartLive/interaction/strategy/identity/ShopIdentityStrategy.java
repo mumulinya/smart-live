@@ -1,7 +1,7 @@
-package com.smartLive.interaction.strategy.follow;
+package com.smartLive.interaction.strategy.identity;
 
 import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.enums.FollowTypeEnum;
+import com.smartLive.common.core.enums.IdentityTypeEnum;
 import com.smartLive.interaction.domain.vo.SocialInfoVO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("shopInfo")
-public class ShopInfoStrategy implements InfoFetcherStrategy<ShopDTO> {
+@Component("shopIdentityStrategy")
+public class ShopIdentityStrategy implements IdentityStrategy<ShopDTO> {
 
     @Autowired
     private RemoteShopService remoteShopService;
@@ -21,7 +21,7 @@ public class ShopInfoStrategy implements InfoFetcherStrategy<ShopDTO> {
      */
     @Override
     public String getType() {
-        return FollowTypeEnum.SHOPINFO.getStrategyName();
+        return IdentityTypeEnum.SHOP_IDENTITY.getBizDomain()+"IdentityStrategy";
     }
     /**
      * 获取关注列表

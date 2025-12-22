@@ -64,8 +64,8 @@ public interface CommentMapper extends BaseMapper<Comment>
     public int deleteCommentByIds(Long[] ids);
 
     @Update("<script>" +
-            "UPDATE sys_blog " +
-            "SET like_count = CASE id " +
+            "UPDATE comment " +
+            "SET liked = CASE id " +
             "  <foreach collection='map.entrySet()' index='key' item='val'> " +
             "    WHEN #{key} THEN #{val} " +
             "  </foreach> " +

@@ -2,8 +2,9 @@ package com.smartLive.interaction.task;
 
 import cn.hutool.core.collection.CollUtil;
 import com.smartLive.blog.api.RemoteBlogService;
+import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
-import com.smartLive.interaction.strategy.resource.ResourceFetcherStrategy;
+import com.smartLive.interaction.strategy.like.LikeStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,58 +22,79 @@ public class LikeSyncTask {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    // 注入各个服务的 Client
     @Autowired
-    private RemoteBlogService remoteBlogService; // 假设你有批量更新的 Service
-    @Autowired
-    private Map<String, ResourceFetcherStrategy> resourceStrategyMap;
+    private Map<String, LikeStrategy> likeStrategyMap;
+    // ... 其他服务
 
     // 每 30 秒执行一次
     @Scheduled(cron = "0/30 * * * * ?")
     public void syncLikesToDb() {
-        log.info("开始同步点赞数");
-        Arrays.stream(ResourceTypeEnum.values())
-                .forEach(type -> {
-                    if(type.getLikedCountKeyPrefix()!=null){
-                        String likedCountKeyPrefix = type.getLikedCountKeyPrefix();
-                        String DIRTY_KEY = type.getLikeDirtyKeyPrefix();
-                        String TEMP_KEY = DIRTY_KEY + ":TEMP";
-                        // 1. 【原子操作】把脏数据 Key 重命名为临时 Key
-                        // 这样新的点赞会立刻写入空的 DIRTY_KEY，互不影响
-                        Boolean hasKey = redisTemplate.hasKey(DIRTY_KEY);
-                        if (Boolean.FALSE.equals(hasKey)) {
-                            return;
-                        }
-                        // rename 可能会覆盖 key，但这里 TEMP_KEY 理论上应该是处理完删掉了的
-                        // 为了安全可以使用 renameIfAbsent 或者先删后 rename，但在定时任务串行场景下直接 rename 即可
-                        redisTemplate.rename(DIRTY_KEY, TEMP_KEY);
+        log.info("开始同步点赞数...");
 
-                        // 2. 取出临时 Key 里的所有 ID
-                        Set<String> dirtyIds = redisTemplate.opsForSet().members(TEMP_KEY);
-                        if (CollUtil.isEmpty(dirtyIds)) {
-                            return;
-                        }
+        Arrays.stream(LikeTypeEnum.values()).forEach(type -> {
+            // 1. 只有配置了 Redis Key 的才处理
+            if (type.getLikedCountKeyPrefix() == null || type.getLikeDirtyKeyPrefix() == null) {
+                return;
+            }
 
-                        // 3. 准备数据
-                        Map<Long, Integer> updateMap = new HashMap<>();
-                        for (String idStr : dirtyIds) {
-                            Long id = Long.valueOf(idStr);
-                            // 查 Redis 最新计数值
-                            String countStr = redisTemplate.opsForValue().get(likedCountKeyPrefix+ id);
-                            if (countStr != null) {
-                                updateMap.put(id, Integer.parseInt(countStr));
-                            }
-                        }
+            String likedCountKeyPrefix = type.getLikedCountKeyPrefix();
+            String DIRTY_KEY = type.getLikeDirtyKeyPrefix();
+            String TEMP_KEY = DIRTY_KEY + ":TEMP";
 
-                        // 4. 【核心优化】批量更新数据库 (Batch Update)
-                        if (CollUtil.isNotEmpty(updateMap)) {
-                            remoteBlogService.updateLikeCountBatch(updateMap);
-                            log.info("同步点赞数成功，更新条数: {}", updateMap.size());
-                        }
+            try {
+                // 2. 【原子重命名】将脏数据移入临时 Key
+                if (Boolean.FALSE.equals(redisTemplate.hasKey(DIRTY_KEY))) {
+                    return;
+                }
+                // 使用 rename，如果有旧的 TEMP_KEY 没处理完，这里会覆盖（权衡之下的选择）
+                // 更严谨的做法是先 check TEMP_KEY 是否存在，如果存在则报警或先合并
+                redisTemplate.rename(DIRTY_KEY, TEMP_KEY);
 
-                        // 5. 处理完，删除临时 Key
-                        redisTemplate.delete(TEMP_KEY);
+                // 3. 取出 ID
+                Set<String> dirtyIds = redisTemplate.opsForSet().members(TEMP_KEY);
+                if (CollUtil.isEmpty(dirtyIds)) {
+                    // 即使为空，也要把临时 Key 删掉
+                    redisTemplate.delete(TEMP_KEY);
+                    return;
+                }
+
+                // 4. 组装数据
+                Map<Long, Integer> updateMap = new HashMap<>();
+                for (String idStr : dirtyIds) {
+                    Long id = Long.valueOf(idStr);
+                    String countStr = redisTemplate.opsForValue().get(likedCountKeyPrefix + id);
+                    // 如果 countStr 为空，可能是过期了，设为 0 或者去库里查（这里视业务而定，通常设为0）
+                    updateMap.put(id, countStr == null ? 0 : Integer.parseInt(countStr));
+                }
+
+                // 5. 【核心修复】根据类型分发给不同的 Service
+                if (CollUtil.isNotEmpty(updateMap)) {
+                    // ✅ 【核心变化】直接调用策略，没有 switch-case 了！
+                    LikeStrategy strategy = likeStrategyMap.get(type.getCode());
+
+                    if (strategy != null) {
+                        strategy.transLikeCountFromRedis2DB(updateMap);
+                        log.info("同步[{}]点赞数成功，条数: {}", type.getDesc(), updateMap.size());
+                    } else {
+                        log.warn("类型[{}]没有对应的同步策略，跳过", type.getDesc());
                     }
-                });
+                }
 
+                // 6. 只有同步成功了，才删除临时 Key
+                redisTemplate.delete(TEMP_KEY);
+
+            } catch (Exception e) {
+                // 7. 【异常处理】
+                // 如果同步失败，千万不要删 TEMP_KEY，保留现场。
+                // 虽然下一次 rename 会覆盖，但至少能在日志里看到错误。
+                // 进阶做法：在这里把 TEMP_KEY 的数据重新 add 回 DIRTY_KEY (回滚操作)
+                log.error("同步[{}]点赞数据失败", type.getDesc(), e);
+
+                // 【可选：回滚逻辑】把数据塞回去，防止丢失
+                // redisTemplate.opsForSet().add(DIRTY_KEY, dirtyIds.toArray(new String[0]));
+            }
+        });
     }
 }

@@ -3,19 +3,16 @@ package com.smartLive.interaction.strategy.resource;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.blog.api.dto.BlogDto;
 import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.domain.blog.Blog;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.interaction.domain.vo.ResourceVO;
-import com.smartLive.interaction.domain.vo.SocialInfoVO;
-import com.smartLive.user.api.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("blogResource")
-public abstract class BlogResourceStrategy implements ResourceFetcherStrategy {
+@Component("BlogResourceStrategy")
+public abstract class BlogResourceStrategy implements ResourceStrategy {
     @Autowired
     private RemoteBlogService remoteBlogService;
     /**
@@ -23,7 +20,7 @@ public abstract class BlogResourceStrategy implements ResourceFetcherStrategy {
      */
     @Override
     public String getType() {
-        return ResourceTypeEnum.BLOGRESOURCE.getStrategyName();
+        return ResourceTypeEnum.BLOG_RESOURCE.getBizDomain()+"ResourceStrategy";
     }
 
     /**

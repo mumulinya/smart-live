@@ -1,11 +1,8 @@
 package com.smartLive.interaction.strategy.resource;
 
-import com.smartLive.blog.api.dto.BlogDto;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.vo.ResourceVO;
-import com.smartLive.interaction.service.ICollectionService;
 import com.smartLive.interaction.service.ICommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,8 +10,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("commentResource")
-public abstract  class CommentResourceStrategy implements ResourceFetcherStrategy{
+@Component("CommentResourceStrategy")
+public abstract  class CommentResourceStrategy implements ResourceStrategy {
 
     @Autowired
     private ICommentService iCommentService;
@@ -23,7 +20,7 @@ public abstract  class CommentResourceStrategy implements ResourceFetcherStrateg
      */
     @Override
     public String getType() {
-        return ResourceTypeEnum.COMMENTRESOURCE.getStrategyName();
+        return ResourceTypeEnum.COMMENT_RESOURCE.getBizDomain()+"ResourceStrategy";
     }
 
     /**

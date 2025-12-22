@@ -2,7 +2,10 @@ package com.smartLive.interaction.strategy.resource;
 
 import com.smartLive.interaction.domain.vo.ResourceVO;
 import java.util.List;
-public interface ResourceFetcherStrategy {
+/**
+ * 资源获取策略
+ */
+public interface ResourceStrategy {
    /**
     * 策略标识 (USER / SHOP)
     */
