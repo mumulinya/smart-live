@@ -6,13 +6,12 @@ import java.util.List;
 /**
  * 获取信息策略
  */
-@Component
 public interface IdentityStrategy<T> {
 
      /**
       * 策略标识 (USER / SHOP)
       */
-     String getType();
+     Integer getType();
      /**
       * 获取关注列表
       */

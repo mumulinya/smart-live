@@ -24,6 +24,7 @@
         <module>smartLive-index</module>
         <module>smartLive-search</module>
         <module>smartLive-map</module>
+        <module>smartLive-interaction</module>
     </modules>
 
     <artifactId>smartLive-modules</artifactId>

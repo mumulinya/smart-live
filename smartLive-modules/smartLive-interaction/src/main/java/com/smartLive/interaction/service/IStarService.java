@@ -2,8 +2,7 @@ package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.domain.Collection;
-import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.Star;
 
 import java.util.List;
 
@@ -14,7 +13,7 @@ import java.util.List;
  * @author mumulin
  * @date 2025-09-21
  */
-public interface ICollectionService extends IService<Collection>
+public interface IStarService extends IService<Star>
 {
     /**
      * 查询关注
@@ -22,7 +21,7 @@ public interface ICollectionService extends IService<Collection>
      * @param id 关注主键
      * @return 关注
      */
-     Collection selectCollectionShopById(Long id);
+     Star selectCollectionShopById(Long id);
 
     /**
      * 查询关注列表
@@ -30,7 +29,7 @@ public interface ICollectionService extends IService<Collection>
      * @param follow 关注
      * @return 关注集合
      */
-     List<Collection> selectCollectionShopList(Collection follow);
+     List<Star> selectCollectionShopList(Star follow);
 
     /**
      * 新增关注
@@ -38,7 +37,7 @@ public interface ICollectionService extends IService<Collection>
      * @param follow 关注
      * @return 结果
      */
-     int insertCollectionShop(Collection follow);
+     int insertCollectionShop(Star follow);
 
     /**
      * 修改关注
@@ -46,7 +45,7 @@ public interface ICollectionService extends IService<Collection>
      * @param follow 关注
      * @return 结果
      */
-     int updateCollectionShop(Collection follow);
+     int updateCollectionShop(Star follow);
 
     /**
      * 批量删除关注
@@ -66,28 +65,28 @@ public interface ICollectionService extends IService<Collection>
 
     /**
      * 关注或取关
-      * @param collection
+      * @param star
      * @return
      */
-    Result collection(Collection collection);
+    Result star(Star star);
 
     /**
      * 判断是否收藏
      * @param
      * @return
      */
-    Result isCollection(Collection collection);
+    Result isStar(Star star);
 
     /**
-     * 获取店铺列表
+     * 获取收藏列表
      * @return
      */
-    Result getCollectionList(Collection collection,Integer current);
+    Result getStarList(Star star, Integer current);
 
     /**
      * 获取收藏数量
-     * @param collection
+     * @param star
      * @return
      */
-    Integer getCollectCount(Collection collection);
+    Integer getStarCount(Star star);
 }

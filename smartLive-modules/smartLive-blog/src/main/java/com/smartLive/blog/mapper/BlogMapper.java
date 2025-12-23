@@ -81,4 +81,18 @@ public interface BlogMapper  extends BaseMapper<Blog>
             "  </foreach>" +
             "</script>")
     void updateLikeCountBatch(@Param("map") Map<Long, Integer> updateMap);
+    @Update("<script>" +
+            "UPDATE blog " +
+            "SET comments" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateCommentCountBatch(@Param("map") Map<Long, Integer> updateMap);
 }

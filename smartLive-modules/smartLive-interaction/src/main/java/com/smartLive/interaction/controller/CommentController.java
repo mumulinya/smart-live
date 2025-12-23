@@ -106,12 +106,23 @@ public class CommentController extends BaseController
         System.out.println("current:"+current);
         return commentService.listComment(comment,current);
     }
-
+    /**
+     * 添加评论
+     */
     @PostMapping("/addComment")
     public Result addComment(@RequestBody Comment comment)
     {
 
         return commentService.addComment(comment);
+    }
+    /**
+     * 删除评论
+     */
+    @PostMapping("/removeComment")
+    public Result removeComment(@RequestBody Comment comment)
+    {
+
+        return Result.ok(commentService.deleteComment(comment));
     }
     @GetMapping("/of/me")
     public Result getCommentOfMe(Integer current){
@@ -123,6 +134,10 @@ public class CommentController extends BaseController
          commentService.aiCreateComment();
         return Result.ok("创建成功");
     }
+    /**
+     * 获取所有评论列表
+     * @return
+     */
     @GetMapping("/comment/list")
     List<Comment> getCommentList(){
         return commentService.getCommentList();

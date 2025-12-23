@@ -1,9 +1,7 @@
 package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.domain.Collection;
-import com.smartLive.interaction.domain.LikeRecord;
+import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.vo.ResourceVO;
 import com.smartLive.interaction.domain.vo.SocialInfoVO;
 
@@ -16,14 +14,14 @@ import java.util.List;
  * @author mumulin
  * @date 2025-09-21
  */
-public interface ILikeRecordService extends IService<LikeRecord> {
+public interface ILikeService extends IService<Like> {
     /**
      * 点赞或取消点赞
      *
-     * @param likeRecord
+     * @param like
      * @return 点赞记录
      */
-    Boolean likeOrCancelLike(LikeRecord likeRecord);
+    Boolean likeOrCancelLike(Like like);
 
     /**
      * 查询点赞数
@@ -31,7 +29,7 @@ public interface ILikeRecordService extends IService<LikeRecord> {
      * @param
      * @return 点赞数
      */
-    Integer queryLikeCount(LikeRecord likeRecord);
+    Integer queryLikeCount(Like like);
 
     /**
      * 查询点赞列表
@@ -39,12 +37,19 @@ public interface ILikeRecordService extends IService<LikeRecord> {
      * @param
      * @return 点赞记录
      */
-    List<ResourceVO> queryLikeRecord(LikeRecord likeRecord,Integer current);
+    List<ResourceVO> queryLikeRecord(Like like, Integer current);
     /**
      * 查询点赞用户列表
      *
      * @param
      * @return 点赞用户列表
      */
-    List<SocialInfoVO> queryLikeUserList(LikeRecord likeRecord);
+    List<SocialInfoVO> queryLikeUserList(Like like);
+    /**
+     * 判断是否点赞
+     *
+     * @param
+     * @return 是否点赞
+     */
+    Boolean isLike(Like like);
 }

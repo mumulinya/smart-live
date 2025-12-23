@@ -78,13 +78,14 @@ public interface ICommentService extends IService<Comment> {
      */
     Result addComment(Comment comment);
 
+
     /**
      * 删除评论
      *
      * @param comment
      * @return
      */
-    Result deleteComment(Comment comment);
+    Boolean deleteComment(Comment comment);
 
     /**
      * 获取我的评论
@@ -147,4 +148,11 @@ public interface ICommentService extends IService<Comment> {
      * @return
      */
     Boolean updateLikeCountBatch(Map<Long, Integer> updateMap);
+    /**
+     * 批量更新评论数
+     *
+     * @param updateMap
+     * @return
+     *  */
+    Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
 }

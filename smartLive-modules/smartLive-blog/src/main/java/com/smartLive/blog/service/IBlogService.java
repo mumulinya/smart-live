@@ -195,4 +195,10 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     Boolean updateLikeCountBatch(Map<Long, Integer> updateMap);
+    /**
+     * 批量更新评论数
+     * @param updateMap
+     * @return
+     */
+    Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
 }

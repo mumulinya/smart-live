@@ -9,6 +9,7 @@ import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(contextId = "remoteShopService", value = ServiceNameConstants.SHOP_SERVICE, fallbackFactory = RemoteShopFallbackFactory.class)
 public interface RemoteShopService {
@@ -17,6 +18,7 @@ public interface RemoteShopService {
      */
     @GetMapping("/shop/{shopName}")
     public R<ShopDTO> getShopByShopName(@PathVariable("shopName") String shopName);
+
     /**
      * 更新商家评论数
      */
@@ -44,14 +46,22 @@ public interface RemoteShopService {
 
     @GetMapping("/shop/shopListByIds")
     R<List<ShopDTO>> getShopList(@RequestParam("shopIdList") List<Long> shopIdList);
+
     /**
      * 获取商家总数
      */
     @GetMapping("/shop/getShopTotal")
     public R<Integer> getShopTotal();
+
     /**
      * 获取最近创建商家
      */
     @GetMapping("/shop/getRecentShops")
     public R<List<ShopDTO>> getRecentShops(@RequestParam("limit") Integer limit);
+
+    /**
+     * 批量更新商家评论数
+     */
+    @PostMapping("/shop/updateCommentCountBatch")
+    public R<Boolean> updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap);
 }

@@ -7,6 +7,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopService> {
@@ -78,6 +79,16 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
             @Override
             public R<List<ShopDTO>> getRecentShops(Integer limit) {
                 return R.fail("获取最近商家列表失败");
+            }
+
+            /**
+             * 批量更新商家评论数
+             *
+             * @param updateMap
+             */
+            @Override
+            public R<Boolean> updateCommentCountBatch(Map<Long, Integer> updateMap) {
+                return R.fail("批量更新商家评论数失败");
             }
         };
     }

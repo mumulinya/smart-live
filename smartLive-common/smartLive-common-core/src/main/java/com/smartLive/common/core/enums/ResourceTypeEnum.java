@@ -20,7 +20,7 @@ public enum ResourceTypeEnum {
 
     // 1. 博客
     BLOG_RESOURCE(GlobalBizTypeEnum.BLOG.getCode(), "博客资源", GlobalBizTypeEnum.BLOG.getBizDomain(),
-            RedisConstants.BLOG_COMMENT_KEY, RedisConstants.BLOG_COLLECT_KEY),
+            RedisConstants.BLOG_COMMENT_KEY, RedisConstants.BLOG_STAR_KEY),
 
     // 2. 店铺
     SHOP_RESOURCE(GlobalBizTypeEnum.SHOP.getCode(), "店铺资源", GlobalBizTypeEnum.SHOP.getBizDomain(),
@@ -28,11 +28,11 @@ public enum ResourceTypeEnum {
 
     // 3. 代金券
     VOUCHER_RESOURCE(GlobalBizTypeEnum.VOUCHER.getCode(), "代金券资源", GlobalBizTypeEnum.VOUCHER.getBizDomain(),
-            RedisConstants.VOUCHER_COMMENT_KEY, RedisConstants.VOUCHER_COLLECT_KEY),
+            RedisConstants.VOUCHER_COMMENT_KEY, RedisConstants.VOUCHER_STAR_KEY),
 
     // 4. 评论 (支持楼中楼)
     COMMENT_RESOURCE(GlobalBizTypeEnum.COMMENT.getCode(), "评论资源", GlobalBizTypeEnum.COMMENT.getBizDomain(),
-            RedisConstants.COMMENT_COMMENT_KEY, RedisConstants.COMMENT_COLLECT_KEY);
+            RedisConstants.COMMENT_COMMENT_KEY, RedisConstants.COMMENT_STAR_KEY);
 
 
     /**

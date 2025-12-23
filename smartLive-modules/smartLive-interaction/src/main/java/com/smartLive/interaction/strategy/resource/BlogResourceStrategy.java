@@ -11,16 +11,16 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("BlogResourceStrategy")
-public abstract class BlogResourceStrategy implements ResourceStrategy {
+@Component
+public  class BlogResourceStrategy implements ResourceStrategy {
     @Autowired
     private RemoteBlogService remoteBlogService;
     /**
      * 策略标识 (USER / SHOP)
      */
     @Override
-    public String getType() {
-        return ResourceTypeEnum.BLOG_RESOURCE.getBizDomain()+"ResourceStrategy";
+    public Integer getType() {
+        return ResourceTypeEnum.BLOG_RESOURCE.getCode();
     }
 
     /**

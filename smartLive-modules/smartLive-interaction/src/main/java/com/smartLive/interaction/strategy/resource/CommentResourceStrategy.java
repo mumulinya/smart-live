@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("CommentResourceStrategy")
-public abstract  class CommentResourceStrategy implements ResourceStrategy {
+@Component
+public class CommentResourceStrategy implements ResourceStrategy {
 
     @Autowired
     private ICommentService iCommentService;
@@ -19,8 +19,8 @@ public abstract  class CommentResourceStrategy implements ResourceStrategy {
      * 策略标识 (USER / SHOP)
      */
     @Override
-    public String getType() {
-        return ResourceTypeEnum.COMMENT_RESOURCE.getBizDomain()+"ResourceStrategy";
+    public Integer getType() {
+        return ResourceTypeEnum.COMMENT_RESOURCE.getCode();
     }
 
     /**

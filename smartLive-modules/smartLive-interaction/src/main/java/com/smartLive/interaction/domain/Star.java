@@ -19,11 +19,11 @@ import java.util.Date;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("collection")
+@TableName("star")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Collection extends BaseEntity implements Serializable
+public class Star extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
@@ -49,4 +49,7 @@ public class Collection extends BaseEntity implements Serializable
     /** 是否收藏 */
     @TableField(exist = false)
     private Boolean isCollection;
+    /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
 }

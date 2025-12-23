@@ -591,6 +591,37 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
+     * 批量更新评论数
+     *
+     * @param updateMap
+     * @return
+     */
+    @Override
+    public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
+        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
+        if (updateMap.size() > 500) {
+            // 分批逻辑 (每500条提交一次)
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateCommentCountBatch(batchMap);
+            }
+        } else {
+            // 数量少直接执行
+            baseMapper.updateCommentCountBatch(updateMap);
+        }
+        return true;
+    }
+
+    /**
      * 刷新缓存
      *
      * @return

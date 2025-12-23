@@ -11,16 +11,16 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("VoucherResourceStrategy")
-public abstract  class VoucherResourceStrategy implements ResourceStrategy {
+@Component
+public  class VoucherResourceStrategy implements ResourceStrategy {
     @Autowired
     private RemoteMarketingService remoteMarketingService;
     /**
      * 策略标识 (USER / SHOP)
      */
     @Override
-    public String getType() {
-        return ResourceTypeEnum.VOUCHER_RESOURCE.getBizDomain()+"ResourceStrategy";
+    public Integer getType() {
+        return ResourceTypeEnum.VOUCHER_RESOURCE.getCode();
     }
 
     /**

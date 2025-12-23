@@ -11,6 +11,8 @@ import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.enums.CommentTypeEnum;
+import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
@@ -20,6 +22,7 @@ import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.CommentDTO;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
+import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
@@ -60,6 +63,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
 
     /**
      * 查询评论
@@ -137,20 +142,29 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     @Override
     public Result listComment(Comment comment, Integer current) {
+        //从redis里面获取
+        CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+        String commentKeyPrefix = commentType.getCommentKeyPrefix();
+        Page<Long> longPage = queryRedisSourceIdsTool.queryRedisIdPage(commentKeyPrefix, comment.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
+        List<Long> commentIdList = longPage.getRecords();
+        if(longPage.getRecords().size() == 0){
+
+        }
         Page<Comment> page = query().eq("source_id", comment.getSourceId())
                 .eq("source_type", comment.getSourceType())
+                .eq("parent_id", 0)
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Comment> list = page.getRecords();
-        list.stream().forEach(c -> {
-            Long id = c.getUserId();
-            R<User> re = remoteAppUserService.queryUserById(id);
-            User user = re.getData();
-            if (user != null) {
-                c.setNickName(user.getNickName());
-                c.setUserIcon(user.getIcon());
-            }
-        });
+//        list.stream().forEach(c -> {
+//            Long id = c.getUserId();
+//            R<User> re = remoteAppUserService.queryUserById(id);
+//            User user = re.getData();
+//            if (user != null) {
+//                c.setNickName(user.getNickName());
+//                c.setUserIcon(user.getIcon());
+//            }
+//        });
         if (list.size() == 0) {
             return Result.ok(list);
         }
@@ -175,18 +189,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public Result addComment(Comment comment) {
         comment.setCreateTime(DateUtils.getNowDate());
         int i = commentMapper.insertComment(comment);
-        Long id = comment.getSourceId();
         if (i > 0) {
-            //发信息给mq更新数据评论
-            ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(comment.getSourceType());
-            if (resourceTypeEnum != null) {
-                log.info("发送rabbitMq消息给{}", resourceTypeEnum.getBizDomain());
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.INTERACT_COMMENT_EXCHANGE_NAME, MqConstants.INTERACT_PREFIX_CREATE_COMMENT + resourceTypeEnum.getCommentKeyPrefix(), comment);
-            }
+            CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+            String commentKeyPrefix = commentType.getCommentKeyPrefix()+ comment.getSourceId();
+            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
+            String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
+            //保存评论信息
+            stringRedisTemplate.opsForZSet().add(commentKeyPrefix, comment.getId().toString(), System.currentTimeMillis());
+            //记录评论数量
+            stringRedisTemplate.opsForValue().increment(commentCountKeyPrefix);
+            //记录脏数据
+            stringRedisTemplate.opsForSet().add(commentDirtyKeyPrefix, comment.getSourceId().toString());
         }
         return Result.ok(i);
     }
-
     /**
      * 删除评论
      *
@@ -194,17 +210,22 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return
      */
     @Override
-    public Result deleteComment(Comment comment) {
+    @Transactional
+    public Boolean deleteComment(Comment comment) {
         boolean i = removeById(comment.getId());
         if (i) {
-            //发信息给mq更新数据评论
-            ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(comment.getSourceType());
-            if (resourceTypeEnum != null) {
-                log.info("发送rabbitMq消息给{}", resourceTypeEnum.getBizDomain());
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.INTERACT_COMMENT_EXCHANGE_NAME, MqConstants.INTERACT_PREFIX_DELETE_COMMENT + resourceTypeEnum.getCommentKeyPrefix(), comment);
-            }
+            CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+            String commentKeyPrefix = commentType.getCommentKeyPrefix()+ comment.getSourceId();
+            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
+            String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
+            //保存评论信息
+            stringRedisTemplate.opsForZSet().remove(commentKeyPrefix, comment.getId().toString());
+            //记录评论数量
+            stringRedisTemplate.opsForValue().decrement(commentCountKeyPrefix);
+            //记录脏数据
+            stringRedisTemplate.opsForSet().add(commentDirtyKeyPrefix, comment.getSourceId().toString());
         }
-        return Result.ok(i);
+        return i;
     }
 
     /**
@@ -215,7 +236,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     @Override
     public Result getCommentOfMe(Integer current) {
-        Long userId = UserContextHolder.getUser().getId();
+        Long userId = 1010L;
         Page<Comment> page = query().eq("user_id", userId)
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
@@ -358,6 +379,37 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         } else {
             // 数量少直接执行
             baseMapper.updateLikeCountBatch(updateMap);
+        }
+        return true;
+    }
+
+    /**
+     * 批量更新评论数
+     *
+     * @param updateMap
+     * @return
+     */
+    @Override
+    public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
+        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
+        if (updateMap.size() > 500) {
+            // 分批逻辑 (每500条提交一次)
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateCommentCountBatch(batchMap);
+            }
+        } else {
+            // 数量少直接执行
+            baseMapper.updateCommentCountBatch(updateMap);
         }
         return true;
     }

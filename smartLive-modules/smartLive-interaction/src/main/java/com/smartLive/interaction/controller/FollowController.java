@@ -1,9 +1,8 @@
 package com.smartLive.interaction.controller;
-import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;
-import com.smartLive.user.api.domain.BlogDTO;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -48,12 +47,11 @@ public class FollowController {
         return followServiceImpl.common(follow,current);
     }
 
-    //把博客笔记推送给所有粉丝
-    @PostMapping("/send/blog")
-    public void sendBlogToFollowers(@RequestBody BlogDTO blogDTO){
-        followServiceImpl.sendBlogToFollowers(blogDTO);
+    //把数据推送给所有粉丝
+    @PostMapping("/pushToFollowers")
+    public void pushToFollowers(@RequestBody FeedEventDTO feedEventDTO){
+        followServiceImpl.pushToFollowers(feedEventDTO);
     }
-
     //获取粉丝列表
     @GetMapping("/fans")
     public Result getFans(Follow follow,@RequestParam("current") Integer current){

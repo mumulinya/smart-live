@@ -41,17 +41,17 @@ public class RedisConstants {
      * 推送数据
      */
     //博文推送
-    public static final String BLOG_FEED_KEY = "blog:feed:";
+    public static final String BLOG_FEED_KEY = "feed:blog:";
     //秒杀代金券推送
-    public static final String SECKILL_VOUCHER_FEED_KEY = "seckill:voucher:feed:";
+    public static final String SECKILL_VOUCHER_FEED_KEY = "feed:seckill:voucher:";
     //优惠券推送
-    public static final String VOUCHER_FEED_KEY = "voucher:feed:";
+    public static final String VOUCHER_FEED_KEY = "feed:voucher:";
 
     /**
      *  点赞数据
      */
     //博文点赞列表
-    public static final String BLOG_LIKED_KEY = "BLOG:liked:";
+    public static final String BLOG_LIKED_KEY = "blog:liked:";
     //博客点赞总数
     public static final String BLOG_LIKED_COUNT_KEY = "blog:liked:count:";
     //博客点赞脏数据列表
@@ -68,22 +68,39 @@ public class RedisConstants {
      * 收藏数据
      */
     //博文收藏
-    public static final String BLOG_COLLECT_KEY = "blog:collect:";
+    public static final String BLOG_STAR_KEY = "blog:star:";
     //代金券收藏
-    public static final String VOUCHER_COLLECT_KEY = "voucher:collect:";
+    public static final String VOUCHER_STAR_KEY = "voucher:star:";
     //评论收藏
-    public static final String COMMENT_COLLECT_KEY = "comment:collect:";
+    public static final String COMMENT_STAR_KEY = "comment:star:";
     /**
      * 评论数据
      */
     //博客的评论
     public static final String BLOG_COMMENT_KEY = "blog:comment:";
+    //博客评论总数
+    public static final String BLOG_COMMENT_COUNT_KEY = "blog:comment:count:";
+    //博客评论脏数据列表
+    public static final String BLOG_COMMENT_DIRTY_KEY = "blog:comment:dirty:";
     //代金券的评论
     public static final String VOUCHER_COMMENT_KEY = "voucher:comment:";
+    //代金券的评论总数
+    public static final String VOUCHER_COMMENT_COUNT_KEY = "voucher:comment:count:";
+    //代金券评论脏数据列表
+    public static final String VOUCHER_COMMENT_DIRTY_KEY = "voucher:comment:dirty:";
+
     //店铺的评论
     public static final String SHOP_COMMENT_KEY = "shop:comment:";
+    //店铺的评论总数
+    public static final String SHOP_COMMENT_COUNT_KEY = "shop:comment:count:";
+    //店铺的评论脏数据列表
+    public static final String SHOP_COMMENT_DIRTY_KEY = "shop:comment:dirty:";
     //评论的评论
     public static final String COMMENT_COMMENT_KEY = "comment:comment:";
+    //评论的评论总数
+    public static final String COMMENT_COMMENT_COUNT_KEY = "shop:comment:count:";
+    //评论的评论脏数据列表
+    public static final String COMMENT_COMMENT_DIRTY_KEY = "shop:comment:dirty:";
     /**
      * 商店地理位置
      */

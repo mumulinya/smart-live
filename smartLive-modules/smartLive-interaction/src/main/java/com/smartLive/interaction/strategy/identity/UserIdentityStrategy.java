@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("userIdentityStrategy")
+@Component
 public class UserIdentityStrategy implements IdentityStrategy<User> {
     @Autowired
     private RemoteAppUserService remoteAppUserService;
@@ -19,8 +19,8 @@ public class UserIdentityStrategy implements IdentityStrategy<User> {
      * 策略标识 (USER / SHOP)
      */
     @Override
-    public String getType() {
-        return  IdentityTypeEnum.USER_IDENTITY.getBizDomain()+"IdentityStrategy";
+    public Integer getType() {
+        return  IdentityTypeEnum.USER_IDENTITY.getCode();
     }
     /**
      * 获取用户列表

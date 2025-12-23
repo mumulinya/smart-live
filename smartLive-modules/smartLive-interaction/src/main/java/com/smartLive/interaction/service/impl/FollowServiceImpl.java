@@ -1,8 +1,5 @@
 package com.smartLive.interaction.service.impl;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -25,7 +22,6 @@ import com.smartLive.interaction.service.IFollowService;
 import com.smartLive.interaction.strategy.identity.IdentityStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.user.api.RemoteAppUserService;
-import com.smartLive.user.api.domain.BlogDTO;
 import com.smartLive.user.api.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +52,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * 策略模式
      */
     @Autowired
-    private Map<String, IdentityStrategy> identityStrategyMap;
+    private Map<Integer, IdentityStrategy> identityStrategyMap;
 
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
@@ -159,6 +155,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         if(follow.getIsFollow()){
             //关注
             follow.setUserId(userId);
+            follow.setCreateTime(DateUtils.getNowDate());
             boolean save = save(follow);
             if (save) {
                 //关注成功，添加关注到redis
@@ -224,31 +221,9 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Result.ok(null);
         }
         List<Long> idList = commonFollowPage.getRecords();
-        IdentityStrategy identityStrategy = identityStrategyMap.get(identityTypeEnum.getBizDomain()+"IdentityStrategy");
+        IdentityStrategy identityStrategy = identityStrategyMap.get(identityTypeEnum.getCode());
         List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(idList);
           return Result.ok(socialInfoVOList);
-    }
-
-    /**
-     * 发送博客给关注者
-     *
-     * @param blogDTO
-     */
-    @Override
-    public void sendBlogToFollowers(BlogDTO blogDTO) {
-        //从redis里面读取粉丝列表
-        IdentityTypeEnum followType = IdentityTypeEnum.getByCode(GlobalBizTypeEnum.USER.getCode());
-        String fansKey = followType.getFansKeyPrefix() + blogDTO.getUserId();
-        //推送笔记id给所有粉丝
-        // 查询笔记作者下的所有粉丝
-        List<Follow> followList = query().eq("source_type", GlobalBizTypeEnum.USER.getCode()).eq("source_id", blogDTO.getUserId()).list();
-        for (Follow follow : followList) {
-            //获取粉丝id
-            Long userId = follow.getUserId();
-            //推送
-            String key = RedisConstants.FEED_KEY + userId;
-            stringRedisTemplate.opsForZSet().add(key, blogDTO.getId().toString(), System.currentTimeMillis());
-        }
     }
 
     /**
@@ -323,7 +298,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         userList.forEach(user->{
             user.setIsFollow((Boolean) isFollowed(new Follow(GlobalBizTypeEnum.USER.getCode(), user.getId())).getData());
         });
-        return Result.ok(userList);
+        return Result.ok(userIdList);
     }
 
     /**
@@ -340,7 +315,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Result.fail("关注类型错误");
         }
         //根据关注类型从关注策略工程获取bean
-        IdentityStrategy identityStrategy = identityStrategyMap.get(identityType.getBizDomain()+"IdentityStrategy");
+        IdentityStrategy identityStrategy = identityStrategyMap.get(identityType.getCode());
         //从redis获取
         Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(identityType.getFollowKeyPrefix(), follow.getUserId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
@@ -372,7 +347,11 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Override
     public Integer getFollowCount(Follow follow) {
-        int followCount = query().eq("source_type", follow.getSourceType()).eq("source_id",follow.getSourceId()).eq("user_id", follow.getUserId()).count().intValue();
+        //从redis里面获取
+        int followCount = (int) queryRedisSourceIdsTool.queryRedisIdPage(IdentityTypeEnum.getByCode(follow.getSourceType()).getFollowKeyPrefix(), follow.getUserId(),1, 0).getTotal();
+        if(followCount==0){
+            followCount = query().eq("source_type", follow.getSourceType()).eq("user_id", follow.getUserId()).count().intValue();
+        }
         return followCount;
     }
 
@@ -384,7 +363,12 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Override
     public Integer getFanCount(Follow follow) {
-        int fansCount = query().eq("source_type", follow.getSourceType()).eq("source_id", follow.getSourceId()).count().intValue();
+        //从redis里面获取
+        int fansCount = (int) queryRedisSourceIdsTool.queryRedisIdPage(IdentityTypeEnum.getByCode(follow.getSourceType()).getFansKeyPrefix(), follow.getSourceId(),1, 0).getTotal()
+                ;
+        if(fansCount==0){
+             fansCount = query().eq("source_type", follow.getSourceType()).eq("source_id", follow.getSourceId()).count().intValue();
+        }
         return fansCount;
     }
 
@@ -396,31 +380,41 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Override
     public Integer getCommonFollowCount(Follow follow) {
+        if(UserContextHolder.getUser()==null){
+            return 0;
+        }
+        IdentityTypeEnum identityTypeEnum = IdentityTypeEnum.getByCode(follow.getSourceType());
+        if (identityTypeEnum == null) {
+            return 0;
+        }
         Long currentUserId=UserContextHolder.getUser().getId();
-        // 提取关注用户ID列表
-        List<Long> targetUserFollowIds = lambdaQuery()
-                .select(Follow::getSourceId)
-                .eq(Follow::getSourceType, follow.getSourceType())
-                .eq(Follow::getSourceId, follow.getSourceId())
-                .eq(Follow::getUserId, follow.getUserId())
-                .list()
-                .stream()
-                .map(Follow::getSourceId)
-                .collect(Collectors.toList());
-        int commonFollowCount;
-        // 如果目标用户没有关注任何人，直接返回0
-        if (targetUserFollowIds.isEmpty()) {
-            commonFollowCount = 0;
-        } else {
-            // 查询共同关注数
-            commonFollowCount = lambdaQuery()
+        //从redis读取
+        Page<Long> commonFollowIdPage = queryRedisSourceIdsTool.queryRedisCommonFollowIdPage(identityTypeEnum.getFollowKeyPrefix(), follow.getUserId(), currentUserId,1, 0);
+        int commonFollowCount = (int) commonFollowIdPage.getTotal();
+        //redis获取失败，从数据库获取
+        if(commonFollowCount==0){
+            // 提取关注用户ID列表
+            List<Long> targetUserFollowIds = lambdaQuery()
                     .select(Follow::getSourceId)
                     .eq(Follow::getSourceType, follow.getSourceType())
-                    .eq(Follow::getSourceId, follow.getSourceId())
-                    .eq(Follow::getUserId, currentUserId)
-                    .in(Follow::getSourceId, targetUserFollowIds)
-                    .count()
-                    .intValue();
+                    .eq(Follow::getUserId, follow.getUserId())
+                    .list()
+                    .stream()
+                    .map(Follow::getSourceId)
+                    .collect(Collectors.toList());
+            // 如果目标用户没有关注任何人，直接返回0
+            if (targetUserFollowIds.isEmpty()) {
+                commonFollowCount = 0;
+            } else {
+                // 查询共同关注数
+                commonFollowCount = lambdaQuery()
+                        .select(Follow::getSourceId)
+                        .eq(Follow::getSourceType, follow.getSourceType())
+                        .eq(Follow::getUserId, currentUserId)
+                        .in(Follow::getSourceId, targetUserFollowIds)
+                        .count()
+                        .intValue();
+            }
         }
         return commonFollowCount;
     }

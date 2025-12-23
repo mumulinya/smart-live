@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.factory;
-
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
  * @Date: 2022/9/5 17:01
  */
 @Configuration
+@Slf4j
 public class ResourceStrategyFactory {
     @Bean
-    public Map<String, ResourceStrategy> ResourceStrategyMap(List<ResourceStrategy> strategies) {
+    public Map<Integer, ResourceStrategy> ResourceStrategyMap(List<ResourceStrategy> strategies) {
+        log.info("初始化资源策略:{}", strategies);
         return strategies.stream()
                 .collect(Collectors.toMap(
                         ResourceStrategy::getType,  // 使用 dataType 作为键

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component("shopIdentityStrategy")
+@Component
 public class ShopIdentityStrategy implements IdentityStrategy<ShopDTO> {
 
     @Autowired
@@ -20,8 +20,8 @@ public class ShopIdentityStrategy implements IdentityStrategy<ShopDTO> {
      * 策略标识 (USER / SHOP)
      */
     @Override
-    public String getType() {
-        return IdentityTypeEnum.SHOP_IDENTITY.getBizDomain()+"IdentityStrategy";
+    public Integer getType() {
+        return IdentityTypeEnum.SHOP_IDENTITY.getCode();
     }
     /**
      * 获取关注列表

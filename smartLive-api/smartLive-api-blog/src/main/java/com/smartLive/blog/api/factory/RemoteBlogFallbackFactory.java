@@ -70,6 +70,16 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
             public R<Boolean> updateLikeCountBatch(Map<Long, Integer> updateMap) {
                 return R.fail("批量更新点赞数失败");
             }
+
+            /**
+             * 批量更新评论数
+             *
+             * @param updateMap
+             */
+            @Override
+            public R<Boolean> updateCommentCountBatch(Map<Long, Integer> updateMap) {
+                return R.fail("批量更新评论数失败");
+            }
         };
  }
 }

@@ -21,7 +21,7 @@ import java.util.Date;
  * @author mumulin
  * @date 2025-10-02
  */
-@TableName("comments")
+@TableName("comment")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

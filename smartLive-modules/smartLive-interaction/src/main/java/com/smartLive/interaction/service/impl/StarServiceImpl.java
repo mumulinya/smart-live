@@ -7,13 +7,12 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.domain.Collection;
+import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.domain.vo.ResourceVO;
-import com.smartLive.interaction.mapper.CollectionMapper;
-import com.smartLive.interaction.service.ICollectionService;
+import com.smartLive.interaction.mapper.StarMapper;
+import com.smartLive.interaction.service.IStarService;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
-import com.smartLive.shop.api.RemoteShopService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -30,10 +29,10 @@ import java.util.stream.Collectors;
  * @date 2025-09-21
  */
 @Service
-public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collection> implements ICollectionService
+public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IStarService
 {
     @Autowired
-    private CollectionMapper collectionMapper;
+    private StarMapper starMapper;
 
 
     @Resource
@@ -42,7 +41,7 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
-    private Map<String, ResourceStrategy> resourceStrategyMap;
+    private Map<Integer, ResourceStrategy> resourceStrategyMap;
     /**
      * 查询关注
      * 
@@ -50,9 +49,9 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
      * @return 关注
      */
     @Override
-    public Collection selectCollectionShopById(Long id)
+    public Star selectCollectionShopById(Long id)
     {
-        return collectionMapper.selectCollectionShopById(id);
+        return starMapper.selectCollectionShopById(id);
     }
 
     /**
@@ -62,9 +61,9 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
      * @return 关注
      */
     @Override
-    public List<Collection> selectCollectionShopList(Collection follow)
+    public List<Star> selectCollectionShopList(Star follow)
     {
-        return collectionMapper.selectCollectionShopList(follow);
+        return starMapper.selectCollectionShopList(follow);
     }
 
     /**
@@ -74,10 +73,10 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
      * @return 结果
      */
     @Override
-    public int insertCollectionShop(Collection follow)
+    public int insertCollectionShop(Star follow)
     {
         follow.setCreateTime(DateUtils.getNowDate());
-        return collectionMapper.insertCollectionShop(follow);
+        return starMapper.insertCollectionShop(follow);
     }
 
     /**
@@ -87,9 +86,9 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
      * @return 结果
      */
     @Override
-    public int updateCollectionShop(Collection follow)
+    public int updateCollectionShop(Star follow)
     {
-        return collectionMapper.updateCollectionShop(follow);
+        return starMapper.updateCollectionShop(follow);
     }
 
     /**
@@ -101,7 +100,7 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
     @Override
     public int deleteCollectionShopByIds(Long[] ids)
     {
-        return collectionMapper.deleteCollectionShopByIds(ids);
+        return starMapper.deleteCollectionShopByIds(ids);
     }
 
     /**
@@ -113,45 +112,46 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
     @Override
     public int deleteCollectionShopById(Long id)
     {
-        return collectionMapper.deleteCollectionShopById(id);
+        return starMapper.deleteCollectionShopById(id);
     }
 
 
     /**
      * 收藏或取消收藏
      *
-      * @param collection
+      * @param star
      * @return
      */
     @Override
-    public Result collection(Collection collection) {
+    public Result star(Star star) {
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
         if (user == null) {
             return Result.ok(false);
         }
         //获取当前用户id
-        Long userId = user.getId();
+        Long userId =user.getId();
         // 1. 获取对应的枚举策略
-        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(collection.getSourceType());
+        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
             return Result.fail("关注类型错误");
         }
         String key =resourceType.getCollectKeyPrefix()+userId;
-        //判断是关注还是取关
-        if(collection.getIsCollection()){
-            //关注
-            collection.setCreateTime(DateUtils.getNowDate());
-            boolean save = save(collection);
+        //判断是收藏还是取消收藏
+        if(star.getIsCollection()){
+            //收藏
+            star.setUserId(userId);
+            star.setCreateTime(DateUtils.getNowDate());
+            boolean save = save(star);
             if (save) {
-                //关注成功，添加关注到redis
-                stringRedisTemplate.opsForZSet().add(key, collection.getSourceId().toString(), System.currentTimeMillis());
+                //收藏成功，添加收藏到redis
+                stringRedisTemplate.opsForZSet().add(key, star.getSourceId().toString(), System.currentTimeMillis());
             }
         }else{
-            //取关
-            boolean remove = remove(new QueryWrapper<Collection>().eq("user_id", userId).eq("source_type",collection.getSourceType()).eq("source_id", collection.getSourceId()));
+            //取消收藏
+            boolean remove = remove(new QueryWrapper<Star>().eq("user_id", userId).eq("source_type", star.getSourceType()).eq("source_id", star.getSourceId()));
             if (remove) {
-                //取关成功，从redis中删除关注
-                stringRedisTemplate.opsForZSet().remove(key, collection.getSourceId().toString());
+                //取消收藏成功成功，从redis中删除收藏
+                stringRedisTemplate.opsForZSet().remove(key, star.getSourceId().toString());
             }
         }
         return Result.ok();
@@ -164,7 +164,7 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
      * @return
      */
     @Override
-    public Result isCollection(Collection collection) {
+    public Result isStar(Star star) {
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
         if (user == null) {
             return Result.ok(false);
@@ -172,13 +172,13 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
         //获取当前用户id
         Long userId = user.getId();
         // 1. 获取对应的枚举策略
-        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(collection.getSourceType());
+        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
             return Result.fail("关注类型错误");
         }
         String key =resourceType.getCollectKeyPrefix()+userId;
         //判断是否关注 从redis的set集合中查询
-        Boolean isMember = stringRedisTemplate.opsForZSet().score(key, collection.getSourceId().toString()) != null;
+        Boolean isMember = stringRedisTemplate.opsForZSet().score(key, star.getSourceId().toString()) != null;
 //        //判断是否关注 从数据库中查询
 //        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
         return Result.ok(isMember);
@@ -190,20 +190,20 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
      * @return
      */
     @Override
-    public Result getCollectionList(Collection collection, Integer current) {
-        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
-        if (user == null) {
-            return Result.ok(false);
-        }
+    public Result getStarList(Star star, Integer current) {
+//        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+//        if (user == null) {
+//            return Result.ok(false);
+//        }
         //获取当前用户id
-        Long userId = user.getId();
+        Long userId = 1L;
         // 1. 获取对应的枚举策略
-        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(collection.getSourceType());
+        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
             return Result.fail("关注类型错误");
         }
         //根据关注类型从关注策略工程获取bean
-        ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceType.getBizDomain()+"ResourceStrategy");
+        ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceType.getCode());
         //从redis获取
         Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(resourceType.getCollectKeyPrefix(), userId, current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
@@ -212,33 +212,33 @@ public class CollectionServiceImpl extends ServiceImpl<CollectionMapper, Collect
             //获取来源id
              sourceIdList = query()
                     .select("shop_id")
-                    .eq("source_type", collection.getSourceType())
-                    .eq("user_id", collection.getUserId())
+                    .eq("source_type", star.getSourceType())
+                    .eq("user_id", star.getUserId())
                     .orderByDesc("create_time") // 添加排序
                     .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
                     .getRecords()
                     .stream()
-                    .map(Collection::getSourceId)
+                    .map(Star::getSourceId)
                     .collect(Collectors.toList());
         }
         if (sourceIdList.isEmpty()) {
             return Result.ok(Collections.emptyList());
         }
-        //根据id查询用户
+        //根据id查询数据
        if(sourceIdList.isEmpty()){
            return Result.ok(Collections.emptyList());
        }
-        List<ResourceVO> resourceList = resourceStrategy.getResourceList(sourceIdList);
-        return Result.ok(resourceList);
+//        List<ResourceVO> resourceList = resourceStrategy.getResourceList(sourceIdList);
+        return Result.ok(sourceIdList);
     }
     /**
      * 获取收藏数量
      *
-     * @param collection
+     * @param star
      * @return
      */
     @Override
-    public Integer getCollectCount(Collection collection) {
-        return query().eq("source_type", collection.getSourceType()).eq("user_id", collection.getUserId()).count().intValue();
+    public Integer getStarCount(Star star) {
+        return query().eq("source_type", star.getSourceType()).eq("user_id", star.getUserId()).count().intValue();
     }
 }

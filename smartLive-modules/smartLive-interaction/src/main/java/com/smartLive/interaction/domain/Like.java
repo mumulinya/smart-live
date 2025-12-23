@@ -23,7 +23,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LikeRecord extends BaseEntity implements Serializable
+public class Like extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
 

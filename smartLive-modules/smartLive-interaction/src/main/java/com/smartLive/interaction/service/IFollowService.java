@@ -87,13 +87,6 @@ public interface IFollowService extends IService<Follow>
      * @return
      */
     Result common(Follow follow, Integer current);
-
-    /**
-     * 发送博客给关注者
-     * @param blogDTO
-     */
-    void sendBlogToFollowers(BlogDTO blogDTO);
-
     /**
      * 推送数据给粉丝
      */

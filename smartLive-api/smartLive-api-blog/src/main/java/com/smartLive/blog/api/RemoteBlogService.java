@@ -19,6 +19,7 @@ public interface RemoteBlogService {
 
     /**
      * 更新博客评论数
+     *
      * @param blogId
      * @return
      */
@@ -27,40 +28,52 @@ public interface RemoteBlogService {
 
     /**
      * 获取博客详情
+     *
      * @param id
      * @return
      */
     @GetMapping("/blog/getBlogById/{id}")
-    R<BlogDto> getBlogById( @PathVariable("id")Long id);
+    R<BlogDto> getBlogById(@PathVariable("id") Long id);
 
     /**
      * 获取博客数
+     *
      * @param userId
      * @return
      */
     @GetMapping("/blog/getBlogCount/{userId}")
-    R<Integer> getBlogCount(@PathVariable("userId")Long userId);
+    R<Integer> getBlogCount(@PathVariable("userId") Long userId);
 
     /**
      * 获取博客点赞数
+     *
      * @param userId
      * @return
      */
     @GetMapping("/blog/getLikeCount/{userId}")
-    R<Integer> getLikeCount( @PathVariable("userId")Long userId);
+    R<Integer> getLikeCount(@PathVariable("userId") Long userId);
+
     /**
      * 获取博客总数
      */
     @GetMapping("/blog/getBlogTotal")
     R<Integer> getBlogTotal();
+
     /**
      * 获取博客列表
      */
     @GetMapping("/blog/getBlogListByIds")
     R<List<BlogDto>> getBlogListByIds(List<Long> sourceIdList);
+
     /**
      * 批量更新点赞数
      */
     @PostMapping("/blog/updateLikeCountBatch")
     R<Boolean> updateLikeCountBatch(Map<Long, Integer> updateMap);
+
+    /**
+     * 批量更新评论数
+     */
+    @PostMapping("/blog/updateCommentCountBatch")
+    R<Boolean> updateCommentCountBatch(Map<Long, Integer> updateMap);
 }
