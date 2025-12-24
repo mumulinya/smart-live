@@ -1,5 +1,6 @@
 package com.smartLive.interaction.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.UserDTO;
@@ -52,13 +53,13 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
      */
     @Override
     public Boolean likeOrCancelLike(Like like) {
-//        //获取当前登录用户
-//        UserDTO user = UserContextHolder.getUser();
-//        if (user == null) {
-//            //未登录
-//            return false;
-//        }
-        Long userId = 1L;
+        //获取当前登录用户
+        UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            //未登录
+            return false;
+        }
+        Long userId = user.getId();
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         String likeKeyPrefix = likeTypeEnum.getLikeKeyPrefix();
         String likedCountKeyPrefix = likeTypeEnum.getLikedCountKeyPrefix();
@@ -67,9 +68,30 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         //判断当前用户是否已经点赞
         String key = likeKeyPrefix+ like.getSourceId();
         Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
-        if (score!=null) {
+        boolean isLiked = false;
+        if (score != null) {
+            // Redis 里有，肯定是点赞了
+            isLiked = true;
+        } else {
+            // 3. 【第二层判断】Redis 里没有，必须查数据库确认！(防止缓存过期导致的误判)
+            // 假设你使用的是 MyBatis-Plus
+            long count = this.count(new LambdaQueryWrapper<Like>()
+                    .eq(Like::getUserId, userId)
+                    .eq(Like::getSourceType, like.getSourceType())
+                    .eq(Like::getSourceId, like.getSourceId()));
+            if (count > 0) {
+                isLiked = true;
+                // 💡 可选优化：既然数据库有但Redis没有，说明缓存丢了。
+                // 此时可以顺手把 Redis 补回去 (缓存预热)，或者直接往下走取消逻辑也没问题。
+
+            }
+        }
+        if (isLiked) {
             //删除点赞记录
-            boolean isDelete = removeById(like);
+            boolean isDelete = this.remove(new LambdaQueryWrapper<Like>()
+                    .eq(Like::getUserId, userId)
+                    .eq(Like::getSourceType, like.getSourceType())
+                    .eq(Like::getSourceId, like.getSourceId()));
             if (isDelete) {
                 //删除用户点赞信息
                 stringRedisTemplate.opsForZSet().remove(key, userId.toString());
@@ -164,12 +186,12 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
      */
     @Override
     public Boolean isLike(Like like) {
-//        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
-//        if (user == null) {
-//            return false;
-//        }
+        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            return false;
+        }
         //获取当前用户id
-        Long userId = 1L;
+        Long userId = user.getId();
         // 1. 获取对应的枚举策略
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         if (likeTypeEnum == null) {

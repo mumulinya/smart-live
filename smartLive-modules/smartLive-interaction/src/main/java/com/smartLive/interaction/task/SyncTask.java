@@ -37,8 +37,8 @@ public class SyncTask {
 
     // 每 30 秒执行一次
     @Scheduled(cron = "0/30 * * * * ?")
-    public void executeTask() throws InterruptedException {
-        log.info("开始执行点赞数同步任务...");
+    public void executeTask() {
+        log.info("开始执行数据数量同步任务...");
             //执行点赞数同步
             executorService.execute(() -> {
                 log.info("开始同步点赞数...");
@@ -92,7 +92,6 @@ public class SyncTask {
             // 使用 rename，如果有旧的 TEMP_KEY 没处理完，这里会覆盖（权衡之下的选择）
             // 更严谨的做法是先 check TEMP_KEY 是否存在，如果存在则报警或先合并
             redisTemplate.rename(DIRTY_KEY, TEMP_KEY);
-
             // 3. 取出 ID
             Set<String> dirtyIds = redisTemplate.opsForSet().members(TEMP_KEY);
             if (CollUtil.isEmpty(dirtyIds)) {
