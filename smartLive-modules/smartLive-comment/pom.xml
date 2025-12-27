@@ -105,6 +105,10 @@
             <version>3.6.6</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-rabbitmq</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>

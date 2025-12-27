@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
-import com.smartLive.user.api.domain.BlogDTO;
+
 
 
 import java.util.List;

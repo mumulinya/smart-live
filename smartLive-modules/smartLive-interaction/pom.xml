@@ -103,6 +103,10 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-marketing</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-user</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>
