@@ -4,9 +4,8 @@ import com.smartLive.auth.service.UserLoginService;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.api.domain.LoginFormDTO;
 import org.springframework.web.bind.annotation.*;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * token 控制

@@ -1,8 +1,7 @@
 package com.smartLive.common.security.feign;
 
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-
+import jakarta.servlet.http.HttpServletRequest;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.UserDTO;
 import org.springframework.stereotype.Component;

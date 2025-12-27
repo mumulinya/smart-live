@@ -5,14 +5,7 @@ import java.util.List;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartlive.chat.service.IChatMessagesService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
@@ -37,7 +30,7 @@ public class ChatMessagesController extends BaseController
      * 查询用户聊天消息列表
      */
     @GetMapping("/list")
-    public Result list(ChatMessages chatMessages,Integer current)
+    public Result list(ChatMessages chatMessages,@RequestParam("current") Integer current)
     {
         List<ChatMessages> list = chatMessagesService.selectChatMessagesList(chatMessages,current);
         return Result.ok(list);

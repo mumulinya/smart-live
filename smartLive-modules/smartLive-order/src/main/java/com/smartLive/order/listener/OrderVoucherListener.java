@@ -3,7 +3,7 @@ package com.smartLive.order.listener;
 import com.rabbitmq.client.Channel;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
-import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.order.domain.VoucherOrder;
 import com.smartLive.order.service.impl.VoucherOrderServiceImpl;
 import lombok.extern.slf4j.Slf4j;

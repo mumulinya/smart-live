@@ -21,7 +21,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -139,7 +139,7 @@ public class SearchController {
     }
     // 获取历史搜索
     @GetMapping("/history")
-    public Result getSearchHistory(@RequestParam Long userId) {
+    public Result getSearchHistory(@RequestParam("userId") Long userId) {
         try {
             String key = "search:history:" + userId;
             Set<String> history = stringRedisTemplate.opsForZSet()
@@ -152,7 +152,7 @@ public class SearchController {
     }
     // 清空用户搜索历史
     @DeleteMapping("/history")
-    public Result clearSearchHistory(@RequestParam Long userId) {
+    public Result clearSearchHistory(@RequestParam("userId") Long userId) {
         try {
             String key = "search:history:" + userId;
             stringRedisTemplate.delete(key);

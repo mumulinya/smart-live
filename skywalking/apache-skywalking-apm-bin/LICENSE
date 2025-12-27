@@ -334,7 +334,7 @@ The text of each license is the standard Apache 2.0 license.
     https://mvnrepository.com/artifact/io.vavr/vavr-match/0.10.3 Apache-2.0
     https://mvnrepository.com/artifact/io.zipkin.zipkin2/zipkin/2.24.1 Apache-2.0
     https://mvnrepository.com/artifact/io.zipkin/zipkin-lens/2.24.1 Apache-2.0
-    https://mvnrepository.com/artifact/javax.inject/javax.inject/1 Apache-2.0
+    https://mvnrepository.com/artifact/jakarta.inject/jakarta.inject/1 Apache-2.0
     https://mvnrepository.com/artifact/joda-time/joda-time/2.10.5 Apache-2.0
     https://mvnrepository.com/artifact/net.jodah/failsafe/2.4.4 Apache-2.0
     https://mvnrepository.com/artifact/org.apache.commons/commons-lang3/3.11 Apache-2.0

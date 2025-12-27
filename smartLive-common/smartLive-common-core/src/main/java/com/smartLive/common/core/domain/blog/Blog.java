@@ -1,9 +1,4 @@
 package com.smartLive.common.core.domain.blog;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
@@ -18,14 +13,12 @@ import java.util.Date;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_blog")
 @Data
 public class Blog extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /** 商户id */
@@ -65,17 +58,14 @@ public class Blog extends BaseEntity implements Serializable
     /**
      * 用户图标
      */
-    @TableField(exist = false)
     private String icon;
     /**
      * 用户姓名
      */
-    @TableField(exist = false)
     private String name;
     /**
      * 是否点赞过了
      */
-    @TableField(exist = false)
     private Boolean isLike;
 
 

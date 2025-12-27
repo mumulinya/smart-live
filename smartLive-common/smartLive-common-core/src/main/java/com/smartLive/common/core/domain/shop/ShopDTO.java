@@ -1,9 +1,4 @@
 package com.smartLive.common.core.domain.shop;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
@@ -24,7 +19,6 @@ public class ShopDTO extends BaseEntity implements Serializable
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /** 商铺名称 */
@@ -75,7 +69,6 @@ public class ShopDTO extends BaseEntity implements Serializable
     @Excel(name = "营业时间，例如 10:00-22:00")
     private String openHours;
 
-    @TableField(exist = false)
     private Double distance;
 
     public Long getId() {

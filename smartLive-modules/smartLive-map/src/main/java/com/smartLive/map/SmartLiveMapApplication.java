@@ -12,12 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @EnableCustomConfig
 @EnableRyFeignClients
-@SpringBootApplication(exclude = {
-        org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration.class,
-        com.smartLive.common.core.config.RabbitTemplateConfig.class,
-        com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils.class,
-        com.smartLive.common.core.config.MqConfig.class
-})
+@SpringBootApplication
 public class SmartLiveMapApplication
 {
     public static void main(String[] args)

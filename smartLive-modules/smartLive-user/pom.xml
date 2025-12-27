@@ -68,13 +68,6 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
-        <!--    mybatis-plus     -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.5.4.1</version>
-        </dependency>
-
         <!--hutool-->
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -97,6 +90,10 @@
             <version>3.6.6</version>
             <scope>compile</scope>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.baomidou</groupId>-->
+<!--            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-blog</artifactId>

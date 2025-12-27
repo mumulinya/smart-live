@@ -1,7 +1,7 @@
 package com.smartLive.system.controller;
 
 import java.util.List;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -61,7 +61,7 @@ public class SysConfigController extends BaseController
      * 根据参数编号获取详细信息
      */
     @GetMapping(value = "/{configId}")
-    public AjaxResult getInfo(@PathVariable Long configId)
+    public AjaxResult getInfo(@PathVariable("configId") Long configId)
     {
         return success(configService.selectConfigById(configId));
     }
@@ -70,7 +70,7 @@ public class SysConfigController extends BaseController
      * 根据参数键名查询参数值
      */
     @GetMapping(value = "/configKey/{configKey}")
-    public AjaxResult getConfigKey(@PathVariable String configKey)
+    public AjaxResult getConfigKey(@PathVariable("configKey") String configKey)
     {
         return success(configService.selectConfigByKey(configKey));
     }

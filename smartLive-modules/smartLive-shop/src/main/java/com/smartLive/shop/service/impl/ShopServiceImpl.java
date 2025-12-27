@@ -19,9 +19,9 @@ import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils; // 新增导入工具类
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.search.api.RemoteSearchService;
 import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.service.IShopTypeService;
@@ -41,7 +41,7 @@ import com.smartLive.shop.mapper.ShopMapper;
 import com.smartLive.shop.domain.Shop;
 import com.smartLive.shop.service.IShopService;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 店铺Service业务层处理
@@ -57,8 +57,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Autowired
     private IShopTypeService shopTypeService;
-    @Autowired
-    private RemoteSearchService remoteSearchService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
 

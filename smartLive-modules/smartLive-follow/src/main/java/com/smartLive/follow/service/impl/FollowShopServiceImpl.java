@@ -13,20 +13,15 @@ import com.smartLive.follow.domain.Follow;
 import com.smartLive.follow.domain.FollowShop;
 import com.smartLive.follow.mapper.FollowMapper;
 import com.smartLive.follow.mapper.FollowShopMapper;
-
 import com.smartLive.follow.service.IFollowShopService;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
-
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**

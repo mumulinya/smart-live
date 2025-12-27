@@ -82,12 +82,6 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
-        <!--    mybatis-plus     -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.5.4.1</version>
-        </dependency>
 
         <!--hutool-->
         <dependency>
@@ -108,10 +102,15 @@
             <artifactId>smartLive-common-security</artifactId>
         </dependency>
 
-        <!-- 若依Redis模块 -->
+        <!-- Redis模块 -->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-redis</artifactId>
+        </dependency>
+        <!--RabbitMQ-->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-rabbitmq</artifactId>
         </dependency>
         <!--arthas-->
         <dependency>
@@ -121,17 +120,10 @@
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-user</artifactId>
-            <version>3.6.6</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-        <!--amqp-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
     </dependencies>
 

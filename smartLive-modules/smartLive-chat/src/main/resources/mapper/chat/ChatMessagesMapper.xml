@@ -15,7 +15,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectChatMessagesVo">
-        select id, session_id, from_uid, to_uid, content, status, create_time from tb_chat_messages
+        select id, session_id, from_uid, to_uid, content, status, create_time from chat_messages
     </sql>
 
     <select id="selectChatMessagesList" parameterType="com.smartlive.chat.domain.ChatMessages" resultMap="ChatMessagesResult">
@@ -35,7 +35,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <insert id="insertChatMessages" parameterType="com.smartlive.chat.domain.ChatMessages">
-        insert into tb_chat_messages
+        insert into chat_messages
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">id,</if>
             <if test="sessionId != null">session_id,</if>
@@ -57,7 +57,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <update id="updateChatMessages" parameterType="com.smartlive.chat.domain.ChatMessages">
-        update tb_chat_messages
+        update chat_messages
         <trim prefix="SET" suffixOverrides=",">
             <if test="sessionId != null">session_id = #{sessionId},</if>
             <if test="fromUid != null">from_uid = #{fromUid},</if>
@@ -70,11 +70,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <delete id="deleteChatMessagesById" parameterType="Long">
-        delete from tb_chat_messages where id = #{id}
+        delete from chat_messages where id = #{id}
     </delete>
 
     <delete id="deleteChatMessagesByIds" parameterType="String">
-        delete from tb_chat_messages where id in 
+        delete from chat_messages where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

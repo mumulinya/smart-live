@@ -1,5 +1,2 @@
 com.smartLive.common.core.utils.SpringUtils
-com.smartLive.common.core.config.MqConfig
-com.smartLive.common.core.config.RabbitTemplateConfig
 com.smartLive.common.core.config.ThreadPoolConfig
-com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils

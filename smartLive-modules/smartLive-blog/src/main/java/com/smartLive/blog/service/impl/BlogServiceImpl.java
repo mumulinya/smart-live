@@ -14,8 +14,8 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.*;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
@@ -28,7 +28,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;

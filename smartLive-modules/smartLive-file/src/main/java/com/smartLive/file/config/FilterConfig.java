@@ -2,7 +2,8 @@ package com.smartLive.file.config;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.DispatcherType;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -34,7 +35,7 @@ public class FilterConfig
     {
         FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setDispatcherTypes(DispatcherType.REQUEST);
-        registration.setFilter(new RefererFilter());
+        registration.setFilter((Filter) new RefererFilter());
         registration.addUrlPatterns(localFilePrefix + "/*");
         registration.setName("refererFilter");
         registration.setOrder(FilterRegistrationBean.HIGHEST_PRECEDENCE);

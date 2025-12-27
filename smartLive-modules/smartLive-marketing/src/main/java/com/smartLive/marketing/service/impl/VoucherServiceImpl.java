@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
@@ -15,8 +14,8 @@ import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.marketing.domain.SeckillVoucher;
 import com.smartLive.marketing.service.ISeckillVoucherService;
 import com.smartLive.marketing.until.RedisIdWorker;
@@ -36,7 +35,7 @@ import com.smartLive.marketing.domain.Voucher;
 import com.smartLive.marketing.service.IVoucherService;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 优惠券Service业务层处理

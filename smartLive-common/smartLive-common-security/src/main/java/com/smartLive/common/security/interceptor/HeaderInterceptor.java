@@ -1,8 +1,7 @@
 package com.smartLive.common.security.interceptor;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.UserDTO;
@@ -17,7 +16,6 @@ import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.security.auth.AuthUtil;
 import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.system.api.model.LoginUser;
-
 import java.util.concurrent.TimeUnit;
 
 /**

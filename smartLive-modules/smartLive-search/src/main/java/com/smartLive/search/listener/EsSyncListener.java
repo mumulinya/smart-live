@@ -5,30 +5,17 @@ import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
-import com.smartLive.search.domain.BlogDoc;
-import com.smartLive.search.domain.ShopDoc;
-import com.smartLive.search.domain.UserDoc;
-import com.smartLive.search.domain.VoucherDoc;
-import com.smartLive.search.service.IBlogEsService;
-import com.smartLive.search.service.IShopEsService;
-import com.smartLive.search.service.IUserEsService;
-import com.smartLive.search.service.IVoucherEsService;
 import com.smartLive.search.strategy.EsSyncStrategy;
-import com.smartLive.search.utils.EsTool;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j

@@ -1,16 +1,10 @@
 package com.smartLive.common.core.domain.markteing;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -20,7 +14,6 @@ import java.util.Date;
  * @author ruoyi
  * @date 2025-09-21
  */
-@TableName("tb_voucher")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,7 +22,6 @@ public class Voucher extends BaseEntity implements Serializable
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /** 商铺id */
@@ -67,26 +59,21 @@ public class Voucher extends BaseEntity implements Serializable
     /**
      * 库存
      */
-    @TableField(exist = false)
     private Integer stock;
 
     /**
      * 生效时间
      */
-    @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date beginTime;
 
     /**
      * 失效时间
      */
-    @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
     //店铺名称
-    @TableField(exist = false)
     private String shopName;
     //店铺类型
-    @TableField(exist = false)
     private Long typeId;
 }

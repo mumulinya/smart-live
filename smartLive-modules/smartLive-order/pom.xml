@@ -69,24 +69,16 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
-        <!--    mybatis-plus     -->
+        <!--RabbitMQ-->
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.5.4.1</version>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-rabbitmq</artifactId>
         </dependency>
-
         <!--hutool-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.7.17</version>
-        </dependency>
-
-        <!--amqp-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
         <!--arthas-->
         <dependency>
@@ -96,8 +88,6 @@
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-marketing</artifactId>
-            <version>3.6.6</version>
-            <scope>compile</scope>
         </dependency>
 
         <!-- smartLive Marketing API -->

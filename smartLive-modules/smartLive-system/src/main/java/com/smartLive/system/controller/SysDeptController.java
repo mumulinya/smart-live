@@ -23,6 +23,8 @@ import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.system.api.domain.SysDept;
 import com.smartLive.system.service.ISysDeptService;
 
+import static com.smartLive.common.core.web.domain.AjaxResult.warn;
+
 /**
  * 部门信息
  * 
@@ -63,7 +65,7 @@ public class SysDeptController extends BaseController
      */
     @RequiresPermissions("system:dept:query")
     @GetMapping(value = "/{deptId}")
-    public AjaxResult getInfo(@PathVariable Long deptId)
+    public AjaxResult getInfo(@PathVariable("deptId") Long deptId)
     {
         deptService.checkDeptDataScope(deptId);
         return success(deptService.selectDeptById(deptId));
@@ -117,7 +119,7 @@ public class SysDeptController extends BaseController
     @RequiresPermissions("system:dept:remove")
     @Log(title = "部门管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{deptId}")
-    public AjaxResult remove(@PathVariable Long deptId)
+    public AjaxResult remove(@PathVariable("deptId") Long deptId)
     {
         if (deptService.hasChildByDeptId(deptId))
         {

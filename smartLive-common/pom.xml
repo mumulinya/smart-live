@@ -18,6 +18,7 @@
         <module>smartLive-common-sensitive</module>
         <module>smartLive-common-datascope</module>
         <module>smartLive-common-datasource</module>
+        <module>smartLive-common-rabbitmq</module>
     </modules>
 
     <artifactId>smartLive-common</artifactId>

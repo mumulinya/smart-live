@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 
-//@FeignClient(contextId = "remoteCommentService", value = ServiceNameConstants.COMMENT_SERVICE, fallbackFactory = RemoteCommentFallbackFactory.class)
+@FeignClient(contextId = "remoteCommentService", value = ServiceNameConstants.COMMENT_SERVICE, fallbackFactory = RemoteCommentFallbackFactory.class)
 public interface RemoteCommentService {
 
     /**

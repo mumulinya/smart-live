@@ -15,7 +15,7 @@ import java.util.Date;
  * @author 木木林
  * @date 2025-10-05
  */
-@TableName("tb_chat_messages")
+@TableName("chat_messages")
 public class ChatMessages extends BaseEntity
 {
     private static final long serialVersionUID = 1L;

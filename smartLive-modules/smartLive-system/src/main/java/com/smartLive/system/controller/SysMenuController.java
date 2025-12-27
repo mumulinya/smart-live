@@ -22,6 +22,8 @@ import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.system.domain.SysMenu;
 import com.smartLive.system.service.ISysMenuService;
 
+import static com.smartLive.common.core.web.domain.AjaxResult.warn;
+
 /**
  * 菜单信息
  * 

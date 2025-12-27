@@ -2,7 +2,7 @@ package com.smartLive.marketing.controller;
 
 import java.util.List;
 import java.io.IOException;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;

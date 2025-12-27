@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
-//@FeignClient(contextId = "remoteFollowService", value = ServiceNameConstants.FOLLOW_SERVICE, fallbackFactory = RemoteFollowFallbackFactory.class)
+@FeignClient(contextId = "remoteFollowService", value = ServiceNameConstants.FOLLOW_SERVICE, fallbackFactory = RemoteFollowFallbackFactory.class)
 public interface RemoteFollowService {
     /**
      * 查询是否关注

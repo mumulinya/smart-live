@@ -1,13 +1,10 @@
-package com.smartLive.common.core.config;
+package com.smartLive.common.rabbitmq.configure;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-
 @Component
 @Slf4j
 @RequiredArgsConstructor

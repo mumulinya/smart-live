@@ -12,7 +12,7 @@
     </resultMap>
 
     <sql id="selectUserSessionsVo">
-        select id, user_id, session_id, target_uid from tb_user_sessions
+        select id, user_id, session_id, target_uid from user_sessions
     </sql>
 
     <select id="selectUserSessionsList" parameterType="com.smartlive.chat.domain.UserSessions" resultMap="UserSessionsResult">
@@ -30,7 +30,7 @@
     </select>
 
     <insert id="insertUserSessions" parameterType="com.smartlive.chat.domain.UserSessions" useGeneratedKeys="true" keyProperty="id">
-        insert into tb_user_sessions
+        insert into user_sessions
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userId != null">user_id,</if>
             <if test="sessionId != null">session_id,</if>
@@ -44,7 +44,7 @@
     </insert>
 
     <update id="updateUserSessions" parameterType="com.smartlive.chat.domain.UserSessions">
-        update tb_user_sessions
+        update user_sessions
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null">user_id = #{userId},</if>
             <if test="sessionId != null">session_id = #{sessionId},</if>
@@ -54,11 +54,11 @@
     </update>
 
     <delete id="deleteUserSessionsById" parameterType="Long">
-        delete from tb_user_sessions where id = #{id}
+        delete from user_sessions where id = #{id}
     </delete>
 
     <delete id="deleteUserSessionsByIds" parameterType="String">
-        delete from tb_user_sessions where id in
+        delete from user_sessions where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

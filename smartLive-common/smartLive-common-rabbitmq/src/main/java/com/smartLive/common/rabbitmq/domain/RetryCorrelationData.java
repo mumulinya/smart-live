@@ -1,4 +1,4 @@
-package com.smartLive.common.core.domain;
+package com.smartLive.common.rabbitmq.domain;
 
 import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.connection.CorrelationData;

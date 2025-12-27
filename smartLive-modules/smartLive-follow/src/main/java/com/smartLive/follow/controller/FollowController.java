@@ -1,14 +1,11 @@
 package com.smartLive.follow.controller;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.follow.domain.Follow;
 import com.smartLive.follow.service.IFollowService;
 import com.smartLive.user.api.domain.BlogDTO;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
-import java.util.List;
+import jakarta.annotation.Resource;
 
 /**
  * <p>

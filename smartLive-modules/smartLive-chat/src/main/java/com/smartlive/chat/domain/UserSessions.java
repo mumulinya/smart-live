@@ -23,7 +23,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@TableName("tb_user_sessions")
+@TableName("user_sessions")
 public class UserSessions extends BaseEntity
 {
     private static final long serialVersionUID = 1L;

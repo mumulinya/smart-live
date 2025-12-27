@@ -22,11 +22,6 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.smartLive</groupId>
-            <artifactId>smartLive-common-core</artifactId>
-        </dependency>
-
     </dependencies>
 
 </project>

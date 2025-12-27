@@ -1,22 +1,13 @@
 package com.smartLive.comment.controller;
 
 import java.util.List;
-import java.io.IOException;
-import javax.servlet.http.HttpServletResponse;
-
+import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.comment.domain.CommentDTO;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
@@ -112,7 +103,7 @@ public class CommentController extends BaseController
 
 
     @GetMapping("/listComment")
-    public Result listComment(Comment  comment,Integer current){
+    public Result listComment(Comment  comment,@RequestParam("current") Integer current){
         System.out.println("current:"+current);
         return commentService.listComment(comment,current);
     }

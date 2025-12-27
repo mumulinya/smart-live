@@ -1,6 +1,6 @@
 package com.smartLive.gen.domain;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.core.web.domain.BaseEntity;
 

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.UserDTO;
-import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.dto.ChatMessageEvent;
 import com.smartlive.chat.service.IChatMessagesService;

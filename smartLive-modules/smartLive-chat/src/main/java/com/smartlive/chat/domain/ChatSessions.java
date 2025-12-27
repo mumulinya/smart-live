@@ -15,7 +15,7 @@ import com.smartLive.common.core.web.domain.BaseEntity;
  * @author 木木林
  * @date 2025-10-05
  */
-@TableName("tb_chat_sessions")
+@TableName("chat_sessions")
 public class ChatSessions extends BaseEntity
 {
     private static final long serialVersionUID = 1L;

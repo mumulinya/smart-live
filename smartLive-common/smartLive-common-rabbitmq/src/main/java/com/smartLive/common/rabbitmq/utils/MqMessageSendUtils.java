@@ -1,33 +1,31 @@
-package com.smartLive.common.core.utils.rabbitMq;
+package com.smartLive.common.rabbitmq.utils;
 
 import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.common.core.domain.RetryCorrelationData;
+import com.smartLive.common.rabbitmq.domain.RetryCorrelationData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Mq消息发送工具类
+ * Spring Boot 3.x / JDK 17 适配版
  */
 @Slf4j
 @Component
 public class MqMessageSendUtils {
-    // 定义一个全局的调度线程池
-//    private static final ScheduledExecutorService retryExecutor = Executors.newScheduledThreadPool(5);
 
-      private static ScheduledExecutorService scheduledExecutorService;
+    private static ScheduledExecutorService scheduledExecutorService;
+
     @Autowired
     public void setScheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
         this.scheduledExecutorService = scheduledExecutorService;
     }
+
     /**
      * 普通交换机
      */
@@ -35,20 +33,17 @@ public class MqMessageSendUtils {
                                      String exchange,
                                      String routingKey,
                                      Object messageEvent) {
-        // 这里直接调用带 delay 的方法，delay 传 null 或 0
         sendMqMessage(rabbitTemplate, exchange, routingKey, messageEvent, null);
     }
 
     /**
      * 延迟交换机
-     *
      */
     public static void sendMqMessage(RabbitTemplate rabbitTemplate,
                                      String exchange,
                                      String routingKey,
                                      Object messageEvent,
                                      Integer delayTime) {
-        // 初始化自定义的 CorrelationData，多传一个 delayTime
         RetryCorrelationData cd = new RetryCorrelationData(
                 UUID.randomUUID().toString(),
                 messageEvent,
@@ -56,9 +51,7 @@ public class MqMessageSendUtils {
                 routingKey,
                 delayTime,
                 3
-                // ⭐ 新增字段
         );
-
         sendWithRetry(rabbitTemplate, cd);
     }
 
@@ -66,14 +59,13 @@ public class MqMessageSendUtils {
      * 普通交换机支持死信交换机回调
      */
     public static void sendMqMessage(RabbitTemplate rabbitTemplate,
-                                          String exchange,
-                                          String routingKey,
-                                          Object messageEvent,
-                                          String deadExchange,
-                                          String deadRoutingKey,
-                                          Integer maxRetries
+                                     String exchange,
+                                     String routingKey,
+                                     Object messageEvent,
+                                     String deadExchange,
+                                     String deadRoutingKey,
+                                     Integer maxRetries
     ) {
-        // 这里直接调用带 delay 的方法，delay 传 null 或 0
         sendMqMessage(rabbitTemplate, exchange, routingKey, messageEvent, null, deadExchange, deadRoutingKey, maxRetries);
     }
 
@@ -81,15 +73,14 @@ public class MqMessageSendUtils {
      * 延迟交换机支持死信交换机回调
      */
     public static void sendMqMessage(RabbitTemplate rabbitTemplate,
-                                          String exchange,
-                                          String routingKey,
-                                          Object messageEvent,
-                                          Integer delayTime,
-                                          String deadExchange,
-                                          String deadRoutingKey,
-                                          Integer maxRetries
-                                     ) {
-        // 初始化自定义的 CorrelationData，多传一个 delayTime
+                                     String exchange,
+                                     String routingKey,
+                                     Object messageEvent,
+                                     Integer delayTime,
+                                     String deadExchange,
+                                     String deadRoutingKey,
+                                     Integer maxRetries
+    ) {
         RetryCorrelationData cd = new RetryCorrelationData(
                 UUID.randomUUID().toString(),
                 messageEvent,
@@ -102,26 +93,26 @@ public class MqMessageSendUtils {
         );
         sendWithRetry(rabbitTemplate, cd);
     }
+
     /**
-     * 发送消息并绑定消息回调
+     * 发送消息并绑定消息回调 (核心修改方法)
      */
     private static void sendWithRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
-        // 绑定回调
-        cd.getFuture().addCallback(new ListenableFutureCallback<>() {
-            @Override
-            public void onFailure(Throwable ex) {
-                log.error("❌ 发送异常: {}", ex.getMessage());
+        // ⭐ [核心修改] Spring Boot 3 使用 CompletableFuture
+        // 使用 whenComplete 替代原来的 addCallback
+        cd.getFuture().whenComplete((confirm, throwable) -> {
+            if (throwable != null) {
+                // 对应原来的 onFailure
+                log.error("❌ 发送异常: {}", throwable.getMessage());
                 // 进行消息重发
                 handleRetry(rabbitTemplate, cd);
-            }
-
-            @Override
-            public void onSuccess(CorrelationData.Confirm result) {
-                if (result.isAck()) {
+            } else {
+                // 对应原来的 onSuccess
+                if (confirm.isAck()) {
                     log.info("收到ConfirmCallback ack 消息发送成功");
                 } else {
-                    log.error("收到ConfirmCallback ack 消息发送失败！reason：{}", result.getReason());
-                    //进行消息重发
+                    log.error("收到ConfirmCallback ack 消息发送失败！reason：{}", confirm.getReason());
+                    // 进行消息重发
                     handleRetry(rabbitTemplate, cd);
                 }
             }
@@ -130,7 +121,6 @@ public class MqMessageSendUtils {
         log.info("🚀 正在发送消息，ID: {}, delayTime: {}", cd.getId(), cd.getDelayTime());
 
         Integer delayTime = cd.getDelayTime();
-        // ⭐ 这里判断有没有传延迟时间：
         if (delayTime != null && delayTime > 0) {
             // 有延迟 → 延迟队列消息
             rabbitTemplate.convertAndSend(
@@ -158,7 +148,7 @@ public class MqMessageSendUtils {
     private static void handleRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
         if (cd.getRetryCount() < cd.getMaxRetries()) {
             cd.setRetryCount(cd.getRetryCount() + 1);
-             log.info("scheduledExecutorService为{}",scheduledExecutorService);
+            log.info("scheduledExecutorService为{}", scheduledExecutorService);
             // 延迟 2 秒后执行重发
             scheduledExecutorService.schedule(() -> {
                 log.info("🔄 执行第 {} 次重试发送...", cd.getRetryCount());
@@ -168,10 +158,9 @@ public class MqMessageSendUtils {
         } else {
             log.error("❌ 消息发送彻底失败，执行本地补偿和持久化。ID: {}", cd.getId());
             // TODO: 判断这个消息是否是秒杀订单消息
-            if(cd.getRoutingKey().equals(MqConstants.ORDER_SECKILL_ROUTING)){
+            if (cd.getRoutingKey().equals(MqConstants.ORDER_SECKILL_ROUTING)) {
                 log.error("订单消息发送失败");
             }
         }
     }
 }
-

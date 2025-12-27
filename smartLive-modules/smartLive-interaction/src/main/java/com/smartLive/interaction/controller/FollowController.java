@@ -5,7 +5,7 @@ import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 关注Controller

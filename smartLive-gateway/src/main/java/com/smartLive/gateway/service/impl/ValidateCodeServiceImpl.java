@@ -3,8 +3,7 @@ package com.smartLive.gateway.service.impl;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Resource;
-import javax.imageio.ImageIO;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FastByteArrayOutputStream;
@@ -19,6 +18,8 @@ import com.smartLive.common.core.web.domain.AjaxResult;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.gateway.config.properties.CaptchaProperties;
 import com.smartLive.gateway.service.ValidateCodeService;
+
+import javax.imageio.ImageIO;
 
 /**
  * 验证码实现处理

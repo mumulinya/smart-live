@@ -1,22 +1,11 @@
 package com.smartlive.chat.controller;
 
 import java.util.List;
-import java.io.IOException;
-import javax.servlet.http.HttpServletResponse;
-
+import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.user.api.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
@@ -69,7 +58,7 @@ public class ChatSessionsController extends BaseController
      * 获取私聊会话详细信息
      */
     @GetMapping
-    public Result getInfo(Long sessionId)
+    public Result getInfo(@RequestParam("sessionId") Long sessionId)
     {
         ChatSessions chatSessions = chatSessionsService.selectChatSessionsById(sessionId);
         return Result.ok(chatSessions);

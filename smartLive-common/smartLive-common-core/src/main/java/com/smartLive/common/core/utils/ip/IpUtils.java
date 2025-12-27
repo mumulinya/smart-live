@@ -2,9 +2,9 @@ package com.smartLive.common.core.utils.ip;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import javax.servlet.http.HttpServletRequest;
 import com.smartLive.common.core.utils.ServletUtils;
 import com.smartLive.common.core.utils.StringUtils;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 获取IP方法

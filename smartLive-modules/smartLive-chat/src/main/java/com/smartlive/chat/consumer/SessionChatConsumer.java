@@ -1,23 +1,12 @@
 package com.smartlive.chat.consumer;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.common.core.utils.rabbitMq.MqDeadLetterSendUtils;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.dto.ChatMessageEvent;
 import com.smartlive.chat.handle.ChatWebSocketHandler;
 import com.smartlive.chat.service.IChatMessagesService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.ExchangeTypes;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.*;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.util.Map;
 

@@ -1,13 +1,12 @@
 package com.smartLive.order.service.impl;
 
 import java.util.List;
-
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
-import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.marketing.api.RemoteMarketingService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.domain.R;
@@ -28,7 +27,7 @@ import com.smartLive.order.mapper.VoucherOrderMapper;
 import com.smartLive.order.domain.VoucherOrder;
 import com.smartLive.order.service.IVoucherOrderService;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 优惠券订单表Service业务层处理

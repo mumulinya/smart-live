@@ -79,6 +79,11 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-core</artifactId>
         </dependency>
+        <!--RabbitMQ-->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-rabbitmq</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

@@ -3,7 +3,7 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.service.IStarService;
 import org.springframework.web.bind.annotation.*;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 收藏Star

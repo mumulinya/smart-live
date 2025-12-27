@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
@@ -23,7 +22,7 @@ import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.rabbitMq.MqMessageSendUtils; // 新增导入工具类
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.follow.api.RemoteFollowService;
 import com.smartLive.order.api.RemoteOrderService;
 
@@ -215,7 +214,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setPhone(phone);
         user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
         save(user);
-        System.out.println("用户信息为"+user);
         return R.ok(user);
     }
 

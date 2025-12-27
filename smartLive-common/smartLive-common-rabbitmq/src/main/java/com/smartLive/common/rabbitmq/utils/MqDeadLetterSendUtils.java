@@ -1,10 +1,7 @@
-package com.smartLive.common.core.utils.rabbitMq;
-
-import com.smartLive.common.core.domain.RetryCorrelationData;
+package com.smartLive.common.rabbitmq.utils;
+import com.smartLive.common.rabbitmq.domain.RetryCorrelationData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -13,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 死信队列发送工具类
+ * Spring Boot 3.x / JDK 17 适配版
  */
 @Slf4j
 public class MqDeadLetterSendUtils {
@@ -33,7 +31,6 @@ public class MqDeadLetterSendUtils {
 
     /**
      * 延迟交换机
-     *
      */
     public static void sendMqMessage(RabbitTemplate rabbitTemplate,
                                      String exchange,
@@ -53,26 +50,26 @@ public class MqDeadLetterSendUtils {
 
         sendWithRetry(rabbitTemplate, cd);
     }
+
     /**
      * 发送消息并绑定消息回调
      */
     public static void sendWithRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
-        // 绑定回调
-        cd.getFuture().addCallback(new ListenableFutureCallback<>() {
-            @Override
-            public void onFailure(Throwable ex) {
-                log.error("❌ 发送异常: {}", ex.getMessage());
+        // ⭐ [核心修改] Spring Boot 3 使用 CompletableFuture
+        // 使用 whenComplete 替代原来的 addCallback
+        cd.getFuture().whenComplete((confirm, throwable) -> {
+            if (throwable != null) {
+                // 对应原来的 onFailure
+                log.error("❌ 发送异常: {}", throwable.getMessage());
                 // 进行消息重发
                 handleRetry(rabbitTemplate, cd);
-            }
-
-            @Override
-            public void onSuccess(CorrelationData.Confirm result) {
-                if (result.isAck()) {
+            } else {
+                // 对应原来的 onSuccess
+                if (confirm.isAck()) {
                     log.info("收到ConfirmCallback ack 消息发送成功");
                 } else {
-                    log.error("收到ConfirmCallback ack 消息发送失败！reason：{}", result.getReason());
-                    //进行消息重发
+                    log.error("收到ConfirmCallback ack 消息发送失败！reason：{}", confirm.getReason());
+                    // 进行消息重发
                     handleRetry(rabbitTemplate, cd);
                 }
             }
@@ -85,7 +82,7 @@ public class MqDeadLetterSendUtils {
         if (delayTime != null && delayTime > 0) {
             // 有延迟 → 延迟死信队列消息
             rabbitTemplate.convertAndSend(
-                    cd.getDeadExchange(),
+                    cd.getDeadExchange(), // ⚠️注意：这里使用的是 DeadExchange，请确保 RetryCorrelationData 里有值
                     cd.getDeadRoutingKey(),
                     cd.getMessage(),
                     message -> {
@@ -97,7 +94,7 @@ public class MqDeadLetterSendUtils {
         } else {
             // 无延迟 → 死信队列消息
             rabbitTemplate.convertAndSend(
-                    cd.getDeadExchange(),
+                    cd.getDeadExchange(), // ⚠️注意：这里使用的是 DeadExchange
                     cd.getDeadRoutingKey(),
                     cd.getMessage(),
                     cd
