@@ -1,0 +1,68 @@
+# Tomcat
+server:
+  port: 9222
+
+# Spring
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  elasticsearch:
+    url: http://localhost:9200
+  application:
+    # 应用名称
+    name: smartLive-ai
+  rabbitmq:
+    username: smart-live
+    password: 123167
+    host: ${RABBITMQ_HOST:192.168.182.20}
+    virtual-host: smart-live
+    port: 5672
+  ai:
+    vectorstore:
+      milvus:
+        host: ${MILVUS_HOST:192.168.182.20}
+        port: 19530
+        collection-name: "shops"
+        database-name: "default"
+        embedding-dimension: 1536
+        metric-type: COSINE
+        index-type: IVF_FLAT
+        initialize-schema: true  # 确保启用自动初始化
+        auto-create-collection: true
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: deepseek-r1:7b
+    openai:
+      #阿里云大模型
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: sk-f2ef71a7bc0d4eadae5f54547c5dad4a
+      #gemini大模型
+      #      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
+      #      api-key: https://generativelanguage.googleapis.com/v1beta/openai/
+      #      chat:
+      #        options:
+      #          # 指定模型名称
+      #          model: "gemini-1.5-flash"
+      chat:
+        options:
+          model: qwen3-max
+      embedding:
+        options:
+          model: text-embedding-v3
+          dimensions: 1024
+  profiles:
+    # 环境配置
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        # 如果系统环境变量里有 NACOS_HOST 就用它，没有就默认用 127.0.0.1
+        server-addr: ${NACOS_HOST:127.0.0.1}:8848
+      config:
+        server-addr: ${NACOS_HOST:127.0.0.1}:8848
+        # 配置文件格式
+        file-extension: yml
+        # 共享配置
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}

@@ -25,6 +25,7 @@
         <module>smartLive-search</module>
         <module>smartLive-map</module>
         <module>smartLive-interaction</module>
+        <module>smartLive-ai</module>
     </modules>
 
     <artifactId>smartLive-modules</artifactId>
