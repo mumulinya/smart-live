@@ -1,29 +1,28 @@
 package com.smartLive.interaction.api.factory;
 import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.api.RemoteFollowService;
-import com.smartLive.interaction.api.dto.FollowDTO;
+import com.smartLive.interaction.api.RemoteStarService;
+import com.smartLive.interaction.api.dto.StarDTO;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Component
-public class RemoteFollowFallbackFactory implements FallbackFactory<RemoteFollowService> {
+public class RemoteStarFallbackFactory implements FallbackFactory<RemoteStarService> {
     @Override
-    public RemoteFollowService create(Throwable cause) {
-        return new RemoteFollowService() {
+    public RemoteStarService create(Throwable cause) {
+        return new RemoteStarService() {
             @Override
-            public R<Boolean> isFollowed(@RequestBody FollowDTO followDTO){
+            public R<Boolean> isStared(@RequestBody StarDTO starDTO){
                 return R.fail("查询失败");
             }
 
             @Override
-            public R<Integer> getFollowCount(FollowDTO followDTO) {
+            public R<Integer> getStarCount(StarDTO starDTO) {
                 return R.fail("获取失败");
             }
 
             @Override
-            public R<Integer> getFanCount(FollowDTO followDTO) {
+            public R<Integer> getFanCount(StarDTO starDTO) {
                 return R.fail("获取失败");
             }
 
@@ -33,7 +32,7 @@ public class RemoteFollowFallbackFactory implements FallbackFactory<RemoteFollow
              * @return
              */
             @Override
-            public R<Integer> getCommonFollowCount(FollowDTO followDTO) {
+            public R<Integer> getCommonStarCount(StarDTO starDTO) {
                 return R.fail("获取失败");
             }
 
@@ -44,7 +43,7 @@ public class RemoteFollowFallbackFactory implements FallbackFactory<RemoteFollow
              * @return
              */
             @Override
-            public R<Integer> getFollowShopCount(FollowDTO followDTO) {
+            public R<Integer> getStarShopCount(StarDTO starDTO) {
                 return R.fail("获取失败");
             }
         };

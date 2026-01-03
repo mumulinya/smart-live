@@ -147,11 +147,9 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-milvus-store</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.smartLive</groupId>
-            <artifactId>smartLive-api-comment</artifactId>
-            <version>3.6.6</version>
+            <artifactId>smartLive-api-interaction</artifactId>
         </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>

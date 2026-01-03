@@ -22,6 +22,7 @@ import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
+import com.smartLive.user.api.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,27 +140,36 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public Result listComment(Comment comment, Integer current) {
         //从redis里面获取
         CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+        if (commentType == null) {
+            log.error("参数错误");
+            return Result.fail("参数错误");
+        }
         String commentKeyPrefix = commentType.getCommentKeyPrefix();
         Page<Long> longPage = queryRedisSourceIdsTool.queryRedisIdPage(commentKeyPrefix, comment.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> commentIdList = longPage.getRecords();
-        if(longPage.getRecords().size() == 0){
-
+        List<Comment> list=new ArrayList<>();
+        if(commentIdList != null && commentIdList.size() > 0){
+             list = listByIds(commentIdList);
         }
-        Page<Comment> page = query().eq("source_id", comment.getSourceId())
-                .eq("source_type", comment.getSourceType())
-                .eq("parent_id", 0)
-                .orderByDesc("create_time")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        List<Comment> list = page.getRecords();
-//        list.stream().forEach(c -> {
-//            Long id = c.getUserId();
-//            R<User> re = remoteAppUserService.queryUserById(id);
-//            User user = re.getData();
-//            if (user != null) {
-//                c.setNickName(user.getNickName());
-//                c.setUserIcon(user.getIcon());
-//            }
-//        });
+        //如果redis里面没有数据，则从数据库里面获取
+        if(list == null || list.size() == 0){
+            log.info("从数据库里面获取");
+            Page<Comment> page = query().eq("source_id", comment.getSourceId())
+                    .eq("source_type", comment.getSourceType())
+                    .eq("parent_id", 0)
+                    .orderByDesc("create_time")
+                    .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+             list = page.getRecords();
+        }
+        list.stream().forEach(c -> {
+            Long id = c.getUserId();
+            R<User> re = remoteAppUserService.queryUserById(id);
+            User user = re.getData();
+            if (user != null) {
+                c.setNickName(user.getNickName());
+                c.setUserIcon(user.getIcon());
+            }
+        });
         if (list.size() == 0) {
             return Result.ok(list);
         }
@@ -230,9 +240,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return
      */
     @Override
-    public Result getCommentOfMe(Integer current) {
-        Long userId = 1010L;
-        Page<Comment> page = query().eq("user_id", userId)
+    public Result getCommentOfMe(Comment comment,Integer current) {
+        Page<Comment> page = query()
+                .eq("source_type", comment.getSourceType())
+                .eq("user_id", comment.getUserId())
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<Comment> list = page.getRecords();
@@ -286,12 +297,16 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     /**
      * 获取用户发表的评论数
      *
-     * @param userId
+     * @param comment
      * @return
      */
     @Override
-    public Integer getCommentCount(Long userId) {
-        int commentCount = query().eq("user_id", userId).count().intValue();
+    public Integer getCommentCount(Comment comment) {
+        int commentCount = query()
+                .eq(comment.getSourceType() != null, "source_type", comment.getSourceType())
+                .eq(comment.getSourceId() != null, "source_id", comment.getSourceId())
+                .eq(comment.getUserId() != null, "user_id", comment.getUserId())
+                .count().intValue();
         return commentCount;
     }
 

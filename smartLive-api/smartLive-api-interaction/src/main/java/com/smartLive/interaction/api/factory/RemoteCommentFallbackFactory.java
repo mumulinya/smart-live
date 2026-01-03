@@ -16,11 +16,11 @@ public class RemoteCommentFallbackFactory implements FallbackFactory<RemoteComme
         return new RemoteCommentService() {
             /**
              * 获取评论数量
-             * @param userId
+             * @param commentDTO
              * @return
              */
             @Override
-            public R<Integer> getCommentCount(Long userId) {
+            public R<Integer> getCommentCount(CommentDTO commentDTO) {
                 return R.fail("查询评论数失败");
             }
             /**
@@ -33,7 +33,7 @@ public class RemoteCommentFallbackFactory implements FallbackFactory<RemoteComme
             }
 
             @Override
-            public List<CommentDTO> searchCommentList() {
+            public R<List<CommentDTO>> searchCommentList() {
                 log.error("查询评论列表失败");
                 return null;
             }

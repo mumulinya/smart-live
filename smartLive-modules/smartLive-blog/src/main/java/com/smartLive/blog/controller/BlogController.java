@@ -269,14 +269,14 @@ public class BlogController extends BaseController
      * 批量更新点赞数
      */
     @PostMapping("/blog/updateLikeCountBatch")
-    R<Boolean> updateLikeCountBatch(Map<Long, Integer> updateMap){
+    R<Boolean> updateLikeCountBatch(@RequestBody  Map<Long, Integer> updateMap){
         return R.ok(blogService.updateLikeCountBatch(updateMap));
     }
     /**
      * 批量更新评论数
      */
     @PostMapping("/blog/updateCommentCountBatch")
-    R<Boolean> updateCommentCountBatch(Map<Long, Integer> updateMap){
+    R<Boolean> updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return R.ok(blogService.updateCommentCountBatch(updateMap));
     }
 }

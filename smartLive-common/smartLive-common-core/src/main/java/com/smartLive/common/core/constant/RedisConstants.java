@@ -23,7 +23,7 @@ public class RedisConstants {
 //    public static final String BLOG_LIKED_KEY = "blog:liked:";
     public static final String CACHE_BLOG_KEY = "cache:blog:";
     public static final String CACHE_HOT_BLOG_KEY = "cache:hotBlog:";
-    public static final Integer CACHE_HOT_BLOG_TTL = 1;//1天
+    public static final Long CACHE_HOT_BLOG_TTL = 1L;//1天
 
     public static final String CACHE_BLOG_TYPE_KEY = "cache:blogType:";
     /**

@@ -1,10 +1,5 @@
 package com.smartLive.ai.service.rag;
-
-
-
-
-import com.smartLive.comment.api.dto.CommentDTO;
-
+import com.smartLive.interaction.api.dto.CommentDTO;
 import java.util.List;
 
 public interface ICommentRagService {

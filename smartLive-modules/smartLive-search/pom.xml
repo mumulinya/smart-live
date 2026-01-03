@@ -85,15 +85,8 @@
             <artifactId>smartLive-common-rabbitmq</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.smartLive</groupId>
-            <artifactId>smartLive-api-follow</artifactId>
-            <version>3.6.6</version>
-            <scope>compile</scope>
+            <artifactId>smartLive-api-interaction</artifactId>
         </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>

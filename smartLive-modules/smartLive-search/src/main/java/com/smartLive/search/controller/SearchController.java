@@ -1,9 +1,11 @@
 package com.smartLive.search.controller;
 
 import com.smartLive.common.core.constant.EsIndexNameConstants;
-import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.follow.api.RemoteFollowService;
+import com.smartLive.interaction.api.RemoteFollowService;
+import com.smartLive.interaction.api.dto.FollowDTO;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
 import com.smartLive.search.domain.req.FilterSearchRequest;
@@ -20,12 +22,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.annotation.Resource;
-import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 
 @RestController
@@ -54,7 +52,17 @@ public class SearchController {
             dataList.forEach(item -> {
                 if (item instanceof UserDoc) {
                     UserDoc user = (UserDoc) item;
-                    user.setIsFollow((Boolean) remoteFollowService.isFollowed(user.getId()).getData());
+                    FollowDTO followDTO = new FollowDTO();
+                    followDTO.setUserId(user.getId());
+                    followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
+                    followDTO.setSourceId(user.getId());
+                    R<Boolean> result = remoteFollowService.isFollowed(followDTO);
+                    if (result.getCode()==R.SUCCESS) {
+                        user.setIsFollow((Boolean) result.getData());
+                    }else {
+                        log.error("查询是否关注失败: " + result.getMsg());
+                        user.setIsFollow(false);
+                    }
                 }
             });
             Map<String, Object> result = ResponseConverter.buildPageResult(response, dataList);

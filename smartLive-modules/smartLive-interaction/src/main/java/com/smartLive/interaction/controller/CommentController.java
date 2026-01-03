@@ -102,7 +102,7 @@ public class CommentController extends BaseController
 
 
     @GetMapping("/listComment")
-    public Result listComment(Comment  comment,Integer current){
+    public Result listComment(Comment  comment,@RequestParam("current") Integer current){
         System.out.println("current:"+current);
         return commentService.listComment(comment,current);
     }
@@ -125,8 +125,8 @@ public class CommentController extends BaseController
         return Result.ok(commentService.deleteComment(comment));
     }
     @GetMapping("/of/me")
-    public Result getCommentOfMe(Integer current){
-        return commentService.getCommentOfMe(current);
+    public Result getCommentOfMe(Comment comment,@RequestParam("current") Integer current){
+        return commentService.getCommentOfMe(comment,current);
     }
 
     @PostMapping("/aiCreateComment")
@@ -138,7 +138,7 @@ public class CommentController extends BaseController
      * 获取所有评论列表
      * @return
      */
-    @GetMapping("/comment/list")
+    @GetMapping("/list2")
     List<Comment> getCommentList(){
         return commentService.getCommentList();
     }
@@ -148,25 +148,25 @@ public class CommentController extends BaseController
      * @param comments
      * @return
      */
-    @PostMapping("/comment/saveAiCreateComment")
+    @PostMapping("/saveAiCreateComment")
     public Result saveAiCreateComment(@RequestBody List<CommentDTO> comments){
         return commentService.saveAiCreateComment(comments);
     }
 
     /**
      * 获取评论数量
-     * @param userId
+     * @param
      * @return
      */
-    @GetMapping("/comment/getCommentCount/{userId}")
-    R<Integer> getCommentCount( @PathVariable("userId")Long userId){
-        return R.ok(commentService.getCommentCount(userId));
+    @GetMapping("/getCommentCount")
+    R<Integer> getCommentCount( Comment comment){
+        return R.ok(commentService.getCommentCount(comment));
     }
     /**
      * 获取评论总数
      * @return
      */
-    @GetMapping("/comment/getCommentTotal")
+    @GetMapping("/getCommentTotal")
     R<Integer> getCommentTotal(){
         return R.ok(commentService.getCommentTotal());
     }

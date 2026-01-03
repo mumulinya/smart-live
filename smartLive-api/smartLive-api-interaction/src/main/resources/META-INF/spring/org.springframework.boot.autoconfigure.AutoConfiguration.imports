@@ -1,2 +1,4 @@
 com.smartLive.interaction.api.factory.RemoteFollowFallbackFactory
 com.smartLive.interaction.api.factory.RemoteCommentFallbackFactory
+com.smartLive.interaction.api.factory.RemoteLikeFallbackFactory
+com.smartLive.interaction.api.factory.RemoteStarFallbackFactory

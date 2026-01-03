@@ -93,7 +93,7 @@ public interface ICommentService extends IService<Comment> {
      * @param current
      * @return
      */
-    Result getCommentOfMe(Integer current);
+    Result getCommentOfMe(Comment comment,Integer current);
 
     /**
      * 获取评论列表
@@ -113,10 +113,10 @@ public interface ICommentService extends IService<Comment> {
     /**
      * 获取用户发表的评论数
      *
-     * @param userId
+     * @param comment
      * @return
      */
-    Integer getCommentCount(Long userId);
+    Integer getCommentCount(Comment comment);
 
     /**
      * 创建ai自动创建的评论

@@ -6,9 +6,11 @@ import com.smartLive.common.core.constant.ServiceNameConstants;
 
 import com.smartLive.common.core.domain.R;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
@@ -63,17 +65,17 @@ public interface RemoteBlogService {
      * 获取博客列表
      */
     @GetMapping("/blog/getBlogListByIds")
-    R<List<BlogDto>> getBlogListByIds(List<Long> sourceIdList);
+    R<List<BlogDto>> getBlogListByIds(@SpringQueryMap List<Long> sourceIdList);
 
     /**
      * 批量更新点赞数
      */
     @PostMapping("/blog/updateLikeCountBatch")
-    R<Boolean> updateLikeCountBatch(Map<Long, Integer> updateMap);
+    R<Boolean> updateLikeCountBatch(@RequestBody  Map<Long, Integer> updateMap);
 
     /**
      * 批量更新评论数
      */
     @PostMapping("/blog/updateCommentCountBatch")
-    R<Boolean> updateCommentCountBatch(Map<Long, Integer> updateMap);
+    R<Boolean> updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap);
 }

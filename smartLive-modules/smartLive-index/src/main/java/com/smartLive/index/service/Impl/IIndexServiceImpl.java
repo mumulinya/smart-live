@@ -1,15 +1,13 @@
 package com.smartLive.index.service.Impl;
 
 import com.smartLive.blog.api.RemoteBlogService;
-import com.smartLive.comment.api.RemoteCommentService;
 import com.smartLive.index.domain.*;
 import com.smartLive.index.service.IIndexService;
+import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.marketing.api.RemoteMarketingService;
 import com.smartLive.order.api.RemoteOrderService;
-import com.smartLive.order.api.dto.VoucherOrderDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

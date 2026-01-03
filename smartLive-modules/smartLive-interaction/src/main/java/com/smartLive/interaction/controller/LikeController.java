@@ -1,5 +1,6 @@
 package com.smartLive.interaction.controller;
 
+import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.service.ILikeService;
@@ -28,8 +29,8 @@ public class LikeController {
      * @return
      */
     @GetMapping("/isLike")
-    public Result isLike(Like like) {
-        return Result.ok(likeRecordService.isLike(like));
+    public R<Boolean> isLike (Like like) {
+        return  R.ok(likeRecordService.isLike(like));
     }
     /**
      * 查询点赞数

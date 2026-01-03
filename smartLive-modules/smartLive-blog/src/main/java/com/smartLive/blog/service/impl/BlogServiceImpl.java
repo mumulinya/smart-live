@@ -13,9 +13,13 @@ import com.smartLive.blog.service.IBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.*;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.api.RemoteLikeService;
+import com.smartLive.interaction.api.dto.LikeDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
@@ -55,6 +59,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private RedisService redisService;
 
     @Autowired
     private ExecutorService executorService;
@@ -63,6 +69,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private RemoteAppUserService remoteAppUserService;
     @Autowired
     private RemoteShopService remoteShopService;
+    @Autowired
+    private RemoteLikeService remoteLikeService;
 
     /**
      * 查询博客
@@ -103,7 +111,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //添加es数据
             publish(new String[]{blog.getId().toString()});
             //更新redis缓存
-            stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
+            redisService.deleteObject(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
         }
         return i;
     }
@@ -192,7 +200,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public Result queryBlogById(Long id) {
         //从redis查询博客缓存
         String key= RedisConstants.CACHE_BLOG_KEY+id;
-        String blogJson = stringRedisTemplate.opsForValue().get(key);
+        String blogJson =redisService.getCacheObject(key);
         if (blogJson != null) {
             //存在
             Blog blog = JSONUtil.toBean(blogJson, Blog.class);
@@ -206,10 +214,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         // 查询blog有关的用户信息
         queryBlogUser(blog);
+        //把博客信息存入redis
+        redisService.setCacheObject(key, JSONUtil.toJsonStr(blog));
         //查询blog是否被点赞
         isBlogLiked(blog);
-        //把博客信息存入redis
-        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(blog));
         //返回结果
         return Result.ok(blog);
     }
@@ -227,10 +235,18 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         //获取当前登录用户
         Long userId = user.getId();
+        LikeDTO likeDTO = new LikeDTO();
+        likeDTO.setUserId(userId);
+        likeDTO.setSourceId(blog.getId());
+        likeDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
         //判断当前用户是否已经点赞
-        String key = RedisConstants.BLOG_LIKED_KEY + blog.getId();
-        Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
-        blog.setIsLike(score!=null);
+        R<Boolean> res = remoteLikeService.isLike(likeDTO);
+        if(res.getCode()==R.SUCCESS){
+            blog.setIsLike(res.getData());
+        }else{
+            blog.setIsLike(false);
+            log.error("查询点赞信息失败"+res.getMsg());
+        }
     }
 
     /**
@@ -263,8 +279,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 queryBlogUser(blog);
             });
             //把查询结果写入redis
-//            stringRedisTemplate.opsForList().leftPush(key, JSONUtil.toJsonStr(blogList));
-            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
+            redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
         return Result.ok(blogList);
     }
@@ -301,13 +316,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Long userId = user.getId();
         //判断当前用户是否已经点赞
         String key = RedisConstants.BLOG_LIKED_KEY + id;
-        Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
+        Double score = redisService.getCacheZSetScore(key, userId.toString());
         if (score!=null) {
             //已经点赞了,取消点赞
             boolean isSuccess = update().setSql("liked = liked - 1").eq("id", id).update();
             if (isSuccess) {
                 //删除用户点赞信息
-                stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+                redisService.removeCacheZSetObject(key, userId.toString());
             }
         }else{
             //未点赞
@@ -316,7 +331,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //保存用户点赞信息到redis的set集合 zadd key value score
             if (isSuccess) {
                 //保存用户点赞信息
-                stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
+                redisService.setCacheZSet(key, userId.toString(), System.currentTimeMillis());
             }
         }
         //清空缓存
@@ -395,7 +410,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         //添加es数据
         publish(new String[]{blog.getId().toString()});
         //更新redis缓存
-        stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
+        redisService.deleteObject(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
         //返回id
         return Result.ok(blog.getId());
     }
@@ -413,7 +428,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Long userId = UserContextHolder.getUser().getId();
         String key = RedisConstants.FEED_KEY + userId;
         //查询收件箱 关注的用户发布的博客
-        Set<ZSetOperations.TypedTuple<String>> typedTuples = stringRedisTemplate.opsForZSet().reverseRangeByScoreWithScores(key, 0,max , offset, 2);
+        Set<ZSetOperations.TypedTuple<Object>> typedTuples = redisService.getCacheZSetReverseRangeByScore(key, 0,max , offset, 2);
         if (typedTuples == null || typedTuples.isEmpty()) {
             return Result.ok(Collections.emptyList());
         }
@@ -422,9 +437,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         List<Long> blogIdList = new ArrayList<>(typedTuples.size());
         long minTime = 0L;
         int os = 1;
-        for (ZSetOperations.TypedTuple<String> typedTuple : typedTuples) {
+        for (ZSetOperations.TypedTuple<Object> typedTuple : typedTuples) {
             //获取博客id
-            blogIdList.add(Long.valueOf(typedTuple.getValue()));
+            String idStr = String.valueOf(typedTuple.getValue());
+            blogIdList.add(Long.valueOf(idStr));
             Long time = typedTuple.getScore().longValue();
             if (minTime == time) {
                 os++;
@@ -587,6 +603,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             // 数量少直接执行
             baseMapper.updateLikeCountBatch(updateMap);
         }
+        flashCache();
         return true;
     }
 
@@ -618,6 +635,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             // 数量少直接执行
             baseMapper.updateCommentCountBatch(updateMap);
         }
+        flashCache();
         return true;
     }
 
@@ -628,9 +646,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public String flashCache() {
-        stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY);
-        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_KEY);
-        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_TYPE_KEY);
+        redisService.deleteObject(redisService.keys(RedisConstants.CACHE_HOT_BLOG_KEY+"*"));
+        redisService.deleteObject(redisService.keys(RedisConstants.CACHE_BLOG_KEY+"*"));
+        redisService.deleteObject(redisService.keys(RedisConstants.CACHE_BLOG_TYPE_KEY+"*"));
         return null;
     }
 
@@ -664,7 +682,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 isBlogLiked(blog);
             });
             //把查询结果写入redis
-            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
+            redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
         return Result.ok(blogList);
     }
@@ -675,10 +693,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     private List<Blog> getBlogListFromRedis(String key) {
-        String blogJson = stringRedisTemplate.opsForValue().get(key);
+        Object blogJson = redisService.getCacheObject(key);
         if (blogJson != null) {
             //存在
-            List<Blog> blogs = JSONUtil.toList(blogJson, Blog.class);
+            List<Blog> blogs = JSONUtil.toList(blogJson.toString(), Blog.class);
             //获取用户是否点赞
             blogs.forEach(blog ->{
                 isBlogLiked(blog);
@@ -813,8 +831,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     private void flashRedisBlogCache(Long blogId) {
         //清空缓存
-        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_KEY+blogId);
-        flashRedisBlogListCache();
+//        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_KEY+blogId);
+        redisService.deleteObject(RedisConstants.CACHE_BLOG_TYPE_KEY+blogId);
     }
     /**
      * 清空博客列表缓存
@@ -822,7 +840,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param
      */
     private void flashRedisBlogListCache() {
-        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_TYPE_KEY);
-        stringRedisTemplate.delete(RedisConstants.CACHE_HOT_BLOG_KEY);
+//        deleteByPrefix(RedisConstants.CACHE_BLOG_TYPE_KEY);
+//        deleteByPrefix(RedisConstants.CACHE_HOT_BLOG_KEY);
+        redisService.deleteObject(redisService.keys(RedisConstants.CACHE_BLOG_TYPE_KEY+"*"));
+        redisService.deleteObject(redisService.keys(RedisConstants.CACHE_HOT_BLOG_KEY+"*"));
     }
 }

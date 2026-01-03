@@ -3,6 +3,7 @@ package com.smartLive.interaction.task;
 import cn.hutool.core.collection.CollUtil;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.strategy.comment.CommentStrategy;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,8 @@ public class SyncTask {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+    @Autowired
+    private RedisService redisService;
 
     // 注入各个服务的 Client
     @Autowired
@@ -86,27 +89,36 @@ public class SyncTask {
     private void sync(String desc,String countKeyPrefix, String DIRTY_KEY, String TEMP_KEY, Consumer<Map<Long, Integer>> dbAction){
         try {
             // 2. 【原子重命名】将脏数据移入临时 Key
-            if (Boolean.FALSE.equals(redisTemplate.hasKey(DIRTY_KEY))) {
+//            if (Boolean.FALSE.equals(redisTemplate.hasKey(DIRTY_KEY))) {
+//                log.warn("[{}]没有脏数据，跳过", desc);
+//                return;
+//            }
+            if (Boolean.FALSE.equals(redisService.hasKey(DIRTY_KEY))) {
+                log.warn("[{}]没有脏数据，跳过", desc);
                 return;
             }
             // 使用 rename，如果有旧的 TEMP_KEY 没处理完，这里会覆盖（权衡之下的选择）
             // 更严谨的做法是先 check TEMP_KEY 是否存在，如果存在则报警或先合并
-            redisTemplate.rename(DIRTY_KEY, TEMP_KEY);
+            redisService.rename(DIRTY_KEY, TEMP_KEY);
             // 3. 取出 ID
-            Set<String> dirtyIds = redisTemplate.opsForSet().members(TEMP_KEY);
+//            Set<String> dirtyIds = redisTemplate.opsForSet().members(TEMP_KEY);
+            Set<Object> dirtyIds = redisService.getCacheSet(TEMP_KEY);
+            log.info("[{}] dirtyIds: {}", desc, dirtyIds);
             if (CollUtil.isEmpty(dirtyIds)) {
                 // 即使为空，也要把临时 Key 删掉
-                redisTemplate.delete(TEMP_KEY);
+//                redisTemplate.delete(TEMP_KEY);
+                redisService.deleteObject(TEMP_KEY);
                 return;
             }
 
             // 4. 组装数据
             Map<Long, Integer> updateMap = new HashMap<>();
-            for (String idStr : dirtyIds) {
-                Long id = Long.valueOf(idStr);
-                String countStr = redisTemplate.opsForValue().get(countKeyPrefix + id);
+            for (Object idStr : dirtyIds) {
+                Long id = Long.valueOf(idStr.toString());
+//                String countStr = redisTemplate.opsForValue().get(countKeyPrefix + id);
+                Object countStr = redisService.getCacheObject(countKeyPrefix + id);
                 // 如果 countStr 为空，可能是过期了，设为 0 或者去库里查（这里视业务而定，通常设为0）
-                updateMap.put(id, countStr == null ? 0 : Integer.parseInt(countStr));
+                updateMap.put(id, countStr == null ? 0 : Integer.parseInt(countStr.toString()));
             }
 
             // 5. 【核心修复】根据类型分发给不同的 Service
@@ -115,8 +127,8 @@ public class SyncTask {
             }
 
             // 6. 只有同步成功了，才删除临时 Key
-            redisTemplate.delete(TEMP_KEY);
-
+//            redisTemplate.delete(TEMP_KEY);
+            redisService.deleteObject(TEMP_KEY);
         } catch (Exception e) {
             // 7. 【异常处理】
             // 如果同步失败，千万不要删 TEMP_KEY，保留现场。

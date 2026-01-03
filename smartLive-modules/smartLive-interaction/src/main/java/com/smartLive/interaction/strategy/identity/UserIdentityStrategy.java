@@ -36,8 +36,8 @@ public class UserIdentityStrategy implements IdentityStrategy<User> {
         List<SocialInfoVO> socialInfoVOList = userList.stream().map(user -> SocialInfoVO.builder()
                 .id(user.getId())
                 .name(user.getNickName())
-                .avatar(user.getIcon())
-                .description(user.getIntroduce())
+                .icon(user.getIcon())
+                .introduce(user.getIntroduce())
                 .isFollow(true)
                 .build()
         ).collect(Collectors.toList());

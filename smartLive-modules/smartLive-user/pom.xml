@@ -97,32 +97,18 @@
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-blog</artifactId>
-            <version>3.6.6</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.smartLive</groupId>
-            <artifactId>smartLive-api-comment</artifactId>
-            <version>3.6.6</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-order</artifactId>
-            <version>3.6.6</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-shop</artifactId>
-            <version>3.6.6</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>
-            <artifactId>smartLive-api-follow</artifactId>
-            <version>3.6.6</version>
-            <scope>compile</scope>
+            <artifactId>smartLive-api-interaction</artifactId>
         </dependency>
     </dependencies>
     <build>

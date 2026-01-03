@@ -15,17 +15,20 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
-import com.smartLive.comment.api.RemoteCommentService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
-import com.smartLive.follow.api.RemoteFollowService;
+import com.smartLive.interaction.api.RemoteCommentService;
+import com.smartLive.interaction.api.RemoteFollowService;
+import com.smartLive.interaction.api.dto.CommentDTO;
+import com.smartLive.interaction.api.dto.FollowDTO;
 import com.smartLive.order.api.RemoteOrderService;
-
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartLive.user.domain.Stats;
 import com.smartLive.user.domain.UserInfo;
@@ -74,8 +77,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private ExecutorService executorService;
     @Autowired
     private RemoteFollowService remoteFollowService;
-
-
     /**
      * 查询用户
      *
@@ -249,7 +250,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = getById(id);
         if(user!= null){
             queryUserInfo(user);
-            user.setIsFollow((Boolean) remoteFollowService.isFollowed(id).getData());
+            FollowDTO followDTO=new FollowDTO();
+            followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
+            followDTO.setSourceId(id);
+            R<Boolean> result = remoteFollowService.isFollowed(followDTO);
+            user.setIsFollow(result.getData());
         }
         return (user);
     }
@@ -278,14 +283,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //获取粉丝数
         Future<Integer> fanCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询粉丝数",Thread.currentThread().getName());
-            Integer fanCount = (Integer) remoteFollowService.getFanCount(userId).getData();
+            FollowDTO followDTO=new FollowDTO();
+            followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
+            followDTO.setSourceId(userId);
+            Integer fanCount = (Integer) remoteFollowService.getFanCount(followDTO).getData();
             countDownLatch.countDown();
             return fanCount;
         });
         //获取关注数
         Future<Integer> followCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询关注数",Thread.currentThread().getName());
-            Integer followCount = (Integer) remoteFollowService.getFollowCount(userId).getData();
+            FollowDTO followDTO=new FollowDTO();
+            followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
+            followDTO.setUserId(userId);
+            Integer followCount = (Integer) remoteFollowService.getFollowCount(followDTO).getData();
             countDownLatch.countDown();
             return followCount;
         });
@@ -296,8 +307,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             Integer commonFollowCount = 0;
             if (user != null) {
                 Long currentUserId = user.getId();
+                FollowDTO followDTO=new FollowDTO();
+                followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
+                followDTO.setUserId(currentUserId);
+                followDTO.setSourceId(userId);
                 //获取共同关注数
-                commonFollowCount = (Integer) remoteFollowService.getCommonFollowCount(userId, currentUserId).getData();
+                commonFollowCount = (Integer) remoteFollowService.getCommonFollowCount(followDTO).getData();
             }
             countDownLatch.countDown();
             return commonFollowCount;
@@ -320,7 +335,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //获取发表评论数量
         Future<Integer> commentCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询发表评论数",Thread.currentThread().getName());
-            Integer commentCount =  remoteCommentService.getCommentCount(userId).getData();
+            CommentDTO commentDTO = new CommentDTO();
+            commentDTO.setUserId(userId);
+            R<Integer> res = remoteCommentService.getCommentCount(commentDTO);
+            if(res.getCode()==R.FAIL){
+                log.error("获取用户统计信息失败:"+res.getMsg());
+            }
+            Integer commentCount = res.getData();
             countDownLatch.countDown();
             return commentCount;
         });
@@ -331,10 +352,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             countDownLatch.countDown();
             return orderCount;
         });
-        //获取收藏数量
+        //获取关注店铺数量
         Future<Integer> collectCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询收藏数",Thread.currentThread().getName());
-            Integer collectCount = (Integer) remoteFollowService.getFollowShopCount(userId).getData();
+            FollowDTO followDTO=new FollowDTO();
+            followDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
+            followDTO.setUserId(userId);
+            Integer collectCount = (Integer) remoteFollowService.getFollowCount(followDTO).getData();
             countDownLatch.countDown();
             return collectCount;
         });

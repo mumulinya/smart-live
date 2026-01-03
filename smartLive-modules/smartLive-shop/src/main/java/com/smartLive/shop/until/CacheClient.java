@@ -6,7 +6,9 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.RedisData;
+import com.smartLive.common.redis.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -23,9 +25,12 @@ public class CacheClient {
 
     @Resource
     private  StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RedisService redisService;
 
     public void set(String key, Object value, Long time, TimeUnit unit){
-        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(value), time, unit);
+//        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(value), time, unit);
+        redisService.setCacheObject(key, JSONUtil.toJsonStr(value), time, unit);
     }
     public void setWithLogicalExpire(String key, Object value, Long time, TimeUnit unit){
         //设置逻辑过期时间
@@ -33,7 +38,8 @@ public class CacheClient {
         redisData.setData(value);
         redisData.setExpireTime(LocalDateTime.now().plusSeconds(unit.toSeconds(time)));
         //写入redis
-        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData), time, unit);
+//        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData), time, unit);
+        redisService.setCacheObject(key, JSONUtil.toJsonStr(redisData), time, unit);
     }
 
 
@@ -46,7 +52,8 @@ public class CacheClient {
 
         //从缓存里获取商铺数据
         String key = keyPrefix + id;
-        String json = stringRedisTemplate.opsForValue().get(key);
+//        String json = stringRedisTemplate.opsForValue().get(key);
+        String json = redisService.getCacheObject(key);
         //判断是否存在
         if(StrUtil.isNotBlank(json)){
             //存在，直接返回
@@ -61,7 +68,8 @@ public class CacheClient {
         R r = dbFallback.apply(id);
         if(r == null){
             //防止缓存穿透,将空值存入redis
-            stringRedisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+//            stringRedisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+            redisService.setCacheObject(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             return null;
         }
         //存入redis

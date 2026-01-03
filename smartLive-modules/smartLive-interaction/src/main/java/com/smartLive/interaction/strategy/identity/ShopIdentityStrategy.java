@@ -38,8 +38,8 @@ public class ShopIdentityStrategy implements IdentityStrategy<ShopDTO> {
                 .isFollow(true)
                 .id(shop.getId())
                 .name(shop.getName())
-                .avatar(shop.getImages())
-                .description(shop.getRemark())
+                .icon(shop.getImages())
+                .introduce(shop.getRemark())
                 .build()
         ).collect(Collectors.toList());
         return socialInfoVOList;

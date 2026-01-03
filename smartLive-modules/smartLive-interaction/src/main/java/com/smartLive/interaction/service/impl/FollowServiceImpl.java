@@ -13,6 +13,7 @@ import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.IdentityTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.vo.SocialInfoVO;
@@ -55,6 +56,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
 
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
+    @Autowired
+    private RedisService redisService;
     /**
      * 查询关注
      * 
@@ -158,16 +161,18 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             boolean save = save(follow);
             if (save) {
                 //关注成功，添加关注到redis
-                stringRedisTemplate.opsForZSet().add(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
-                stringRedisTemplate.opsForZSet().add(targetFansKey, userId.toString(), System.currentTimeMillis());
+//                stringRedisTemplate.opsForZSet().add(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
+                redisService.setCacheZSet(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
+//                stringRedisTemplate.opsForZSet().add(targetFansKey, userId.toString(), System.currentTimeMillis());
+                redisService.setCacheZSet(targetFansKey, userId.toString(), System.currentTimeMillis());
             }
         }else{
             //取关
             boolean remove = remove(new QueryWrapper<Follow>().eq("user_id", userId).eq("source_type",follow.getSourceType()).eq("source_id", follow.getSourceId()));
             if (remove) {
                 //取关成功，从redis中删除关注
-                stringRedisTemplate.opsForZSet().remove(myFollowKey, follow.getSourceId().toString());
-                stringRedisTemplate.opsForZSet().remove(targetFansKey, userId.toString());
+                redisService.removeCacheZSetObject(myFollowKey, follow.getSourceId().toString());
+                redisService.removeCacheZSetObject(targetFansKey, userId.toString());
             }
         }
         return Result.ok();
@@ -197,7 +202,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
 //        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
         //判断是否关注 从redis的zSet集合中查询
         //如果分数不为 null，说明元素存在（已关注）；如果为 null，说明不存在（未关注）
-        Boolean isFollow = stringRedisTemplate.opsForZSet().score(key, follow.getSourceId().toString()) != null;
+        Boolean isFollow =redisService.getCacheZSetScore(key, follow.getSourceId().toString())!= null;
         return Result.ok(isFollow);
     }
 
@@ -265,39 +270,35 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     @Override
     public Result getFans(Follow follow,Integer current) {
         // 1. 获取对应的枚举策略
-        IdentityTypeEnum followType = IdentityTypeEnum.getByCode(follow.getSourceType());
-        if (followType == null) {
+        IdentityTypeEnum identityType = IdentityTypeEnum.getByCode(follow.getSourceType());
+        if (identityType == null) {
             return Result.fail("关注类型错误");
         }
+        //根据关注类型从关注策略工程获取bean
+        IdentityStrategy identityStrategy = identityStrategyMap.get(identityType.getCode());
         //从redis获取
-        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(followType.getFansKeyPrefix(), follow.getSourceId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
-        List<Long> userIdList = fanIdPage.getRecords();
+        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(identityType.getFansKeyPrefix(), follow.getSourceId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
+        List<Long> sourceIdList = fanIdPage.getRecords();
         //redis获取失败，从数据库获取
-        if (userIdList.isEmpty()) {
+        if (sourceIdList.isEmpty()) {
             //获取粉丝id
-            userIdList = query()
+            sourceIdList = query()
                     .select("user_id")
                     .eq("source_type",follow.getSourceType())
                     .eq("source_id", follow.getSourceId())
                     .orderByDesc("create_time") // 添加排序
                     .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
-                    .getRecords()                .stream()
+                    .getRecords()
+                    .stream()
                     .map(Follow::getUserId)  // 假设 follow 是你的实体类
                     .collect(Collectors.toList());
         }
         //根据id查询用户
-       if(userIdList.isEmpty()){
+       if(sourceIdList.isEmpty()){
            return Result.ok(Collections.emptyList());
        }
-        R<List<User>> userSuccess = remoteAppUserService.getUserList(userIdList);
-        if (userSuccess.getCode() != 200) {
-            return Result.fail(userSuccess.getMsg());
-        }
-        List<User> userList = userSuccess.getData();
-        userList.forEach(user->{
-            user.setIsFollow((Boolean) isFollowed(new Follow(GlobalBizTypeEnum.USER.getCode(), user.getId())).getData());
-        });
-        return Result.ok(userIdList);
+        List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(sourceIdList);
+        return Result.ok(socialInfoVOList);
     }
 
     /**
@@ -322,18 +323,19 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         if (sourceIdList.isEmpty()) {
             //获取粉丝id
             sourceIdList = query()
-                    .select("user_id")
+                    .select("source_id")
                     .eq("source_type",follow.getSourceType())
-                    .eq("source_id", follow.getSourceId())
+                    .eq("user_id", follow.getUserId())
                     .orderByDesc("create_time") // 添加排序
                     .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
-                    .getRecords()                .stream()
-                    .map(Follow::getUserId)  // 假设 follow 是你的实体类
+                    .getRecords()
+                    .stream()
+                    .map(Follow::getSourceId)  // 假设 follow 是你的实体类
                     .collect(Collectors.toList());
         }
-                if(sourceIdList.isEmpty()){
-                    return Result.ok(Collections.emptyList());
-                }
+        if(sourceIdList.isEmpty()){
+            return Result.ok(Collections.emptyList());
+        }
         List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(sourceIdList);
         return Result.ok(socialInfoVOList);
     }

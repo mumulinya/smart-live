@@ -23,7 +23,7 @@ public class UserInfoController {
      * 获取用户信息
      */
     @GetMapping("/getUserInfo/{userId}")
-    public Result getUserInfo( @PathVariable Long userId) {
+    public Result getUserInfo( @PathVariable("userId") Long userId) {
         try {
             UserInfo userInfo = userInfoService.getByUserId(userId);
             if (userInfo == null) {
