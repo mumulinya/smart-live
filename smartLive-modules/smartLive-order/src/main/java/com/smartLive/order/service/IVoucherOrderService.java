@@ -20,7 +20,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param id 优惠券订单表主键
      * @return 优惠券订单表
      */
-    public VoucherOrder selectVoucherOrderById(Long id);
+     VoucherOrder selectVoucherOrderById(Long id);
 
     /**
      * 查询优惠券订单表列表
@@ -28,7 +28,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param voucherOrder 优惠券订单表
      * @return 优惠券订单表集合
      */
-    public List<VoucherOrder> selectVoucherOrderList(VoucherOrder voucherOrder);
+     List<VoucherOrder> selectVoucherOrderList(VoucherOrder voucherOrder);
 
     /**
      * 新增优惠券订单表
@@ -36,7 +36,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param voucherOrder 优惠券订单表
      * @return 结果
      */
-    public int insertVoucherOrder(VoucherOrder voucherOrder);
+     int insertVoucherOrder(VoucherOrder voucherOrder);
 
     /**
      * 修改优惠券订单表
@@ -44,7 +44,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param voucherOrder 优惠券订单表
      * @return 结果
      */
-    public int updateVoucherOrder(VoucherOrder voucherOrder);
+     int updateVoucherOrder(VoucherOrder voucherOrder);
 
     /**
      * 批量删除优惠券订单表
@@ -52,7 +52,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param ids 需要删除的优惠券订单表主键集合
      * @return 结果
      */
-    public int deleteVoucherOrderByIds(Long[] ids);
+     int deleteVoucherOrderByIds(Long[] ids);
 
     /**
      * 删除优惠券订单表信息
@@ -60,7 +60,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param id 优惠券订单表主键
      * @return 结果
      */
-    public int deleteVoucherOrderById(Long id);
+     int deleteVoucherOrderById(Long id);
 
     /**
      *实现一人一单

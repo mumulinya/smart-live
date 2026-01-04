@@ -1,6 +1,9 @@
 package com.smartLive.common.redis.configure;
 
 import io.lettuce.core.ReadFrom;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.boot.autoconfigure.data.redis.LettuceClientConfigurationBuilderCustomizer;
@@ -43,6 +46,16 @@ public class RedisConfig extends CachingConfigurerSupport
 
         template.afterPropertiesSet();
         return template;
+    }
+
+    @Bean
+    public RedissonClient redissonClient() {
+        //配置类
+        Config config = new Config();
+        //单机模式 添加单点地址 可以使用config.useClusterServers()添加集群地址
+        config.useSingleServer().setAddress("redis://127.0.0.1:6379");
+        //创建客户端
+        return Redisson.create(config);
     }
 
     /**

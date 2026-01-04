@@ -1,4 +1,4 @@
-package com.smartLive.comment.config;
+package com.smartLive.common.core.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
