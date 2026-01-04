@@ -146,7 +146,7 @@ public class BlogController extends BaseController
      */
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog ) {
-        return blogService.saveBlog(blog);
+        return Result.ok(blogService.saveBlog(blog));
     }
 
     /**
@@ -156,7 +156,11 @@ public class BlogController extends BaseController
      */
     @PutMapping("/like/{id}")
     public Result likeBlog(@PathVariable("id") Long id) {
-        return blogService.likeBlog(id);
+        Boolean b = blogService.likeBlog(id);
+        if (b) {
+            return Result.ok("操作成功");
+        }
+        return Result.fail("操作失败");
     }
 
     /**
@@ -178,11 +182,11 @@ public class BlogController extends BaseController
     @GetMapping("/hot")
     public Result queryHotBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
 
-        return blogService.queryHotBlog(current);
+        return Result.ok(blogService.queryHotBlog(current));
     }
     @GetMapping("/category/{typeId}")
     public Result queryBlogByCategory(@PathVariable("typeId") Long typeId,@RequestParam(value = "current", defaultValue = "1") Integer current) {
-        return blogService.queryBlogByCategory(typeId,current);
+        return Result.ok(blogService.queryBlogByCategory(typeId,current));
     }
     /**
      * 查询博文详情
@@ -192,17 +196,7 @@ public class BlogController extends BaseController
     @GetMapping("/{id}")
     public Result queryBlogById(@PathVariable("id") Long id) {
 
-        return blogService.queryBlogById(id);
-    }
-
-    /**
-     * 查询博文点赞数
-     * @param id
-     * @return
-     */
-    @GetMapping("/likes/{id}")
-    public Result queryBlogLikes(@PathVariable("id") Long id) {
-        return blogService.queryBlogLikes(id);
+        return Result.ok(blogService.queryBlogById(id));
     }
 
     /**
@@ -215,7 +209,7 @@ public class BlogController extends BaseController
     public Result queryBlogByUserId(
             @RequestParam(value = "current", defaultValue = "1") Integer current,
             @RequestParam("userId") Long userId) {
-        return blogService.queryBlogByUserId(current, userId);
+        return Result.ok(blogService.queryBlogByUserId(current, userId));
     }
     /**
      * 查询关注用户发布的博文
@@ -225,17 +219,17 @@ public class BlogController extends BaseController
      */
     @GetMapping("/of/follow")
     public Result queryBlogByFollow(@RequestParam(value = "lastId") Long max, @RequestParam(value = "offset", defaultValue = "0") Integer offset) {
-        return blogService.queryBlogByFollow(max, offset);
+        return Result.ok(blogService.queryBlogByFollow(max, offset));
     }
 
     @PostMapping("/blog/updateCommentById/{id}")
     public R<Boolean> updateCommentById(@PathVariable("id") Long blogId){
-        return blogService.updateCommentById(blogId);
+        return R.ok(blogService.updateCommentById(blogId));
     }
 
     @GetMapping("/blog/getBlogById/{id}")
     R<Blog> getBlogById( @PathVariable("id")Long id){
-        return blogService.getBlogById(id);
+        return R.ok(blogService.getBlogById(id));
     }
     @GetMapping("/blog/getBlogCount/{userId}")
     R<Integer> getBlogCount(@PathVariable("userId")Long userId){

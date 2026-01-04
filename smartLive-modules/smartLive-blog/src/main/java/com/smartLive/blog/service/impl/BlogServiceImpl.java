@@ -14,6 +14,7 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.*;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -197,7 +198,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public Result queryBlogById(Long id) {
+    public Blog queryBlogById(Long id) {
         //从redis查询博客缓存
         String key= RedisConstants.CACHE_BLOG_KEY+id;
         String blogJson =redisService.getCacheObject(key);
@@ -205,12 +206,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //存在
             Blog blog = JSONUtil.toBean(blogJson, Blog.class);
             isBlogLiked(blog);
-            return Result.ok(blog);
+            return blog;
         }
         //根据博客id查询博客信息
         Blog blog = getById(id);
         if (blog == null) {
-            return Result.fail("数据不存在");
+            throw new BusinessException("数据不存在");
         }
         // 查询blog有关的用户信息
         queryBlogUser(blog);
@@ -219,7 +220,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         //查询blog是否被点赞
         isBlogLiked(blog);
         //返回结果
-        return Result.ok(blog);
+        return blog;
     }
 
     /**
@@ -257,7 +258,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
 
-    public Result queryHotBlog(Integer current) {
+    public List<Blog> queryHotBlog(Integer current) {
         //从redis查询热门博客
         String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
         List<Blog> blogList = getBlogListFromRedis(key);
@@ -265,7 +266,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             blogList.forEach(blog ->{
                 isBlogLiked(blog);
             });
-            return Result.ok(blogList);
+            return blogList;
         }
         // 根据用户查询
         Page<Blog> page = query()
@@ -281,7 +282,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //把查询结果写入redis
             redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
-        return Result.ok(blogList);
+        return blogList;
     }
 
     /**
@@ -306,20 +307,21 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public Result likeBlog(Long id) {
+    public Boolean likeBlog(Long id) {
         //获取当前登录用户
         UserDTO user = UserContextHolder.getUser();
         if (user == null) {
             //未登录
-            return Result.fail("请登录");
+            throw new BusinessException("请登录");
         }
         Long userId = user.getId();
         //判断当前用户是否已经点赞
         String key = RedisConstants.BLOG_LIKED_KEY + id;
         Double score = redisService.getCacheZSetScore(key, userId.toString());
+        boolean isSuccess = false;
         if (score!=null) {
             //已经点赞了,取消点赞
-            boolean isSuccess = update().setSql("liked = liked - 1").eq("id", id).update();
+            isSuccess = update().setSql("liked = liked - 1").eq("id", id).update();
             if (isSuccess) {
                 //删除用户点赞信息
                 redisService.removeCacheZSetObject(key, userId.toString());
@@ -327,7 +329,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }else{
             //未点赞
             //修改点赞数量
-            boolean isSuccess = update().setSql("liked = liked + 1").eq("id", id).update();
+            isSuccess = update().setSql("liked = liked + 1").eq("id", id).update();
             //保存用户点赞信息到redis的set集合 zadd key value score
             if (isSuccess) {
                 //保存用户点赞信息
@@ -335,35 +337,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             }
         }
         //清空缓存
-        flashRedisBlogCache(id);
-        flashRedisBlogListCache();
-        return Result.ok("点赞成功");
-    }
-
-    /**
-     * 查询博客点赞数
-     *
-     * @param id
-     * @return
-     */
-    @Override
-    public Result queryBlogLikes(Long id) {
-        String key = RedisConstants.BLOG_LIKED_KEY + id;
-        //查询top5的点赞数 zrange key 0 4
-        Set<String> top5 = stringRedisTemplate.opsForZSet().range(key, 0, 4);
-        if (top5 == null || top5.isEmpty()) {
-            return Result.ok(Collections.emptyList());
+        if (isSuccess) {
+            //更新缓存
+            flashRedisBlogCache(id);
+            flashRedisBlogListCache();
         }
-        //解析其中的用户id
-        List<Long> userIdList = top5.stream().map(Long::valueOf).collect(Collectors.toList());
-        //根据用户id查询用户  where id in (5,2) order by field (id,5,2)
-        R<List<User>> userR = remoteAppUserService.getUserList(userIdList);
-        if (userR.getCode() != 200) {
-            return Result.fail(userR.getMsg());
-        }
-        List<User> userList = userR.getData();
-        List<UserDTO> userDTOList = userList.stream().map(user -> BeanUtil.copyProperties(user, UserDTO.class)).collect(Collectors.toList());
-        return Result.ok(userDTOList);
+        return isSuccess;
     }
 
     /**
@@ -374,7 +353,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public Result queryBlogByUserId(Integer current, Long userId) {
+    public List<Blog> queryBlogByUserId(Integer current, Long userId) {
         Page<Blog> page = query()
                 .eq("user_id", userId)
                 .orderByAsc("create_time")
@@ -383,7 +362,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         records.forEach(blog ->{
             isBlogLiked(blog);
         });
-        return Result.ok(records);
+        return records;
     }
 
     /**
@@ -393,14 +372,14 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public Result saveBlog(Blog blog) {
+    public Long saveBlog(Blog blog) {
         blog.setUserId(UserContextHolder.getUser().getId());
         R<ShopDTO> result = remoteShopService.getShopById(blog.getShopId());
         blog.setTypeId(result.getData().getTypeId());
         // 保存探店笔记
         boolean success = save(blog);
         if (!success) {
-            return Result.fail("新增博文失败");
+            throw new BusinessException("新增博文失败");
         }
         //推送笔记id给所有粉丝
         BlogDTO blogDTO = BeanUtil.copyProperties(blog, BlogDTO.class);
@@ -412,7 +391,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         //更新redis缓存
         redisService.deleteObject(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
         //返回id
-        return Result.ok(blog.getId());
+        return blog.getId();
     }
 
     /**
@@ -423,14 +402,14 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public Result queryBlogByFollow(Long max, Integer offset) {
+    public ScrollResult queryBlogByFollow(Long max, Integer offset) {
         //获取当前登录用户
         Long userId = UserContextHolder.getUser().getId();
         String key = RedisConstants.FEED_KEY + userId;
         //查询收件箱 关注的用户发布的博客
         Set<ZSetOperations.TypedTuple<Object>> typedTuples = redisService.getCacheZSetReverseRangeByScore(key, 0,max , offset, 2);
         if (typedTuples == null || typedTuples.isEmpty()) {
-            return Result.ok(Collections.emptyList());
+            return new ScrollResult();
         }
 
         //获取博客id解析数据：blogId  minTime(时间戳) offset
@@ -464,7 +443,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         scrollResult.setList(blogList);
         scrollResult.setOffset(os);
         scrollResult.setMinTime(minTime);
-        return Result.ok(scrollResult);
+        return scrollResult;
     }
 
     /**
@@ -474,11 +453,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public R<Boolean> updateCommentById(Long blogId) {
+    public Boolean updateCommentById(Long blogId) {
         boolean update = update().setSql("comments = comments + 1").eq("id", blogId).update();
-        //清空缓存
-        flashRedisBlogCache(blogId);
-        return update ? R.ok() : R.fail();
+        if (update) {
+            //更新缓存
+            flashRedisBlogCache(blogId);
+        }
+        return update;
     }
 
     /**
@@ -513,9 +494,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public R<Blog> getBlogById(Long id) {
+    public Blog getBlogById(Long id) {
         Blog blog = blogMapper.selectBlogById(id);
-        return R.ok(blog);
+        return blog;
     }
 
     /**
@@ -660,13 +641,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public Result queryBlogByCategory(Long typeId, Integer current) {
+    public List<Blog> queryBlogByCategory(Long typeId, Integer current) {
         //从redis查询分类博客
         String key= RedisConstants.CACHE_BLOG_TYPE_KEY + typeId+":"+ current;
         List<Blog> blogList = getBlogListFromRedis(key);
         if (blogList != null) {
                 blogList.forEach(blog -> isBlogLiked(blog));
-            return Result.ok(blogList);
+            return blogList;
         }
         Page<Blog> page = query()
                 .select("images","liked","user_id","title","id")
@@ -684,7 +665,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //把查询结果写入redis
             redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
-        return Result.ok(blogList);
+        return blogList;
     }
     /**
      * 从redis中获取博客列表
