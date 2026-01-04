@@ -115,7 +115,11 @@ public class VoucherOrderController extends BaseController
      */
      @PostMapping("/pay/{id}")
     public Result pay(@PathVariable("id") Long id) {
-        return voucherOrderService.pay(id);
+         Integer pay = voucherOrderService.pay(id);
+         if(pay>0){
+             return Result.ok("支付成功");
+         }
+         return Result.fail("支付失败");
     }
 
     /**
@@ -123,21 +127,33 @@ public class VoucherOrderController extends BaseController
      */
     @PostMapping("/use/{id}")
     public Result use(@PathVariable("id") Long id) {
-        return voucherOrderService.use(id);
+        Integer use = voucherOrderService.use(id);
+        if(use>0){
+            return Result.ok("支付成功");
+        }
+        return Result.fail("支付失败");
     }
     /**
      * 取消订单
      */
     @PostMapping("/cancel/{id}")
     public Result cancel(@PathVariable("id") Long id) {
-        return voucherOrderService.cancel(id);
+        Integer cancel = voucherOrderService.cancel(id);
+        if(cancel>0){
+            return Result.ok("取消成功");
+        }
+        return Result.fail("取消失败");
     }
     /**
      * 退款订单
      */
     @PostMapping("/refund/{id}")
     public Result refund(@PathVariable("id") Long id) {
-        return voucherOrderService.refund(id);
+        Integer refund = voucherOrderService.refund(id);
+        if(refund>0){
+            return Result.ok("退款成功");
+        }
+        return Result.fail("退款失败");
     }
     /**
      * 获取订单数量

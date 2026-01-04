@@ -1,5 +1,7 @@
 package com.smartLive.common.security.handler;
 
+import com.smartLive.common.core.exception.BusinessException;
+import com.smartLive.common.core.web.domain.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +67,7 @@ public class GlobalExceptionHandler
     }
 
     /**
-     * 业务异常
+     * 服务异常
      */
     @ExceptionHandler(ServiceException.class)
     public AjaxResult handleServiceException(ServiceException e, HttpServletRequest request)
@@ -162,5 +164,13 @@ public class GlobalExceptionHandler
     public AjaxResult handleDemoModeException(DemoModeException e)
     {
         return AjaxResult.error("演示模式，不允许操作");
+    }
+    /**
+     * 业务异常
+     */
+    @ExceptionHandler(value = {BusinessException.class})
+    public Result handleBusinessException(BusinessException e)
+    {
+        return Result.fail(e.getMessage());
     }
 }

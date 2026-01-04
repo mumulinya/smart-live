@@ -81,7 +81,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param
      * @return
      */
-    Result pay(Long id );
+    Integer pay(Long id );
 
     /**
      * 退款订单
@@ -89,7 +89,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param
      * @return
      */
-    Result cancel(Long id);
+    Integer cancel(Long id);
 
     /**
      * 退款订单
@@ -97,7 +97,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param
      * @return
      */
-    Result refund(Long id);
+    Integer refund(Long id);
 
     /**
      * 使用订单
@@ -105,7 +105,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @param
      * @return
      */
-    Result use(Long id);
+    Integer use(Long id);
 
     /**
      * 获取订单数量

@@ -6,6 +6,7 @@ import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.marketing.api.RemoteMarketingService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -240,19 +241,17 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return
      */
     @Override
-    public Result pay(Long id) {
+    public Integer pay(Long id) {
         VoucherOrder voucherOrder = getById(id);
         if(voucherOrder==null){
-            return Result.fail("订单不存在");
+
+            throw new BusinessException("订单不存在");
         }
         voucherOrder.setPayTime(DateUtils.getNowDate());
         voucherOrder.setStatus(OrderStatusConstants.PAID);
         voucherOrder.setPayType(PayTypeConstants.BALANCE);
         int i = updateVoucherOrder(voucherOrder);
-        if(i>0){
-            return Result.ok("付款成功");
-        }
-        return Result.fail("付款失败");
+        return i;
     }
 
     /**
@@ -263,10 +262,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return
      */
     @Override
-    public Result cancel(Long id) {
+    public Integer cancel(Long id) {
         VoucherOrder voucherOrder = getById(id);
         if(voucherOrder==null){
-            return Result.fail("订单不存在");
+            throw new BusinessException("订单不存在");
         }
         voucherOrder.setStatus(OrderStatusConstants.CANCELLED);
         int i = updateVoucherOrder(voucherOrder);
@@ -278,9 +277,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     //恢复库存
                     remoteMarketingService.recoverVoucherStock(voucherOrder.getVoucherId());
             }
-            return Result.ok("已经取消");
         }
-        return Result.fail("取消失败");
+        return i;
     }
 
     /**
@@ -291,18 +289,15 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return
      */
     @Override
-    public Result refund(Long id) {
+    public Integer refund(Long id) {
         VoucherOrder voucherOrder = getById(id);
         if(voucherOrder==null){
-            return Result.fail("订单不存在");
+            throw new BusinessException("订单不存在");
         }
         voucherOrder.setRefundTime(DateUtils.getNowDate());
         voucherOrder.setStatus(OrderStatusConstants.REFUNDED);
         int i = updateVoucherOrder(voucherOrder);
-        if(i>0){
-            return Result.ok("退款成功");
-        }
-        return Result.fail("退款失败");
+        return i;
     }
 
     /**
@@ -313,18 +308,15 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return
      */
     @Override
-    public Result use(Long id) {
+    public Integer use(Long id) {
         VoucherOrder voucherOrder = getById(id);
         if(voucherOrder==null){
-            return Result.fail("订单不存在");
+            throw new BusinessException("订单不存在");
         }
         voucherOrder.setUseTime(DateUtils.getNowDate());
         voucherOrder.setStatus(OrderStatusConstants.VERIFIED);
         int i = updateVoucherOrder(voucherOrder);
-        if(i>0){
-            return Result.ok("使用成功");
-        }
-        return Result.fail("使用失败");
+        return i;
     }
 
     /**
