@@ -140,7 +140,8 @@ public class ShopController extends BaseController {
             @RequestParam(value = "y", required = false) Double y
     ) {
 
-        return shopService.queryShopByType(typeId, current,sortBy, x, y);
+        List<Shop> shopList = shopService.queryShopByType(typeId, current, sortBy, x, y);
+        return Result.ok(shopList);
     }
 
     /**
@@ -171,8 +172,11 @@ public class ShopController extends BaseController {
      */
     @GetMapping("/{id}")
     public Result queryShopById(@PathVariable("id") Long id) {
-
-        return shopService.queryById(id);
+        Shop shop = shopService.queryById(id);
+        if (shop == null) {
+            return Result.fail("店铺不存在");
+        }
+        return Result.ok(shop);
     }
 
     @PostMapping("/shop/list")
@@ -186,14 +190,16 @@ public class ShopController extends BaseController {
     }
     @GetMapping("/shop/{shopName}")
     public R<Shop> getShopByShopName(@PathVariable("shopName") String shopName){
-        return shopService.getShopByShopName(shopName);
+        Shop shop = shopService.getShopByShopName(shopName);
+        return R.ok(shop);
     }
     /**
      * 更新商家评论数
      */
     @PostMapping("/shop/updateCommentById/{id}")
     public R<Boolean> updateCommentById(@PathVariable("id") Long shopId){
-        return shopService.updateCommentById(shopId);
+        Boolean b = shopService.updateCommentById(shopId);
+        return R.ok(b);
     }
 
     /**
@@ -203,12 +209,17 @@ public class ShopController extends BaseController {
     public R<List<Shop>> getShopByCondition(@RequestBody Shop shop){
         return R.ok(shopService.getShopByCondition(shop));
     }
-
+    /**
+     * 根据id查询商家信息
+     */
     @GetMapping("/shop/getShopById/{shopId}")
     public R<Shop> getShopById(@PathVariable("shopId") Long shopId ){
-        return shopService.getShopById(shopId);
+        Shop shop = shopService.queryById(shopId);
+        return R.ok(shop);
     }
-
+    /**
+     * 根据id列表查询商家信息
+     */
     @GetMapping("/shop/shopListByIds")
      public R<List<Shop>> listShopByIds(@RequestParam("shopIdList") List<Long> shopIdList){
         return R.ok(shopService.getShopList(shopIdList));

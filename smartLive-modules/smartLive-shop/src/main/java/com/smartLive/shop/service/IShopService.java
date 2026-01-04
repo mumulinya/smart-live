@@ -20,7 +20,7 @@ public interface IShopService extends IService<Shop> {
      * @param id 店铺主键
      * @return 店铺
      */
-    public Shop selectShopById(String id);
+     Shop selectShopById(String id);
 
     /**
      * 查询店铺列表
@@ -28,7 +28,7 @@ public interface IShopService extends IService<Shop> {
      * @param shop 店铺
      * @return 店铺集合
      */
-    public List<Shop> selectShopList(Shop shop);
+     List<Shop> selectShopList(Shop shop);
 
     /**
      * 新增店铺
@@ -36,7 +36,7 @@ public interface IShopService extends IService<Shop> {
      * @param shop 店铺
      * @return 结果
      */
-    public int insertShop(Shop shop);
+     int insertShop(Shop shop);
 
     /**
      * 修改店铺
@@ -44,7 +44,7 @@ public interface IShopService extends IService<Shop> {
      * @param shop 店铺
      * @return 结果
      */
-    public int updateShop(Shop shop);
+     int updateShop(Shop shop);
 
     /**
      * 批量删除店铺
@@ -52,7 +52,7 @@ public interface IShopService extends IService<Shop> {
      * @param ids 需要删除的店铺主键集合
      * @return 结果
      */
-    public int deleteShopByIds(String[] ids);
+     int deleteShopByIds(String[] ids);
 
     /**
      * 删除店铺信息
@@ -60,7 +60,7 @@ public interface IShopService extends IService<Shop> {
      * @param id 店铺主键
      * @return 结果
      */
-    public int deleteShopById(String id);
+     int deleteShopById(String id);
 
 
     /**
@@ -69,7 +69,7 @@ public interface IShopService extends IService<Shop> {
      * @param id 商铺id
      * @return 商铺详情数据
      */
-    Result queryById(Long id);
+    Shop queryById(Long id);
 
     /**
      * 根据类型分页查询商铺信息
@@ -78,7 +78,7 @@ public interface IShopService extends IService<Shop> {
      * @param current 页码
      * @return 商铺列表
      */
-    Result queryShopByType(Integer typeId, Integer current, String sortBy,Double x, Double y);
+    List<Shop> queryShopByType(Integer typeId, Integer current, String sortBy,Double x, Double y);
 
     /**
      * 根据商铺信息搜索商铺列表
@@ -102,7 +102,7 @@ public interface IShopService extends IService<Shop> {
      * @param shopName 商铺名称
      * @return 商铺详情
      */
-    R<Shop> getShopByShopName(String shopName);
+    Shop getShopByShopName(String shopName);
 
     /**
      * 修改商铺评论数量
@@ -110,7 +110,7 @@ public interface IShopService extends IService<Shop> {
      * @param shopId 商铺id
      * @return 修改结果
      */
-    R<Boolean> updateCommentById(Long shopId);
+    Boolean updateCommentById(Long shopId);
 
     /**
      * 根据条件查询商铺信息
@@ -119,14 +119,6 @@ public interface IShopService extends IService<Shop> {
      * @return 搜索结果
      */
     List<Shop> getShopByCondition(Shop shop);
-
-    /**
-     * 根据商铺id查询商铺信息
-     *
-     * @param shopId 商铺id
-     * @return 商铺信息
-     */
-    R<Shop> getShopById(Long shopId);
 
     /**
      * 根据商铺id列表查询商铺信息列表
