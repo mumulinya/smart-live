@@ -3,6 +3,7 @@ package com.smartLive.interaction.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.domain.Star;
+import com.smartLive.interaction.domain.vo.ResourceVO;
 
 import java.util.List;
 
@@ -68,20 +69,20 @@ public interface IStarService extends IService<Star>
       * @param star
      * @return
      */
-    Result star(Star star);
+    Boolean star(Star star);
 
     /**
      * 判断是否收藏
      * @param
      * @return
      */
-    Result isStar(Star star);
+    Boolean isStar(Star star);
 
     /**
      * 获取收藏列表
      * @return
      */
-    Result getStarList(Star star, Integer current);
+    List<ResourceVO> getStarList(Star star, Integer current);
 
     /**
      * 获取收藏数量

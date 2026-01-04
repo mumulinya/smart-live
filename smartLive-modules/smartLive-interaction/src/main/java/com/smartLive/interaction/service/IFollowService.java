@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
-
+import com.smartLive.interaction.domain.vo.SocialInfoVO;
 
 
 import java.util.List;
@@ -25,7 +25,7 @@ public interface IFollowService extends IService<Follow>
      * @param id 关注主键
      * @return 关注
      */
-    public Follow selectFollowUserById(Long id);
+     Follow selectFollowUserById(Long id);
 
     /**
      * 查询关注列表
@@ -33,7 +33,7 @@ public interface IFollowService extends IService<Follow>
      * @param follow 关注
      * @return 关注集合
      */
-    public List<Follow> selectFollowUserList(Follow follow);
+     List<Follow> selectFollowUserList(Follow follow);
 
     /**
      * 新增关注
@@ -41,7 +41,7 @@ public interface IFollowService extends IService<Follow>
      * @param follow 关注
      * @return 结果
      */
-    public int insertFollowUser(Follow follow);
+     int insertFollowUser(Follow follow);
 
     /**
      * 修改关注
@@ -49,7 +49,7 @@ public interface IFollowService extends IService<Follow>
      * @param follow 关注
      * @return 结果
      */
-    public int updateFollowUser(Follow follow);
+     int updateFollowUser(Follow follow);
 
     /**
      * 批量删除关注
@@ -57,7 +57,7 @@ public interface IFollowService extends IService<Follow>
      * @param ids 需要删除的关注主键集合
      * @return 结果
      */
-    public int deleteFollowUserByIds(Long[] ids);
+     int deleteFollowUserByIds(Long[] ids);
 
     /**
      * 删除关注信息
@@ -65,28 +65,28 @@ public interface IFollowService extends IService<Follow>
      * @param id 关注主键
      * @return 结果
      */
-    public int deleteFollowUserById(Long id);
+     int deleteFollowUserById(Long id);
 
     /**
      * 关注或取关
      * @param
      * @return
      */
-    Result follow(Follow follow);
+    Boolean follow(Follow follow);
 
     /**
      * 判断是否关注
      * @param follow
      * @return
      */
-    Result isFollowed(Follow follow);
+    Boolean isFollowed(Follow follow);
 
     /**
      * 共同关注列表
       * @param follow
      * @return
      */
-    Result common(Follow follow, Integer current);
+    List<SocialInfoVO> common(Follow follow, Integer current);
     /**
      * 推送数据给粉丝
      */
@@ -96,13 +96,13 @@ public interface IFollowService extends IService<Follow>
      * 获取粉丝列表
      * @return
      */
-    Result getFans(Follow follow,Integer current);
+    List<SocialInfoVO> getFans(Follow follow,Integer current);
 
     /**
      * 获取关注列表
      * @return
      */
-    Result getFollows(Follow follow,Integer current);
+    List<SocialInfoVO> getFollows(Follow follow,Integer current);
     /**
      * 获取关注数
      * @return

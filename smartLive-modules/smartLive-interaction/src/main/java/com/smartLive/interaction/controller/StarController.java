@@ -15,7 +15,7 @@ import jakarta.annotation.Resource;
 @RequestMapping("/star")
 public class StarController {
     @Resource
-    private IStarService collectionShopService;
+    private IStarService starService;
     /**
      * 收藏或取消收藏
      * @param
@@ -24,7 +24,11 @@ public class StarController {
      */
     @PutMapping()
     public Result star(@RequestBody Star star) {
-        return collectionShopService.star(star);
+        Boolean start = starService.star(star);
+        if (start) {
+            return Result.ok("操作成功");
+        }
+        return Result.fail("操作失败");
     }
     /**
      * 查询是否收藏
@@ -33,12 +37,13 @@ public class StarController {
      */
     @GetMapping("/isStar")
     public Result isStar(Star star){
-        return collectionShopService.isStar(star);
+        Boolean isStar = starService.isStar(star);
+        return Result.ok(isStar);
     }
     //获取收藏列表
     @GetMapping("/starList")
     public Result getStars(Star star, @RequestParam("current") Integer current){
-        return collectionShopService.getStarList(star, current);
+        return Result.ok(starService.getStarList(star, current));
     }
     /**
      * 获取用户收藏的数量
@@ -47,7 +52,7 @@ public class StarController {
      */
     @GetMapping("/getStarCount")
     Result getStarCount(Star star){
-        Integer followShopCount=collectionShopService.getStarCount(star);
+        Integer followShopCount=starService.getStarCount(star);
         return Result.ok(followShopCount);
     }
 }

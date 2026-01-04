@@ -26,7 +26,11 @@ public class FollowController {
      */
     @PutMapping()
     public Result follow(@RequestBody Follow follow) {
-        return followServiceImpl.follow(follow);
+        Boolean f = followServiceImpl.follow(follow);
+        if (f) {
+            return Result.ok("操作成功");
+        }
+        return Result.fail("操作失败");
     }
     /**
      * 查询是否关注
@@ -35,7 +39,7 @@ public class FollowController {
      */
     @GetMapping("/isFollow")
     public Result isFollowed(Follow follow){
-        return followServiceImpl.isFollowed(follow);
+        return Result.ok(followServiceImpl.isFollowed(follow));
     }
     /**
      * 查询共同关注用户列表
@@ -44,7 +48,7 @@ public class FollowController {
      */
     @GetMapping("/common")
     public Result common(Follow follow,@RequestParam("current") Integer current){
-        return followServiceImpl.common(follow,current);
+        return Result.ok(followServiceImpl.common(follow,current));
     }
 
     //把数据推送给所有粉丝
@@ -55,12 +59,12 @@ public class FollowController {
     //获取粉丝列表
     @GetMapping("/fans")
     public Result getFans(Follow follow,@RequestParam("current") Integer current){
-        return followServiceImpl.getFans(follow,current);
+        return Result.ok(followServiceImpl.getFans(follow,current));
     }
     //获取关注列表
     @GetMapping("/follows")
     public Result getFollows(Follow follow,@RequestParam("current") Integer current){
-        return followServiceImpl.getFollows(follow,current);
+        return Result.ok(followServiceImpl.getFollows(follow,current));
     }
     /**
      * 获取关注数

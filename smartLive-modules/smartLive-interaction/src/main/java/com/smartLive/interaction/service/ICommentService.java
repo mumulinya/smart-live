@@ -68,7 +68,7 @@ public interface ICommentService extends IService<Comment> {
      * @param comment
      * @return
      */
-    Result listComment(Comment comment, Integer current);
+    List<Comment> listComment(Comment comment, Integer current);
 
     /**
      * 新增评论
@@ -76,7 +76,7 @@ public interface ICommentService extends IService<Comment> {
      * @param comment
      * @return
      */
-    Result addComment(Comment comment);
+    Integer addComment(Comment comment);
 
 
     /**
@@ -93,7 +93,7 @@ public interface ICommentService extends IService<Comment> {
      * @param current
      * @return
      */
-    Result getCommentOfMe(Comment comment,Integer current);
+    List<Comment> getCommentOfMe(Comment comment,Integer current);
 
     /**
      * 获取评论列表
@@ -108,7 +108,7 @@ public interface ICommentService extends IService<Comment> {
      * @param comments
      * @return
      */
-    Result saveAiCreateComment(List<CommentDTO> comments);
+    Boolean saveAiCreateComment(List<CommentDTO> comments);
 
     /**
      * 获取用户发表的评论数

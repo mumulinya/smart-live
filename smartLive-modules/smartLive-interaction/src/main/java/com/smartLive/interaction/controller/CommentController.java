@@ -103,8 +103,7 @@ public class CommentController extends BaseController
 
     @GetMapping("/listComment")
     public Result listComment(Comment  comment,@RequestParam("current") Integer current){
-        System.out.println("current:"+current);
-        return commentService.listComment(comment,current);
+        return Result.ok(commentService.listComment(comment,current));
     }
     /**
      * 添加评论
@@ -112,8 +111,11 @@ public class CommentController extends BaseController
     @PostMapping("/addComment")
     public Result addComment(@RequestBody Comment comment)
     {
-
-        return commentService.addComment(comment);
+        Integer i = commentService.addComment(comment);
+        if (i > 0) {
+            return Result.ok("添加成功");
+        }
+        return Result.fail("添加失败");
     }
     /**
      * 删除评论
@@ -126,7 +128,7 @@ public class CommentController extends BaseController
     }
     @GetMapping("/of/me")
     public Result getCommentOfMe(Comment comment,@RequestParam("current") Integer current){
-        return commentService.getCommentOfMe(comment,current);
+        return Result.ok(commentService.getCommentOfMe(comment,current));
     }
 
     @PostMapping("/aiCreateComment")
@@ -150,7 +152,7 @@ public class CommentController extends BaseController
      */
     @PostMapping("/saveAiCreateComment")
     public Result saveAiCreateComment(@RequestBody List<CommentDTO> comments){
-        return commentService.saveAiCreateComment(comments);
+        return Result.ok(commentService.saveAiCreateComment(comments));
     }
 
     /**

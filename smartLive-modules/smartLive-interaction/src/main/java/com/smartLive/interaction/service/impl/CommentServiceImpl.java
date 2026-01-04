@@ -137,12 +137,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return
      */
     @Override
-    public Result listComment(Comment comment, Integer current) {
+    public List<Comment> listComment(Comment comment, Integer current) {
         //从redis里面获取
         CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
         if (commentType == null) {
             log.error("参数错误");
-            return Result.fail("参数错误");
+            return Collections.emptyList();
         }
         String commentKeyPrefix = commentType.getCommentKeyPrefix();
         Page<Long> longPage = queryRedisSourceIdsTool.queryRedisIdPage(commentKeyPrefix, comment.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
@@ -171,7 +171,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             }
         });
         if (list.size() == 0) {
-            return Result.ok(list);
+            return Collections.emptyList();
         }
         //获取是否有ai生成评论
         String key = RedisConstants.CACHE_AI_COMMENT_KEY + comment.getSourceType() + ":" + comment.getSourceId();
@@ -180,7 +180,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             Comment commentDTO = JSON.parseObject(JsonStr, Comment.class);
             list.add(commentDTO);
         }
-        return Result.ok(list);
+        return list;
     }
 
     /**
@@ -191,7 +191,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     @Override
     @Transactional
-    public Result addComment(Comment comment) {
+    public Integer addComment(Comment comment) {
         comment.setCreateTime(DateUtils.getNowDate());
         int i = commentMapper.insertComment(comment);
         if (i > 0) {
@@ -206,7 +206,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             //记录脏数据
             stringRedisTemplate.opsForSet().add(commentDirtyKeyPrefix, comment.getSourceId().toString());
         }
-        return Result.ok(i);
+        return i;
     }
     /**
      * 删除评论
@@ -240,14 +240,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return
      */
     @Override
-    public Result getCommentOfMe(Comment comment,Integer current) {
+    public List<Comment> getCommentOfMe(Comment comment,Integer current) {
         Page<Comment> page = query()
                 .eq("source_type", comment.getSourceType())
                 .eq("user_id", comment.getUserId())
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<Comment> list = page.getRecords();
-        return Result.ok(list);
+        return list;
     }
 
     /**
@@ -279,9 +279,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return
      */
     @Override
-    public Result saveAiCreateComment(List<CommentDTO> comments) {
+    public Boolean saveAiCreateComment(List<CommentDTO> comments) {
         if (comments.size() == 0) {
-            return Result.fail("请传入数据");
+            throw new RuntimeException("请传入数据");
         }
         //清空redis缓存
         stringRedisTemplate.delete(RedisConstants.CACHE_AI_COMMENT_KEY);
@@ -291,7 +291,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             //设置过期时间
 //            stringRedisTemplate.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
         });
-        return Result.ok();
+        return true;
     }
 
     /**

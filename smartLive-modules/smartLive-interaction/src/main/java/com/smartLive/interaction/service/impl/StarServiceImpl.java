@@ -123,17 +123,18 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      * @return
      */
     @Override
-    public Result star(Star star) {
+    public Boolean star(Star star) {
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
         if (user == null) {
-            return Result.ok(false);
+            return false;
         }
         //获取当前用户id
         Long userId =user.getId();
         // 1. 获取对应的枚举策略
         ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
-            return Result.fail("关注类型错误");
+            log.error("关注类型错误");
+            return false;
         }
         String key =resourceType.getCollectKeyPrefix()+userId;
         //判断是收藏还是取消收藏
@@ -154,7 +155,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                 stringRedisTemplate.opsForZSet().remove(key, star.getSourceId().toString());
             }
         }
-        return Result.ok();
+        return true;
     }
 
     /**
@@ -164,24 +165,25 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      * @return
      */
     @Override
-    public Result isStar(Star star) {
+    public Boolean isStar(Star star) {
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
         if (user == null) {
-            return Result.ok(false);
+            return false;
         }
         //获取当前用户id
         Long userId = user.getId();
         // 1. 获取对应的枚举策略
         ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
-            return Result.fail("关注类型错误");
+            log.error("关注类型错误");
+            return false;
         }
         String key =resourceType.getCollectKeyPrefix()+userId;
         //判断是否关注 从redis的set集合中查询
         Boolean isMember = stringRedisTemplate.opsForZSet().score(key, star.getSourceId().toString()) != null;
 //        //判断是否关注 从数据库中查询
 //        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
-        return Result.ok(isMember);
+        return isMember;
     }
 
     /**
@@ -190,7 +192,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      * @return
      */
     @Override
-    public Result getStarList(Star star, Integer current) {
+    public List<ResourceVO> getStarList(Star star, Integer current) {
 //        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
 //        if (user == null) {
 //            return Result.ok(false);
@@ -200,7 +202,8 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         // 1. 获取对应的枚举策略
         ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
-            return Result.fail("关注类型错误");
+
+            return Collections.emptyList();
         }
         //根据关注类型从关注策略工程获取bean
         ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceType.getCode());
@@ -222,14 +225,14 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                     .collect(Collectors.toList());
         }
         if (sourceIdList.isEmpty()) {
-            return Result.ok(Collections.emptyList());
+            return Collections.emptyList();
         }
         //根据id查询数据
        if(sourceIdList.isEmpty()){
-           return Result.ok(Collections.emptyList());
+           return Collections.emptyList();
        }
-//        List<ResourceVO> resourceList = resourceStrategy.getResourceList(sourceIdList);
-        return Result.ok(sourceIdList);
+        List<ResourceVO> resourceList = resourceStrategy.getResourceList(sourceIdList);
+        return resourceList;
     }
     /**
      * 获取收藏数量

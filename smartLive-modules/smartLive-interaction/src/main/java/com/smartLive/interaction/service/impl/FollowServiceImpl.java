@@ -140,13 +140,16 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public Result follow(Follow follow) {
+    public Boolean follow(Follow follow) {
+        if(UserContextHolder.getUser()==null){
+            return false;
+        }
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
         // 1. 获取对应的枚举策略
         IdentityTypeEnum followType = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (followType == null) {
-            return Result.fail("关注类型错误");
+            return false;
         }
         //2.我的关注列表
         String myFollowKey = followType.getFollowKeyPrefix() + userId;
@@ -166,6 +169,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
 //                stringRedisTemplate.opsForZSet().add(targetFansKey, userId.toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(targetFansKey, userId.toString(), System.currentTimeMillis());
             }
+            return save;
         }else{
             //取关
             boolean remove = remove(new QueryWrapper<Follow>().eq("user_id", userId).eq("source_type",follow.getSourceType()).eq("source_id", follow.getSourceId()));
@@ -174,8 +178,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 redisService.removeCacheZSetObject(myFollowKey, follow.getSourceId().toString());
                 redisService.removeCacheZSetObject(targetFansKey, userId.toString());
             }
+            return remove;
         }
-        return Result.ok();
     }
 
     /**
@@ -185,17 +189,18 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public Result isFollowed(Follow follow) {
+    public Boolean isFollowed(Follow follow) {
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
         if (user == null) {
-            return Result.ok(false);
+            return false;
         }
         //获取当前用户id
         Long userId = user.getId();
         // 1. 获取对应的枚举策略
         IdentityTypeEnum followType = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (followType == null) {
-            return Result.fail("关注类型错误");
+            log.error("关注类型错误");
+            return false;
         }
         String key =followType.getFollowKeyPrefix()+userId;
 //        //判断是否关注 从数据库中查询
@@ -203,7 +208,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         //判断是否关注 从redis的zSet集合中查询
         //如果分数不为 null，说明元素存在（已关注）；如果为 null，说明不存在（未关注）
         Boolean isFollow =redisService.getCacheZSetScore(key, follow.getSourceId().toString())!= null;
-        return Result.ok(isFollow);
+        return isFollow;
     }
 
     /**
@@ -213,21 +218,22 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public Result common(Follow follow, Integer current) {
+    public List<SocialInfoVO> common(Follow follow, Integer current) {
         IdentityTypeEnum identityTypeEnum = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (identityTypeEnum == null) {
-            return Result.fail("关注类型错误");
+            log.error("关注类型错误");
+            return Collections.emptyList();
         }
         //获取当前用户id
         Long currentUserId = UserContextHolder.getUser().getId();
         Page<Long> commonFollowPage =  queryRedisSourceIdsTool.queryRedisCommonFollowIdPage(identityTypeEnum.getFollowKeyPrefix(), currentUserId, follow.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
         if (commonFollowPage.getTotal()==0) {
-            return Result.ok(null);
+            return Collections.emptyList();
         }
         List<Long> idList = commonFollowPage.getRecords();
         IdentityStrategy identityStrategy = identityStrategyMap.get(identityTypeEnum.getCode());
         List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(idList);
-          return Result.ok(socialInfoVOList);
+        return socialInfoVOList;
     }
 
     /**
@@ -268,11 +274,12 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public Result getFans(Follow follow,Integer current) {
+    public List<SocialInfoVO> getFans(Follow follow,Integer current) {
         // 1. 获取对应的枚举策略
         IdentityTypeEnum identityType = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (identityType == null) {
-            return Result.fail("关注类型错误");
+            log.error("关注类型错误");
+            return Collections.emptyList();
         }
         //根据关注类型从关注策略工程获取bean
         IdentityStrategy identityStrategy = identityStrategyMap.get(identityType.getCode());
@@ -295,10 +302,10 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
         //根据id查询用户
        if(sourceIdList.isEmpty()){
-           return Result.ok(Collections.emptyList());
+           return Collections.emptyList();
        }
         List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(sourceIdList);
-        return Result.ok(socialInfoVOList);
+        return socialInfoVOList;
     }
 
     /**
@@ -308,11 +315,12 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public Result getFollows(Follow follow,Integer current) {
+    public List<SocialInfoVO> getFollows(Follow follow,Integer current) {
 //        // 1. 获取对应的枚举策略
         IdentityTypeEnum identityType = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (identityType == null) {
-            return Result.fail("关注类型错误");
+            log.error("关注类型错误");
+            return Collections.emptyList();
         }
         //根据关注类型从关注策略工程获取bean
         IdentityStrategy identityStrategy = identityStrategyMap.get(identityType.getCode());
@@ -334,10 +342,10 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                     .collect(Collectors.toList());
         }
         if(sourceIdList.isEmpty()){
-            return Result.ok(Collections.emptyList());
+            return Collections.emptyList();
         }
         List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(sourceIdList);
-        return Result.ok(socialInfoVOList);
+        return socialInfoVOList;
     }
 
     /**
