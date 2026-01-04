@@ -166,16 +166,18 @@ public class UserController extends BaseController
     //获取用户信息
     @GetMapping("/user/info/{phone}")
     R<User> getUserInfoByPhone(@PathVariable("phone") String phone){
-        return userService.getUserInfoByPhone(phone);
+        User user = userService.getUserInfoByPhone(phone);
+        return R.ok(user);
     }
     @PostMapping("/user/create/{phone}")
     R<User> createUserByPhone(@PathVariable("phone") String phone){
-        return userService.createUserByPhone(phone);
+        User user = userService.createUserByPhone(phone);
+        return R.ok(user);
     }
     //根据用户id列表查询用户列表
     @GetMapping("/user/userListByIds")
     R<List<User>> getUserList(@RequestParam("userIdList") List<Long> userIdList){
-        return userService.getUserList(userIdList);
+        return R.ok(userService.getUserList(userIdList));
     }
     //根据用户id查询用户信息
     @GetMapping("/user/{id}")

@@ -198,9 +198,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 用户
      */
     @Override
-    public R<User> getUserInfoByPhone(String phone) {
+    public User getUserInfoByPhone(String phone) {
         User user = query().eq("phone", phone).one();
-        return R.ok(user);
+        return user;
     }
 
     /**
@@ -210,12 +210,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 用户
      */
     @Override
-    public R<User> createUserByPhone(String phone) {
+    public User createUserByPhone(String phone) {
         User user = new User();
         user.setPhone(phone);
         user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
         save(user);
-        return R.ok(user);
+        return user;
     }
 
     /**
@@ -225,7 +225,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 用户列表
      */
     @Override
-    public R<List<User>> getUserList(List<Long> userIdList) {
+    public List<User> getUserList(List<Long> userIdList) {
         //根据用户id查询用户  where id in (5,2) order by field (id,5,2)
         String idStr = StrUtil.join(",",userIdList);
         List<User> userList = query().in("id", userIdList).last("order by field(id," + idStr + ")").list();
@@ -236,7 +236,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             }
             return user;
         }).collect(Collectors.toList());
-        return R.ok(userList);
+        return userList;
     }
 
     /**
