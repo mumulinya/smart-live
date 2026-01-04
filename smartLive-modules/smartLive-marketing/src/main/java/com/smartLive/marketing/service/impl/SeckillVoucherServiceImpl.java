@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.marketing.domain.SeckillVoucher;
 import com.smartLive.marketing.domain.Voucher;
 import com.smartLive.marketing.mapper.SeckillVoucherMapper;
@@ -28,13 +29,12 @@ import java.util.List;
  */
 @Service
 public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper, SeckillVoucher> implements ISeckillVoucherService {
-
-    @Autowired
-    StringRedisTemplate stringRedisTemplate;
     IVoucherService voucherService;
 
     @Autowired
     RabbitTemplate rabbitTemplate;
+    @Autowired
+    private RedisService redisService;
 
     public SeckillVoucherServiceImpl(@Lazy IVoucherService voucherService){
         this.voucherService=voucherService;
@@ -47,7 +47,7 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
      * @return
      */
     @Override
-    public R<Boolean> updateSeckillVoucherByVoucherId(Long voucherId) {
+    public Boolean updateSeckillVoucherByVoucherId(Long voucherId) {
         boolean update = update().setSql("stock = stock - 1")
                 .eq("voucher_id", voucherId)
                 //防止超卖
@@ -57,7 +57,7 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
             //更新es数据
             voucherService.publish(new String[]{voucherId.toString()});
         }
-        return R.ok(update);
+        return update;
     }
 
     /**
@@ -67,18 +67,18 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
      * @return
      */
     @Override
-    public R<Boolean> recoverVoucherStock(Long voucherId) {
+    public Boolean recoverVoucherStock(Long voucherId) {
         boolean update = update().setSql("stock = stock + 1")
                 .eq("voucher_id", voucherId)
                 .update();
         if(update){
             //恢复redis的库存
             String stockKey = RedisConstants.SECKILL_STOCK_KEY + voucherId;
-            stringRedisTemplate.opsForValue().increment(stockKey, 1);
+            redisService.increment(stockKey);
             //更新es数据
             voucherService.publish(new String[]{voucherId.toString()});
         }
-        return R.ok( update);
+        return update;
     }
 
     /**

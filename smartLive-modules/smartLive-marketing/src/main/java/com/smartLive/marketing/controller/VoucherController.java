@@ -139,7 +139,8 @@ public class VoucherController extends BaseController {
      */
     @GetMapping("/list/{shopId}")
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
-        return voucherService.queryVoucherOfShop(shopId);
+        List<Voucher> voucherList = voucherService.queryVoucherOfShop(shopId);
+        return Result.ok(voucherList);
     }
 
     @GetMapping(value = "/{id}")
@@ -154,7 +155,8 @@ public class VoucherController extends BaseController {
     public Result seckillVoucher(@PathVariable("id") Long voucherId) {
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
-        return voucherService.seckillVoucher(voucherId, userId);
+        Long orderId = voucherService.seckillVoucher(voucherId, userId);
+        return Result.ok(orderId);
     }
     /**
      * 购买优惠券
@@ -163,7 +165,7 @@ public class VoucherController extends BaseController {
     public Result buyVoucher(@PathVariable("id") Long voucherId) {
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
-        return voucherService.buyVoucher(voucherId, userId);
+        return Result.ok(voucherService.buyVoucher(voucherId, userId));
     }
 
     /**
@@ -171,14 +173,14 @@ public class VoucherController extends BaseController {
      */
     @PostMapping("/orderSeckillVoucher")
     public Result orderSeckillVoucher(@RequestParam("id") Long voucherId, @RequestParam("userId") Long userId) {
-        return voucherService.seckillVoucher(voucherId, userId);
+        return Result.ok(voucherService.seckillVoucher(voucherId, userId));
     }
     /**
      * 购买优惠券(ai代买)
      */
     @PostMapping("/orderVoucher")
     public Result orderVoucher(@RequestParam("id") Long voucherId,@RequestParam("userId") Long userId) {
-        return voucherService.buyVoucher(voucherId, userId);
+        return Result.ok(voucherService.buyVoucher(voucherId, userId));
     }
 
     /**
@@ -188,15 +190,15 @@ public class VoucherController extends BaseController {
      * @return
      */
     @PostMapping("/{voucherId}")
-    public R<Boolean> updateVoucherStatus(@PathVariable("voucherId") Long voucherId) {
-        return seckillVoucherService.updateSeckillVoucherByVoucherId(voucherId);
+    public R<Boolean> updateSeckillVoucherByVoucherId(@PathVariable("voucherId") Long voucherId) {
+        return R.ok(seckillVoucherService.updateSeckillVoucherByVoucherId(voucherId));
     }
     /**
      * 恢复秒杀券库存
      */
     @PostMapping("/recover/{id}")
     R<Boolean> recoverVoucherStock(@PathVariable("id") Long voucherId){
-        return seckillVoucherService.recoverVoucherStock(voucherId);
+        return R.ok(seckillVoucherService.recoverVoucherStock(voucherId));
     }
     @PostMapping("/listSeckillVoucherByVoucher")
     public List<Voucher> listSeckillVoucher(@RequestBody Voucher voucher) {

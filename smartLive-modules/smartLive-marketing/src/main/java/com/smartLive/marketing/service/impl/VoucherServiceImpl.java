@@ -13,9 +13,11 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.marketing.domain.SeckillVoucher;
 import com.smartLive.marketing.service.ISeckillVoucherService;
 import com.smartLive.marketing.until.RedisIdWorker;
@@ -51,6 +53,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     private VoucherMapper voucherMapper;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RedisService redisService;
 
     @Resource
     private ISeckillVoucherService seckillVoucherService;
@@ -219,12 +223,17 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @return
      */
     @Override
-    public Result seckillVoucher(Long voucherId, Long userId) {
+    public Long seckillVoucher(Long voucherId, Long userId) {
         //获取订单id
         Long orderId = redisIdWorker.nextId("order");
         //1.执行lua脚本
-        Long result = stringRedisTemplate.execute(
-                SECKILL_SCRIPT,
+//        Long result = stringRedisTemplate.execute(
+//                SECKILL_SCRIPT,
+//                Collections.emptyList(),
+//                voucherId.toString(),
+//                userId.toString(),
+//                String.valueOf(orderId));
+        Long result = redisService.executeScript(SECKILL_SCRIPT,
                 Collections.emptyList(),
                 voucherId.toString(),
                 userId.toString(),
@@ -235,9 +244,11 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             //2.1 不为0，代表没有购买资格
             switch (r){
                 case 1:
-                    return Result.fail("库存不足");
+                    throw new BusinessException("库存不足");
                 case 2:
-                    return Result.fail("不能重复下单");
+                    throw new BusinessException("不能重复下单");
+                case 3:
+                    throw new BusinessException("活动结束");
             }
         }
         //创建订单
@@ -268,7 +279,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         //获取事务代理对象
         proxy= (IVoucherService) AopContext.currentProxy();
         //3 返回订单id
-        return Result.ok(orderId);
+        return orderId;
     }
 
 
@@ -278,7 +289,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @return
      */
     @Override
-    public Result buyVoucher(Long voucherId, Long userId) {
+    public Long buyVoucher(Long voucherId, Long userId) {
         //获取订单id
         Long orderId = redisIdWorker.nextId("order");
         VoucherOrderDTO voucherOrder = new VoucherOrderDTO();
@@ -301,7 +312,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 //        });
 //        save(voucherOrder);
         //6.返回订单id
-        return Result.ok(voucherOrder.getId());
+        return voucherOrder.getId();
     }
     /**
      * 根据店铺查询优惠券列表
@@ -310,11 +321,11 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @return
      */
     @Override
-    public Result queryVoucherOfShop(Long shopId) {
+    public List<Voucher> queryVoucherOfShop(Long shopId) {
         // 查询优惠券信息
         List<Voucher> vouchers = getBaseMapper().queryVoucherOfShop(shopId);
         // 返回结果
-        return Result.ok(vouchers);
+        return vouchers;
     }
 
     /**
@@ -335,7 +346,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         seckillVoucherService.save(seckillVoucher);
         //把秒杀库存写入redis
         String key= RedisConstants.SECKILL_STOCK_KEY + voucher.getId();
-        stringRedisTemplate.opsForValue().set(key, voucher.getStock().toString());
+        redisService.setCacheObject(key, voucher.getStock());
     }
 
     /**

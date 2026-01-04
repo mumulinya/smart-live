@@ -21,7 +21,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param id 优惠券主键
      * @return 优惠券
      */
-    public Voucher selectVoucherById(Long id);
+     Voucher selectVoucherById(Long id);
 
     /**
      * 查询优惠券列表
@@ -29,7 +29,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param voucher 优惠券
      * @return 优惠券集合
      */
-    public List<Voucher> selectVoucherList(Voucher voucher);
+     List<Voucher> selectVoucherList(Voucher voucher);
 
     /**
      * 新增优惠券
@@ -37,7 +37,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param voucher 优惠券
      * @return 结果
      */
-    public int insertVoucher(Voucher voucher);
+     int insertVoucher(Voucher voucher);
 
     /**
      * 修改优惠券
@@ -45,7 +45,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param voucher 优惠券
      * @return 结果
      */
-    public int updateVoucher(Voucher voucher);
+     int updateVoucher(Voucher voucher);
 
     /**
      * 批量删除优惠券
@@ -53,7 +53,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param ids 需要删除的优惠券主键集合
      * @return 结果
      */
-    public int deleteVoucherByIds(Long[] ids);
+     int deleteVoucherByIds(Long[] ids);
 
     /**
      * 删除优惠券信息
@@ -61,14 +61,14 @@ public interface IVoucherService extends IService<Voucher>
      * @param id 优惠券主键
      * @return 结果
      */
-    public int deleteVoucherById(Long id);
+     int deleteVoucherById(Long id);
 
     /**
      * 根据店铺查询优惠券列表
      * @param shopId
      * @return
      */
-    Result queryVoucherOfShop(Long shopId);
+    List<Voucher> queryVoucherOfShop(Long shopId);
 
     /**
      * 添加秒杀券
@@ -81,7 +81,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param voucherId
      * @return
      */
-    Result seckillVoucher(Long voucherId, Long userId);
+    Long seckillVoucher(Long voucherId, Long userId);
 
 
     /**
@@ -89,7 +89,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param voucherId
      * @return
      */
-    Result buyVoucher(Long voucherId, Long userId);
+    Long buyVoucher(Long voucherId, Long userId);
 
     /**
      * 查询店铺的优惠券列表
