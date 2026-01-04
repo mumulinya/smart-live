@@ -1,4 +1,5 @@
 package com.smartLive.interaction.controller;
+
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.service.IStarService;
@@ -40,7 +41,11 @@ public class StarController {
         Boolean isStar = starService.isStar(star);
         return Result.ok(isStar);
     }
-    //获取收藏列表
+    /**
+     * 获取收藏列表
+     * @param
+     * @return
+     */
     @GetMapping("/starList")
     public Result getStars(Star star, @RequestParam("current") Integer current){
         return Result.ok(starService.getStarList(star, current));

@@ -74,7 +74,7 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
         if(update){
             //恢复redis的库存
             String stockKey = RedisConstants.SECKILL_STOCK_KEY + voucherId;
-            redisService.increment(stockKey);
+            redisService.incrementCacheValue(stockKey);
             //更新es数据
             voucherService.publish(new String[]{voucherId.toString()});
         }

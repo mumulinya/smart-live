@@ -101,14 +101,11 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                     .eq(Like::getSourceId, like.getSourceId()));
             if (isDelete) {
                 //删除用户点赞信息
-//                stringRedisTemplate.opsForZSet().remove(key, userId.toString());
                 redisService.removeCacheZSetObject(key, userId.toString());
                 //记录点赞数量
-//                stringRedisTemplate.opsForValue().decrement(likedCountKeyPrefix+ like.getSourceId());
-                redisService.decrement(likedCountKeyPrefix+ like.getSourceId());
+                redisService.decrementCacheValue(likedCountKeyPrefix+ like.getSourceId());
                 //记录脏数据
-//                stringRedisTemplate.opsForSet().add(likeDirtyKeyPrefix, like.getSourceId().toString());
-                redisService.addCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
+                redisService.setCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
             }
         }else{
             like.setUserId(userId);
@@ -118,20 +115,13 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             //保存用户点赞信息到redis的set集合 zadd key value score
             if (isSuccess) {
                 //保存用户点赞信息
-//                stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(key, userId.toString(), System.currentTimeMillis());
                 //记录点赞数量
-//                stringRedisTemplate.opsForValue().increment(likedCountKeyPrefix+ like.getSourceId());
-                redisService.increment(likedCountKeyPrefix+ like.getSourceId());
+                redisService.incrementCacheValue(likedCountKeyPrefix+ like.getSourceId());
                 //记录脏数据
-//                stringRedisTemplate.opsForSet().add(likeDirtyKeyPrefix, like.getSourceId().toString());
-                redisService.addCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
+                redisService.setCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
             }
         }
-        //清空缓存
-//        flashRedisBlogCache(id);
-//        flashRedisBlogListCache();
-//        return Result.ok("点赞成功");
         return true;
     }
 
@@ -180,7 +170,6 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         String likeKeyPrefix = likeTypeEnum.getLikeKeyPrefix();
         String key = likeKeyPrefix + like.getSourceId();
         //查询top5的点赞数 zrange key 0 4
-//        Set<String> top5 = stringRedisTemplate.opsForZSet().range(key, 0, 4);
         Set<Object> top5 =redisService.getCacheZSetRange(key, 0, 4);
         if (top5 == null || top5.isEmpty()) {
             return null;
@@ -217,7 +206,6 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
 //        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
         //判断是否关注 从redis的zSet集合中查询
         //如果分数不为 null，说明元素存在（已关注）；如果为 null，说明不存在（未关注）
-//        Boolean isLike = stringRedisTemplate.opsForZSet().score(key, userId.toString()) != null;
         Boolean isLike = redisService.getCacheZSetScore(key, userId.toString()) != null;
         return isLike;
     }

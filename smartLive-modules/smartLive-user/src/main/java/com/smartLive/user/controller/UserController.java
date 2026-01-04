@@ -1,12 +1,7 @@
 package com.smartLive.user.controller;
 
 import java.util.List;
-import java.util.Map;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import cn.hutool.core.bean.BeanUtil;
-import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.UserDTO;
@@ -14,7 +9,6 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.service.IUserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
@@ -41,9 +35,6 @@ public class UserController extends BaseController
 
     @Autowired
     private IUserInfoService userInfoService;
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-
     /**
      * 分页查询用户列表
      */
@@ -134,7 +125,9 @@ public class UserController extends BaseController
     public AjaxResult allPublish(@PathVariable String[] ids) {
         return success(userService.publish(ids));
     }
-
+    /**
+     * 获取用户详情
+     */
     @GetMapping("/info/{id}")
     public Result info(@PathVariable("id") Long userId){
         // 查询详情
@@ -148,7 +141,9 @@ public class UserController extends BaseController
         // 返回
         return Result.ok(info);
     }
-
+    /**
+     * 获取当前用户信息
+     */
     @GetMapping("/me")
     public Result me(){
         UserDTO userDTO = UserContextHolder.getUser();
@@ -162,24 +157,32 @@ public class UserController extends BaseController
     public Result getUserById(@PathVariable("id") Long userId) {
         return Result.ok(userService.queryUserById(userId));
     }
-
-    //获取用户信息
+    /**
+     * 根据手机号查询用户详情
+     */
     @GetMapping("/user/info/{phone}")
     R<User> getUserInfoByPhone(@PathVariable("phone") String phone){
         User user = userService.getUserInfoByPhone(phone);
         return R.ok(user);
     }
+    /**
+     * 创建用户
+     */
     @PostMapping("/user/create/{phone}")
     R<User> createUserByPhone(@PathVariable("phone") String phone){
         User user = userService.createUserByPhone(phone);
         return R.ok(user);
     }
-    //根据用户id列表查询用户列表
+    /**
+     * 根据id查询用户列表
+     */
     @GetMapping("/user/userListByIds")
     R<List<User>> getUserList(@RequestParam("userIdList") List<Long> userIdList){
         return R.ok(userService.getUserList(userIdList));
     }
-    //根据用户id查询用户信息
+    /**
+     * 根据id查询用户
+     */
     @GetMapping("/user/{id}")
     R<User> queryUserById(@PathVariable("id") Long id){
         User user = userService.queryUserById(id);
@@ -195,6 +198,9 @@ public class UserController extends BaseController
         user.setId(userId);
         return Result.ok(userService.updateUser(user));
     }
+    /**
+     * 获取用户统计信息
+     */
     @GetMapping("/stats/{userId}")
     public Result getStats(@PathVariable("userId") Long userId){
         return Result.ok(userService.getStats(userId));

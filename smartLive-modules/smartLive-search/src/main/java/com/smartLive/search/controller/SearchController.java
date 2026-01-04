@@ -33,8 +33,6 @@ import java.util.*;
 public class SearchController {
     @Autowired
     private ISearchService searchService;
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private RedisService redisService;
     @Autowired
@@ -153,8 +151,6 @@ public class SearchController {
     public Result getSearchHistory(@RequestParam("userId") Long userId) {
         try {
             String key = "search:history:" + userId;
-//            Set<String> history = stringRedisTemplate.opsForZSet()
-//                    .reverseRange(key, 0, 9);
             Set<Object> history = redisService.getCacheZSetReverseRange(key, 0, 9);
             return Result.ok(new ArrayList<>(history));
         } catch (Exception e) {
@@ -166,7 +162,6 @@ public class SearchController {
     public Result clearSearchHistory(@RequestParam("userId") Long userId) {
         try {
             String key = "search:history:" + userId;
-//            stringRedisTemplate.delete(key);
             redisService.deleteObject(key);
             return Result.ok("搜索历史已清空");
         } catch (Exception e) {
@@ -179,8 +174,6 @@ public class SearchController {
     public Result getHotSearch() {
         try {
             String key = "search:hot:keywords";
-//            Set<ZSetOperations.TypedTuple<String>> hotKeywords = stringRedisTemplate.opsForZSet()
-//                    .reverseRangeWithScores(key, 0, 9);
             Set<ZSetOperations.TypedTuple<String>> hotKeywords = redisService.getCacheZSetReverseRangeWithScores(key, 0, 9);
             // 转换为前端需要的格式
             List<String> result = new ArrayList<>();

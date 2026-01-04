@@ -10,7 +10,6 @@ import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.interaction.domain.Comment;
-import com.smartLive.interaction.domain.CommentDTO;
 import com.smartLive.interaction.service.ICommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -151,7 +150,7 @@ public class CommentController extends BaseController
      * @return
      */
     @PostMapping("/saveAiCreateComment")
-    public Result saveAiCreateComment(@RequestBody List<CommentDTO> comments){
+    public Result saveAiCreateComment(@RequestBody List<Comment> comments){
         return Result.ok(commentService.saveAiCreateComment(comments));
     }
 

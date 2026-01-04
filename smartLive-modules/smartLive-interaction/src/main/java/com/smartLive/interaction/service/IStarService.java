@@ -1,7 +1,6 @@
 package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.domain.vo.ResourceVO;
 

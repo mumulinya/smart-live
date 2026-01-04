@@ -1,16 +1,13 @@
 package com.smartLive.marketing.service;
 
 import java.util.List;
-
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.domain.Voucher;
 
 /**
  * 优惠券Service接口
  * 
- * @author ruoyi
+ * @author 木木林
  * @date 2025-09-21
  */
 public interface IVoucherService extends IService<Voucher>

@@ -1,6 +1,5 @@
 package com.smartLive.shop.service;
 
-
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.domain.ShopType;
@@ -10,7 +9,7 @@ import com.smartLive.shop.domain.ShopType;
  *  服务类
  * </p>
  *
- * @author 虎哥
+ * @author 木木林
  * @since 2021-12-22
  */
 public interface IShopTypeService extends IService<ShopType> {

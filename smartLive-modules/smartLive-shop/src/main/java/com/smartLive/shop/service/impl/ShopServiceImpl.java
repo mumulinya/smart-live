@@ -55,12 +55,10 @@ import jakarta.annotation.Resource;
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
     @Autowired
     private ShopMapper shopMapper;
-
     @Autowired
     private IShopTypeService shopTypeService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
-
     @Autowired
     private ExecutorService executorService;
     @Autowired

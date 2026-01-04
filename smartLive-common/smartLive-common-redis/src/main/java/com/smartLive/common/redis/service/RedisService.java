@@ -116,7 +116,7 @@ public class RedisService
      * @param key 缓存键值
      * @return 自增后的值 (new value)
      */
-    public Long increment(final String key)
+    public Long incrementCacheValue(final String key)
     {
         return redisTemplate.opsForValue().increment(key);
     }
@@ -128,7 +128,7 @@ public class RedisService
      * @param delta 自增步长
      * @return 自增后的值
      */
-    public Long increment(final String key, long delta)
+    public Long incrementCacheValue(final String key, long delta)
     {
         return redisTemplate.opsForValue().increment(key, delta);
     }
@@ -139,7 +139,7 @@ public class RedisService
      * @param key 缓存键值
      * @return 自减后的值 (new value)
      */
-    public Long decrement(final String key)
+    public Long decrementCacheValue(final String key)
     {
         return redisTemplate.opsForValue().decrement(key);
     }
@@ -151,7 +151,7 @@ public class RedisService
      * @param delta 自减步长
      * @return 自减后的值
      */
-    public Long decrement(final String key, long delta)
+    public Long decrementCacheValue(final String key, long delta)
     {
         return redisTemplate.opsForValue().decrement(key, delta);
     }
@@ -241,7 +241,18 @@ public class RedisService
         }
         return setOperation;
     }
-
+    /**
+     * 向 Set 缓存中添加单个数据
+     * 对应 Redis 命令: SADD key member
+     *
+     * @param key   缓存键值
+     * @param value 缓存的数据
+     * @return 成功添加的数量 (1表示新添加，0表示已存在)
+     */
+    public <T> Long setCacheSet(final String key, final T value)
+    {
+        return redisTemplate.opsForSet().add(key, value);
+    }
     /**
      * 获得缓存的set
      *
@@ -251,18 +262,6 @@ public class RedisService
     public <T> Set<T> getCacheSet(final String key)
     {
         return redisTemplate.opsForSet().members(key);
-    }
-    /**
-     * 向 Set 缓存中添加单个数据
-     * 对应 Redis 命令: SADD key member
-     *
-     * @param key   缓存键值
-     * @param value 缓存的数据
-     * @return 成功添加的数量 (1表示新添加，0表示已存在)
-     */
-    public <T> Long addCacheSet(final String key, final T value)
-    {
-        return redisTemplate.opsForSet().add(key, value);
     }
     /**
      * 缓存ZSet (批量添加)

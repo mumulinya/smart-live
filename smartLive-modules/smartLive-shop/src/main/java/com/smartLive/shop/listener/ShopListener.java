@@ -1,4 +1,5 @@
 package com.smartLive.shop.listener;
+
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.shop.service.IShopService;
 import lombok.extern.slf4j.Slf4j;

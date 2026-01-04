@@ -12,7 +12,6 @@ import com.smartLive.marketing.api.RemoteMarketingService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.api.dto.VoucherDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -21,7 +20,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import com.smartLive.order.mapper.VoucherOrderMapper;
@@ -45,6 +43,23 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private RemoteMarketingService remoteMarketingService;
+
+    @Resource
+    private RedissonClient redissonClient;
+
+
+    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
+    /**
+     * 释放锁脚本初始化
+     */
+    static {
+        SECKILL_SCRIPT = new DefaultRedisScript<>();
+        SECKILL_SCRIPT.setLocation(new ClassPathResource("seckill.lua"));
+        SECKILL_SCRIPT.setResultType(Long.class);
+    }
+    private IVoucherOrderService proxy;
 
     /**
      * 查询优惠券订单表
@@ -130,25 +145,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     {
         return voucherOrderMapper.deleteVoucherOrderById(id);
     }
-
-
-    @Autowired
-    private RemoteMarketingService remoteMarketingService;
-
-    @Resource
-    private RedissonClient redissonClient;
-
-
-    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
-    /**
-     * 释放锁脚本初始化
-     */
-    static {
-        SECKILL_SCRIPT = new DefaultRedisScript<>();
-        SECKILL_SCRIPT.setLocation(new ClassPathResource("seckill.lua"));
-        SECKILL_SCRIPT.setResultType(Long.class);
-    }
-    private IVoucherOrderService proxy;
 
     /**
      * 处理订单

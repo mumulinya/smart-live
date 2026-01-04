@@ -1,10 +1,7 @@
 package com.smartLive.shop.service;
 
 import java.util.List;
-
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.domain.Shop;
 
 /**

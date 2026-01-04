@@ -1,12 +1,8 @@
 package com.smartLive.blog.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.blog.domain.Blog;
 import com.smartLive.blog.service.IBlogService;
-import com.smartLive.common.core.constant.SystemConstants;
-import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
@@ -17,9 +13,7 @@ import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +29,6 @@ public class BlogController extends BaseController
 {
     @Autowired
     private IBlogService blogService;
-
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 查询博客列表

@@ -2,10 +2,7 @@ package com.smartLive.blog.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.blog.domain.Blog;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.ScrollResult;
-import com.smartLive.common.core.web.domain.Result;
-
 import java.util.List;
 import java.util.Map;
 

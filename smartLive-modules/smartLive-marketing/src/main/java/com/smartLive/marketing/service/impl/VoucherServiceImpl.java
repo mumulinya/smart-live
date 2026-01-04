@@ -15,7 +15,6 @@ import com.smartLive.common.core.domain.EsInsertRequest;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.marketing.domain.SeckillVoucher;
@@ -29,20 +28,18 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import com.smartLive.marketing.mapper.VoucherMapper;
 import com.smartLive.marketing.domain.Voucher;
 import com.smartLive.marketing.service.IVoucherService;
 import org.springframework.transaction.annotation.Transactional;
-
 import jakarta.annotation.Resource;
 
 /**
  * 优惠券Service业务层处理
  *
- * @author ruoyi
+ * @author 木木林
  * @date 2025-09-21
  */
 @Service
@@ -51,8 +48,6 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 {
     @Autowired
     private VoucherMapper voucherMapper;
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private RedisService redisService;
 

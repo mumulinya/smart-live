@@ -1,18 +1,15 @@
 package com.smartLive.interaction.service.impl;
+
 import java.util.*;
 import java.util.stream.Collectors;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.FeedTypeEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.IdentityTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
@@ -21,13 +18,10 @@ import com.smartLive.interaction.mapper.FollowMapper;
 import com.smartLive.interaction.service.IFollowService;
 import com.smartLive.interaction.strategy.identity.IdentityStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
-import com.smartLive.user.api.RemoteAppUserService;
-import com.smartLive.user.api.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import jakarta.annotation.Resource;
+
 
 /**
  * 关注Service业务层处理
@@ -42,12 +36,6 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     @Autowired
     private FollowMapper followMapper;
 
-
-    @Resource
-    StringRedisTemplate stringRedisTemplate;
-
-    @Autowired
-    private RemoteAppUserService remoteAppUserService;
     /**
      * 策略模式
      */
@@ -164,9 +152,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             boolean save = save(follow);
             if (save) {
                 //关注成功，添加关注到redis
-//                stringRedisTemplate.opsForZSet().add(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
-//                stringRedisTemplate.opsForZSet().add(targetFansKey, userId.toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(targetFansKey, userId.toString(), System.currentTimeMillis());
             }
             return save;
@@ -250,8 +236,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return;
         }
         String fansKey = followType.getFansKeyPrefix() + feedEventDTO.getSourceId();
-        Set<String> userIdSet= stringRedisTemplate.opsForZSet().range(fansKey, 0, -1);
-        List<Long> userIdList = userIdSet.stream().map(Long::valueOf).collect(Collectors.toList());
+        Set<Object> userIdSet= redisService.getCacheZSetRange(fansKey, 0, -1);
+        List<Long> userIdList = userIdSet.stream().map(obj -> (Long) obj).collect(Collectors.toList());
         //推送笔记id给所有粉丝
         // 查询笔记作者下的所有粉丝
         if(userIdList.isEmpty()){
@@ -265,7 +251,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             //推送
             String feedKeyPrefix = FeedTypeEnum.getByCode(feedEventDTO.getBizType()).getFeedKeyPrefix();
             String key = feedKeyPrefix + userId;
-            stringRedisTemplate.opsForZSet().add(key, feedEventDTO.getBizId().toString(), System.currentTimeMillis());
+            redisService.setCacheZSet(key, feedEventDTO.getBizId().toString(), System.currentTimeMillis());
         }
     }
     /**

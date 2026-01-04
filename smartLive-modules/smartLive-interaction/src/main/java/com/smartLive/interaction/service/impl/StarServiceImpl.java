@@ -1,4 +1,5 @@
 package com.smartLive.interaction.service.impl;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -6,7 +7,7 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.domain.vo.ResourceVO;
 import com.smartLive.interaction.mapper.StarMapper;
@@ -14,9 +15,7 @@ import com.smartLive.interaction.service.IStarService;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +32,8 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
 {
     @Autowired
     private StarMapper starMapper;
-
-
-    @Resource
-    StringRedisTemplate stringRedisTemplate;
-
+    @Autowired
+    private RedisService redisService;
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
@@ -145,14 +141,14 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             boolean save = save(star);
             if (save) {
                 //收藏成功，添加收藏到redis
-                stringRedisTemplate.opsForZSet().add(key, star.getSourceId().toString(), System.currentTimeMillis());
+                redisService.setCacheZSet(key, star.getSourceId().toString(), System.currentTimeMillis());
             }
         }else{
             //取消收藏
             boolean remove = remove(new QueryWrapper<Star>().eq("user_id", userId).eq("source_type", star.getSourceType()).eq("source_id", star.getSourceId()));
             if (remove) {
                 //取消收藏成功成功，从redis中删除收藏
-                stringRedisTemplate.opsForZSet().remove(key, star.getSourceId().toString());
+                redisService.removeCacheZSetObject(key, star.getSourceId().toString());
             }
         }
         return true;
@@ -180,7 +176,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         }
         String key =resourceType.getCollectKeyPrefix()+userId;
         //判断是否关注 从redis的set集合中查询
-        Boolean isMember = stringRedisTemplate.opsForZSet().score(key, star.getSourceId().toString()) != null;
+        Boolean isMember = redisService.getCacheZSetScore(key, star.getSourceId().toString()) != null;
 //        //判断是否关注 从数据库中查询
 //        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
         return isMember;

@@ -4,7 +4,6 @@ import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.annotation.Resource;
 
 /**

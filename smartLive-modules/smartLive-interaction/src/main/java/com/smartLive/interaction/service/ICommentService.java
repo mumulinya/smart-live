@@ -1,9 +1,7 @@
 package com.smartLive.interaction.service;
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.domain.Comment;
-import com.smartLive.interaction.domain.CommentDTO;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.smartLive.interaction.domain.Comment;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +18,7 @@ public interface ICommentService extends IService<Comment> {
      * @param id 评论主键
      * @return 评论
      */
-    public Comment selectCommentById(Long id);
+     Comment selectCommentById(Long id);
 
     /**
      * 查询评论列表
@@ -28,7 +26,7 @@ public interface ICommentService extends IService<Comment> {
      * @param comment 评论
      * @return 评论集合
      */
-    public List<Comment> selectCommentList(Comment comment);
+     List<Comment> selectCommentList(Comment comment);
 
     /**
      * 新增评论
@@ -36,7 +34,7 @@ public interface ICommentService extends IService<Comment> {
      * @param comment 评论
      * @return 结果
      */
-    public int insertComment(Comment comment);
+     int insertComment(Comment comment);
 
     /**
      * 修改评论
@@ -44,7 +42,7 @@ public interface ICommentService extends IService<Comment> {
      * @param comment 评论
      * @return 结果
      */
-    public int updateComment(Comment comment);
+     int updateComment(Comment comment);
 
     /**
      * 批量删除评论
@@ -52,7 +50,7 @@ public interface ICommentService extends IService<Comment> {
      * @param ids 需要删除的评论主键集合
      * @return 结果
      */
-    public int deleteCommentByIds(Long[] ids);
+     int deleteCommentByIds(Long[] ids);
 
     /**
      * 删除评论信息
@@ -60,7 +58,7 @@ public interface ICommentService extends IService<Comment> {
      * @param id 评论主键
      * @return 结果
      */
-    public int deleteCommentById(Long id);
+     int deleteCommentById(Long id);
 
     /**
      * 获取评论列表
@@ -108,7 +106,7 @@ public interface ICommentService extends IService<Comment> {
      * @param comments
      * @return
      */
-    Boolean saveAiCreateComment(List<CommentDTO> comments);
+    Boolean saveAiCreateComment(List<Comment> comments);
 
     /**
      * 获取用户发表的评论数

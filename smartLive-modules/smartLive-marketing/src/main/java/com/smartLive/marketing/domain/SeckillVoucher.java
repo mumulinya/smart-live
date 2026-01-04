@@ -7,9 +7,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -17,7 +15,7 @@ import java.util.Date;
  * 秒杀优惠券表，与优惠券是一对一关系
  * </p>
  *
- * @author 虎哥
+ * @author 木木林
  * @since 2022-01-04
  */
 @Data

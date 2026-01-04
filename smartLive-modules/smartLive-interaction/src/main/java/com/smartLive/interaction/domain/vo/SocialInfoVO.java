@@ -2,7 +2,6 @@ package com.smartLive.interaction.domain.vo;
 
 import lombok.Builder;
 import lombok.Data;
-
 import java.util.Map;
 
 @Data

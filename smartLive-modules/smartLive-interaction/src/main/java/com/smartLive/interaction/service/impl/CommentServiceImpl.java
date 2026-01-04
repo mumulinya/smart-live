@@ -1,4 +1,5 @@
 package com.smartLive.interaction.service.impl;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.alibaba.fastjson.JSON;
@@ -12,10 +13,9 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.Comment;
-import com.smartLive.interaction.domain.CommentDTO;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
@@ -26,11 +26,10 @@ import com.smartLive.user.api.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -53,14 +52,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Autowired
     private RemoteShopService remoteShopService;
-
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 查询评论
@@ -175,7 +172,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         //获取是否有ai生成评论
         String key = RedisConstants.CACHE_AI_COMMENT_KEY + comment.getSourceType() + ":" + comment.getSourceId();
-        String JsonStr = stringRedisTemplate.opsForValue().get(key);
+        String JsonStr = redisService.getCacheObject(key);
         if (JsonStr != null) {
             Comment commentDTO = JSON.parseObject(JsonStr, Comment.class);
             list.add(commentDTO);
@@ -200,11 +197,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
             String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
             //保存评论信息
-            stringRedisTemplate.opsForZSet().add(commentKeyPrefix, comment.getId().toString(), System.currentTimeMillis());
+            redisService.setCacheZSet(commentKeyPrefix, comment.getId().toString(), System.currentTimeMillis());
             //记录评论数量
-            stringRedisTemplate.opsForValue().increment(commentCountKeyPrefix);
+            redisService.incrementCacheValue(commentCountKeyPrefix);
             //记录脏数据
-            stringRedisTemplate.opsForSet().add(commentDirtyKeyPrefix, comment.getSourceId().toString());
+            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getId().toString()));
         }
         return i;
     }
@@ -223,12 +220,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             String commentKeyPrefix = commentType.getCommentKeyPrefix()+ comment.getSourceId();
             String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
             String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
-            //保存评论信息
-            stringRedisTemplate.opsForZSet().remove(commentKeyPrefix, comment.getId().toString());
+            //删除评论信息
+            redisService.removeCacheZSetObject(commentKeyPrefix, comment.getId().toString());
             //记录评论数量
-            stringRedisTemplate.opsForValue().decrement(commentCountKeyPrefix);
+            redisService.decrementCacheValue(commentCountKeyPrefix);
             //记录脏数据
-            stringRedisTemplate.opsForSet().add(commentDirtyKeyPrefix, comment.getSourceId().toString());
+            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getId().toString()));
         }
         return i;
     }
@@ -279,17 +276,17 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return
      */
     @Override
-    public Boolean saveAiCreateComment(List<CommentDTO> comments) {
+    public Boolean saveAiCreateComment(List<Comment> comments) {
         if (comments.size() == 0) {
             throw new RuntimeException("请传入数据");
         }
         //清空redis缓存
-        stringRedisTemplate.delete(RedisConstants.CACHE_AI_COMMENT_KEY);
+        redisService.deleteObject(redisService.keys(RedisConstants.CACHE_AI_COMMENT_KEY + "*"));
         comments.forEach(commentDTO -> {
             String key = RedisConstants.CACHE_AI_COMMENT_KEY + commentDTO.getSourceType() + ":" + commentDTO.getSourceId();
-            stringRedisTemplate.opsForValue().set(key, JSON.toJSONString(commentDTO));
+            redisService.setCacheObject(key, JSON.toJSONString(commentDTO));
             //设置过期时间
-//            stringRedisTemplate.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
+//          redisService.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
         });
         return true;
     }

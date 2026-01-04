@@ -16,7 +16,6 @@ import com.smartLive.common.core.domain.*;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteLikeService;
@@ -29,11 +28,8 @@ import com.smartLive.user.api.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-
-import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -53,11 +49,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 {
     @Autowired
     private BlogMapper blogMapper;
-
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
-
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
@@ -812,7 +803,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     private void flashRedisBlogCache(Long blogId) {
         //清空缓存
-//        stringRedisTemplate.delete(RedisConstants.CACHE_BLOG_KEY+blogId);
         redisService.deleteObject(RedisConstants.CACHE_BLOG_TYPE_KEY+blogId);
     }
     /**
@@ -821,8 +811,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param
      */
     private void flashRedisBlogListCache() {
-//        deleteByPrefix(RedisConstants.CACHE_BLOG_TYPE_KEY);
-//        deleteByPrefix(RedisConstants.CACHE_HOT_BLOG_KEY);
         redisService.deleteObject(redisService.keys(RedisConstants.CACHE_BLOG_TYPE_KEY+"*"));
         redisService.deleteObject(redisService.keys(RedisConstants.CACHE_HOT_BLOG_KEY+"*"));
     }
