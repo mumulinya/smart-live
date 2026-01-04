@@ -2,16 +2,11 @@ package com.smartLive.search.service.Impl;
 
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.search.domain.req.FilterSearchRequest;
 import com.smartLive.search.service.ISearchService;
 import com.smartLive.search.utils.EsTool;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -23,17 +18,13 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
-import org.elasticsearch.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-
 import jakarta.annotation.Resource;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 @Service
 @Slf4j
@@ -43,6 +34,8 @@ public class SearchServiceImpl implements ISearchService {
     private RestHighLevelClient client;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RedisService redisService;
     /**
      * 简单搜索
      */
@@ -176,15 +169,18 @@ public class SearchServiceImpl implements ISearchService {
         String key = RedisConstants.SEARCH_HISTORY_KEY + userId;
         double score = System.currentTimeMillis();
         // 先删除已存在的相同关键词
-        stringRedisTemplate.opsForZSet().remove(key, keyword);
+//        stringRedisTemplate.opsForZSet().remove(key, keyword);
+        redisService.removeCacheZSetObject(key, keyword);
         // 添加新记录
-        stringRedisTemplate.opsForZSet().add(key, keyword, score);
+//        stringRedisTemplate.opsForZSet().add(key, keyword, score);
+        redisService.setCacheZSet(key, keyword, score);
 
         // 保持最近10条
-        stringRedisTemplate.opsForZSet().removeRange(key, 0, -11);
-
+//        stringRedisTemplate.opsForZSet().removeRange(key, 0, -11);
+        redisService.removeRangeCacheZSetObject(key, 0, -11);
         // 设置30天过期
-        stringRedisTemplate.expire(key, RedisConstants.SEARCH_HISTORY_TTL, TimeUnit.DAYS);
+//        stringRedisTemplate.expire(key, RedisConstants.SEARCH_HISTORY_TTL, TimeUnit.DAYS);
+        redisService.expire(key, RedisConstants.SEARCH_HISTORY_TTL, TimeUnit.DAYS);
         return true;
     }
     /**
@@ -193,9 +189,11 @@ public class SearchServiceImpl implements ISearchService {
     @Override
     public Boolean recordSearch(String keyword){
         String key = RedisConstants.SEARCH_HOT_KEYWORDS;
-        stringRedisTemplate.opsForZSet().incrementScore(key, keyword, 1);
+//        stringRedisTemplate.opsForZSet().incrementScore(key, keyword, 1);
+        redisService.incrementCacheZSetScore(key, keyword, 1);
         // 设置24小时过期
-        stringRedisTemplate.expire(key, RedisConstants.SEARCH_HOT_TTL, TimeUnit.HOURS);
+//        stringRedisTemplate.expire(key, RedisConstants.SEARCH_HOT_TTL, TimeUnit.HOURS);
+        redisService.expire(key, RedisConstants.SEARCH_HOT_TTL, TimeUnit.HOURS);
         return true;
     }
 }

@@ -20,12 +20,12 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
         DataSourceTransactionManagerAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class
 })
-public class SmartLiveESApplication
+public class SmartLiveSearchApplication
 {
     public static void main(String[] args)
     {
-        SpringApplication.run(SmartLiveESApplication.class, args);
-        System.out.println("(♥◠‿◠)ﾉﾞ  es服务模块启动成功   ლ(´ڡ`ლ)ﾞ  \n" +
+        SpringApplication.run(SmartLiveSearchApplication.class, args);
+        System.out.println("(♥◠‿◠)ﾉﾞ  搜索服务模块启动成功   ლ(´ڡ`ლ)ﾞ  \n" +
                 " .-------.       ____     __        \n" +
                 " |  _ _   \\      \\   \\   /  /    \n" +
                 " | ( ' )  |       \\  _. /  '       \n" +

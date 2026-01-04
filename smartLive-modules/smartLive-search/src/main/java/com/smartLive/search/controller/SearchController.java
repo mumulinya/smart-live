@@ -4,6 +4,7 @@ import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.dto.FollowDTO;
 import com.smartLive.search.domain.ShopDoc;
@@ -34,6 +35,8 @@ public class SearchController {
     private ISearchService searchService;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RedisService redisService;
     @Autowired
     private RemoteFollowService remoteFollowService;
 
@@ -150,9 +153,9 @@ public class SearchController {
     public Result getSearchHistory(@RequestParam("userId") Long userId) {
         try {
             String key = "search:history:" + userId;
-            Set<String> history = stringRedisTemplate.opsForZSet()
-                    .reverseRange(key, 0, 9);
-
+//            Set<String> history = stringRedisTemplate.opsForZSet()
+//                    .reverseRange(key, 0, 9);
+            Set<Object> history = redisService.getCacheZSetReverseRange(key, 0, 9);
             return Result.ok(new ArrayList<>(history));
         } catch (Exception e) {
             return Result.fail("获取历史搜索失败");
@@ -163,8 +166,8 @@ public class SearchController {
     public Result clearSearchHistory(@RequestParam("userId") Long userId) {
         try {
             String key = "search:history:" + userId;
-            stringRedisTemplate.delete(key);
-
+//            stringRedisTemplate.delete(key);
+            redisService.deleteObject(key);
             return Result.ok("搜索历史已清空");
         } catch (Exception e) {
             log.error("清空搜索历史失败, userId: {}", userId, e);
@@ -176,8 +179,9 @@ public class SearchController {
     public Result getHotSearch() {
         try {
             String key = "search:hot:keywords";
-            Set<ZSetOperations.TypedTuple<String>> hotKeywords = stringRedisTemplate.opsForZSet()
-                    .reverseRangeWithScores(key, 0, 9);
+//            Set<ZSetOperations.TypedTuple<String>> hotKeywords = stringRedisTemplate.opsForZSet()
+//                    .reverseRangeWithScores(key, 0, 9);
+            Set<ZSetOperations.TypedTuple<String>> hotKeywords = redisService.getCacheZSetReverseRangeWithScores(key, 0, 9);
             // 转换为前端需要的格式
             List<String> result = new ArrayList<>();
             for (ZSetOperations.TypedTuple<String> tuple : hotKeywords) {

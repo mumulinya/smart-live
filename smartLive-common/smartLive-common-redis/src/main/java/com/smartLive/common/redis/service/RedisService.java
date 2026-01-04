@@ -338,6 +338,22 @@ public class RedisService
         return redisTemplate.opsForZSet().reverseRangeByScoreWithScores(key, min, max, offset, count);
     }
     /**
+     * 获取 ZSet 数据 (倒序 + 按排名范围 + 携带分数)
+     * 对应 Redis 命令: ZREVRANGE key start stop WITHSCORES
+     *
+     * @param key   缓存键值
+     * @param start 起始索引 (0 表示第一名)
+     * @param end   结束索引 (例如 9 表示第十名)
+     * @return 包含值(String)和分数的 Tuple 集合
+     */
+    public Set<ZSetOperations.TypedTuple<String>> getCacheZSetReverseRangeWithScores(
+            final String key,
+            final long start,
+            final long end)
+    {
+        return redisTemplate.opsForZSet().reverseRangeWithScores(key, start, end);
+    }
+    /**
      * 获取有序集合(ZSet)中指定元素的分数
      *
      * @param key
@@ -376,6 +392,18 @@ public class RedisService
         return count != null ? count : 0L;
     }
     /**
+     * 给 ZSet 中的元素分数增加 (自增)
+     * 对应 Redis 命令: ZINCRBY key increment member
+     *
+     * @param key   缓存键
+     * @param value 元素 (Member)
+     * @param delta 增加的分数 (可以为负数实现自减)
+     * @return 增加后的新分数
+     */
+    public Double incrementCacheZSetScore(String key, String value, double delta) {
+        return redisTemplate.opsForZSet().incrementScore(key, value, delta);
+    }
+    /**
      * 删除 ZSet 中的指定元素 (Member)
      * 对应 Redis 命令: ZREM key member
      *
@@ -387,6 +415,20 @@ public class RedisService
     {
         Long count = redisTemplate.opsForZSet().remove(key, value);
         return count != null && count > 0;
+    }
+    /**
+     * 按索引范围删除 ZSet 中的元素
+     * 对应 Redis 命令: ZREMRANGEBYRANK key start stop
+     * 常用于定长队列，例如：只保留最新的 N 条数据
+     *
+     * @param key   缓存键
+     * @param start 起始索引
+     * @param end   结束索引
+     * @return 被删除的元素数量
+     */
+    public Long removeRangeCacheZSetObject(String key, long start, long end) {
+        Long count = redisTemplate.opsForZSet().removeRange(key, start, end);
+        return count != null ? count : 0L;
     }
     /**
      * 缓存Map
