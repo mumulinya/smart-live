@@ -10,10 +10,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.log.annotation.Log;
-import com.smartLive.user.api.RemoteAppUserService;
 import com.smartlive.chat.domain.ChatSessions;
-import com.smartlive.chat.handle.ChatWebSocketHandler;
+import com.smartlive.chat.handle.NettyChatHandler;
 import com.smartlive.chat.service.IChatMessagesService;
 import com.smartlive.chat.service.IChatSessionsService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,12 +36,12 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
     private ChatMessagesMapper chatMessagesMapper;
 
     private final IChatSessionsService chatSessionsService;
-    private final ChatWebSocketHandler chatWebSocketHandler;
+    private final NettyChatHandler nettyChatHandler;
 
     // 使用懒加载防止循环依赖
-    public ChatMessagesServiceImpl(@Lazy IChatSessionsService chatSessionsService,@Lazy ChatWebSocketHandler chatWebSocketHandle) {
+    public ChatMessagesServiceImpl(@Lazy IChatSessionsService chatSessionsService,@Lazy NettyChatHandler nettyChatHandler) {
         this.chatSessionsService = chatSessionsService;
-        this.chatWebSocketHandler = chatWebSocketHandle;
+        this.nettyChatHandler = nettyChatHandler;
     }
 
     /**
@@ -102,22 +100,18 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
      * @param fromUserId 发送方用户ID
      */
     private void batchNotifyMessagesRead(Long sessionId, Long currentUserId, Long fromUserId) {
-        try {
-            if (chatWebSocketHandler.isUserOnline(fromUserId)) {
-                Map<String, Object> batchReadNotification = Map.of(
-                        "type", "BATCH_MESSAGES_READ",
-                        "sessionId", sessionId,
-                        "readerUserId", currentUserId,
-                        "status", 1L,
-                        "timestamp", System.currentTimeMillis()
-                );
+        if (nettyChatHandler.isUserOnline(fromUserId)) {
+            Map<String, Object> batchReadNotification = Map.of(
+                    "type", "BATCH_MESSAGES_READ",
+                    "sessionId", sessionId,
+                    "readerUserId", currentUserId,
+                    "status", 1L,
+                    "timestamp", System.currentTimeMillis()
+            );
 
-                chatWebSocketHandler.sendMessageToUser(fromUserId, "MESSAGE_STATUS_UPDATE", batchReadNotification);
-                log.info("✅ 已批量通知发送方 {} 会话 {} 的所有消息已被用户 {} 阅读",
-                        fromUserId, sessionId, currentUserId);
-            }
-        } catch (IOException e) {
-            log.error("批量通知发送方消息已读失败", e);
+            nettyChatHandler.sendMessageToUser(fromUserId, "MESSAGE_STATUS_UPDATE", batchReadNotification);
+            log.info("✅ 已批量通知发送方 {} 会话 {} 的所有消息已被用户 {} 阅读",
+                    fromUserId, sessionId, currentUserId);
         }
     }
     /**
