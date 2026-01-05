@@ -5,6 +5,7 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import com.smartLive.auth.until.RegexUtils;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.LoginFormDTO;
@@ -41,29 +42,25 @@ public class UserLoginService {
         //获取传入的电话号码和验证码
         String phone = loginForm.getPhone();
         String code = loginForm.getCode();
-        // TODO 获取session中的验证码
-//        String sessionCode = (String) session.getAttribute("code");
         // TODO 从redis中获取验证码
-        String redisCode = (String) stringRedisTemplate.opsForValue().get(RedisConstants.LOGIN_CODE_KEY+ phone);
+        String redisCode = stringRedisTemplate.opsForValue().get(RedisConstants.LOGIN_CODE_KEY+ phone);
         System.out.println("redis验证码为"+redisCode);
         //判断当前电话号码是否正确
         if (RegexUtils.isPhoneInvalid( phone)) {
-            return Result.fail("手机号格式错误！");
+            throw new BusinessException("手机号格式错误！");
         }
         //判断验证码和电话号码是否一致
         if (redisCode == null || !code.equals(redisCode)) {
 //            return Result.fail("验证码错误");
         }
         //根据电话号码查询用户信息
-        R<User> userResult = remoteAppUserService.getUserInfoByPhone(phone);
-        User user = userResult.getData();
+        UserDTO user = remoteAppUserService.getUserInfoByPhone(phone);
         if (user == null) {
             //不存在 创建新用户并写入数据库
-            R<User> userByPhone = remoteAppUserService.createUserByPhone(phone);
-            if (userByPhone.getCode() == 500) {
-                return Result.fail("登录失败");
+            user= remoteAppUserService.createUserByPhone(phone);
+            if (user == null) {
+                throw new BusinessException("创建用户失败");
             }
-            user =userByPhone.getData();
         }
         // TODO 把用户信息存入redis当中
         //将User对象转换为hashMap对象存储

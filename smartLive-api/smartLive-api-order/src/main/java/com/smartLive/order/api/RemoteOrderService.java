@@ -15,12 +15,12 @@ public interface RemoteOrderService {
      * @param userId
      * @return
      */
-    @GetMapping("/voucher-order/getOrderCount/{userId}")
-    R<Integer> getOrderCount( @PathVariable("userId")Long userId);
+    @GetMapping("/inner/voucher-order/getOrderCount/{userId}")
+    Integer getOrderCount( @PathVariable("userId")Long userId);
     /**
      * 获取订单总数
      * @return
      */
-    @GetMapping("/voucher-order/getOrderTotal")
-    R<Integer> getOrderTotal();
+    @GetMapping("/inner/voucher-order/getOrderTotal")
+    Integer getOrderTotal();
 }

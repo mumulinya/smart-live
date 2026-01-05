@@ -363,7 +363,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @param voucher
      */
     void queryVoucherShopMessage(Voucher voucher){
-        ShopDTO shopDTO = remoteShopService.getShopById(voucher.getShopId()).getData();
+        ShopDTO shopDTO = remoteShopService.getShopById(voucher.getShopId());
         if(shopDTO != null){
             voucher.setShopName(shopDTO.getName());
             voucher.setTypeId(shopDTO.getTypeId());
@@ -380,8 +380,10 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     public List<Voucher> listSeckillVoucher(Voucher voucher) {
         Long shopId = voucher.getShopId();
         if(voucher.getShopName()!= null){
-            R<ShopDTO> shop = remoteShopService.getShopByShopName(voucher.getShopName());
-            shopId = shop.getData().getId();
+            ShopDTO shop = remoteShopService.getShopByShopName(voucher.getShopName());
+            if(shop != null){
+                shopId = shop.getId();
+            }
         }
         return query().eq(shopId != null,"shop_id", shopId).eq("type", 1).list();
     }
@@ -435,17 +437,15 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             // 2. 只有当 ID 列表不为空时才发起远程调用，节省资源
             if (!shopIds.isEmpty()) {
                 // 批量查询用户信息
-                R<List<ShopDTO>> response = remoteShopService.getShopList(shopIds);
+                List<ShopDTO> shopDTOList = remoteShopService.getShopList(shopIds);
                 // 3. 安全获取 List 数据 (防止远程调用返回 null 或者 data 为 null)
-                List<ShopDTO> userList = (response != null && response.getData() != null)
-                        ? response.getData()
-                        : Collections.emptyList();
                 // 4. 将 List<User> 转换为 Map<Long, User>
-                ShopDTOMap = userList.stream().collect(Collectors.toMap(
-                        ShopDTO::getId,               // Key: 用户 ID
-                        Function.identity(),       // Value: User 对象本身
-                        (v1, v2) -> v1             // MergeFunction: 如果远程服务返回了重复 ID 的数据，取第一个，防止报错
-                ));
+              if(shopDTOList != null && shopDTOList.size() > 0){
+                  ShopDTOMap = shopDTOList.stream().collect(Collectors.toMap(
+                          ShopDTO::getId,               // Key: 用户 ID
+                          Function.identity(),       // Value: User 对象本身
+                          (v1, v2) -> v1             // MergeFunction: 如果远程服务返回了重复 ID 的数据，取第一个，防止报错
+                  ));              }
             }
             Map<Long, ShopDTO> finalShopDTOMap = ShopDTOMap;
 

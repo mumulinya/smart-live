@@ -9,6 +9,7 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.User;
+import com.smartLive.user.api.domain.UserDTO;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.service.IChatMessagesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,9 +69,9 @@ public class UserSessionsServiceImpl  extends ServiceImpl<UserSessionsMapper, Us
         userSessionsList.stream().forEach(c -> {
             //获取用户信息
             Long id = c.getTargetUid();
-            R<User> user = remoteAppUserService.queryUserById(id);
-            c.setNickname(user.getData().getNickName());
-            c.setAvatar(user.getData().getIcon());
+            UserDTO user = remoteAppUserService.queryUserById(id);
+            c.setNickname(user.getNickName());
+            c.setAvatar(user.getIcon());
             //获取未读消息数量
             Long count = chatMessagesService.query()
                     .eq("session_id", c.getSessionId())

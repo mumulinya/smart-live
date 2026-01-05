@@ -5,11 +5,11 @@ import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.service.IShopTypeService;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -21,13 +21,17 @@ import java.util.List;
  * @since 2021-12-2
  */
 @RestController
-@RequestMapping("/shop-type")
-public class ShopTypeController {
+@RequestMapping("/inner/shop-type")
+public class ShopTypeInnerController {
     @Resource
     private IShopTypeService typeService;
-
-    @GetMapping("list")
-    public Result queryTypeList() {
-        return typeService.queryList();
+    /**
+     * 查询商铺类型列表
+     */
+    @GetMapping("/getShopListByType")
+    public List<ShopType> getShopTypeList(){
+        Result result = typeService.queryList();
+        List<ShopType> shopTypeList = (List<ShopType>) result.getData();
+        return shopTypeList;
     }
 }

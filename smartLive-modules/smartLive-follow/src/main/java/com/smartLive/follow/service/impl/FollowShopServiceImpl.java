@@ -194,11 +194,10 @@ public class FollowShopServiceImpl extends ServiceImpl<FollowShopMapper, FollowS
        if(shopIdList.isEmpty()){
            return Result.ok(Collections.emptyList());
        }
-        R<List<ShopDTO>> userSuccess = remoteShopService.getShopList(shopIdList);
-        if (userSuccess.getCode() != 200) {
-            return Result.fail(userSuccess.getMsg());
+        List<ShopDTO> shopList = remoteShopService.getShopList(shopIdList);
+        if (shopList.isEmpty()) {
+            return Result.ok(Collections.emptyList());
         }
-        List<ShopDTO> shopList = userSuccess.getData();
         shopList.forEach(shopDTO -> {
             //判断是否关注
             shopDTO.setIsFollow((Boolean) isFollowed(shopDTO.getId()).getData());

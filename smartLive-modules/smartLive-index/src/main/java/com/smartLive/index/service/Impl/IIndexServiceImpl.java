@@ -4,7 +4,7 @@ import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.index.domain.*;
 import com.smartLive.index.service.IIndexService;
 import com.smartLive.interaction.api.RemoteCommentService;
-import com.smartLive.marketing.api.RemoteMarketingService;
+import com.smartLive.marketing.api.RemoteVoucherService;
 import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
@@ -40,7 +40,7 @@ public class IIndexServiceImpl implements IIndexService {
     private RemoteOrderService remoteOrderService;
 
     @Autowired
-    private RemoteMarketingService remoteMarketService;
+    private RemoteVoucherService remoteMarketService;
 
     @Autowired
     private RemoteCommentService remoteCommentService;
@@ -66,21 +66,21 @@ public class IIndexServiceImpl implements IIndexService {
         //使用线程池查询店铺总数
         Future<Integer> shopCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询店铺总数",Thread.currentThread().getName());
-            Integer shopCount = remoteShopService.getShopTotal().getData();
+            Integer shopCount = remoteShopService.getShopTotal();
             latch.countDown();
             return shopCount;
         });
         //使用线程池查询代金券总数
         Future<Integer> couponCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询代金券总数",Thread.currentThread().getName());
-                    Integer couponCount = remoteMarketService.getCouponTotal().getData();
+                    Integer couponCount = remoteMarketService.getCouponTotal();
                     latch.countDown();
                     return couponCount;
                 });
         //使用线程池查询订单总数
         Future<Integer> orderCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询订单总数",Thread.currentThread().getName());
-            Integer orderCount = remoteOrderService.getOrderTotal().getData();
+            Integer orderCount = remoteOrderService.getOrderTotal();
             latch.countDown();
             return orderCount;
         });
@@ -173,7 +173,7 @@ public class IIndexServiceImpl implements IIndexService {
      */
     @Override
     public List<RecentShopVO> getRecentShops(Integer limit) {
-        List<ShopDTO> shopDTOList = remoteShopService.getRecentShops(limit).getData();
+        List<ShopDTO> shopDTOList = remoteShopService.getRecentShops(limit);
         List<RecentShopVO> recentShops = new ArrayList<>();
         for (ShopDTO shopDTO : shopDTOList) {
             RecentShopVO recentShop = new RecentShopVO();

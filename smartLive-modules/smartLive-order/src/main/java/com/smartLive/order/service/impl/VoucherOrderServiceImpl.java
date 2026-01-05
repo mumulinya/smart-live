@@ -8,7 +8,7 @@ import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
-import com.smartLive.marketing.api.RemoteMarketingService;
+import com.smartLive.marketing.api.RemoteVoucherService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
@@ -44,7 +44,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
-    private RemoteMarketingService remoteMarketingService;
+    private RemoteVoucherService remoteVoucherService;
 
     @Resource
     private RedissonClient redissonClient;
@@ -73,8 +73,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
         VoucherOrder voucherOrder = voucherOrderMapper.selectVoucherOrderById(id);
         if (voucherOrder!=null) {
-            VoucherDTO voucherDTO = (VoucherDTO) remoteMarketingService.getVoucherById(voucherOrder.getVoucherId()).getData();
-            voucherOrder.setShopId(voucherDTO.getShopId());
+            VoucherDTO voucherDTO = remoteVoucherService.getVoucherById(voucherOrder.getVoucherId());
+            if(voucherDTO!=null) {
+                voucherOrder.setShopId(voucherDTO.getShopId());
+            }
         }
         return voucherOrder;
     }
@@ -90,8 +92,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     {
         List<VoucherOrder> voucherOrderList = voucherOrderMapper.selectVoucherOrderList(voucherOrder);
         voucherOrderList.forEach(v -> {
-            VoucherDTO voucher  = remoteMarketingService.getVoucherById(v.getVoucherId()).getData();
-            v.setShopId(voucher.getShopId());
+            VoucherDTO voucher  = remoteVoucherService.getVoucherById(v.getVoucherId());
+            if(voucher!=null) {
+                v.setShopId(voucher.getShopId());
+            }
         });
         return voucherOrderList;
     }
@@ -193,8 +197,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return;
         }
         //5.扣减库存
-        R<Boolean> r = remoteMarketingService.updateVoucherById(voucherOrder.getVoucherId());
-        boolean success = r.getData();
+        Boolean success = remoteVoucherService.updateVoucherById(voucherOrder.getVoucherId());
         if(!success){
             //扣减失败
             log.error("库存不足");
@@ -266,12 +269,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         voucherOrder.setStatus(OrderStatusConstants.CANCELLED);
         int i = updateVoucherOrder(voucherOrder);
         if(i>0){
-            VoucherDTO vo = remoteMarketingService.getVoucherById(voucherOrder.getVoucherId()).getData();
+            VoucherDTO vo = remoteVoucherService.getVoucherById(voucherOrder.getVoucherId());
             if (vo.getType()==1){
                 log.info("秒杀券,准备恢复库存");
                     //秒杀券
                     //恢复库存
-                    remoteMarketingService.recoverVoucherStock(voucherOrder.getVoucherId());
+                    remoteVoucherService.recoverVoucherStock(voucherOrder.getVoucherId());
             }
         }
         return i;

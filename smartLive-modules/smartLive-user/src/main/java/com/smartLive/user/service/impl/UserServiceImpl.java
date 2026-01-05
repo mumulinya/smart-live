@@ -344,7 +344,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //获取订单数量
         Future<Integer> orderCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询订单数",Thread.currentThread().getName());
-            Integer orderCount =  remoteOrderService.getOrderCount(userId).getData();
+            Integer orderCount =  remoteOrderService.getOrderCount(userId);
             countDownLatch.countDown();
             return orderCount;
         });

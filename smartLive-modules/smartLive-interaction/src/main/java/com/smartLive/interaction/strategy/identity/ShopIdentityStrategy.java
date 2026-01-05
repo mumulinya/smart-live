@@ -29,11 +29,10 @@ public class ShopIdentityStrategy implements IdentityStrategy<ShopDTO> {
      */
     @Override
     public List<SocialInfoVO> getFollowList(List<Long> sourceIdList) {
-        R<List<ShopDTO>> r = remoteShopService.getShopList(sourceIdList);
-        if (r.getCode() != 200) {
+        List<ShopDTO> shopList = remoteShopService.getShopList(sourceIdList);
+        if (shopList == null || shopList.isEmpty()) {
             return null;
         }
-        List<ShopDTO> shopList = r.getData();
         List<SocialInfoVO> socialInfoVOList = shopList.stream().map(shop -> SocialInfoVO.builder()
                 .isFollow(true)
                 .id(shop.getId())

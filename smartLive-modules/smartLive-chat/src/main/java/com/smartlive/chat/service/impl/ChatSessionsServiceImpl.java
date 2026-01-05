@@ -8,6 +8,7 @@ import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.User;
+import com.smartLive.user.api.domain.UserDTO;
 import com.smartlive.chat.domain.UserSessions;
 import com.smartlive.chat.mapper.UserSessionsMapper;
 import com.smartlive.chat.service.IUserSessionsService;
@@ -57,9 +58,9 @@ public class ChatSessionsServiceImpl extends ServiceImpl<ChatSessionsMapper, Cha
             chatSessions.setToUid(chatSessions.getMaxUserId());
         }
         //获取接收消息用户的个人信息
-        R<User> user = remoteAppUserService.queryUserById(chatSessions.getToUid());
-        chatSessions.setContactName(user.getData().getNickName());
-        chatSessions.setContactAvatar(user.getData().getIcon());
+        UserDTO user = remoteAppUserService.queryUserById(chatSessions.getToUid());
+        chatSessions.setContactName(user.getNickName());
+        chatSessions.setContactAvatar(user.getIcon());
         return chatSessions;
     }
 

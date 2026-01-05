@@ -196,11 +196,10 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         //将字符串转换为Long类型
         List<Long> idList = common.stream().map(Long::valueOf).collect(Collectors.toList());
         //根据id查询用户
-        R<List<User>> userSuccess = remoteAppUserService.getUserList(idList);
-        if (userSuccess.getCode() != 200) {
-            return Result.fail(userSuccess.getMsg());
+        List<UserDTO> userList = remoteAppUserService.getUserList(idList);
+        if (userList == null || userList.isEmpty()) {
+            return Result.ok(Collections.emptyList());
         }
-        List<User> userList = userSuccess.getData();
         userList.forEach(user -> {
             user.setIsFollow((Boolean) isFollowed(user.getId()).getData());
         });
@@ -247,11 +246,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
        if(userIdList.isEmpty()){
            return Result.ok(Collections.emptyList());
        }
-        R<List<User>> userSuccess = remoteAppUserService.getUserList(userIdList);
-        if (userSuccess.getCode() != 200) {
-            return Result.fail(userSuccess.getMsg());
-        }
-        List<User> userList = userSuccess.getData();
+        List<UserDTO> userList = remoteAppUserService.getUserList(userIdList);
         userList.forEach(user->{
             user.setIsFollow((Boolean) isFollowed(user.getId()).getData());
         });
@@ -278,11 +273,10 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 if(followUserIdList.isEmpty()){
                     return Result.ok(Collections.emptyList());
                 }
-                R<List<User>> userSuccess = remoteAppUserService.getUserList(followUserIdList);
-                if (userSuccess.getCode() != 200) {
-                    return Result.fail(userSuccess.getMsg());
-                }
-                List<User> userList = userSuccess.getData();
+        List<UserDTO> userList = remoteAppUserService.getUserList(followUserIdList);
+        if (userList == null || userList.isEmpty()) {
+            return Result.ok(Collections.emptyList());
+        }
         return Result.ok(userList);
     }
 

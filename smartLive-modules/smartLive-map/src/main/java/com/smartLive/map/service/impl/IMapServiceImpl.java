@@ -23,8 +23,8 @@ public class IMapServiceImpl implements IMapService {
      */
     @Override
     public List<ShopTypeDTO> queryShopTypeList() {
-        R<List<ShopTypeDTO>> shopTypeListData = remoteShopService.getShopTypeList();
-        return shopTypeListData.getData();
+        List<ShopTypeDTO> shopTypeList = remoteShopService.getShopTypeList();
+        return shopTypeList;
     }
 
     /**
@@ -35,12 +35,7 @@ public class IMapServiceImpl implements IMapService {
      */
     @Override
     public List<ShopDTO> queryShopList(ShopDTO shopDTO) {
-        R<List<ShopDTO>> shopListData = remoteShopService.queryShopList(shopDTO);
-        if (R.isError(shopListData)) {
-            log.error("查询商铺列表失败: {}", shopListData.getMsg());
-            return null;
-        }
-        List<ShopDTO> data = shopListData.getData();
-        return data;
+      List<ShopDTO> shopDTOList = remoteShopService.queryShopList(shopDTO);
+        return shopDTOList;
     }
 }

@@ -1,10 +1,9 @@
 package com.smartLive.interaction.strategy.identity;
 
-import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.domain.user.User;
 import com.smartLive.common.core.enums.IdentityTypeEnum;
 import com.smartLive.interaction.domain.vo.SocialInfoVO;
 import com.smartLive.user.api.RemoteAppUserService;
+import com.smartLive.user.api.domain.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class UserIdentityStrategy implements IdentityStrategy<User> {
+public class UserIdentityStrategy implements IdentityStrategy<UserDTO> {
     @Autowired
     private RemoteAppUserService remoteAppUserService;
     /**
@@ -28,11 +27,10 @@ public class UserIdentityStrategy implements IdentityStrategy<User> {
      */
     @Override
     public List<SocialInfoVO> getFollowList(List<Long> sourceIdList) {
-        R<List<com.smartLive.user.api.domain.User>> userSuccess = remoteAppUserService.getUserList(sourceIdList);
-        if (userSuccess.getCode() != 200) {
+        List<UserDTO> userList = remoteAppUserService.getUserList(sourceIdList);
+        if (userList == null || userList.isEmpty()) {
             return null;
         }
-        List<com.smartLive.user.api.domain.User> userList = userSuccess.getData();
         List<SocialInfoVO> socialInfoVOList = userList.stream().map(user -> SocialInfoVO.builder()
                 .id(user.getId())
                 .name(user.getNickName())

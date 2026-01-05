@@ -27,7 +27,7 @@ import com.smartLive.common.core.web.page.TableDataInfo;
  */
 @RestController
 
-//@RequestMapping("/shop")
+@RequestMapping("/shop")
 public class ShopController extends BaseController {
     @Autowired
     private IShopService shopService;
@@ -177,65 +177,5 @@ public class ShopController extends BaseController {
             return Result.fail("店铺不存在");
         }
         return Result.ok(shop);
-    }
-
-    @PostMapping("/shop/list")
-    List<Shop> searchShopsByCategory( @RequestBody Shop shopQuery) {
-        return shopService.searchShopsByShopQuery(shopQuery);
-    }
-
-    @PostMapping("/shop/detail")
-    Shop getShopDetails( @RequestBody Shop shopVO) {
-        return shopService.selectShopByShop(shopVO);
-    }
-    @GetMapping("/shop/{shopName}")
-    public R<Shop> getShopByShopName(@PathVariable("shopName") String shopName){
-        Shop shop = shopService.getShopByShopName(shopName);
-        return R.ok(shop);
-    }
-    /**
-     * 更新商家评论数
-     */
-    @PostMapping("/shop/updateCommentById/{id}")
-    public R<Boolean> updateCommentById(@PathVariable("id") Long shopId){
-        Boolean b = shopService.updateCommentById(shopId);
-        return R.ok(b);
-    }
-
-    /**
-     * 根据条件查询商家信息
-     */
-    @PostMapping("/shop/getShopList")
-    public R<List<Shop>> getShopByCondition(@RequestBody Shop shop){
-        return R.ok(shopService.getShopByCondition(shop));
-    }
-    /**
-     * 根据id查询商家信息
-     */
-    @GetMapping("/shop/getShopById/{shopId}")
-    public R<Shop> getShopById(@PathVariable("shopId") Long shopId ){
-        Shop shop = shopService.queryById(shopId);
-        return R.ok(shop);
-    }
-    /**
-     * 根据id列表查询商家信息
-     */
-    @GetMapping("/shop/shopListByIds")
-     public R<List<Shop>> listShopByIds(@RequestParam("shopIdList") List<Long> shopIdList){
-        return R.ok(shopService.getShopList(shopIdList));
-    }
-    /**
-     * 获取商家总数
-     */
-    @GetMapping("/shop/getShopTotal")
-    public R<Integer> getShopTotal() {
-        return R.ok(shopService.getShopTotal());
-    }
-    /**
-     * 获取最近创建商家
-     */
-    @GetMapping("/shop/getRecentShops")
-    public R<List<Shop>> getRecentShops(@RequestParam("limit") Integer limit){
-        return R.ok(shopService.getRecentShops(limit));
     }
 }

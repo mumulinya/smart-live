@@ -3,7 +3,7 @@ package com.smartLive.ai.service.rag.impl;
 import com.smartLive.ai.entity.vo.VoucherVO;
 import com.smartLive.ai.service.rag.IVoucherRagService;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.marketing.api.RemoteMarketingService;
+import com.smartLive.marketing.api.RemoteVoucherService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -23,10 +23,10 @@ import java.util.concurrent.CompletableFuture;
 public class VoucherRagService implements IVoucherRagService {
 
     private final VectorStore voucherVectorStore;
-    private final RemoteMarketingService remoteMarketingService;
-    public VoucherRagService(@Qualifier("voucherVectorStore") VectorStore vectorStore, RemoteMarketingService remoteMarketingService) {
+    private final RemoteVoucherService remoteVoucherService;
+    public VoucherRagService(@Qualifier("voucherVectorStore") VectorStore vectorStore, RemoteVoucherService remoteVoucherService) {
         this.voucherVectorStore = vectorStore;
-        this.remoteMarketingService = remoteMarketingService;
+        this.remoteVoucherService = remoteVoucherService;
     }
 
     /**
@@ -77,32 +77,31 @@ public class VoucherRagService implements IVoucherRagService {
             return "该优惠券已售罄";
         }
         try {
-            Result result = null;
+            Long result = null;
             //普通券
             if (vo.getType() == 0) {
-                CompletableFuture<Result> future = CompletableFuture.supplyAsync(() -> {
-                    Result re = remoteMarketingService.buyVoucher(vo.getId(), userId);
+                CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> {
+                    Long re = remoteVoucherService.buyVoucher(vo.getId(), userId);
                     return re;
                 });
                 result = future.get();
-                if (result.getSuccess()) {
-                    return "抢购成功，订单id为" + result.getData();
+                if (result != null ) {
+                    return "抢购成功，订单id为" + result;
                 } else {
-                    return  result.getErrorMsg();
+                    return  "抢购失败";
                 }
             }
             //秒杀券
             else if (vo.getType() == 1) {
-                CompletableFuture<Result> future = CompletableFuture.supplyAsync(() -> {
-                    Result re = remoteMarketingService.seckillVoucher(vo.getId(), userId);
+                CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> {
+                    Long re = remoteVoucherService.seckillVoucher(vo.getId(), userId);
                     return re;
                 });
                 result = future.get();
-
-                if (result.getSuccess()) {
-                    return "抢购成功,订单id为" + result.getData();
+                if (result != null ) {
+                    return "抢购成功，订单id为" + result;
                 } else {
-                    return  result.getErrorMsg();
+                    return  "抢购失败";
                 }
             }
         }catch (Exception e){

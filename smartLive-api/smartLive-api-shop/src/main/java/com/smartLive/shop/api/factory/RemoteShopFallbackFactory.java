@@ -3,6 +3,7 @@ import com.smartLive.common.core.domain.R;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.shop.api.domain.ShopTypeDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -10,14 +11,16 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@Slf4j
 public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopService> {
 
     @Override
     public RemoteShopService create(Throwable cause) {
         return new RemoteShopService() {
             @Override
-            public R<ShopDTO> getShopByShopName(String shopName) {
-                return R.fail("查询商家信息失败");
+            public ShopDTO getShopByShopName(String shopName) {
+                log.error("查询商家信息失败:{}", cause.getMessage());
+                return null;
             }
 
             /**
@@ -26,8 +29,9 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
              * @param shopId
              */
             @Override
-            public R<Boolean> updateCommentById(Long shopId) {
-                return R.fail("更新商家评论数失败");
+            public Boolean updateCommentById(Long shopId) {
+                log.error("更新商家评论数失败:{}", cause.getMessage());
+                return false;
             }
 
             /**
@@ -36,17 +40,18 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
              * @param shopDTo
              */
             @Override
-            public R<List<ShopDTO>> queryShopList(ShopDTO shopDTo) {
-                return R.fail("查询商家信息失败");
+            public List<ShopDTO> queryShopList(ShopDTO shopDTo) {
+                log.error("查询商家信息失败:{}", cause.getMessage());
+                return null;
             }
 
             /**
              * 查询商铺类型列表
              */
             @Override
-            public R<List<ShopTypeDTO>> getShopTypeList() {
-
-                return R.fail("查询商铺类型列表失败");
+            public List<ShopTypeDTO> getShopTypeList() {
+                log.error("查询商铺类型列表失败:{}", cause.getMessage());
+                return null;
             }
 
             /**
@@ -55,21 +60,24 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
              * @param shopId
              */
             @Override
-            public R<ShopDTO> getShopById(Long shopId) {
-                return R.fail("查询商家信息失败");
+            public ShopDTO getShopById(Long shopId) {
+                log.error("查询商家信息失败:{}", cause.getMessage());
+                return null;
             }
 
             @Override
-            public R<List<ShopDTO>> getShopList(List<Long> shopIdList) {
-                return R.fail("查询店铺列表失败");
+            public List<ShopDTO> getShopList(List<Long> shopIdList) {
+                log.error("查询店铺列表失败:{}", cause.getMessage());
+                return null;
             }
 
             /**
              * 获取商家总数
              */
             @Override
-            public R<Integer> getShopTotal() {
-                return R.fail("查询商家总数失败");
+            public Integer getShopTotal() {
+                log.error("查询商家总数失败:{}", cause.getMessage());
+                return null;
             }
             /**
              * 获取最近商家列表
@@ -77,8 +85,9 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
              * @param limit
              */
             @Override
-            public R<List<ShopDTO>> getRecentShops(Integer limit) {
-                return R.fail("获取最近商家列表失败");
+            public List<ShopDTO> getRecentShops(Integer limit) {
+                log.error("获取最近商家列表失败:{}", cause.getMessage());
+                return null;
             }
 
             /**
@@ -87,8 +96,9 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
              * @param updateMap
              */
             @Override
-            public R<Boolean> updateCommentCountBatch(Map<Long, Integer> updateMap) {
-                return R.fail("批量更新商家评论数失败");
+            public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
+                log.error("批量更新商家评论数失败:{}", cause.getMessage());
+                return false;
             }
         };
     }

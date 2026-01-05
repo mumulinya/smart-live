@@ -12,7 +12,10 @@ import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.*;
+import com.smartLive.common.core.domain.EsBatchInsertRequest;
+import com.smartLive.common.core.domain.EsInsertRequest;
+import com.smartLive.common.core.domain.ScrollResult;
+import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
@@ -278,8 +281,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private void queryBlogUser(Blog blog){
         Long userId = blog.getUserId();
         //根据用户id获取用户信息
-        R<User> queryUserById = remoteAppUserService.queryUserById(userId);
-        User user = queryUserById.getData();
+        com.smartLive.user.api.domain.UserDTO user= remoteAppUserService.queryUserById(userId);
         if (user != null) {
             blog.setName(user.getNickName());
             blog.setIcon(user.getIcon());
@@ -360,8 +362,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public Long saveBlog(Blog blog) {
         blog.setUserId(UserContextHolder.getUser().getId());
-        R<ShopDTO> result = remoteShopService.getShopById(blog.getShopId());
-        blog.setTypeId(result.getData().getTypeId());
+        ShopDTO shopDTO = remoteShopService.getShopById(blog.getShopId());
+        if(shopDTO!= null){
+            blog.setTypeId(shopDTO.getTypeId());
+        }
         // 保存探店笔记
         boolean success = save(blog);
         if (!success) {
@@ -700,27 +704,25 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                         .collect(Collectors.toList());
 
                 // 定义结果 Map，默认为空
-                Map<Long, User> userMap = Collections.emptyMap();
+                Map<Long, com.smartLive.user.api.domain.UserDTO> userMap = Collections.emptyMap();
 
                 // 2. 只有当 ID 列表不为空时才发起远程调用，节省资源
                 if (!userIds.isEmpty()) {
                     // 批量查询用户信息
-                    R<List<User>> response = remoteAppUserService.getUserList(userIds);
-                    // 3. 安全获取 List 数据 (防止远程调用返回 null 或者 data 为 null)
-                    List<User> userList = (response != null && response.getData() != null)
-                            ? response.getData()
-                            : Collections.emptyList();
+                    List<com.smartLive.user.api.domain.UserDTO> userList = remoteAppUserService.getUserList(userIds);
                     // 4. 将 List<User> 转换为 Map<Long, User>
-                    userMap = userList.stream().collect(Collectors.toMap(
-                            User::getId,               // Key: 用户 ID
-                            Function.identity(),       // Value: User 对象本身
-                            (v1, v2) -> v1             // MergeFunction: 如果远程服务返回了重复 ID 的数据，取第一个，防止报错
-                    ));
+                    if (userList != null) {
+                        userMap = userList.stream().collect(Collectors.toMap(
+                                com.smartLive.user.api.domain.UserDTO::getId,               // Key: 用户 ID
+                                Function.identity(),       // Value: User 对象本身
+                                (v1, v2) -> v1             // MergeFunction: 如果远程服务返回了重复 ID 的数据，取第一个，防止报错
+                        ));
+                    }
                 }
-                Map<Long, User> finalUserMap = userMap;
+                Map<Long, com.smartLive.user.api.domain.UserDTO> finalUserMap = userMap;
                 blogs.forEach(blog ->{
                     //查询blog有关的用户信息
-                    User user = finalUserMap.get(blog.getUserId());
+                    com.smartLive.user.api.domain.UserDTO user = finalUserMap.get(blog.getUserId());
                     blog.setName(user.getNickName());
                     blog.setIcon(user.getIcon());
                 });

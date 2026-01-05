@@ -442,23 +442,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         return shops;
     }
 
-    @Override
-    public List<Shop> searchShopsByShopQuery(Shop shopQuery) {
-        log.info("查询店铺信息的条件是：{}", shopQuery);
-        List<Shop> list = query().list();
-        return list;
-    }
-
-    @Override
-    public Shop selectShopByShop(Shop shopVO) {
-        log.info("查询店铺详细信息的条件是：{}", shopVO);
-        Shop shop = query()
-                .eq(shopVO.getId() != null, "id", shopVO.getId())
-                .like(shopVO.getName() != null, "name", shopVO.getName())
-                .one();
-        return shop;
-    }
-
     /**
      * 根据商铺名称查询商铺信息
      *

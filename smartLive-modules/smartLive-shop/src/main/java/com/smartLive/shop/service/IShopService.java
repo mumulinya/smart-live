@@ -78,22 +78,6 @@ public interface IShopService extends IService<Shop> {
     List<Shop> queryShopByType(Integer typeId, Integer current, String sortBy,Double x, Double y);
 
     /**
-     * 根据商铺信息搜索商铺列表
-     *
-     * @param shopQuery 搜索条件
-     * @return 搜索结果
-     */
-    List<Shop> searchShopsByShopQuery(Shop shopQuery);
-
-    /**
-     * 根据商铺信息查询商铺
-     *
-     * @param shopVO 商铺信息
-     * @return 商铺
-     */
-    Shop selectShopByShop(Shop shopVO);
-
-    /**
      * 根据商铺名称查询商铺信息
      *
      * @param shopName 商铺名称

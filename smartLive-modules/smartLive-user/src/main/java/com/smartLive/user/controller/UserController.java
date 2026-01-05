@@ -27,7 +27,7 @@ import com.smartLive.common.core.web.page.TableDataInfo;
  * @date 2025-09-21
  */
 @RestController
-//@RequestMapping("/user")
+@RequestMapping("/user")
 public class UserController extends BaseController
 {
     @Autowired
@@ -156,37 +156,6 @@ public class UserController extends BaseController
     @GetMapping("/{id}")
     public Result getUserById(@PathVariable("id") Long userId) {
         return Result.ok(userService.queryUserById(userId));
-    }
-    /**
-     * 根据手机号查询用户详情
-     */
-    @GetMapping("/user/info/{phone}")
-    R<User> getUserInfoByPhone(@PathVariable("phone") String phone){
-        User user = userService.getUserInfoByPhone(phone);
-        return R.ok(user);
-    }
-    /**
-     * 创建用户
-     */
-    @PostMapping("/user/create/{phone}")
-    R<User> createUserByPhone(@PathVariable("phone") String phone){
-        User user = userService.createUserByPhone(phone);
-        return R.ok(user);
-    }
-    /**
-     * 根据id查询用户列表
-     */
-    @GetMapping("/user/userListByIds")
-    R<List<User>> getUserList(@RequestParam("userIdList") List<Long> userIdList){
-        return R.ok(userService.getUserList(userIdList));
-    }
-    /**
-     * 根据id查询用户
-     */
-    @GetMapping("/user/{id}")
-    R<User> queryUserById(@PathVariable("id") Long id){
-        User user = userService.queryUserById(id);
-        return R.ok(user);
     }
 
     /**

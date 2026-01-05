@@ -22,6 +22,7 @@ import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.User;
+import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,8 +149,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         List<Comment> list = page.getRecords();
         list.stream().forEach(c -> {
             Long id = c.getUserId();
-            R<User> re = remoteAppUserService.queryUserById(id);
-            User user = re.getData();
+            UserDTO user = remoteAppUserService.queryUserById(id);
             if (user != null){
                 c.setNickName(user.getNickName());
                 c.setUserIcon(user.getIcon());
@@ -226,9 +226,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 if((blog.getTitle()!=null))
                 c.setSourceName(blog.getTitle());
             }else if(c.getSourceType()==2){
-                R<ShopDTO> shop = remoteShopService.getShopById(c.getSourceId());
-                if((shop.getData().getName()!=null))
-                c.setSourceName(shop.getData().getName());
+                ShopDTO shop = remoteShopService.getShopById(c.getSourceId());
+                if(shop!= null){
+                    c.setSourceName(shop.getName());
+
+                }
             }
         });
         return list;
