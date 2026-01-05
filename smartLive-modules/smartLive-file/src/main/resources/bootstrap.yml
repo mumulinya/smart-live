@@ -1,6 +1,6 @@
 # Tomcat
 server:
-  port: 9211
+  port: 9212
 #arthas
 arthas:
   tunnel-server: ws://127.0.0.1:7777/ws

@@ -9,18 +9,15 @@
 com.smartLive
 ├── smartLive-html            // 前台模块 [8081]     
 ├── smartLive-ui              // 后台模块 [80]
-├── smartLive-ai              // ai模块 [9216]
 ├── smartLive-sentinel        // 限流模块 [8718]
 ├── smartLive-seata-server    // 分布式事务模块 [7091]
 ├── smartLive-gateway         // 网关模块 [8080]
 ├── smartLive-auth            // 认证中心 [9200]
 ├── smartLive-api             // 接口模块
 │       └── smartLive-api-blog                            // 博客接口
-│       └── smartLive-api-comment                         // 评论接口
-│       └── smartLive-api-follow                          // 关注接口
+│       └── smartLive-api-interaction                     // 互动接口
 │       └── smartLive-api-marketing                       // 营销接口
 │       └── smartLive-api-order                           // 订单接口
-│       └── smartLive-api-search                          // 搜索接口
 │       └── smartLive-api-shop                            // 店铺接口
 │       └── smartLive-api-system                          // 系统接口
 │       └── smartLive-api-user                            // 用户接口
@@ -30,24 +27,25 @@ com.smartLive
 │       └── smartLive-common-datasource                   // 多数据源
 │       └── smartLive-common-log                          // 日志记录
 │       └── smartLive-common-redis                        // 缓存服务
+│       └── smartLive-common-rabbitmq                     // 消息队列服务
 │       └── smartLive-common-seata                        // 分布式事务
 │       └── smartLive-common-security                     // 安全模块
 │       └── smartLive-common-sensitive                    // 数据脱敏
 │       └── smartLive-common-swagger                      // 系统接口
 ├── smartLive-modules         // 业务模块
-│       └── smartLive-index                               // 首页模块 [9215]                                 // 代码生成 [9202]
+│       └── smartLive-ai                                  // AI模块  [9215]                                
 │       └── smartLive-blog                                // 博客模块 [9214]    
-│       └── smartLive-chat                                // 聊天模块 [9213]                                // 博客模块 [9205]    
-│       └── smartLive-comment                             // 评论模块 [9212]                                  // ai模块 [9204]
-│       └── smartLive-file                                // 文件服务 [9211]
-│       └── smartLive-follow                              // 关注模块 [9210]                                  // ai模块 [9204]
-│       └── smartLive-gen                                 // 代码生成 [9209]
+│       └── smartLive-chat                                // 聊天模块 [9213]                                   
+│       └── smartLive-file                                // 文件服务 [9212]
+│       └── smartLive-gen                                 // 代码生成 [9211]
+│       └── smartLive-index                               // 首页模块 [9210]                                
+│       └── smartLive-interaction                         // 互动模块 [9209]                             
 │       └── smartLive-job                                 // 定时任务 [9208]
 │       └── smartLive-map                                 // 地图模块 [9207]
-│       └── smartLive-marketing                           // 营销模块 [9206]                                  // ai模块 [9204]
-│       └── smartLive-order                               // 订单模块 [9205]                                  // ai模块 [9204]
-│       └── smartLive-search                              // 搜索模块 [9204]                                  // ai模块 [9204]
-│       └── smartLive-shop                                // 店铺模块 [9203]                                  // ai模块 [9204]
+│       └── smartLive-marketing                           // 营销模块 [9206]                                  
+│       └── smartLive-order                               // 订单模块 [9205]                                  
+│       └── smartLive-search                              // 搜索模块 [9204]                                  
+│       └── smartLive-shop                                // 店铺模块 [9203]                                  
 │       └── smartLive-system                              // 系统模块 [9202]
 │       └── smartLive-user                                // 用户模块 [9201]
 
