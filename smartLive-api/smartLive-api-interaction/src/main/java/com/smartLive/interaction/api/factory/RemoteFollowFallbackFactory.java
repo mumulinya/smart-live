@@ -3,28 +3,33 @@ import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.dto.FollowDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Component
+@Slf4j
 public class RemoteFollowFallbackFactory implements FallbackFactory<RemoteFollowService> {
     @Override
     public RemoteFollowService create(Throwable cause) {
         return new RemoteFollowService() {
             @Override
-            public R<Boolean> isFollowed(@RequestBody FollowDTO followDTO){
-                return R.fail("查询失败");
+            public Boolean isFollowed(@RequestBody FollowDTO followDTO){
+                log.error("查询是否关注失败:{}",cause.getMessage());
+                return false;
             }
 
             @Override
-            public R<Integer> getFollowCount(FollowDTO followDTO) {
-                return R.fail("获取失败");
+            public Integer getFollowCount(FollowDTO followDTO) {
+                log.error("获取关注数失败:{}",cause.getMessage());
+                return 0;
             }
 
             @Override
-            public R<Integer> getFanCount(FollowDTO followDTO) {
-                return R.fail("获取失败");
+            public Integer getFanCount(FollowDTO followDTO) {
+                log.error("获取粉丝数失败:{}",cause.getMessage());
+                return 0;
             }
 
             /**
@@ -33,19 +38,9 @@ public class RemoteFollowFallbackFactory implements FallbackFactory<RemoteFollow
              * @return
              */
             @Override
-            public R<Integer> getCommonFollowCount(FollowDTO followDTO) {
-                return R.fail("获取失败");
-            }
-
-            /**
-             * 获取用户关注店铺数量
-             *
-             * @param
-             * @return
-             */
-            @Override
-            public R<Integer> getFollowShopCount(FollowDTO followDTO) {
-                return R.fail("获取失败");
+            public Integer getCommonFollowCount(FollowDTO followDTO) {
+                log.error("获取共同关注数失败:{}",cause.getMessage());
+                return 0;
             }
         };
 

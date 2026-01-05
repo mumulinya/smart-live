@@ -253,8 +253,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             FollowDTO followDTO=new FollowDTO();
             followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
             followDTO.setSourceId(id);
-            R<Boolean> result = remoteFollowService.isFollowed(followDTO);
-            user.setIsFollow(result.getData());
+            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+            user.setIsFollow(isFollow);
         }
         return (user);
     }
@@ -286,7 +286,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             FollowDTO followDTO=new FollowDTO();
             followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
             followDTO.setSourceId(userId);
-            Integer fanCount = (Integer) remoteFollowService.getFanCount(followDTO).getData();
+            Integer fanCount = remoteFollowService.getFanCount(followDTO);
             countDownLatch.countDown();
             return fanCount;
         });
@@ -296,7 +296,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             FollowDTO followDTO=new FollowDTO();
             followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
             followDTO.setUserId(userId);
-            Integer followCount = (Integer) remoteFollowService.getFollowCount(followDTO).getData();
+            Integer followCount = remoteFollowService.getFollowCount(followDTO);
             countDownLatch.countDown();
             return followCount;
         });
@@ -312,7 +312,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 followDTO.setUserId(currentUserId);
                 followDTO.setSourceId(userId);
                 //获取共同关注数
-                commonFollowCount = (Integer) remoteFollowService.getCommonFollowCount(followDTO).getData();
+                commonFollowCount =remoteFollowService.getCommonFollowCount(followDTO);
             }
             countDownLatch.countDown();
             return commonFollowCount;
@@ -321,14 +321,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //获取博客数
         Future<Integer> blogCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询博客数",Thread.currentThread().getName());
-            Integer blogCount =  remoteBlogService.getBlogCount(userId).getData();
+            Integer blogCount =  remoteBlogService.getBlogCount(userId);
             countDownLatch.countDown();
             return blogCount;
         });
         //获取点赞数
         Future<Integer> likeCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询点赞数",Thread.currentThread().getName());
-            Integer likeCount = remoteBlogService.getLikeCount(userId).getData();
+            Integer likeCount = remoteBlogService.getLikeCount(userId);
             countDownLatch.countDown();
             return likeCount;
         });
@@ -337,11 +337,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             log.info("线程：{}开始查询发表评论数",Thread.currentThread().getName());
             CommentDTO commentDTO = new CommentDTO();
             commentDTO.setUserId(userId);
-            R<Integer> res = remoteCommentService.getCommentCount(commentDTO);
-            if(res.getCode()==R.FAIL){
-                log.error("获取用户统计信息失败:"+res.getMsg());
-            }
-            Integer commentCount = res.getData();
+            Integer commentCount = remoteCommentService.getCommentCount(commentDTO);
             countDownLatch.countDown();
             return commentCount;
         });
@@ -358,7 +354,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             FollowDTO followDTO=new FollowDTO();
             followDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
             followDTO.setUserId(userId);
-            Integer collectCount = (Integer) remoteFollowService.getFollowCount(followDTO).getData();
+            Integer collectCount = remoteFollowService.getFollowCount(followDTO);
             countDownLatch.countDown();
             return collectCount;
         });

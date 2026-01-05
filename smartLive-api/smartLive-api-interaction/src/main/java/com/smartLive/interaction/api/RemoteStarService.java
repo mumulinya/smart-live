@@ -15,32 +15,32 @@ public interface RemoteStarService {
      * @param
      * @return
      */
-    @GetMapping("/star/isStar")
-    R<Boolean> isStared(@SpringQueryMap StarDTO starDTO);
+    @GetMapping("/inner/star/isStar")
+    Boolean isStared(@SpringQueryMap StarDTO starDTO);
     /**
      * 获取收藏数
      * @return
      */
-    @GetMapping("/star/getStarCount")
-     R<Integer> getStarCount(@SpringQueryMap StarDTO starDTO);
+    @GetMapping("/inner/star/getStarCount")
+     Integer getStarCount(@SpringQueryMap StarDTO starDTO);
     /**
      * 获取粉丝数
      * @return
      */
-    @GetMapping("/star/getFanCount")
-     R<Integer> getFanCount(@SpringQueryMap StarDTO starDTO);
+    @GetMapping("/inner/star/getFanCount")
+     Integer getFanCount(@SpringQueryMap StarDTO starDTO);
 
     /**
-     * 获取共同关注数
+     * 获取共同收藏数
      * @return
      */
-    @GetMapping("/star/getCommonStarCount")
-     R<Integer> getCommonStarCount(@SpringQueryMap StarDTO starDTO);
+    @GetMapping("/inner/star/getCommonStarCount")
+     Integer getCommonStarCount(@SpringQueryMap StarDTO starDTO);
 
     /**
      * 获取用户关注店铺数量
      * @return
      */
-    @GetMapping("/star/getStarShopCount")
-     R<Integer> getStarShopCount(@SpringQueryMap StarDTO starDTO);
+    @GetMapping("/inner/star/getStarShopCount")
+     Integer getStarShopCount(@SpringQueryMap StarDTO starDTO);
 }

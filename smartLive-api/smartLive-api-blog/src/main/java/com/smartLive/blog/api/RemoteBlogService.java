@@ -20,22 +20,13 @@ import java.util.Map;
 public interface RemoteBlogService {
 
     /**
-     * 更新博客评论数
-     *
-     * @param blogId
-     * @return
-     */
-    @PostMapping("/blog/updateCommentById/{id}")
-    public R<Boolean> updateCommentById(@PathVariable("id") Long blogId);
-
-    /**
      * 获取博客详情
      *
      * @param id
      * @return
      */
-    @GetMapping("/blog/getBlogById/{id}")
-    R<BlogDto> getBlogById(@PathVariable("id") Long id);
+    @GetMapping("/inner/blog/getBlogById/{id}")
+    BlogDto getBlogById(@PathVariable("id") Long id);
 
     /**
      * 获取博客数
@@ -44,7 +35,7 @@ public interface RemoteBlogService {
      * @return
      */
     @GetMapping("/blog/getBlogCount/{userId}")
-    R<Integer> getBlogCount(@PathVariable("userId") Long userId);
+    Integer getBlogCount(@PathVariable("userId") Long userId);
 
     /**
      * 获取博客点赞数
@@ -52,30 +43,30 @@ public interface RemoteBlogService {
      * @param userId
      * @return
      */
-    @GetMapping("/blog/getLikeCount/{userId}")
-    R<Integer> getLikeCount(@PathVariable("userId") Long userId);
+    @GetMapping("/inner/blog/getLikeCount/{userId}")
+    Integer getLikeCount(@PathVariable("userId") Long userId);
 
     /**
      * 获取博客总数
      */
-    @GetMapping("/blog/getBlogTotal")
-    R<Integer> getBlogTotal();
+    @GetMapping("/inner/blog/getBlogTotal")
+    Integer getBlogTotal();
 
     /**
      * 获取博客列表
      */
-    @GetMapping("/blog/getBlogListByIds")
-    R<List<BlogDto>> getBlogListByIds(@SpringQueryMap List<Long> sourceIdList);
+    @GetMapping("/inner/blog/getBlogListByIds")
+    List<BlogDto> getBlogListByIds(@SpringQueryMap List<Long> sourceIdList);
 
     /**
      * 批量更新点赞数
      */
-    @PostMapping("/blog/updateLikeCountBatch")
-    R<Boolean> updateLikeCountBatch(@RequestBody  Map<Long, Integer> updateMap);
+    @PostMapping("/inner/blog/updateLikeCountBatch")
+    Boolean updateLikeCountBatch(@RequestBody  Map<Long, Integer> updateMap);
 
     /**
      * 批量更新评论数
      */
-    @PostMapping("/blog/updateCommentCountBatch")
-    R<Boolean> updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap);
+    @PostMapping("/inner/blog/updateCommentCountBatch")
+    Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap);
 }

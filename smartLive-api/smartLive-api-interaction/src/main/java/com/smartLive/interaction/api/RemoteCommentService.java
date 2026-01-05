@@ -1,4 +1,5 @@
 package com.smartLive.interaction.api;
+
 import com.smartLive.common.core.constant.ServiceNameConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.interaction.api.dto.CommentDTO;
@@ -21,16 +22,16 @@ public interface RemoteCommentService {
      * @param commentDTO
      * @return
      */
-    @GetMapping("/comment/getCommentCount")
-    R<Integer> getCommentCount(@SpringQueryMap CommentDTO commentDTO);
+    @GetMapping("/inner/comment/getCommentCount")
+    Integer getCommentCount(@SpringQueryMap CommentDTO commentDTO);
     /**
      * 获取评论总数
      * @return
      */
-    @GetMapping("/comment/getCommentTotal")
-    R<Integer> getCommentTotal();
-    @GetMapping("/comment/list")
-    R<List<CommentDTO>> searchCommentList();
-    @PostMapping("/comment/saveAiCreateComment")
+    @GetMapping("/inner/comment/getCommentTotal")
+    Integer getCommentTotal();
+    @GetMapping("/inner/comment/list")
+    List<CommentDTO> searchCommentList();
+    @PostMapping("/inner/comment/saveAiCreateComment")
     void saveAiCreateComment(@RequestBody List<CommentDTO> comments);
 }

@@ -57,13 +57,8 @@ public class SearchController {
                     followDTO.setUserId(user.getId());
                     followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
                     followDTO.setSourceId(user.getId());
-                    R<Boolean> result = remoteFollowService.isFollowed(followDTO);
-                    if (result.getCode()==R.SUCCESS) {
-                        user.setIsFollow((Boolean) result.getData());
-                    }else {
-                        log.error("查询是否关注失败: " + result.getMsg());
-                        user.setIsFollow(false);
-                    }
+                    Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+                        user.setIsFollow(isFollow);
                 }
             });
             Map<String, Object> result = ResponseConverter.buildPageResult(response, dataList);

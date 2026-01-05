@@ -12,36 +12,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 @FeignClient(contextId = "remoteLikeService", value = ServiceNameConstants.INTERACTION_SERVICE, fallbackFactory = RemoteLikeFallbackFactory.class)
 public interface RemoteLikeService {
     /**
-     * 查询是否关注
+     * 查询是否点赞
      * @param
      * @return
      */
-    @GetMapping("/like/isLike")
-    R<Boolean> isLike(@SpringQueryMap LikeDTO likeDTO);
+    @GetMapping("/inner/like/isLike")
+    Boolean isLike(@SpringQueryMap LikeDTO likeDTO);
     /**
-     * 获取关注数
+     * 获取点赞数
      * @return
      */
-    @GetMapping("/like/getLikeCount")
-     R<Integer> getLikeCount(@SpringQueryMap LikeDTO likeDTO);
-    /**
-     * 获取粉丝数
-     * @return
-     */
-    @GetMapping("/like/getFanCount")
-     R<Integer> getFanCount(@SpringQueryMap LikeDTO likeDTO);
+    @GetMapping("/inner/like/getLikeCount")
+     Integer getLikeCount(@SpringQueryMap LikeDTO likeDTO);
 
     /**
-     * 获取共同关注数
+     * 获取共同点赞数
      * @return
      */
-    @GetMapping("/like/getCommonLikeCount")
-     R<Integer> getCommonLikeCount(@SpringQueryMap LikeDTO likeDTO);
-
-    /**
-     * 获取用户关注店铺数量
-     * @return
-     */
-    @GetMapping("/like/getLikeShopCount/{id}")
-     R<Integer> getLikeShopCount(@SpringQueryMap LikeDTO likeDTO);
+    @GetMapping("/inner/like/getCommonLikeCount")
+     Integer getCommonLikeCount(@SpringQueryMap LikeDTO likeDTO);
 }

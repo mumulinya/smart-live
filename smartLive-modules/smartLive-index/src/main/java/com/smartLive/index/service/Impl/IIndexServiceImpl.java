@@ -59,7 +59,7 @@ public class IIndexServiceImpl implements IIndexService {
         //使用线程池查询博客总数
         Future<Integer> blogCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询博客总数",Thread.currentThread().getName());
-            Integer blogCount = remoteBlogService.getBlogTotal().getData();
+            Integer blogCount = remoteBlogService.getBlogTotal();
             latch.countDown();
             return blogCount;
         });
@@ -87,7 +87,7 @@ public class IIndexServiceImpl implements IIndexService {
         //使用线程池查询评论总数
         Future<Integer> commentCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询评论总数",Thread.currentThread().getName());
-            Integer commentCount = remoteCommentService.getCommentTotal().getData();
+            Integer commentCount = remoteCommentService.getCommentTotal();
             latch.countDown();
             return commentCount;
         });

@@ -2,6 +2,7 @@ package com.smartLive.blog.api.factory;
 
 import com.smartLive.blog.api.dto.BlogDto;
 import com.smartLive.common.core.domain.R;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import com.smartLive.blog.api.RemoteBlogService;
@@ -10,24 +11,23 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@Slf4j
 public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogService> {
 
     @Override
     public RemoteBlogService create(Throwable cause) {
         return new RemoteBlogService() {
+
             @Override
-            public R<Boolean> updateCommentById(Long blogId) {
-                return R.fail("评论失败");
+            public BlogDto getBlogById(Long id) {
+                log.error("查询博客失败:{}", cause.getMessage());
+                return null;
             }
 
             @Override
-            public R<BlogDto> getBlogById(Long id) {
-                return R.fail("查询博客信息失败");
-            }
-
-            @Override
-            public R<Integer> getBlogCount(Long userId) {
-                return R.fail("查询博客数量失败");
+            public Integer getBlogCount(Long userId) {
+                log.error("查询博客数量失败:{}", cause.getMessage());
+                return 0;
             }
 
             /**
@@ -37,9 +37,9 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
              * @return
              */
             @Override
-            public R<Integer> getLikeCount(Long userId) {
-
-                return R.fail("查询点赞数失败");
+            public Integer getLikeCount(Long userId) {
+                log.error("查询博客点赞数失败:{}", cause.getMessage());
+                return 0;
             }
             /**
              * 获取博客总数
@@ -47,8 +47,9 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
              * @return
              */
             @Override
-            public R<Integer> getBlogTotal() {
-                return R.fail("查询博客总数失败");
+            public Integer getBlogTotal() {
+                log.error("查询博客总数失败:{}", cause.getMessage());
+                return 0;
             }
 
             /**
@@ -57,8 +58,9 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
              * @param sourceIdList
              */
             @Override
-            public R<List<BlogDto>> getBlogListByIds(List<Long> sourceIdList) {
-                return R.fail("查询博客列表失败");
+            public List<BlogDto> getBlogListByIds(List<Long> sourceIdList) {
+                log.error("查询博客列表失败:{}", cause.getMessage());
+                return null;
             }
 
             /**
@@ -67,8 +69,9 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
              * @param updateMap
              */
             @Override
-            public R<Boolean> updateLikeCountBatch(Map<Long, Integer> updateMap) {
-                return R.fail("批量更新点赞数失败");
+            public Boolean updateLikeCountBatch(Map<Long, Integer> updateMap) {
+                log.error("批量更新点赞数失败:{}", cause.getMessage());
+                return false;
             }
 
             /**
@@ -77,8 +80,9 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
              * @param updateMap
              */
             @Override
-            public R<Boolean> updateCommentCountBatch(Map<Long, Integer> updateMap) {
-                return R.fail("批量更新评论数失败");
+            public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
+                log.error("批量更新评论数失败:{}", cause.getMessage());
+                return false;
             }
         };
  }

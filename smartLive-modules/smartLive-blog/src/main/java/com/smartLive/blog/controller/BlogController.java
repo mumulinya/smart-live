@@ -2,7 +2,6 @@ package com.smartLive.blog.controller;
 
 import com.smartLive.blog.domain.Blog;
 import com.smartLive.blog.service.IBlogService;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
@@ -15,7 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 博客Controller
@@ -24,7 +22,7 @@ import java.util.Map;
  * @date 2025-09-21
  */
 @RestController
-//@RequestMapping("/blog")
+@RequestMapping("/blog")
 public class BlogController extends BaseController
 {
     @Autowired
@@ -211,57 +209,5 @@ public class BlogController extends BaseController
     @GetMapping("/of/follow")
     public Result queryBlogByFollow(@RequestParam(value = "lastId") Long max, @RequestParam(value = "offset", defaultValue = "0") Integer offset) {
         return Result.ok(blogService.queryBlogByFollow(max, offset));
-    }
-
-    @PostMapping("/blog/updateCommentById/{id}")
-    public R<Boolean> updateCommentById(@PathVariable("id") Long blogId){
-        return R.ok(blogService.updateCommentById(blogId));
-    }
-
-    @GetMapping("/blog/getBlogById/{id}")
-    R<Blog> getBlogById( @PathVariable("id")Long id){
-        return R.ok(blogService.getBlogById(id));
-    }
-    @GetMapping("/blog/getBlogCount/{userId}")
-    R<Integer> getBlogCount(@PathVariable("userId")Long userId){
-        Integer count = blogService.getBlogCount(userId);
-        return R.ok(count);
-    }
-    /**
-     * 获取博客点赞数
-     * @param userId
-     * @return
-     */
-    @GetMapping("/blog/getLikeCount/{userId}")
-    R<Integer> getLikeCount( @PathVariable("userId")Long userId){
-        return R.ok(blogService.getLikeCount(userId));
-    }
-    /**
-     * 获取博客总数
-     */
-    @GetMapping("/blog/getBlogTotal")
-    R<Integer> getBlogTotal() {
-        return R.ok(blogService.getBlogTotal());
-    }
-    /**
-     * 获取博客列表
-     */
-    @GetMapping("/blog/getBlogListByIds")
-    R<List<Blog>> getBlogListByIds(List<Long> sourceIdList){
-        return R.ok(blogService.getBlogListByIds(sourceIdList));
-    }
-    /**
-     * 批量更新点赞数
-     */
-    @PostMapping("/blog/updateLikeCountBatch")
-    R<Boolean> updateLikeCountBatch(@RequestBody  Map<Long, Integer> updateMap){
-        return R.ok(blogService.updateLikeCountBatch(updateMap));
-    }
-    /**
-     * 批量更新评论数
-     */
-    @PostMapping("/blog/updateCommentCountBatch")
-    R<Boolean> updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap){
-        return R.ok(blogService.updateCommentCountBatch(updateMap));
     }
 }

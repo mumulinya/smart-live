@@ -31,11 +31,10 @@ public  class BlogResourceStrategy implements ResourceStrategy {
     @Override
     public List<ResourceVO> getResourceList(List<Long> sourceIdList) {
 
-        R<List<BlogDto>> blogSuccess = remoteBlogService.getBlogListByIds(sourceIdList);
-        if (blogSuccess.getCode() != 200) {
+        List<BlogDto> blogList= remoteBlogService.getBlogListByIds(sourceIdList);
+        if (blogList == null) {
             return null;
         }
-        List<BlogDto> blogList = blogSuccess.getData();
         List<ResourceVO> resourceVOList = blogList.stream().map(blog -> ResourceVO.builder()
                 .id(blog.getId())
                 .userAvatar(blog.getIcon())

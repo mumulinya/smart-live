@@ -232,13 +232,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         likeDTO.setSourceId(blog.getId());
         likeDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
         //判断当前用户是否已经点赞
-        R<Boolean> res = remoteLikeService.isLike(likeDTO);
-        if(res.getCode()==R.SUCCESS){
-            blog.setIsLike(res.getData());
-        }else{
-            blog.setIsLike(false);
-            log.error("查询点赞信息失败"+res.getMsg());
-        }
+        Boolean isLike = remoteLikeService.isLike(likeDTO);
+        blog.setIsLike(isLike);
     }
 
     /**

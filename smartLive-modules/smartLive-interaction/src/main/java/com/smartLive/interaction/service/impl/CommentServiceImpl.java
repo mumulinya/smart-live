@@ -257,9 +257,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         List<Comment> list = query().list();
         list.stream().forEach(c -> {
             if (c.getSourceType() == 1) {
-                R<BlogDto> blog = remoteBlogService.getBlogById(c.getSourceId());
-                if ((blog.getData().getTitle() != null))
-                    c.setSourceName(blog.getData().getTitle());
+                BlogDto blog = remoteBlogService.getBlogById(c.getSourceId());
+                if ((blog.getTitle() != null))
+                    c.setSourceName(blog.getTitle());
             } else if (c.getSourceType() == 2) {
                 R<ShopDTO> shop = remoteShopService.getShopById(c.getSourceId());
                 if ((shop.getData().getName() != null))

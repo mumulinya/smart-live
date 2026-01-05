@@ -7,7 +7,9 @@ import com.smartLive.interaction.service.ILikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-
+/**
+ * 点赞服务外部接口
+ */
 @RestController
 @RequestMapping("/like")
 public class LikeController {
@@ -22,15 +24,6 @@ public class LikeController {
     @PutMapping()
     public Result likeBlog(@RequestBody Like like) {
         return Result.ok(likeRecordService.likeOrCancelLike(like));
-    }
-    /**
-     * 查询是否点赞
-     * @param
-     * @return
-     */
-    @GetMapping("/isLike")
-    public R<Boolean> isLike (Like like) {
-        return  R.ok(likeRecordService.isLike(like));
     }
     /**
      * 查询点赞数

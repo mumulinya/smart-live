@@ -24,6 +24,11 @@ public class BlogLikeStrategy implements LikeStrategy {
     public void transLikeCountFromRedis2DB(Map<Long, Integer> updateMap) {
         log.info("正在调用博客服务，同步数据");
         // 调用博客服务的批量更新接口
-        remoteBlogService.updateLikeCountBatch(updateMap);
+        Boolean b = remoteBlogService.updateLikeCountBatch(updateMap);
+        if (b) {
+            log.info("同步数据成功");
+        } else {
+            log.info("同步数据失败");
+        }
     }
 }

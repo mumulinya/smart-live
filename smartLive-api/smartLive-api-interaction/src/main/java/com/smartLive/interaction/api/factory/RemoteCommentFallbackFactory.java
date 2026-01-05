@@ -20,27 +20,29 @@ public class RemoteCommentFallbackFactory implements FallbackFactory<RemoteComme
              * @return
              */
             @Override
-            public R<Integer> getCommentCount(CommentDTO commentDTO) {
-                return R.fail("查询评论数失败");
+            public Integer getCommentCount(CommentDTO commentDTO) {
+                log.error("查询评论数失败", cause.getMessage());
+                return 0;
             }
             /**
              * 获取评论总数
              * @return
              */
             @Override
-            public R<Integer> getCommentTotal() {
-                return R.fail("查询评论总数失败");
+            public Integer getCommentTotal() {
+                log.error("查询评论总数失败", cause.getMessage());
+                return 0;
             }
 
             @Override
-            public R<List<CommentDTO>> searchCommentList() {
-                log.error("查询评论列表失败");
+            public List<CommentDTO> searchCommentList() {
+                log.error("查询评论列表失败", cause.getMessage());
                 return null;
             }
 
             @Override
             public void saveAiCreateComment(List<CommentDTO> comments) {
-                log.error("保存AI创建的评论失败");
+                log.error("保存AI创建的评论失败", cause.getMessage());
             }
         };
     }
