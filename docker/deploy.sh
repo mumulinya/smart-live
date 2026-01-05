@@ -91,7 +91,7 @@ modules(){
  # 这里列出所有 smartLive-modules- 开头的服务
  docker-compose up -d smartLive-modules-user smartLive-modules-shop smartLive-modules-search smartLive-modules-order \
                       smartLive-modules-marketing smartLive-modules-map smartLive-modules-job smartLive-modules-gen \
-                      smartLive-modules-follow smartLive-modules-file smartLive-modules-comment smartLive-modules-chat \
+                      smartLive-modules-interaction smartLive-modules-file  smartLive-modules-chat \
                       smartLive-modules-blog smartLive-modules-index smartLive-modules-ai
 
  # 最后启动前端和监控
@@ -108,7 +108,7 @@ baseModules(){
 
   docker-compose up -d  smartLive-modules-user smartLive-modules-shop smartLive-modules-search \
                         smartLive-modules-marketing smartLive-modules-map  \
-                         smartLive-modules-chat  smartLive-modules-blog    \
+                         smartLive-modules-chat  smartLive-modules-blog
   docker-compose up -d smartLive-nginx
 }
 
