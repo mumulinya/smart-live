@@ -13,11 +13,8 @@
         <module>smartLive-api-marketing</module>
         <module>smartLive-api-user</module>
         <module>smartLive-api-blog</module>
-        <module>smartLive-api-comment</module>
         <module>smartLive-api-order</module>
-        <module>smartLive-api-search</module>
         <module>smartLive-api-shop</module>
-        <module>smartLive-api-follow</module>
         <module>smartLive-api-interaction</module>
     </modules>
 
