@@ -1,7 +1,7 @@
 package com.smartLive.common.security.config;
 
+import com.smartLive.common.redis.service.RedisService;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import com.smartLive.common.security.interceptor.HeaderInterceptor;
@@ -17,7 +17,7 @@ import jakarta.annotation.Resource;
 public class WebMvcConfig implements WebMvcConfigurer
 {
     @Resource
-    StringRedisTemplate stringRedisTemplate;
+    RedisService redisService;
     /** 不需要拦截地址 */
     public static final String[] excludeUrls = { "/login", "/logout", "/refresh" };
 
@@ -35,6 +35,6 @@ public class WebMvcConfig implements WebMvcConfigurer
      */
     public HeaderInterceptor getHeaderInterceptor()
     {
-        return new HeaderInterceptor(stringRedisTemplate);
+        return new HeaderInterceptor(redisService);
     }
 }

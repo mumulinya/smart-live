@@ -21,7 +21,7 @@ import java.util.List;
  * @since 2021-12-2
  */
 @RestController
-@RequestMapping("/inner/shop-type")
+@RequestMapping("/inner/shop/shop-type")
 public class ShopTypeInnerController {
     @Resource
     private IShopTypeService typeService;

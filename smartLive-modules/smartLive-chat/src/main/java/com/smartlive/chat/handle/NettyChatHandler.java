@@ -6,6 +6,7 @@ import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.dto.ChatMessageEvent;
 import com.smartlive.chat.service.IChatMessagesService;
@@ -21,9 +22,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,13 +35,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @ChannelHandler.Sharable 
 public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
-
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
     private IChatMessagesService chatMessagesService;
     @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+    private RedisService redisService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
@@ -115,8 +113,8 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
         try {
             String key = RedisConstants.LOGIN_USER_KEY + token;
             // 注意：这里假设 Redis 里存的是 Hash 结构，如果报错需检查 Redis 存储格式
-            Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(key);
-            
+            Map<String, Object> userMap = redisService.getCacheMap(key);
+
             // 简单的判空保护
             if (userMap == null || userMap.isEmpty()) {
                 sendAuthFailed(channel, "Token无效或已过期");

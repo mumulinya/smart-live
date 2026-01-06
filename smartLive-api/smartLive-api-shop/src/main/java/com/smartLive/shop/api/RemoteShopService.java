@@ -32,7 +32,7 @@ public interface RemoteShopService {
     /**
      * 查询商铺类型列表
      */
-    @GetMapping("/inner/shop-type/getShopListByType")
+    @GetMapping("/inner/shop/shop-type/getShopListByType")
      List<ShopTypeDTO> getShopTypeList();
 
 

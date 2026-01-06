@@ -5,13 +5,12 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.mapper.ShopTypeMapper;
 import com.smartLive.shop.service.IShopTypeService;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -25,9 +24,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> implements IShopTypeService {
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 查询所有商铺类型
@@ -39,7 +37,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         //从缓存中获取
         String key = RedisConstants.CACHE_SHOP_TYPE_KEY;
         //从缓存中获取商户类型列表
-        String shopTypeListJson = stringRedisTemplate.opsForList().leftPop(key);
+        String shopTypeListJson =  redisService.leftPopCacheList(key);
         if(StrUtil.isNotBlank(shopTypeListJson)){
             List<ShopType> shopTypeList = JSONUtil.toList(shopTypeListJson, ShopType.class);
             return Result.ok(shopTypeList);
@@ -49,8 +47,8 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         if(typeList == null){
             return Result.fail("商铺类型不存在");
         }
-        stringRedisTemplate.opsForList().leftPush(key, JSONUtil.toJsonStr(typeList));
-        stringRedisTemplate.expire(key, RedisConstants.CACHE_SHOP_TYPE_TTL, TimeUnit.MINUTES);
+        redisService.setCacheList(key, JSONUtil.toJsonStr(typeList));
+        redisService.expire(key, RedisConstants.CACHE_SHOP_TYPE_TTL, TimeUnit.MINUTES);
         return Result.ok(typeList);
     }
 }

@@ -1,14 +1,13 @@
 package com.smartLive.gateway.service.impl;
 
-
 import cn.hutool.core.util.RandomUtil;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.gateway.service.SmsSendService;
 import com.smartLive.gateway.until.RegexUtils;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -18,9 +17,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class SmsSendServiceImpl implements SmsSendService {
-
-    @Resource
-    StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RedisService redisService;
     /**
      * 发送短信
      *
@@ -38,7 +36,7 @@ public class SmsSendServiceImpl implements SmsSendService {
         // TODO 发送验证码
         String code = RandomUtil.randomNumbers(4);
         // TODO 保存验证码到redis当中
-        stringRedisTemplate.opsForValue().set(RedisConstants.LOGIN_CODE_KEY + phone, code, RedisConstants.LOGIN_CODE_TTL, TimeUnit.MINUTES);
+        redisService.setCacheObject(RedisConstants.LOGIN_CODE_KEY + phone, code, RedisConstants.LOGIN_CODE_TTL, TimeUnit.MINUTES);
         log.debug("[验证码]" + phone + ":" + code);
         return ServerResponse.ok().bodyValue(Result.ok("短信发送成功！"));
     }

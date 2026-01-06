@@ -34,7 +34,7 @@ public interface RemoteBlogService {
      * @param userId
      * @return
      */
-    @GetMapping("/blog/getBlogCount/{userId}")
+    @GetMapping("/inner/blog/getBlogCount/{userId}")
     Integer getBlogCount(@PathVariable("userId") Long userId);
 
     /**

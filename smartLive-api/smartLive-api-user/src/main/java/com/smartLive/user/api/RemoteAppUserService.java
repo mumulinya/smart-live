@@ -15,14 +15,14 @@ public interface RemoteAppUserService {
      * @param phone
      * @return
      */
-    @GetMapping("/user/info/{phone}")
+    @GetMapping("/inner/user/info/{phone}")
     UserDTO getUserInfoByPhone(@PathVariable("phone") String phone);
     /**
      * 电话号码创建用户
      * @param phone
      * @return
      */
-    @PostMapping("/user/create/{phone}")
+    @PostMapping("/inner/user/create/{phone}")
     UserDTO createUserByPhone(@PathVariable("phone") String phone);
 
     /**
@@ -30,14 +30,13 @@ public interface RemoteAppUserService {
      * @param userIdList
      * @return
      */
-    @GetMapping("/user/userListByIds")
+    @GetMapping("/inner/user/userListByIds")
     List<UserDTO> getUserList(@RequestParam("userIdList") List<Long> userIdList);
     /**
      * 根据用户id查询用户
      * @param id
      * @return
      */
-    @GetMapping("/user/{id}")
+    @GetMapping("/inner/user/{id}")
     UserDTO queryUserById(@PathVariable("id") Long id);
-
 }

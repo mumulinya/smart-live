@@ -3,7 +3,6 @@ package com.smartLive.user.controller;
 import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.domain.UserInfo;

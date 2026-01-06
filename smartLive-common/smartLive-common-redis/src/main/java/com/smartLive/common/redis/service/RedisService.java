@@ -155,6 +155,23 @@ public class RedisService
     {
         return redisTemplate.opsForValue().decrement(key, delta);
     }
+
+    /**
+     * 设置缓存对象，仅当 key 不存在时才设置成功 (分布式锁核心方法)
+     * 对应 Redis 命令: SET key value NX EX time
+     *
+     * @param key      缓存键
+     * @param value    缓存值 (通常是 "1" 或 UUID)
+     * @param timeout  超时时间
+     * @param timeUnit 时间单位
+     * @return true=设置成功(获取锁成功); false=设置失败(锁已存在)
+     */
+    public <T> boolean setCacheObjectIfAbsent(final String key, final T value, final Long timeout, final TimeUnit timeUnit) {
+        // 使用 redisTemplate (或者 stringRedisTemplate，视你注入了哪个而定)
+        Boolean result = redisTemplate.opsForValue().setIfAbsent(key, value, timeout, timeUnit);
+        // 避免返回 null 导致自动拆箱 NPE
+        return result != null && result;
+    }
     /**
      * 删除单个对象
      *

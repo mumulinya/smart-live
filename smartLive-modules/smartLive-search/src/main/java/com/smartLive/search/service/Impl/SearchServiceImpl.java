@@ -19,9 +19,7 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +30,6 @@ public class SearchServiceImpl implements ISearchService {
 
     @Autowired
     private RestHighLevelClient client;
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private RedisService redisService;
     /**
@@ -169,17 +165,13 @@ public class SearchServiceImpl implements ISearchService {
         String key = RedisConstants.SEARCH_HISTORY_KEY + userId;
         double score = System.currentTimeMillis();
         // 先删除已存在的相同关键词
-//        stringRedisTemplate.opsForZSet().remove(key, keyword);
         redisService.removeCacheZSetObject(key, keyword);
         // 添加新记录
-//        stringRedisTemplate.opsForZSet().add(key, keyword, score);
         redisService.setCacheZSet(key, keyword, score);
 
         // 保持最近10条
-//        stringRedisTemplate.opsForZSet().removeRange(key, 0, -11);
         redisService.removeRangeCacheZSetObject(key, 0, -11);
         // 设置30天过期
-//        stringRedisTemplate.expire(key, RedisConstants.SEARCH_HISTORY_TTL, TimeUnit.DAYS);
         redisService.expire(key, RedisConstants.SEARCH_HISTORY_TTL, TimeUnit.DAYS);
         return true;
     }
@@ -189,10 +181,8 @@ public class SearchServiceImpl implements ISearchService {
     @Override
     public Boolean recordSearch(String keyword){
         String key = RedisConstants.SEARCH_HOT_KEYWORDS;
-//        stringRedisTemplate.opsForZSet().incrementScore(key, keyword, 1);
         redisService.incrementCacheZSetScore(key, keyword, 1);
         // 设置24小时过期
-//        stringRedisTemplate.expire(key, RedisConstants.SEARCH_HOT_TTL, TimeUnit.HOURS);
         redisService.expire(key, RedisConstants.SEARCH_HOT_TTL, TimeUnit.HOURS);
         return true;
     }

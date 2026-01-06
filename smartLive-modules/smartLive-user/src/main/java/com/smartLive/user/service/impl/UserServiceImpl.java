@@ -19,11 +19,10 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.EsBatchInsertRequest;
 import com.smartLive.common.core.domain.EsInsertRequest;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.dto.CommentDTO;
@@ -36,12 +35,10 @@ import com.smartLive.user.service.IUserInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import com.smartLive.user.mapper.UserMapper;
 import com.smartLive.user.domain.User;
 import com.smartLive.user.service.IUserService;
-
 import static com.smartLive.common.core.constant.SystemConstants.USER_NICK_NAME_PREFIX;
 
 /**
@@ -58,7 +55,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private UserMapper userMapper;
 
     @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+    private RedisService redisService;
     @Autowired
     private IUserInfoService userInfoService;
 
@@ -140,9 +137,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                                 //把userDto字段值转为字符串
                                 .setFieldValueEditor((fieldName, fieldValue) -> fieldValue == null ? "" : fieldValue.toString()));
                 //更新之前的数据
-                stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
+                redisService.setCacheMap(RedisConstants.LOGIN_USER_KEY+tokenKey,userMap);
                 //设置token有效期
-                stringRedisTemplate.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+                redisService.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
                 UserContextHolder.removeUser();
             }
             //更新es数据

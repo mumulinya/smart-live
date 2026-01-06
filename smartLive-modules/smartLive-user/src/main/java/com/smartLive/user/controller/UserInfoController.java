@@ -14,7 +14,7 @@ import java.util.Date;
  * 用户信息Controller
  */
 @RestController
-@RequestMapping("/info")
+@RequestMapping("/user/info")
 public class UserInfoController {
 
     @Autowired

@@ -30,7 +30,6 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.redis.connection.RedisGeoCommands;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import com.smartLive.shop.mapper.ShopMapper;
 import com.smartLive.shop.domain.Shop;
@@ -156,10 +155,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         return shopMapper.deleteShopById(id);
     }
 
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
-
     @Resource
     private CacheClient cacheClient;
 
@@ -198,7 +193,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
         //从缓存里获取商铺数据
         String key = RedisConstants.CACHE_SHOP_KEY + id;
-//        String shopJson = stringRedisTemplate.opsForValue().get(key);
         String shopJson = redisService.getCacheObject(key);
         //判断是否存在
         if (StrUtil.isNotBlank(shopJson)) {
@@ -213,12 +207,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         Shop shop = this.getById(id);
         if (shop == null) {
             //防止缓存穿透,将空值存入redis
-//            stringRedisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             redisService.setCacheObject(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             return null;
         }
         //存入redis
-//        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(shop), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         redisService.setCacheObject(key, JSONUtil.toJsonStr(shop), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         return shop;
 
@@ -236,7 +228,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public Shop queryWithLogicalExpire(Long id) {
         String key = RedisConstants.CACHE_SHOP_KEY + id;
         //从缓存里获取商铺缓存
-        String shopJson = stringRedisTemplate.opsForValue().get(key);
+        String shopJson = redisService.getCacheObject(key);
         //判断是否存在
         if (StrUtil.isBlank(shopJson)) {
             //不存在，直接返回空
@@ -283,7 +275,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public Shop queryWithMutex(Long id) {
         String key = RedisConstants.CACHE_SHOP_KEY + id;
         //从缓存里获取商铺缓存
-        String shopJson = stringRedisTemplate.opsForValue().get(key);
+        String shopJson = redisService.getCacheObject(key);
         //判断是否存在
         if (StrUtil.isNotBlank(shopJson)) {
             //存在，直接返回
@@ -313,11 +305,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 //            Thread.sleep(5000);
             if (shop == null) {
                 //防止缓存穿透,将空值存入redis
-                stringRedisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+                redisService.setCacheObject(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
                 return null;
             }
             //存入redis
-            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(shop), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+            redisService.setCacheObject(key, JSONUtil.toJsonStr(shop), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         } catch (Exception e) {
         } finally {
             unLock(lockKey);
@@ -335,7 +327,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return
      */
     private boolean tryLock(String key) {
-        Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", RedisConstants.LOCK_SHOP_TTL, TimeUnit.SECONDS);
+        boolean flag = redisService.setCacheObjectIfAbsent(key, "1", RedisConstants.LOCK_SHOP_TTL, TimeUnit.SECONDS);
         return BooleanUtil.isTrue(flag);
     }
 
@@ -345,7 +337,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @param key
      */
     private void unLock(String key) {
-        stringRedisTemplate.delete(key);
+        redisService.deleteObject(key);
     }
 
     /**

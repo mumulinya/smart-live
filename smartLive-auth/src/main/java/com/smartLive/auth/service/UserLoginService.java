@@ -4,18 +4,14 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.smartLive.auth.until.RegexUtils;
 import com.smartLive.common.core.constant.RedisConstants;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.LoginFormDTO;
-import com.smartLive.user.api.domain.User;
 import com.smartLive.user.api.domain.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,12 +23,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class UserLoginService {
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
-
     @Autowired
     private RemoteAppUserService remoteAppUserService;
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 登录功能
@@ -43,7 +37,7 @@ public class UserLoginService {
         String phone = loginForm.getPhone();
         String code = loginForm.getCode();
         // TODO 从redis中获取验证码
-        String redisCode = stringRedisTemplate.opsForValue().get(RedisConstants.LOGIN_CODE_KEY+ phone);
+        String redisCode=redisService.getCacheObject(RedisConstants.LOGIN_CODE_KEY+ phone);
         System.out.println("redis验证码为"+redisCode);
         //判断当前电话号码是否正确
         if (RegexUtils.isPhoneInvalid( phone)) {
@@ -75,9 +69,9 @@ public class UserLoginService {
         String token= UUID.randomUUID().toString();
         //存储
         String tokenKey=RedisConstants.LOGIN_USER_KEY+token;
-        stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
+        redisService.setCacheMap(tokenKey, userMap);
         //设置token有效期
-        stringRedisTemplate.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+        redisService.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
         return Result.ok(token);
     }
     /**
@@ -89,7 +83,7 @@ public class UserLoginService {
         //TODO 获取请求头中的token
         String token = request.getHeader("authorization");
         //TODO 删除redis中的token
-        stringRedisTemplate.delete(RedisConstants.LOGIN_USER_KEY+token);
+        redisService.deleteObject(RedisConstants.LOGIN_USER_KEY+token);
         return Result.ok();
     }
 }

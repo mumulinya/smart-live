@@ -8,7 +8,6 @@ import com.smartLive.common.core.enums.IdentityTypeEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.vo.ResourceVO;
@@ -17,13 +16,9 @@ import com.smartLive.interaction.mapper.LikeMapper;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.strategy.identity.IdentityStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
-import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,9 +33,6 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements ILikeService {
-
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private Map<Integer, IdentityStrategy> identityStrategyMap;
     @Autowired

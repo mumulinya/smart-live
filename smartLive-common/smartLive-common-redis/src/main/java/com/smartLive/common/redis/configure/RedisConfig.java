@@ -1,6 +1,7 @@
 package com.smartLive.common.redis.configure;
 
 import io.lettuce.core.ReadFrom;
+import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;

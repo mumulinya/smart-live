@@ -1,9 +1,8 @@
 package com.smartLive.marketing.until;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.smartLive.common.redis.service.RedisService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -23,8 +22,8 @@ public class RedisIdWorker {
      * 序列号的位数
      */
     private static final int COUNT_BITS=32;
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 生成全局id
@@ -41,7 +40,7 @@ public class RedisIdWorker {
         //获取当前日期，精确到天
         String date = now.format(DateTimeFormatter.ofPattern("yyyy:MM:dd"));
         //生成自增序列号
-        long count = stringRedisTemplate.opsForValue().increment("icr:" + keyPrefix + ":" + date);
+        long count = redisService.incrementCacheValue("icr:" + keyPrefix + ":" + date);
 
         //拼接并返回
         return timestamp << COUNT_BITS | count;

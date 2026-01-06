@@ -9,10 +9,7 @@ import com.smartLive.common.core.constant.RedisData;
 import com.smartLive.common.redis.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,14 +19,10 @@ import java.util.function.Function;
 @Slf4j
 @Component
 public class CacheClient {
-
-    @Resource
-    private  StringRedisTemplate stringRedisTemplate;
     @Autowired
     private RedisService redisService;
 
     public void set(String key, Object value, Long time, TimeUnit unit){
-//        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(value), time, unit);
         redisService.setCacheObject(key, JSONUtil.toJsonStr(value), time, unit);
     }
     public void setWithLogicalExpire(String key, Object value, Long time, TimeUnit unit){
@@ -38,7 +31,6 @@ public class CacheClient {
         redisData.setData(value);
         redisData.setExpireTime(LocalDateTime.now().plusSeconds(unit.toSeconds(time)));
         //写入redis
-//        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData), time, unit);
         redisService.setCacheObject(key, JSONUtil.toJsonStr(redisData), time, unit);
     }
 
@@ -52,7 +44,6 @@ public class CacheClient {
 
         //从缓存里获取商铺数据
         String key = keyPrefix + id;
-//        String json = stringRedisTemplate.opsForValue().get(key);
         String json = redisService.getCacheObject(key);
         //判断是否存在
         if(StrUtil.isNotBlank(json)){
@@ -68,7 +59,6 @@ public class CacheClient {
         R r = dbFallback.apply(id);
         if(r == null){
             //防止缓存穿透,将空值存入redis
-//            stringRedisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             redisService.setCacheObject(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             return null;
         }
@@ -89,7 +79,7 @@ public class CacheClient {
     public <R,ID> R queryWithLogicalExpire(String keyPrefix, ID id,Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit)  {
         String key = keyPrefix + id;
         //从缓存里获取商铺缓存
-        String json = stringRedisTemplate.opsForValue().get(key);
+        String json =redisService.getCacheObject(key);
         //判断是否存在
         if(StrUtil.isBlank(json)){
             //存在，直接返回空
@@ -137,7 +127,7 @@ public class CacheClient {
     public <R,ID> R queryWithLogicalExpireAndPassThrough(String keyPrefix, ID id,Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit)  {
         String key = keyPrefix + id;
         //从缓存里获取商铺缓存
-        String json = stringRedisTemplate.opsForValue().get(key);
+        String json =redisService.getCacheObject(key);
         R r=null;
         //判断是否存在
         if(StrUtil.isNotBlank(json)){
@@ -167,7 +157,7 @@ public class CacheClient {
                     R r1 = dbFallback.apply(id);
                     if(r1 == null){
                         //防止缓存穿透,将空值存入redis
-                        stringRedisTemplate.opsForValue().set(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+                        redisService.setCacheObject(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
                     }else{
                         //写入redis
                         this.setWithLogicalExpire(key, r1,time, unit);
@@ -190,7 +180,7 @@ public class CacheClient {
      * @return
      */
     private boolean tryLock(String key){
-        Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", RedisConstants.LOCK_SHOP_TTL, TimeUnit.SECONDS);
+        boolean flag = redisService.setCacheObjectIfAbsent(key, "1", RedisConstants.LOCK_SHOP_TTL, TimeUnit.SECONDS);
         return BooleanUtil.isTrue(flag);
     }
 
@@ -199,6 +189,6 @@ public class CacheClient {
      * @param key
      */
     private void unLock(String key){
-        stringRedisTemplate.delete(key);
+        redisService.deleteObject(key);
     }
 }

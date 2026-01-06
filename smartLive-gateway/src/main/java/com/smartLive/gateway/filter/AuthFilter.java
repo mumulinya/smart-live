@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -42,10 +41,6 @@ public class AuthFilter implements GlobalFilter, Ordered
 
     @Autowired
     private RedisService redisService;
-
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain)
@@ -102,7 +97,7 @@ public class AuthFilter implements GlobalFilter, Ordered
             String token = getToken(request);
             //TODO 2.获取redis中的用户
             String tokenKey = RedisConstants.LOGIN_USER_KEY + token;
-            Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(tokenKey);
+            Map<String, Object> userMap = redisService.getCacheMap(tokenKey);
             //如果token存在，且用户信息存在
             if(StrUtil.isNotBlank(tokenKey)&&!userMap.isEmpty()){
                 //TODO 5 把hashMap对象转换为userDto对象
@@ -132,7 +127,7 @@ public class AuthFilter implements GlobalFilter, Ordered
                 return unauthorizedResponse(exchange, "登录状态已过期");
             }
             //TODO 7.刷新token有效期
-            stringRedisTemplate.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+            redisService.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
         }
         return chain.filter(exchange.mutate().request(mutate.build()).build());
     }

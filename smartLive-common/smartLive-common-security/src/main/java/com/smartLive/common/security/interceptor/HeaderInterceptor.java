@@ -1,5 +1,6 @@
 package com.smartLive.common.security.interceptor;
 
+import com.smartLive.common.redis.service.RedisService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.constant.RedisConstants;
@@ -27,10 +28,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HeaderInterceptor implements AsyncHandlerInterceptor
 {
-    private StringRedisTemplate stringRedisTemplate;
+    private RedisService redisService;
 
-    public HeaderInterceptor(StringRedisTemplate stringRedisTemplate) {
-        this.stringRedisTemplate = stringRedisTemplate;
+    public HeaderInterceptor(RedisService redisService) {
+        this.redisService = redisService;
     }
 
     @Override
@@ -73,7 +74,8 @@ public class HeaderInterceptor implements AsyncHandlerInterceptor
             //刷新token有效期
             if (StringUtils.isNotEmpty(userToken)){
                 //TODO 7.刷新token有效期
-                stringRedisTemplate.expire(userToken, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+                redisService.expire(userToken, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+                log.info("刷新token有效期：{}", userToken);
             }
         }
         return true;
