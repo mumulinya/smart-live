@@ -2,7 +2,9 @@ package com.smartlive.chat.dto;
 
 import lombok.Data;
 import java.util.Date;
-
+/**
+ * 聊天消息事件
+ */
 @Data
 public class ChatMessageEvent {
     private String type;

@@ -77,6 +77,7 @@ public class ChatSessionsController extends BaseController
             chatSessions.setLowUserId(targetUid);
         }else{
             chatSessions.setMaxUserId(targetUid);
+            chatSessions.setLowUserId(userId);
         }
         Long sessionsId=chatSessionsService.insertChatSessions(chatSessions);
         return Result.ok(sessionsId);
