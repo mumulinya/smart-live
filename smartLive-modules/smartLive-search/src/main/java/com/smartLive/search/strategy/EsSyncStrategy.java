@@ -7,9 +7,9 @@ import java.util.function.Function;
 public interface EsSyncStrategy {
 
     /**
-     * 获取策略支持的数据类型，例如 "voucher", "shop"
+     * 获取策略的类型
      */
-    String getDataType();
+    Integer getType();
     /**
      * 单条插入或更新
      * @param indexName

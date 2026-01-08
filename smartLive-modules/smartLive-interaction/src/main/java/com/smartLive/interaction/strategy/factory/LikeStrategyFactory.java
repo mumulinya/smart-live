@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 public class LikeStrategyFactory {
     @Bean
     public Map<Integer, LikeStrategy> LikeStrategyMap(List<LikeStrategy> strategies) {
-        log.info("初始化点赞策略:{}", strategies);
         return strategies.stream()
                 .collect(Collectors.toMap(
                         LikeStrategy::getType,  // 使用 dataType 作为键

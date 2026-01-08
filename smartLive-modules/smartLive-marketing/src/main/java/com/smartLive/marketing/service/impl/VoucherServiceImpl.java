@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
-import com.smartLive.common.core.domain.EsBatchInsertRequest;
-import com.smartLive.common.core.domain.EsInsertRequest;
-import com.smartLive.common.core.domain.R;
+import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
+import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -183,13 +183,13 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         for (Long id : ids) {
             executorService.submit(()->{
                 log.info("线程“{}删除es数据id为：{}", id);
-                EsInsertRequest esInsertRequest = new EsInsertRequest();
-                esInsertRequest.setId(id);
-                esInsertRequest.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
-                esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
+                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
+                searchIndexMessage.setId(id);
+                searchIndexMessage.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+                searchIndexMessage.setType(GlobalBizTypeEnum.VOUCHER.getCode());
                 //发起rabbitMq信息删除es数据
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_VOUCHER_DELETE,esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_DELETE, esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_DELETE, searchIndexMessage);
                 //发起rabbitmq信息删除milvus数据
 //               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE,MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,esInsertRequest);
             });
@@ -487,10 +487,10 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 //                   queryVoucherShopMessage(voucher);
                 });
                 // 创建请求并发送
-                EsBatchInsertRequest request = new EsBatchInsertRequest();
+                SearchIndexBatchMessage request = new SearchIndexBatchMessage();
                 request.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
                 request.setData(vouchers);
-                request.setDataType(EsDataTypeConstants.VOUCHER);
+                request.setType(GlobalBizTypeEnum.VOUCHER.getCode());
                 // 发送rabbitmq消息数据插入es
 //               rabbitTemplate.convertAndSend(
 //                       MqConstants.ES_EXCHANGE,
@@ -530,17 +530,17 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 }
                 querySeckill(voucher);
                 queryVoucherShopMessage(voucher);
-                EsInsertRequest esInsertRequest = new EsInsertRequest();
-                esInsertRequest.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
-                esInsertRequest.setData(voucher);
-                esInsertRequest.setId(voucher.getId());
-                esInsertRequest.setDataType(EsDataTypeConstants.VOUCHER);
+                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
+                searchIndexMessage.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+                searchIndexMessage.setData(voucher);
+                searchIndexMessage.setId(voucher.getId());
+                searchIndexMessage.setType(GlobalBizTypeEnum.VOUCHER.getCode());
                 log.info("发送的优惠券信息为{}", voucher);
                 //发送rabbitmq消息数据插入es
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, searchIndexMessage);
                 //发送rabbitmq消息数据插入Milvus
-               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_INSERT, esInsertRequest);
+               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_INSERT, searchIndexMessage);
             });
         }
         return "发布成功";

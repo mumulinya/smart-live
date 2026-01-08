@@ -1,7 +1,7 @@
 package com.smartLive.ai.listener;
 
 import com.smartLive.ai.entity.request.AIGenerateRequest;
-import com.smartLive.ai.service.strategy.handlers.impl.CommentHandler;
+import com.smartLive.ai.strategy.handlers.impl.CommentHandler;
 import com.smartLive.common.core.constant.MqConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;

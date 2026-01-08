@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 public class ResourceStrategyFactory {
     @Bean
     public Map<Integer, ResourceStrategy> ResourceStrategyMap(List<ResourceStrategy> strategies) {
-        log.info("初始化资源策略:{}", strategies);
         return strategies.stream()
                 .collect(Collectors.toMap(
                         ResourceStrategy::getType,  // 使用 dataType 作为键

@@ -10,8 +10,8 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.core.enums.IdentityTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.redis.service.RedisService;
-import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.vo.SocialInfoVO;
 import com.smartLive.interaction.mapper.FollowMapper;
@@ -225,23 +225,23 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     /**
      * 推送数据给粉丝
      *
-     * @param feedEventDTO
+     * @param feedEventMessage
      */
     @Override
-    public void pushToFollowers(FeedEventDTO feedEventDTO) {
+    public void pushToFollowers(FeedEventMessage feedEventMessage) {
         //从redis里面读取粉丝列表
-        IdentityTypeEnum followType = IdentityTypeEnum.getByCode(feedEventDTO.getSourceType());
+        IdentityTypeEnum followType = IdentityTypeEnum.getByCode(feedEventMessage.getSourceType());
         if (followType == null) {
             log.error("推送数据给粉丝失败，未知的关注类型");
             return;
         }
-        String fansKey = followType.getFansKeyPrefix() + feedEventDTO.getSourceId();
+        String fansKey = followType.getFansKeyPrefix() + feedEventMessage.getSourceId();
         Set<Object> userIdSet= redisService.getCacheZSetRange(fansKey, 0, -1);
         List<Long> userIdList = userIdSet.stream().map(obj -> (Long) obj).collect(Collectors.toList());
         //推送笔记id给所有粉丝
         // 查询笔记作者下的所有粉丝
         if(userIdList.isEmpty()){
-            userIdList = query().select("user_id").eq("source_type", feedEventDTO.getSourceType()).eq("source_id", feedEventDTO.getSourceId()).list().stream().map(Follow::getUserId).collect(Collectors.toList());
+            userIdList = query().select("user_id").eq("source_type", feedEventMessage.getSourceType()).eq("source_id", feedEventMessage.getSourceId()).list().stream().map(Follow::getUserId).collect(Collectors.toList());
         }
         if(userIdList.isEmpty()){
             log.info("推送数据给粉丝失败，没有粉丝");
@@ -249,9 +249,9 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
         for (Long userId : userIdList) {
             //推送
-            String feedKeyPrefix = FeedTypeEnum.getByCode(feedEventDTO.getBizType()).getFeedKeyPrefix();
+            String feedKeyPrefix = FeedTypeEnum.getByCode(feedEventMessage.getBizType()).getFeedKeyPrefix();
             String key = feedKeyPrefix + userId;
-            redisService.setCacheZSet(key, feedEventDTO.getBizId().toString(), System.currentTimeMillis());
+            redisService.setCacheZSet(key, feedEventMessage.getBizId().toString(), System.currentTimeMillis());
         }
     }
     /**

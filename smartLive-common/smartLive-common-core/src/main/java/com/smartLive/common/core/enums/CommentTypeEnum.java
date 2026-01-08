@@ -5,8 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 点赞业务专用枚举
- * 作用：只定义支持点赞的资源类型，消除 Null 判断
+ * 评论类型总枚举
+ * 职责：
+ * 1. 评论类型编码 (数据库存储值)
+ * 2. 提供策略模式所需的 Bean 名称 (strategyName)
+ * 3. 提供 MQ/API 用的业务域标识 (bizDomain)
  */
 @Getter
 @AllArgsConstructor

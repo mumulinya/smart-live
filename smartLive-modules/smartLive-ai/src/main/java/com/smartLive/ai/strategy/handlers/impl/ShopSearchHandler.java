@@ -1,8 +1,8 @@
-package com.smartLive.ai.service.strategy.handlers.impl;
+package com.smartLive.ai.strategy.handlers.impl;
 
 import com.smartLive.ai.entity.request.AIChatRequest;
 import com.smartLive.ai.service.ai.AIClient;
-import com.smartLive.ai.service.strategy.handlers.ChatHandler;
+import com.smartLive.ai.strategy.handlers.ChatHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;

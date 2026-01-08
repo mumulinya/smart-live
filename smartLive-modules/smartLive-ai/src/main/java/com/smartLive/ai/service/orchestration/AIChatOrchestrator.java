@@ -1,7 +1,7 @@
 package com.smartLive.ai.service.orchestration;
 
 import com.smartLive.ai.entity.request.AIChatRequest;
-import com.smartLive.ai.service.strategy.handlers.ChatHandler;
+import com.smartLive.ai.strategy.handlers.ChatHandler;
 import com.smartLive.ai.service.recognition.IntentRecognizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

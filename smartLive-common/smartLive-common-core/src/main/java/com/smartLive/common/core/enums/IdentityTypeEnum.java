@@ -3,7 +3,9 @@ package com.smartLive.common.core.enums;
 import com.smartLive.common.core.constant.RedisConstants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
+/**
+ * 关注和粉丝的枚举
+ */
 @Getter
 @AllArgsConstructor
 public enum IdentityTypeEnum {

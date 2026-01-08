@@ -2,7 +2,12 @@ package com.smartLive.common.core.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
+/**
+ * 全局业务类型枚举
+ * 1. 用于数据库存储业务类型
+ * 2. 用于 MQ 消息的标识
+ * 3. 用于 Redis Key 的标识
+ */
 @Getter
 @AllArgsConstructor
 public enum GlobalBizTypeEnum {

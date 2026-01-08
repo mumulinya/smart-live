@@ -7,8 +7,7 @@ import lombok.Getter;
 import java.util.Arrays;
 
 /**
- * 业务类型枚举
- * 用于：收藏表(sys_favorite)、点赞表、Feed流推送内容类型
+ * 推送类型枚举
  */
 @Getter
 @AllArgsConstructor

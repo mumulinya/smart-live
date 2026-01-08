@@ -1,9 +1,10 @@
-package com.smartLive.ai.service.strategy.milvus.Impl;
+package com.smartLive.ai.strategy.milvus;
 
 import com.smartLive.ai.entity.DOC.ShopDoc;
 import com.smartLive.ai.service.business.IShopMilvusService;
-import com.smartLive.ai.service.strategy.milvus.MilvusSyncStrategy;
+import com.smartLive.ai.strategy.milvus.MilvusSyncStrategy;
 import com.smartLive.ai.utils.EsTool;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,11 +14,11 @@ import java.util.Map;
 @Component
 public class ShopMilvusStrategy implements MilvusSyncStrategy {
     /**
-     * 获取策略支持的数据类型，例如 "voucher", "shop"
+     * 获取策略支持的数据类型
      */
     @Override
-    public String getDataType() {
-        return "shop";
+    public Integer getType() {
+        return GlobalBizTypeEnum.SHOP.getCode();
     }
 
     @Autowired

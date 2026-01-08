@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 public class CommentStrategyFactory {
     @Bean
     public Map<Integer, CommentStrategy> CommentStrategyMap(List<CommentStrategy> strategies) {
-        log.info("初始化评论策略:{}", strategies);
         return strategies.stream()
                 .collect(Collectors.toMap(
                         CommentStrategy::getType,  // 使用 dataType 作为键

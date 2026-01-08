@@ -1,9 +1,10 @@
-package com.smartLive.ai.service.strategy.milvus.Impl;
+package com.smartLive.ai.strategy.milvus;
 
 import com.smartLive.ai.entity.DOC.VoucherDoc;
 import com.smartLive.ai.service.business.IVoucherMilvusService;
-import com.smartLive.ai.service.strategy.milvus.MilvusSyncStrategy;
+import com.smartLive.ai.strategy.milvus.MilvusSyncStrategy;
 import com.smartLive.ai.utils.EsTool;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,11 +16,11 @@ public class VoucherMilvusStrategy implements MilvusSyncStrategy{
     @Autowired
     private IVoucherMilvusService voucherMilvusService;
     /**
-     * 获取策略支持的数据类型，例如 "voucher", "shop"
+     * 获取策略的类型
      */
     @Override
-    public String getDataType() {
-        return "voucher";
+    public Integer getType() {
+        return GlobalBizTypeEnum.VOUCHER.getCode();
     }
 
     @Override

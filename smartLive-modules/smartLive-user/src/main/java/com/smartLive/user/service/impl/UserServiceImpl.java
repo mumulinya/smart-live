@@ -17,8 +17,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.EsBatchInsertRequest;
-import com.smartLive.common.core.domain.EsInsertRequest;
+import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
+import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -163,13 +163,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         for (Long id : ids) {
             executorService.submit(()->{
                 log.info("线程：{}开始删除es数据id：{}",Thread.currentThread().getName(),id);
-                EsInsertRequest esInsertRequest = new EsInsertRequest();
-                esInsertRequest.setId(id);
-                esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-                esInsertRequest.setDataType(EsDataTypeConstants.USER);
+                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
+                searchIndexMessage.setId(id);
+                searchIndexMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+                    searchIndexMessage.setType(GlobalBizTypeEnum.USER.getCode());
                 //发起rabbitMq信息删除
 //                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_DELETE, esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_DELETE, searchIndexMessage);
             });
         }
 //        }
@@ -410,10 +410,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                         }
                 );
                 // 创建请求并发送
-                EsBatchInsertRequest request = new EsBatchInsertRequest();
+                SearchIndexBatchMessage request = new SearchIndexBatchMessage();
                 request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
                 request.setData(users);
-                request.setDataType(EsDataTypeConstants.USER);
+                request.setType(GlobalBizTypeEnum.USER.getCode());
 //               rabbitTemplate.convertAndSend(
 //                       MqConstants.ES_EXCHANGE,
 //                       MqConstants.ES_ROUTING_USER_BATCH_INSERT,
@@ -444,13 +444,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     return;
                 }
                 queryUserInfo(user);
-                EsInsertRequest esInsertRequest = new EsInsertRequest();
-                esInsertRequest.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-                esInsertRequest.setData(user);
-                esInsertRequest.setId(user.getId());
-                esInsertRequest.setDataType(EsDataTypeConstants.USER);
+                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
+                searchIndexMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+                searchIndexMessage.setData(user);
+                searchIndexMessage.setId(user.getId());
+                searchIndexMessage.setType(GlobalBizTypeEnum.USER.getCode());
 //                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, searchIndexMessage);
             });
         }
         return "发布成功";

@@ -1,27 +1,27 @@
-package com.smartLive.search.strategy.Impl;
+package com.smartLive.search.strategy;
 
-import com.smartLive.search.domain.BlogDoc;
-import com.smartLive.search.service.IBlogEsService;
-import com.smartLive.search.strategy.EsSyncStrategy;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.search.domain.UserDoc;
+import com.smartLive.search.service.IUserEsService;
 import com.smartLive.search.utils.EsTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-@Component("blog")
-public class BlogEsStrategy implements EsSyncStrategy {
+
+@Component
+public class UserEsStrategy implements EsSyncStrategy {
     @Autowired
-    IBlogEsService blogEsService;
+    IUserEsService userEsService;
 
     /**
-     * 获取策略支持的数据类型，例如 "voucher", "shop"
+     * 获取策略的类型
      */
     @Override
-    public String getDataType() {
-        return "blog";
+    public Integer getType() {
+        return GlobalBizTypeEnum.USER.getCode();
     }
 
     /**
@@ -35,8 +35,8 @@ public class BlogEsStrategy implements EsSyncStrategy {
      */
     @Override
     public boolean insertOrUpdate(String indexName, String id, Object data) throws IOException {
-        BlogDoc doc = EsTool.convertToObject((Map) data, BlogDoc.class);
-        return blogEsService.insertOrUpdate(indexName, id, doc);
+        UserDoc doc = EsTool.convertToObject((Map) data, UserDoc.class);
+        return userEsService.insertOrUpdate(indexName, id, doc);
     }
 
     /**
@@ -48,8 +48,8 @@ public class BlogEsStrategy implements EsSyncStrategy {
      */
     @Override
     public boolean batchInsert(String indexName, List<Object> dataList) throws IOException {
-        List<BlogDoc> docList = EsTool.convertList(dataList, BlogDoc.class);
-        return blogEsService.batchInsert(indexName, docList,  data -> data.getId().toString());
+        List<UserDoc> docList = EsTool.convertList(dataList, UserDoc.class);
+        return userEsService.batchInsert(indexName, docList,  data -> data.getId().toString());
     }
 
     /**
@@ -61,6 +61,6 @@ public class BlogEsStrategy implements EsSyncStrategy {
      */
     @Override
     public boolean delete(String indexName, String id) throws IOException {
-        return blogEsService.delete(indexName,id);
+        return userEsService.delete(indexName,id);
     }
 }

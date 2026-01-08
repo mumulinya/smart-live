@@ -1,9 +1,9 @@
 package com.smartLive.ai.listener;
-
-import com.smartLive.ai.entity.request.MilvusBatchInsertRequest;
 import com.smartLive.ai.entity.request.MilvusInsertRequest;
-import com.smartLive.ai.service.strategy.milvus.MilvusSyncStrategy;
+import com.smartLive.ai.strategy.milvus.MilvusSyncStrategy;
 import com.smartLive.common.core.constant.MqConstants;
+import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
+import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -23,17 +23,7 @@ public class MilvusSyncListener {
     @Autowired
     private ExecutorService executorService;
     @Autowired
-    private Map<String, MilvusSyncStrategy> milvusStrategyMap;
-
-    //基于 Spring 容器管理的策略分发模式
-//    @Autowired
-//    public MilvusSyncListener(List<MilvusSyncStrategy> strategies) {
-//        this.milvusStrategyMap = strategies.stream()
-//                .collect(Collectors.toMap(
-//                        MilvusSyncStrategy::getDataType,  // 使用 dataType 作为键
-//                        Function.identity()               // 策略对象作为值
-//                ));
-//    }
+    private Map<Integer, MilvusSyncStrategy> milvusStrategyMap;
 
     // ==================== 单条插入 ====================
     @RabbitListener(bindings = {
@@ -44,19 +34,19 @@ public class MilvusSyncListener {
                             MqConstants.MILVUS_ROUTING_SHOP_INSERT,
                             MqConstants.MILVUS_ROUTING_BLOG_INSERT})
     })
-    public void handleSingleInsert(MilvusInsertRequest request) {
+    public void handleSingleInsert(SearchIndexMessage request) {
       executorService.submit(()->{
           log.info("线程：{}接收Milvus单条插入请求: {}",Thread.currentThread().getName(), request);
           // 1. 获取策略
-          MilvusSyncStrategy strategy = milvusStrategyMap.get(request.getDataType());
+          MilvusSyncStrategy strategy = milvusStrategyMap.get(request.getType());
           if (strategy == null) {
-              log.error("Milvus单条插入失败：未找到策略 dataType={}", request.getDataType());
+              log.error("Milvus单条插入失败：未找到策略 dataType={}", request.getType());
               return;
           }
           try {
               // 2. 直接委托给策略执行
               boolean success = strategy.insertOrUpdate(request.getId().toString(), request.getData());
-              log.info("Milvus单条插入结果: {}, type={}", success, request.getDataType());
+              log.info("Milvus单条插入结果: {}, type={}", success, request.getType());
           } catch (Exception e) {
               log.error("Milvus单条插入异常", e);
           }
@@ -70,17 +60,17 @@ public class MilvusSyncListener {
                             MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT,
                             MqConstants.MILVUS_ROUTING_BLOG_BATCH_INSERT})
     })
-    public void handleBatchInsert(MilvusBatchInsertRequest request) {
+    public void handleBatchInsert(SearchIndexBatchMessage request) {
        executorService.submit(()->{
            log.info("线程：{}接收Milvus批量插入请求: {}",Thread.currentThread().getName(), request);
-           MilvusSyncStrategy strategy = milvusStrategyMap.get(request.getDataType());
+           MilvusSyncStrategy strategy = milvusStrategyMap.get(request.getType());
            if (strategy == null) {
-               log.error("Milvus批量插入失败：未找到策略 dataType={}", request.getDataType());
+               log.error("Milvus批量插入失败：未找到策略 dataType={}", request.getType());
                return;
            }
            try {
                boolean success = strategy.batchInsert((List<Object>) request.getData());
-               log.info("Milvus批量插入结果: {}, type={}", success, request.getDataType());
+               log.info("Milvus批量插入结果: {}, type={}", success, request.getType());
            } catch (Exception e) {
                log.error("Milvus批量插入异常", e);
            }
@@ -95,12 +85,12 @@ public class MilvusSyncListener {
                             MqConstants.MILVUS_ROUTING_SHOP_DELETE,
                             MqConstants.MILVUS_ROUTING_BLOG_DELETE})
     })
-    public void handleDelete(MilvusInsertRequest request) {
+    public void handleDelete(SearchIndexMessage request) {
         executorService.submit(()->{
             log.info("线程：{}接收Milvus删除请求: id={}",Thread.currentThread().getName(), request.getId());
-            MilvusSyncStrategy strategy = milvusStrategyMap.get(request.getDataType());
+            MilvusSyncStrategy strategy = milvusStrategyMap.get(request.getType());
             if (strategy == null) {
-                log.error("Milvus删除失败：未找到策略 dataType={}", request.getDataType());
+                log.error("Milvus删除失败：未找到策略 dataType={}", request.getType());
                 return;
             }
             try {

@@ -1,4 +1,4 @@
-package com.smartLive.ai.service.strategy.handlers;
+package com.smartLive.ai.strategy.handlers;
 
 import com.smartLive.ai.entity.request.AIChatRequest;
 import reactor.core.publisher.Flux;

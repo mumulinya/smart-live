@@ -1,7 +1,5 @@
 package com.smartLive.interaction.controller;
 
-import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.api.dto.FeedEventDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;
 import jakarta.annotation.Resource;

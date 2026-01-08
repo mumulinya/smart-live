@@ -1,6 +1,6 @@
 package com.smartLive.interaction.listener;
 import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.interaction.api.dto.FeedEventDTO;
+import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.interaction.service.IFollowService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -30,9 +30,9 @@ public class FollowListener {
                     MqConstants.INTERACT_FEED_VOUCHER_ROUTING,
             }
     ))
-    public void handleSendNormalToFollowers(FeedEventDTO feedEventDTO){
+    public void handleSendNormalToFollowers(FeedEventMessage feedEventMessage){
         executorService.execute(() -> {
-            followService.pushToFollowers(feedEventDTO);
+            followService.pushToFollowers(feedEventMessage);
         });
     }
     //紧急数据推送
@@ -44,9 +44,9 @@ public class FollowListener {
                     MqConstants.INTERACT_FEED_VOUCHER_ROUTING,
             }
     ))
-    public void handleSendUrgentToFollowers(FeedEventDTO feedEventDTO){
+    public void handleSendUrgentToFollowers(FeedEventMessage feedEventMessage){
         executorService.execute(() -> {
-            followService.pushToFollowers(feedEventDTO);
+            followService.pushToFollowers(feedEventMessage);
         });
     }
 }

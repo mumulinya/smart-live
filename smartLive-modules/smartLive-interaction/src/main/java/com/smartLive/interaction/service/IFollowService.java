@@ -1,7 +1,7 @@
 package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.interaction.api.dto.FeedEventDTO;
+import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.vo.SocialInfoVO;
 
@@ -88,7 +88,7 @@ public interface IFollowService extends IService<Follow>
     /**
      * 推送数据给粉丝
      */
-    void pushToFollowers(FeedEventDTO feedEventDTO);
+    void pushToFollowers(FeedEventMessage feedEventMessage);
 
     /**
      * 获取粉丝列表

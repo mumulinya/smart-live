@@ -8,5 +8,5 @@ public class MilvusInsertRequest {
     private String indexName;
     private Long  id;
     private Object data;
-    private String dataType; // shop, blog, user, voucher
+    private Integer type; // shop, blog, user, voucher
 }

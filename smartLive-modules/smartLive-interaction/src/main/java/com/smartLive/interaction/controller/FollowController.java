@@ -1,6 +1,6 @@
 package com.smartLive.interaction.controller;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.api.dto.FeedEventDTO;
+import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;
 import org.springframework.web.bind.annotation.*;
@@ -52,8 +52,8 @@ public class FollowController {
 
     //把数据推送给所有粉丝
     @PostMapping("/pushToFollowers")
-    public void pushToFollowers(@RequestBody FeedEventDTO feedEventDTO){
-        followServiceImpl.pushToFollowers(feedEventDTO);
+    public void pushToFollowers(@RequestBody FeedEventMessage feedEventMessage){
+        followServiceImpl.pushToFollowers(feedEventMessage);
     }
     //获取粉丝列表
     @GetMapping("/fans")

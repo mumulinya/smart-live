@@ -1,4 +1,4 @@
-package com.smartLive.ai.service.strategy.milvus;
+package com.smartLive.ai.strategy.milvus;
 
 import java.io.IOException;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.List;
 public interface MilvusSyncStrategy {
 
     /**
-     * 获取策略支持的数据类型，例如 "voucher", "shop"
+     * 获取策略的类型
      */
-    String getDataType();
+    Integer getType();
 
 
     /**

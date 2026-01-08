@@ -1,10 +1,10 @@
-package com.smartLive.ai.service.strategy.handlers.impl;
+package com.smartLive.ai.strategy.handlers.impl;
 
 import com.smartLive.ai.entity.request.AIChatRequest;
 import com.smartLive.ai.entity.request.AIGenerateRequest;
 import com.smartLive.ai.service.ai.AIClient;
 import com.smartLive.ai.service.rag.impl.CommentRagService;
-import com.smartLive.ai.service.strategy.handlers.ChatHandler;
+import com.smartLive.ai.strategy.handlers.ChatHandler;
 import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.interaction.api.dto.CommentDTO;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.smartLive.interaction.api.dto;
+package com.smartLive.common.rabbitmq.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class FeedEventDTO {
+public class FeedEventMessage {
     // 1. 谁发的？(Sender)
     private Long sourceId;       // 发送者ID (用户ID 或 店铺ID)
     private Integer sourceType;  // 发送者类型 (FollowTypeEnum: USER/SHOP)

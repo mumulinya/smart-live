@@ -12,8 +12,8 @@ import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.EsBatchInsertRequest;
-import com.smartLive.common.core.domain.EsInsertRequest;
+import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
+import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
 import com.smartLive.common.core.domain.ScrollResult;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
@@ -27,7 +27,6 @@ import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.BlogDTO;
-import com.smartLive.user.api.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,13 +144,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         for (Long id : ids) {
             executorService.submit(()->{
                log.info("删除es数据：{}", id);
-               EsInsertRequest esInsertRequest = new EsInsertRequest();
-               esInsertRequest.setId(id);
-               esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-               esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
-               //发起rabbitMq信息删除
+               SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
+               searchIndexMessage.setId(id);
+               searchIndexMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+                searchIndexMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
+                //发起rabbitMq信息删除
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
-               MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
+               MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, searchIndexMessage);
                //更新redis缓存
                flashRedisBlogCache(id);
                latch.countDown();
@@ -727,10 +726,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                     blog.setIcon(user.getIcon());
                 });
                 // 创建请求并发送
-                EsBatchInsertRequest request = new EsBatchInsertRequest();
+                SearchIndexBatchMessage request = new SearchIndexBatchMessage();
                 request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
                 request.setData(blogs);
-                request.setDataType(EsDataTypeConstants.BLOG);
+                request.setType(GlobalBizTypeEnum.BLOG.getCode());
 //                rabbitTemplate.convertAndSend(
 //                        MqConstants.ES_EXCHANGE,
 //                        MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
@@ -778,16 +777,16 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                   return;
               }
               queryBlogUser(blog);
-              EsInsertRequest esInsertRequest = new EsInsertRequest();
-              esInsertRequest.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-              esInsertRequest.setData(blog);
-              esInsertRequest.setId(blog.getId());
-              esInsertRequest.setDataType(EsDataTypeConstants.BLOG);
+              SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
+              searchIndexMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+              searchIndexMessage.setData(blog);
+              searchIndexMessage.setId(blog.getId());
+              searchIndexMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
 //              rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BLOG_INSERT, esInsertRequest);
               MqMessageSendUtils.sendMqMessage(rabbitTemplate,
                       MqConstants.ES_EXCHANGE,
                       MqConstants.ES_ROUTING_BLOG_INSERT,
-                      esInsertRequest);
+                      searchIndexMessage);
           });
         }
         return "发布成功";

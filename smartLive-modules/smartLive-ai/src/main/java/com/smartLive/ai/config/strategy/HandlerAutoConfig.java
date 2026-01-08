@@ -1,5 +1,5 @@
 package com.smartLive.ai.config.strategy;
-import com.smartLive.ai.service.strategy.handlers.ChatHandler;
+import com.smartLive.ai.strategy.handlers.ChatHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

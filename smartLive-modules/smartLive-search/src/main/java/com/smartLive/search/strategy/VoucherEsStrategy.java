@@ -1,28 +1,27 @@
-package com.smartLive.search.strategy.Impl;
+package com.smartLive.search.strategy;
 
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.search.domain.VoucherDoc;
 import com.smartLive.search.service.IVoucherEsService;
-import com.smartLive.search.strategy.EsSyncStrategy;
 import com.smartLive.search.utils.EsTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@Component("voucher")
+@Component
 public class VoucherEsStrategy implements EsSyncStrategy {
     @Autowired
     IVoucherEsService voucherEsService;
 
     /**
-     * 获取策略支持的数据类型，例如 "voucher", "voucher"
+     * 获取策略的类型
      */
     @Override
-    public String getDataType() {
-        return "voucher";
+    public Integer getType() {
+        return GlobalBizTypeEnum.VOUCHER.getCode();
     }
 
     /**

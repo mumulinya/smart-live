@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 public class IdentityStrategyFactory {
     @Bean
     public Map<Integer, IdentityStrategy> IdentityStrategyMap(List<IdentityStrategy> strategies) {
-        log.info("初始化信息策略:{}", strategies);
         return strategies.stream()
                 .collect(Collectors.toMap(
                         IdentityStrategy::getType,  // 使用 dataType 作为键
