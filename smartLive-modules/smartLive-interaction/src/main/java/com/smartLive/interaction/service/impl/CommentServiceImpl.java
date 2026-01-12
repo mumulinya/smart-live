@@ -10,7 +10,6 @@ import com.smartLive.blog.api.dto.BlogDto;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
@@ -22,7 +21,6 @@ import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
-import com.smartLive.user.api.domain.User;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -30,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -59,7 +56,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
     private RedisService redisService;
-
     /**
      * 查询评论
      *
@@ -201,7 +197,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             //记录评论数量
             redisService.incrementCacheValue(commentCountKeyPrefix);
             //记录脏数据
-            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getId().toString()));
+            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getSourceId().toString()));
         }
         return i;
     }

@@ -81,7 +81,7 @@ public class BlogInnerController extends BaseController
     /**
      * 批量更新评论数
      */
-    @PostMapping("/blog/updateCommentCountBatch")
+    @PostMapping("/updateCommentCountBatch")
     Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return blogService.updateCommentCountBatch(updateMap);
     }

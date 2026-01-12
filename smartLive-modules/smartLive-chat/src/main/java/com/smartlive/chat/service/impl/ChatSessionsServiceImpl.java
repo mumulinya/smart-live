@@ -154,9 +154,13 @@ public class ChatSessionsServiceImpl extends ServiceImpl<ChatSessionsMapper, Cha
      */
     @Override
     public Long getSessionId(ChatSessions chatSessions) {
-        Long sessionId = query().eq("max_user_id", chatSessions.getMaxUserId())
+        ChatSessions sessions = query().eq("max_user_id", chatSessions.getMaxUserId())
                 .eq("low_user_id", chatSessions.getLowUserId())
-                .one().getId();
+                .one();
+        if(sessions==null){
+            return null;
+        }
+        Long sessionId = sessions.getId();
         return sessionId;
     }
 }

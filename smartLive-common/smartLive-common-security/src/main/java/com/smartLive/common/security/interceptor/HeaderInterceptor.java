@@ -75,7 +75,6 @@ public class HeaderInterceptor implements AsyncHandlerInterceptor
             if (StringUtils.isNotEmpty(userToken)){
                 //TODO 7.刷新token有效期
                 redisService.expire(userToken, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
-                log.info("刷新token有效期：{}", userToken);
             }
         }
         return true;

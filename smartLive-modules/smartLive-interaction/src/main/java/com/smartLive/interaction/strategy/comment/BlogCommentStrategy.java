@@ -26,7 +26,8 @@ public class BlogCommentStrategy implements CommentStrategy {
         Boolean b = remoteBlogService.updateCommentCountBatch(updateMap);
         if(b){
             log.info("更新成功{}", updateMap);
+        }else{
+            log.info("更新失败{}", updateMap);
         }
-        log.info("更新失败{}", updateMap);
     }
 }

@@ -72,10 +72,9 @@ public class SearchController {
     /**
      * 搜索博客
      */
-    @GetMapping("/blogs")
-    public ResponseEntity<Object> searchBlogs( FilterSearchRequest request) {
-        return search(EsIndexNameConstants.BLOG_INDEX_NAME, request.getKeyword(), request.getPage(), request.getSize());
-    }
+    @PostMapping("/blogs")
+    public ResponseEntity<Object> searchBlogs(@RequestBody  FilterSearchRequest request) {
+        return searchWithFilter(EsIndexNameConstants.BLOG_INDEX_NAME, request);    }
 
     /**
      * 搜索店铺

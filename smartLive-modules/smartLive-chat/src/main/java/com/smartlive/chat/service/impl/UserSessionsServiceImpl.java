@@ -1,5 +1,6 @@
 package com.smartlive.chat.service.impl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,6 +13,7 @@ import com.smartLive.user.api.domain.User;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.service.IChatMessagesService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ import com.smartlive.chat.service.IUserSessionsService;
  * @date 2025-10-05
  */
 @Service
+@Slf4j
 public class UserSessionsServiceImpl  extends ServiceImpl<UserSessionsMapper, UserSessions> implements IUserSessionsService
 {
     @Autowired
@@ -66,36 +69,40 @@ public class UserSessionsServiceImpl  extends ServiceImpl<UserSessionsMapper, Us
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<UserSessions> userSessionsList = page.getRecords();
+        log.info("userSessionsList:{}",userSessionsList.toString());
         userSessionsList.stream().forEach(c -> {
             //获取用户信息
-            Long id = c.getTargetUid();
-            UserDTO user = remoteAppUserService.queryUserById(id);
-            c.setNickname(user.getNickName());
-            c.setAvatar(user.getIcon());
-            //获取未读消息数量
-            Long count = chatMessagesService.query()
-                    .eq("session_id", c.getSessionId())
-                    .eq("from_uid", c.getTargetUid())
-                    .eq("to_uid", c.getUserId())
-                    .eq("status", 2)
-                    .count();
-            c.setUnread(count.intValue());
-            //获取最后一条消息
-            ChatMessages chatMessages = chatMessagesService.query()
-                    .eq("session_id", c.getSessionId())
-                    .orderByDesc("create_time")
-                    .last("limit 1")
-                    .one();
-            if(chatMessages!=null){
-                if (chatMessages.getContent()!=null&&chatMessages.getContent()!=""){
-                    c.setLastMessage(chatMessages.getContent());
+            if(c!=null){
+                Long id = c.getTargetUid();
+                UserDTO user = remoteAppUserService.queryUserById(id);
+                c.setNickname(user.getNickName());
+                c.setAvatar(user.getIcon());
+                //获取未读消息数量
+                Long count = chatMessagesService.query()
+                        .eq("session_id", c.getSessionId())
+                        .eq("from_uid", c.getTargetUid())
+                        .eq("to_uid", c.getUserId())
+                        .eq("status", 2)
+                        .count();
+                c.setUnread(count.intValue());
+                //获取最后一条消息
+                ChatMessages chatMessages = chatMessagesService.query()
+                        .eq("session_id", c.getSessionId())
+                        .orderByDesc("create_time")
+                        .last("limit 1")
+                        .one();
+                if(chatMessages!=null){
+                    if (chatMessages.getContent()!=null&&chatMessages.getContent()!=""){
+                        c.setLastMessage(chatMessages.getContent());
+                    }
+                    c.setLastTime(chatMessages.getCreateTime());
                 }
-                c.setLastTime(chatMessages.getCreateTime());
             }
         });
         // 按lastTime降序排序（最新的在前）
         List<UserSessions> sortedList = userSessionsList.stream()
-                .sorted((s1, s2) -> s2.getLastTime().compareTo(s1.getLastTime()))
+                .filter(s -> s != null && s.getLastTime() != null)
+                .sorted(Comparator.comparing(UserSessions::getLastTime, Comparator.reverseOrder()))
                 .collect(Collectors.toList());
         return sortedList;
     }
