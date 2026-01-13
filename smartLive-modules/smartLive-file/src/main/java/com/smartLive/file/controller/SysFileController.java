@@ -32,7 +32,7 @@ public class SysFileController
      * 文件上传请求
      */
     @PostMapping("/upload")
-    public R<SysFile> upload(MultipartFile file)
+    public R<SysFile> upload(@RequestParam("file") MultipartFile file)
     {
         try
         {
@@ -54,7 +54,7 @@ public class SysFileController
      * 文件删除请求
      */
     @DeleteMapping("delete")
-    public R<Boolean> delete(String fileUrl)
+    public R<Boolean> delete(@RequestParam("fileUrl") String fileUrl)
     {
         try
         {
@@ -75,7 +75,7 @@ public class SysFileController
      * app端文件上传请求
      */
     @PostMapping("/appUpload")
-    public Result appUpload(MultipartFile file)
+    public Result appUpload(@RequestParam("file") MultipartFile file)
     {
         try
         {
@@ -96,7 +96,7 @@ public class SysFileController
      * 文件删除请求
      */
     @GetMapping("/appDelete")
-    public Result appDelete(@RequestParam("name") String fileUrl)
+    public Result appDelete(@RequestParam("fileUrl") String fileUrl)
     {
         try
         {

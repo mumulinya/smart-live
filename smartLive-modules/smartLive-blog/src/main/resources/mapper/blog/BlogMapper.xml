@@ -86,7 +86,7 @@
         where id = #{id}
     </update>
 
-    <delete id="deleteBlogById" parameterType="String">
+    <delete id="deleteBlogById">
         delete from blog where id = #{id}
     </delete>
 

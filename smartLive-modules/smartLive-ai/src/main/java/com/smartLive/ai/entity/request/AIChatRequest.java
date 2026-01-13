@@ -8,7 +8,6 @@ import java.util.Map;
 public class AIChatRequest {
     @NotBlank(message = "消息内容不能为空")
     private String message;          // 用户消息
-    
     private String sessionId;        // 会话ID
     private String userId;           // 用户ID
     private Map<String, Object> context; // 扩展上下文

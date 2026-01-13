@@ -155,6 +155,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                     .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
              list = page.getRecords();
         }
+        List<Long> parentIdList = list.stream().map(Comment::getSourceId).collect(Collectors.toList());
+        //获取子评论
+        if (!parentIdList.isEmpty()) {
+            // 假设你的实体类叫 UserComment
+            List<Comment> comments = lambdaQuery().in(Comment::getParentId, parentIdList).list();
+            list.addAll(comments);
+        }
         list.stream().forEach(c -> {
             Long id = c.getUserId();
             UserDTO user = remoteAppUserService.queryUserById(id);

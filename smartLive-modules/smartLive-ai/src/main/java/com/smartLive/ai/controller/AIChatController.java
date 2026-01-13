@@ -7,10 +7,7 @@ import com.smartLive.ai.service.orchestration.AIChatOrchestrator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.Map;
@@ -26,12 +23,10 @@ public class AIChatController {
     private AIChatOrchestrator aiOrchestrator;
 
     @Autowired
-    private CommentHandler commentHandler;
-    @Autowired
     private  ChatHistoryRepository chatHistoryRepository;
     
-    @PostMapping("/chat")
-    public Flux<String> chat(@RequestBody AIChatRequest request) {
+    @GetMapping("/chat")
+    public Flux<String> chat( AIChatRequest request) {
         long startTime = System.currentTimeMillis();
         log.info("📨 收到AI聊天请求: sessionId={}, message={}", 
                 request.getSessionId(), request.getMessage());
@@ -40,6 +35,7 @@ public class AIChatController {
             // 1.保存会话id
             chatHistoryRepository.save("chat", request.getSessionId());
             Flux<String> response = aiOrchestrator.processMessage(request);
+            log.info("输出返回消息",response);
             return response;
             
         } catch (Exception e) {

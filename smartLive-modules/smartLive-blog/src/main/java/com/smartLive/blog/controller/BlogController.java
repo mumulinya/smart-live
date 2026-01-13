@@ -92,23 +92,32 @@ public class BlogController extends BaseController
     /**
      * 修改博客
      */
-    @RequiresPermissions("business:blog:edit")
     @Log(title = "博客", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody Blog blog)
+    public Result edit(@RequestBody Blog blog)
     {
-        return toAjax(blogService.updateBlog(blog));
+        return Result.ok(blogService.updateBlog(blog));
+    }
+
+    /**
+     * 删除博客列表
+     */
+    @RequiresPermissions("business:blog:remove")
+    @Log(title = "博客", businessType = BusinessType.DELETE)
+	@DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable("ids") Long[] ids)
+    {
+        return toAjax(blogService.deleteBlogByIds(ids));
     }
 
     /**
      * 删除博客
      */
-    @RequiresPermissions("business:blog:remove")
     @Log(title = "博客", businessType = BusinessType.DELETE)
-	@DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable Long[] ids)
+    @DeleteMapping("remove/{id}")
+    public Result removeById(@PathVariable("id") Long id)
     {
-        return toAjax(blogService.deleteBlogByIds(ids));
+        return Result.ok(blogService.deleteBlogById(id));
     }
 
     /**

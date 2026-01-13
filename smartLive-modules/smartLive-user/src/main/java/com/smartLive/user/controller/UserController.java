@@ -104,7 +104,7 @@ public class UserController extends BaseController
     @RequiresPermissions("user:user:remove")
     @Log(title = "用户", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable Long[] ids)
+    public AjaxResult remove(@PathVariable("ids") Long[] ids)
     {
         return toAjax(userService.deleteUserByIds(ids));
     }
@@ -146,6 +146,9 @@ public class UserController extends BaseController
     @GetMapping("/me")
     public Result me(){
         UserDTO userDTO = UserContextHolder.getUser();
+        if (userDTO == null) {
+            return Result.fail("未登录");
+        }
         return Result.ok(userDTO);
     }
 

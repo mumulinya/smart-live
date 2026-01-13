@@ -147,7 +147,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
                searchIndexMessage.setId(id);
                searchIndexMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-                searchIndexMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
+               searchIndexMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
                 //发起rabbitMq信息删除
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
                MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, searchIndexMessage);
@@ -178,7 +178,18 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public int deleteBlogById(Long id)
     {
-        return blogMapper.deleteBlogById(id);
+        int i = blogMapper.deleteBlogById(id);
+        if(i > 0){
+            SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
+            searchIndexMessage.setId(id);
+            searchIndexMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+            searchIndexMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
+            //发起rabbitMq信息删除
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, searchIndexMessage);
+            //更新redis缓存
+            flashRedisBlogCache(id);
+        }
+        return i;
     }
 
 

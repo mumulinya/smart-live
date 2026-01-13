@@ -27,9 +27,6 @@ public class UserInfoController {
     public Result getUserInfo( @PathVariable("userId") Long userId) {
         try {
             UserInfo userInfo = userInfoService.getByUserId(userId);
-            if (userInfo == null) {
-                return Result.fail("用户信息不存在");
-            }
             return Result.ok(userInfo);
             
         } catch (Exception e) {

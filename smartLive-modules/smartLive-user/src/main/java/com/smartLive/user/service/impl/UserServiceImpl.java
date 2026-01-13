@@ -137,7 +137,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                                 //把userDto字段值转为字符串
                                 .setFieldValueEditor((fieldName, fieldValue) -> fieldValue == null ? "" : fieldValue.toString()));
                 //更新之前的数据
-                redisService.setCacheMap(RedisConstants.LOGIN_USER_KEY+tokenKey,userMap);
+                redisService.setCacheMap(tokenKey,userMap);
                 //设置token有效期
                 redisService.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
                 UserContextHolder.removeUser();
