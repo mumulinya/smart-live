@@ -84,6 +84,17 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
                 log.error("批量更新评论数失败:{}", cause.getMessage());
                 return false;
             }
+
+            /**
+             * 批量更新收藏数
+             *
+             * @param updateMap
+             */
+            @Override
+            public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
+                log.error("批量更新收藏数失败:{}", cause.getMessage());
+                return false;
+            }
         };
  }
 }

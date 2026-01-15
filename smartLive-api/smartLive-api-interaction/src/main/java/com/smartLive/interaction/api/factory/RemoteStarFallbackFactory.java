@@ -14,7 +14,7 @@ public class RemoteStarFallbackFactory implements FallbackFactory<RemoteStarServ
     public RemoteStarService create(Throwable cause) {
         return new RemoteStarService() {
             @Override
-            public Boolean isStared(@RequestBody StarDTO starDTO){
+            public Boolean isStar(@RequestBody StarDTO starDTO){
                 log.error("查询是否收藏失败:{}",cause.getMessage());
                 return false;
             }

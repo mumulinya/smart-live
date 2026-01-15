@@ -13,10 +13,13 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -48,6 +51,8 @@ public class NettyServer implements CommandLineRunner {
                                 pipeline.addLast(new HttpObjectAggregator(65536));
                                 // 处理 WebSocket 握手、心跳 (路径要和前端一致)
                                 pipeline.addLast(new WebSocketServerProtocolHandler("/ws"));
+                                // 心跳时间间间隔，读空闲时间，写空闲时间，时间单位
+                                pipeline.addLast(new IdleStateHandler(60, 0, 0, TimeUnit.SECONDS));
                                 // ★★★ 我们的业务处理器 ★★★
                                 pipeline.addLast(nettyChatHandler);
                             }

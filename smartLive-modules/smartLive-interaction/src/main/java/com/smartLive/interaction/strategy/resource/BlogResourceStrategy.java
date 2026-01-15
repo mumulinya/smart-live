@@ -39,9 +39,11 @@ public  class BlogResourceStrategy implements ResourceStrategy {
                 .id(blog.getId())
                 .userAvatar(blog.getIcon())
                 .userName(blog.getName())
-                .cover(blog.getImages())
+                .images(blog.getImages())
                 .content(blog.getContent())
-                .isLike(true)
+                .title(blog.getTitle())
+                .liked(blog.getLiked())
+                .isLike(blog.getIsLike())
                 .build()
         ).collect(Collectors.toList());
         return resourceVOList;

@@ -76,11 +76,19 @@ public class UserSessionsController extends BaseController
     /**
      * 删除用户会话列表
      */
-    @RequiresPermissions("chat:chat:remove")
     @Log(title = "用户会话列表", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable Long[] ids)
+    public Result remove(@PathVariable("ids") Long[] ids)
     {
-        return toAjax(userSessionsService.deleteUserSessionsByIds(ids));
+        return Result.ok(userSessionsService.deleteUserSessionsByIds(ids));
+    }
+    //是否置顶
+    @PutMapping("/isPin")
+    public Result isPin(@RequestBody UserSessions userSessions){
+        boolean pin = userSessionsService.isPin(userSessions);
+        if (pin){
+            return Result.ok("操作成功");
+        }else
+        return Result.fail("操作失败");
     }
 }

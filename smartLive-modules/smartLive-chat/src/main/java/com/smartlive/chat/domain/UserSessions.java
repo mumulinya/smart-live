@@ -24,7 +24,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Data
 @TableName("user_sessions")
-public class UserSessions extends BaseEntity
+public class UserSessions
 {
     private static final long serialVersionUID = 1L;
 
@@ -65,6 +65,8 @@ public class UserSessions extends BaseEntity
     @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date lastTime;
+    /** 置顶 */
+    private Boolean pin;
 
     public void setId(Long id) 
     {
@@ -144,16 +146,6 @@ public class UserSessions extends BaseEntity
 
     public void setLastTime(Date lastTime) {
         this.lastTime = lastTime;
-    }
-
-    @Override
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    @Override
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
     }
 
     @Override

@@ -1,9 +1,12 @@
 package com.smartLive.shop.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.smartLive.shop.domain.Shop;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * 店铺Mapper接口
@@ -60,4 +63,32 @@ public interface ShopMapper extends BaseMapper<Shop>
      * @return 结果
      */
     public int deleteShopByIds(String[] ids);
+    @Update("<script>" +
+            "UPDATE blog " +
+            "SET comments" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateCommentCountBatch(@Param("map") Map<Long, Integer> updateMap);
+    @Update("<script>" +
+            "UPDATE shop " +
+            "SET stared" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateStarCountBatch(@Param("map")Map<Long, Integer> batchMap);
 }

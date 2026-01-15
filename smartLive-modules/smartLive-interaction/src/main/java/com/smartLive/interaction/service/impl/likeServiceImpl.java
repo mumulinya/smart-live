@@ -143,6 +143,9 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceTypeEnum.getCode());
         List<Long> sourceIdList = query().select("source_id").eq("source_type", like.getSourceType()).eq("user_id", like.getUserId()).list().stream().map(Like::getSourceId).collect(Collectors.toList());
         log.info("资源id：{}", sourceIdList);
+        if (sourceIdList == null || sourceIdList.isEmpty()) {
+            return null;
+        }
         List<ResourceVO> resourceVOList = resourceStrategy.getResourceList(sourceIdList);
         return resourceVOList;
     }

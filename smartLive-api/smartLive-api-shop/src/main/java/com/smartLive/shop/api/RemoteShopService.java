@@ -62,4 +62,9 @@ public interface RemoteShopService {
      */
     @PostMapping("/inner/shop/updateCommentCountBatch")
      Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap);
+    /**
+     * 批量更新商家收藏数
+     */
+    @PostMapping("/inner/shop/updateStarCountBatch")
+    Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
 }

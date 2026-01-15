@@ -1,15 +1,14 @@
 package com.smartlive.chat.service.impl;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.user.api.RemoteAppUserService;
-import com.smartLive.user.api.domain.User;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.service.IChatMessagesService;
@@ -153,5 +152,39 @@ public class UserSessionsServiceImpl  extends ServiceImpl<UserSessionsMapper, Us
     public int deleteUserSessionsById(Long id)
     {
         return userSessionsMapper.deleteUserSessionsById(id);
+    }
+
+    /**
+     * 判断用户会话列表是否存在,不存在的话就创建会话列表
+     *
+     * @param userSessions
+     * @return 结果
+     */
+    @Override
+    public int isCreateUserSessions(UserSessions userSessions) {
+        UserSessions one = query().eq("user_id", userSessions.getUserId())
+                .eq("target_uid", userSessions.getTargetUid())
+                .eq("session_id", userSessions.getSessionId()).one();
+        if (one == null) {
+            userSessions.setCreateTime(new Date());
+            return insertUserSessions(userSessions);
+        }
+        return 0;
+    }
+
+    /**
+     * 置顶会话列表
+     *
+     * @param
+     * @return 结果
+     */
+    @Override
+    public boolean isPin(UserSessions userSessions) {
+
+        boolean update = this.lambdaUpdate()
+                .eq(UserSessions::getId, userSessions.getId())
+                .set(UserSessions::getPin, userSessions.getPin())
+                .update();
+        return update;
     }
 }

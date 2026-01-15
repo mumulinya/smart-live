@@ -53,6 +53,10 @@ public class Blog extends BaseEntity implements Serializable
     @Excel(name = "点赞数量")
     private Integer liked;
 
+    /** 收藏数量 */
+    @Excel(name = "收藏数量")
+    private Integer stared;
+
     /** 评论数量 */
     @Excel(name = "评论数量")
     private Integer comments;
@@ -76,6 +80,10 @@ public class Blog extends BaseEntity implements Serializable
      */
     @TableField(exist = false)
     private Boolean isLike;
-
+    /**
+     * 是否收藏过了
+     */
+    @TableField(exist = false)
+    private Boolean isStared;
 
 }

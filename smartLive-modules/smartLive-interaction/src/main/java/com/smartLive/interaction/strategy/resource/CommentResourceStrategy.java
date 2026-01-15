@@ -38,7 +38,7 @@ public class CommentResourceStrategy implements ResourceStrategy {
                 .id(comment.getId())
                 .userAvatar(comment.getUserIcon())
                 .userName(comment.getNickName())
-                .cover(comment.getImages())
+                .images(comment.getImages())
                 .content(comment.getContent())
                 .isLike(true)
                 .build()

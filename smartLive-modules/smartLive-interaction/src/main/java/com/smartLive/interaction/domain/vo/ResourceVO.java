@@ -12,9 +12,10 @@ public class ResourceVO {
     private Integer type;      // BLOG, GOODS, COUPON
     
     private String title;      // 博客标题 / 商品名 / 代金券名
-    private String cover;      // 博客封面 / 商品主图
+    private String images;      // 博客封面 / 商品主图
     private String content;    // 博客摘要 / 商品价格 / 代金券面额 (差异化展示)
     private Boolean isLike;
+    private Integer liked;
     private String userName;
     private String userAvatar;
     //销量

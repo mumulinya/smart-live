@@ -38,7 +38,7 @@ public class LikeController {
      * 查询点赞记录
      */
     @GetMapping("/likeRecord")
-    public Result queryLikeRecord(Like like, Integer current) {
+    public Result queryLikeRecord(Like like, @RequestParam("current")Integer current) {
         return Result.ok(likeRecordService.queryLikeRecord(like, current));
     }
     /**

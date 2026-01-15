@@ -48,7 +48,7 @@ public class Star extends BaseEntity implements Serializable
 
     /** 是否收藏 */
     @TableField(exist = false)
-    private Boolean isCollection;
+    private Boolean isStar;
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

@@ -1,6 +1,8 @@
 package com.smartLive.shop.service;
 
 import java.util.List;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.shop.domain.Shop;
 
@@ -142,6 +144,20 @@ public interface IShopService extends IService<Shop> {
      * @return 最近商铺
      */
     List<Shop> getRecentShops(Integer limit);
+    /**
+     * 批量更新商铺收藏数
+     *
+     * @param updateMap 商铺id和收藏数
+     * @return 更新结果
+     */
+    Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
+    /**
+     * 批量更新商铺评论数
+     *
+     * @param updateMap 商铺id和评论数
+     * @return 批量更新结果
+     */
+    Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
 }
 
 

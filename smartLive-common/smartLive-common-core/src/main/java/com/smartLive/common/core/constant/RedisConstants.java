@@ -69,6 +69,16 @@ public class RedisConstants {
      */
     //博文收藏
     public static final String BLOG_STAR_KEY = "blog:star:";
+    //博客收藏总数
+    public static final String BLOG_STAR_COUNT_KEY = "blog:star:count:";
+    //博客收藏脏数据列表
+    public static final String BLOG_STAR_DIRTY_KEY = "blog:star:dirty:";
+    //店铺收藏
+    public static final String SHOP_STAR_KEY = "shop:star:";
+    //店铺收藏总数
+    public static final String SHOP_STAR_COUNT_KEY = "shop:star:count:";
+    //店铺收藏脏数据列表
+    public static final String SHOP_STAR_DIRTY_KEY = "shop:star:dirty:";
     //代金券收藏
     public static final String VOUCHER_STAR_KEY = "voucher:star:";
     //评论收藏

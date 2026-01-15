@@ -1,6 +1,7 @@
 package com.smartLive.search.controller;
 
 import com.smartLive.common.core.constant.EsIndexNameConstants;
+import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.web.domain.Result;
@@ -10,8 +11,6 @@ import com.smartLive.interaction.api.dto.FollowDTO;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
 import com.smartLive.search.domain.req.FilterSearchRequest;
-import com.smartLive.search.domain.req.SearchHistoryDTO;
-import com.smartLive.search.domain.req.SearchRecordDTO;
 import com.smartLive.search.domain.res.SearchResult;
 import com.smartLive.search.service.ISearchService;
 import com.smartLive.search.utils.EsTool;
@@ -19,11 +18,9 @@ import com.smartLive.search.utils.ResponseConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.annotation.Resource;
 import java.util.*;
 
 
@@ -80,7 +77,7 @@ public class SearchController {
      * 搜索店铺
      */
     @PostMapping("/shops")
-    public ResponseEntity<Object> searchShops( @RequestBody  FilterSearchRequest request) {
+    public ResponseEntity<Object> searchShops(@RequestBody  FilterSearchRequest request) {
         try {
             SearchResponse response = searchService.searchShops(request);
             List<ShopDoc> shops = ResponseConverter.convertToShopList(response);
@@ -96,7 +93,7 @@ public class SearchController {
      * 搜索用户
      */
     @GetMapping("/users")
-    public ResponseEntity<Object> searchUsers( FilterSearchRequest request) {
+    public ResponseEntity<Object> searchUsers(FilterSearchRequest request) {
         return search(EsIndexNameConstants.USER_INDEX_NAME, request.getKeyword(), request.getPage(), request.getSize());
     }
 
@@ -130,13 +127,13 @@ public class SearchController {
 
     // 添加搜索历史（去重）
     @PostMapping("/history")
-    public Result addSearchHistory(@RequestBody SearchHistoryDTO dto) {
+    public Result addSearchHistory(@RequestParam("userId") Long userId, @RequestParam("keyword") String keyword) {
         try {
-            searchService.insertSearchHistory(dto.getUserId(), dto.getKeyword());
+            searchService.insertSearchHistory(userId, keyword);
             return Result.ok();
         } catch (Exception e) {
             log.error("添加搜索历史失败, userId: {}, keyword: {}",
-                    dto.getUserId(), dto.getKeyword(), e);
+                    userId, keyword, e);
             return Result.fail("添加搜索历史失败");
         }
     }
@@ -144,10 +141,11 @@ public class SearchController {
     @GetMapping("/history")
     public Result getSearchHistory(@RequestParam("userId") Long userId) {
         try {
-            String key = "search:history:" + userId;
+            String key= RedisConstants.SEARCH_HISTORY_KEY+userId;
             Set<Object> history = redisService.getCacheZSetReverseRange(key, 0, 9);
             return Result.ok(new ArrayList<>(history));
         } catch (Exception e) {
+            log.error("获取历史搜索失败, userId: {}", userId, e);
             return Result.fail("获取历史搜索失败");
         }
     }
@@ -167,7 +165,7 @@ public class SearchController {
     @GetMapping("/hot")
     public Result getHotSearch() {
         try {
-            String key = "search:hot:keywords";
+            String key= RedisConstants.SEARCH_HOT_KEYWORDS;
             Set<ZSetOperations.TypedTuple<String>> hotKeywords = redisService.getCacheZSetReverseRangeWithScores(key, 0, 9);
             // 转换为前端需要的格式
             List<String> result = new ArrayList<>();
@@ -176,17 +174,18 @@ public class SearchController {
             }
             return Result.ok(new ArrayList<>(result));
         } catch (Exception e) {
+            log.error("获取热门搜索失败", e);
             return Result.fail("获取热门搜索失败");
         }
     }
     // 记录搜索（用于热门搜索统计）
     @PostMapping("/record")
-    public Result recordSearch(@RequestBody SearchRecordDTO dto) {
+    public Result recordSearch(@RequestParam("keyword") String keyword) {
         try {
-            searchService.recordSearch(dto.getKeyword());
+            searchService.recordSearch(keyword);
             return Result.ok();
         } catch (Exception e) {
-            log.error("记录搜索失败, keyword: {}", dto.getKeyword(), e);
+            log.error("记录搜索失败, keyword: {}", keyword, e);
             return Result.fail("记录搜索失败");
         }
     }

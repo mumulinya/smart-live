@@ -13,13 +13,14 @@
         <result property="images"    column="images"    />
         <result property="content"    column="content"    />
         <result property="liked"    column="liked"    />
+        <result property="stared"    column="stared"    />
         <result property="comments"    column="comments"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateTime"    column="update_time"    />
     </resultMap>
 
     <sql id="selectBlogVo">
-        select id, shop_id, type_id, user_id, title, images, content, liked, comments, create_time, update_time from blog
+        select id, shop_id, type_id, user_id, title, images, content, liked,, comments, create_time, update_time from blog
     </sql>
 
     <select id="selectBlogList" parameterType="com.smartLive.blog.domain.Blog" resultMap="BlogResult">

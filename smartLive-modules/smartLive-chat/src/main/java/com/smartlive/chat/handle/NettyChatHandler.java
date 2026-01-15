@@ -8,8 +8,10 @@ import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartlive.chat.domain.ChatMessages;
+import com.smartlive.chat.domain.UserSessions;
 import com.smartlive.chat.dto.ChatMessageEvent;
 import com.smartlive.chat.service.IChatMessagesService;
+import com.smartlive.chat.service.IUserSessionsService;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -43,6 +45,8 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
     private RedisService redisService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    IUserSessionsService userSessionsService;
 
     // 1. 管理所有连接的 ChannelGroup (自带线程安全)
     public static final ChannelGroup allChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
@@ -178,6 +182,15 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
         boolean saveResult = chatMessagesService.save(chatMessage);
 
         if (saveResult) {
+            //1.判断是否存在用户会话
+            UserSessions userSessions=new UserSessions();
+            userSessions.setUserId(toUserId);
+            userSessions.setTargetUid(fromUserId);
+            userSessions.setSessionId(sessionId);
+            userSessionsService.isCreateUserSessions(userSessions);
+            userSessions.setUserId(fromUserId);
+            userSessions.setTargetUid(toUserId);
+            userSessionsService.isCreateUserSessions(userSessions);
             // 2. 发送成功确认
             sendMessage(channel, "MESSAGE_SENT", Map.of(
                     "tempId", tempId != null ? tempId : "",

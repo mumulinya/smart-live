@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 店铺服务内部Controller
@@ -78,5 +79,19 @@ public class ShopInnerController extends BaseController {
     @GetMapping("/getRecentShops")
     public List<Shop> getRecentShops(@RequestParam("limit") Integer limit){
         return shopService.getRecentShops(limit);
+    }
+    /**
+     * 批量更新商家评论数
+     */
+    @PostMapping("/updateCommentCountBatch")
+   public Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap){
+        return shopService.updateCommentCountBatch(updateMap);
+    }
+    /**
+     * 批量更新商家收藏数
+     */
+    @PostMapping("/updateStarCountBatch")
+   public Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap){
+        return shopService.updateStarCountBatch(updateMap);
     }
 }

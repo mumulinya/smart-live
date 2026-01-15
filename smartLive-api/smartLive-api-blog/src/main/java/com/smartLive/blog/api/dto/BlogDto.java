@@ -18,7 +18,6 @@ import java.io.Serializable;
  * @author mumulin
  * @date 2025-09-21
  */
-@TableName("tb_blog")
 @Data
 public class BlogDto extends BaseEntity implements Serializable
 {
@@ -50,7 +49,7 @@ public class BlogDto extends BaseEntity implements Serializable
 
     /** 点赞数量 */
     @Excel(name = "点赞数量")
-    private String liked;
+    private Integer liked;
 
     /** 评论数量 */
     @Excel(name = "评论数量")
@@ -71,108 +70,4 @@ public class BlogDto extends BaseEntity implements Serializable
      */
     @TableField(exist = false)
     private Boolean isLike;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getShopId() {
-        return shopId;
-    }
-
-    public void setShopId(Long shopId) {
-        this.shopId = shopId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getImages() {
-        return images;
-    }
-
-    public void setImages(String images) {
-        this.images = images;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getLiked() {
-        return liked;
-    }
-
-    public void setLiked(String liked) {
-        this.liked = liked;
-    }
-
-    public String getComments() {
-        return comments;
-    }
-
-    public void setComments(String comments) {
-        this.comments = comments;
-    }
-
-    public String getIcon() {
-        return icon;
-    }
-
-    public void setIcon(String icon) {
-        this.icon = icon;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Boolean getLike() {
-        return isLike;
-    }
-
-    public void setIsLike(Boolean isLike) {
-        this.isLike = isLike;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("id", getId())
-            .append("shopId", getShopId())
-            .append("userId", getUserId())
-            .append("title", getTitle())
-            .append("images", getImages())
-            .append("content", getContent())
-            .append("liked", getLiked())
-            .append("comments", getComments())
-            .append("createTime", getCreateTime())
-            .append("updateTime", getUpdateTime())
-            .toString();
-    }
 }

@@ -68,7 +68,7 @@ public class BlogInnerController extends BaseController
      * 获取博客列表
      */
     @GetMapping("/getBlogListByIds")
-    List<Blog> getBlogListByIds(List<Long> sourceIdList){
+    List<Blog> getBlogListByIds(@RequestParam("sourceIdList") List<Long> sourceIdList){
         return blogService.getBlogListByIds(sourceIdList);
     }
     /**
@@ -84,5 +84,12 @@ public class BlogInnerController extends BaseController
     @PostMapping("/updateCommentCountBatch")
     Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return blogService.updateCommentCountBatch(updateMap);
+    }
+    /**
+     * 批量更新收藏数
+     */
+    @PostMapping("/updateStarCountBatch")
+    Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap){
+        return blogService.updateStarCountBatch(updateMap);
     }
 }

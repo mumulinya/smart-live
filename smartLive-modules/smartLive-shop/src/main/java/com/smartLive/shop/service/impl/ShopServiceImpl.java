@@ -6,6 +6,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
@@ -14,6 +17,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
+import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
 import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
@@ -21,6 +26,8 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.api.RemoteStarService;
+import com.smartLive.interaction.api.dto.StarDTO;
 import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.service.IShopTypeService;
 import com.smartLive.shop.until.CacheClient;
@@ -56,6 +63,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private ExecutorService executorService;
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private RemoteStarService remoteStarService;
     /**
      * 查询店铺
      *
@@ -180,10 +189,32 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         if (shop == null) {
             return null;
         }
+        //是否收藏
+        isShopStared(shop);
         return shop;
     }
 
-
+    /**
+     * 判断当前用户是否已经收藏博客
+     * @param shop
+     */
+    private void isShopStared(Shop shop) {
+        UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            //未登录,不用查询是否点赞
+            shop.setIsStared(false);
+            return;
+        }
+        //获取当前登录用户
+        Long userId = user.getId();
+        StarDTO starDTO = new StarDTO();
+        starDTO.setUserId(userId);
+        starDTO.setSourceId(shop.getId());
+        starDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
+        //判断当前用户是否已经收藏
+        Boolean isStared = remoteStarService.isStar(starDTO);
+        shop.setIsStared(isStared);
+    }
     /**
      * 缓存穿透
      *
@@ -675,5 +706,69 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             });
         }
         return "发布成功";
+    }
+
+    /**
+     * 批量更新商铺收藏数
+     *
+     * @param updateMap 商铺id和收藏数
+     * @return 更新结果
+     */
+    @Override
+    public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
+        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
+        if (updateMap.size() > 500) {
+            // 分批逻辑 (每500条提交一次)
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateStarCountBatch(batchMap);
+            }
+        } else {
+            // 数量少直接执行
+            baseMapper.updateStarCountBatch(updateMap);
+        }
+        flushCache();
+        return true;
+    }
+
+    /**
+     * 批量更新商铺评论数
+     *
+     * @param updateMap 商铺id和评论数
+     * @return 批量更新结果
+     */
+    @Override
+    public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
+        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
+        if (updateMap.size() > 500) {
+            // 分批逻辑 (每500条提交一次)
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateCommentCountBatch(batchMap);
+            }
+        } else {
+            // 数量少直接执行
+            baseMapper.updateCommentCountBatch(updateMap);
+        }
+        flushCache();
+        return true;
     }
 }

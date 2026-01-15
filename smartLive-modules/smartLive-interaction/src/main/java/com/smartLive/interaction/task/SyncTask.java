@@ -3,9 +3,11 @@ package com.smartLive.interaction.task;
 import cn.hutool.core.collection.CollUtil;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
+import com.smartLive.common.core.enums.StarTypeEnum;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.strategy.comment.CommentStrategy;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
+import com.smartLive.interaction.strategy.star.StarStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,9 +25,6 @@ import java.util.function.Consumer;
 @Component
 @Slf4j
 public class SyncTask {
-
-    @Autowired
-    private StringRedisTemplate redisTemplate;
     @Autowired
     private RedisService redisService;
 
@@ -34,6 +33,8 @@ public class SyncTask {
     private Map<Integer, LikeStrategy> likeStrategyMap;
     @Autowired
     private Map<Integer, CommentStrategy> commentStrategyMap;
+    @Autowired
+    private Map<Integer, StarStrategy> starStrategyMap;
     @Autowired
     private ExecutorService executorService;
     // ... 其他服务
@@ -85,6 +86,28 @@ public class SyncTask {
                 });
                 log.info("同步评论数完成");
             });
+           //执行收藏数同步
+           executorService.execute(() -> {
+            log.info("开始同步收藏数...");
+            Arrays.stream(StarTypeEnum.values()).forEach(starType -> {
+                // 1. 只有配置了 Redis Key 的才处理
+                if (starType.getStarCountKeyPrefix() == null || starType.getStarDirtyKeyPrefix() == null) {
+                    return;
+                }
+                String starCountKeyPrefix = starType.getStarCountKeyPrefix();
+                String DIRTY_KEY = starType.getStarDirtyKeyPrefix();
+                String TEMP_KEY = DIRTY_KEY + ":TEMP";
+                // ✅ 【核心变化】直接调用策略，没有 switch-case 了！
+                StarStrategy strategy = starStrategyMap.get(starType.getCode());
+
+                if (strategy != null) {
+                    sync(starType.getDesc(),starCountKeyPrefix, DIRTY_KEY, TEMP_KEY, map -> strategy.transStarCountFromRedis2DB(map));
+                } else {
+                    log.warn("类型[{}]没有对应的同步策略，跳过", starType.getDesc());
+                }
+            });
+            log.info("同步收藏数完成");
+        });
     }
     private void sync(String desc,String countKeyPrefix, String DIRTY_KEY, String TEMP_KEY, Consumer<Map<Long, Integer>> dbAction){
         try {

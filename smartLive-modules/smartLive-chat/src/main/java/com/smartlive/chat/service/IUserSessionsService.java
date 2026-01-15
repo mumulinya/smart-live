@@ -60,4 +60,17 @@ public interface IUserSessionsService extends IService<UserSessions>
      * @return 结果
      */
     public int deleteUserSessionsById(Long id);
+    /**
+     * 判断用户会话列表是否存在,不存在的话就创建会话列表
+     *
+     *
+     * @return 结果
+     */
+    int isCreateUserSessions(UserSessions userSessions);
+    /**
+     * 置顶会话列表
+     *
+     * @return 结果
+     */
+    boolean isPin(UserSessions userSessions);
 }

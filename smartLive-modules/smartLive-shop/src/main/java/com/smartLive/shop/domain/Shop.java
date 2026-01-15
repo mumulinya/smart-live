@@ -70,6 +70,9 @@ public class Shop extends BaseEntity implements Serializable
     /** 评论数量 */
     @Excel(name = "评论数量")
     private Integer comments;
+    /** 收藏数量 */
+    @Excel(name = "收藏数量")
+    private Integer stared;
 
     /** 评分，1~5分，乘10保存，避免小数 */
     @Excel(name = "评分，1~5分，乘10保存，避免小数")
@@ -87,6 +90,9 @@ public class Shop extends BaseEntity implements Serializable
     private Double distance;
     @TableField(exist = false)
     private String location;
+    /** 是否收藏 */
+    @TableField(exist = false)
+    private Boolean isStared;
 
     private void updateLocation() {
         if (this.y != null && this.x != null) {

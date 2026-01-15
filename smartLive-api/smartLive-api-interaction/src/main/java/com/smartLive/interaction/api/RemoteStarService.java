@@ -16,7 +16,7 @@ public interface RemoteStarService {
      * @return
      */
     @GetMapping("/inner/star/isStar")
-    Boolean isStared(@SpringQueryMap StarDTO starDTO);
+    Boolean isStar(@SpringQueryMap StarDTO starDTO);
     /**
      * 获取收藏数
      * @return
@@ -41,6 +41,6 @@ public interface RemoteStarService {
      * 获取用户关注店铺数量
      * @return
      */
-    @GetMapping("/inner/star/getStarShopCount")
+    @GetMapping("/inner/star/getStarCount")
      Integer getStarShopCount(@SpringQueryMap StarDTO starDTO);
 }

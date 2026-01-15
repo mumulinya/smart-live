@@ -22,12 +22,15 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteLikeService;
+import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.dto.LikeDTO;
+import com.smartLive.interaction.api.dto.StarDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.BlogDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.patterns.AnyTypePattern;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -65,6 +68,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private RemoteShopService remoteShopService;
     @Autowired
     private RemoteLikeService remoteLikeService;
+    @Autowired
+    private RemoteStarService remoteStarService;
 
     /**
      * 查询博客
@@ -210,6 +215,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //存在
             Blog blog = JSONUtil.toBean(blogJson, Blog.class);
             isBlogLiked(blog);
+            //判断当前用户是否已经收藏
+            isBlogStared(blog);
             return blog;
         }
         //根据博客id查询博客信息
@@ -247,6 +254,28 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         //判断当前用户是否已经点赞
         Boolean isLike = remoteLikeService.isLike(likeDTO);
         blog.setIsLike(isLike);
+    }
+
+    /**
+     * 判断当前用户是否已经收藏博客
+     * @param blog
+     */
+    private void isBlogStared(Blog blog) {
+        UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            //未登录,不用查询是否点赞
+            blog.setIsStared(false);
+            return;
+        }
+        //获取当前登录用户
+        Long userId = user.getId();
+        StarDTO starDTO = new StarDTO();
+        starDTO.setUserId(userId);
+        starDTO.setSourceId(blog.getId());
+        starDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
+        //判断当前用户是否已经收藏
+        Boolean isStared = remoteStarService.isStar(starDTO);
+        blog.setIsStared(isStared);
     }
 
     /**
@@ -615,6 +644,38 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         } else {
             // 数量少直接执行
             baseMapper.updateCommentCountBatch(updateMap);
+        }
+        flashCache();
+        return true;
+    }
+
+    /**
+     * 批量更新收藏数
+     *
+     * @param updateMap
+     * @return
+     */
+    @Override
+    public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
+        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
+        if (updateMap.size() > 500) {
+            // 分批逻辑 (每500条提交一次)
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateStarCountBatch(batchMap);
+            }
+        } else {
+            // 数量少直接执行
+            baseMapper.updateStarCountBatch(updateMap);
         }
         flashCache();
         return true;

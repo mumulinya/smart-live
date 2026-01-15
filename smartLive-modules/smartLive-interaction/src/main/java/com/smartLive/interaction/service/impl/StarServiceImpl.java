@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.StarTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Star;
@@ -127,14 +128,17 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         //获取当前用户id
         Long userId =user.getId();
         // 1. 获取对应的枚举策略
-        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
+        StarTypeEnum resourceType = StarTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
             log.error("关注类型错误");
             return false;
         }
-        String key =resourceType.getCollectKeyPrefix()+userId;
+        String starKeyPrefix = resourceType.getStarKeyPrefix();
+        String starCountKeyPrefix = resourceType.getStarCountKeyPrefix();
+        String starDirtyKeyPrefix = resourceType.getStarDirtyKeyPrefix();
+        String key =starKeyPrefix+userId;
         //判断是收藏还是取消收藏
-        if(star.getIsCollection()){
+        if(star.getIsStar()){
             //收藏
             star.setUserId(userId);
             star.setCreateTime(DateUtils.getNowDate());
@@ -142,6 +146,10 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             if (save) {
                 //收藏成功，添加收藏到redis
                 redisService.setCacheZSet(key, star.getSourceId().toString(), System.currentTimeMillis());
+                //记录点赞数量
+                redisService.incrementCacheValue(starCountKeyPrefix+ star.getSourceId());
+                //记录脏数据
+                redisService.setCacheSet(starDirtyKeyPrefix, star.getSourceId().toString());
             }
         }else{
             //取消收藏
@@ -149,6 +157,10 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             if (remove) {
                 //取消收藏成功成功，从redis中删除收藏
                 redisService.removeCacheZSetObject(key, star.getSourceId().toString());
+                //记录收藏数量
+                redisService.decrementCacheValue(starCountKeyPrefix+ star.getSourceId());
+                //记录脏数据
+                redisService.setCacheSet(starDirtyKeyPrefix, star.getSourceId().toString());
             }
         }
         return true;
@@ -169,12 +181,12 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         //获取当前用户id
         Long userId = user.getId();
         // 1. 获取对应的枚举策略
-        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
+        StarTypeEnum resourceType = StarTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
             log.error("关注类型错误");
             return false;
         }
-        String key =resourceType.getCollectKeyPrefix()+userId;
+        String key =resourceType.getStarKeyPrefix()+userId;
         //判断是否关注 从redis的set集合中查询
         Boolean isMember = redisService.getCacheZSetScore(key, star.getSourceId().toString()) != null;
 //        //判断是否关注 从数据库中查询
@@ -189,12 +201,6 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      */
     @Override
     public List<ResourceVO> getStarList(Star star, Integer current) {
-//        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
-//        if (user == null) {
-//            return Result.ok(false);
-//        }
-        //获取当前用户id
-        Long userId = 1L;
         // 1. 获取对应的枚举策略
         ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
@@ -204,13 +210,13 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         //根据关注类型从关注策略工程获取bean
         ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceType.getCode());
         //从redis获取
-        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(resourceType.getCollectKeyPrefix(), userId, current, SystemConstants.DEFAULT_PAGE_SIZE);
+        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(resourceType.getCollectKeyPrefix(), star.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
         if (sourceIdList.isEmpty()) {
             //redis获取失败，从数据库获取
             //获取来源id
              sourceIdList = query()
-                    .select("shop_id")
+                    .select("source_id")
                     .eq("source_type", star.getSourceType())
                     .eq("user_id", star.getUserId())
                     .orderByDesc("create_time") // 添加排序
