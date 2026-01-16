@@ -375,24 +375,24 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Override
     public Integer getCommonFollowCount(Follow follow) {
-        if(UserContextHolder.getUser()==null){
-            return 0;
-        }
+        log.info("获取共同关注数：{}",follow);
         IdentityTypeEnum identityTypeEnum = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (identityTypeEnum == null) {
+            log.error("关注类型错误");
             return 0;
         }
-        Long currentUserId=UserContextHolder.getUser().getId();
+        Long currentUserId=follow.getUserId();
         //从redis读取
-        Page<Long> commonFollowIdPage = queryRedisSourceIdsTool.queryRedisCommonFollowIdPage(identityTypeEnum.getFollowKeyPrefix(), follow.getUserId(), currentUserId,1, 0);
+        Page<Long> commonFollowIdPage = queryRedisSourceIdsTool.queryRedisCommonFollowIdPage(identityTypeEnum.getFollowKeyPrefix(), follow.getSourceId(), currentUserId,1, 0);
         int commonFollowCount = (int) commonFollowIdPage.getTotal();
+        log.info("从redis获取共同关注数：{}",commonFollowCount);
         //redis获取失败，从数据库获取
         if(commonFollowCount==0){
             // 提取关注用户ID列表
             List<Long> targetUserFollowIds = lambdaQuery()
                     .select(Follow::getSourceId)
                     .eq(Follow::getSourceType, follow.getSourceType())
-                    .eq(Follow::getUserId, follow.getUserId())
+                    .eq(Follow::getUserId, follow.getSourceId())
                     .list()
                     .stream()
                     .map(Follow::getSourceId)

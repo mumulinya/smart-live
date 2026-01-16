@@ -1,5 +1,6 @@
 package com.smartLive.interaction.controller;
 
+import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.service.ILikeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,5 +21,14 @@ public class LikeInnerController {
     @GetMapping("/isLike")
     public Boolean  isLike (Like like) {
         return  likeRecordService.isLike(like);
+    }
+    /**
+     * 查询点赞数
+     * @param
+     * @return
+     */
+    @GetMapping("/getLikeCount")
+    public Integer queryBlogLikes(Like like) {
+        return likeRecordService.queryLikeCount(like);
     }
 }

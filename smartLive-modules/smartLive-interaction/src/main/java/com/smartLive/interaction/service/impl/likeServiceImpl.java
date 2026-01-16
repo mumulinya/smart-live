@@ -124,7 +124,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
      */
     @Override
     public Integer queryLikeCount(Like like) {
-        Integer likeCount = query().eq("source_type", like.getSourceType()).eq("source_id", like.getSourceId()).count().intValue();
+        Integer likeCount = query().eq("source_type", like.getSourceType()).eq("user_id", like.getUserId()).count().intValue();
         return likeCount;
     }
 

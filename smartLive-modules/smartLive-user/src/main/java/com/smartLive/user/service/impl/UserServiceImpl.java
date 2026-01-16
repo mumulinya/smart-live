@@ -25,8 +25,12 @@ import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.interaction.api.RemoteFollowService;
+import com.smartLive.interaction.api.RemoteLikeService;
+import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.dto.CommentDTO;
 import com.smartLive.interaction.api.dto.FollowDTO;
+import com.smartLive.interaction.api.dto.LikeDTO;
+import com.smartLive.interaction.api.dto.StarDTO;
 import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartLive.user.domain.Stats;
@@ -74,6 +78,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private ExecutorService executorService;
     @Autowired
     private RemoteFollowService remoteFollowService;
+    @Autowired
+    private RemoteLikeService remoteLikeService;
+    @Autowired
+    private RemoteStarService remoteStarService;
     /**
      * 查询用户
      *
@@ -276,7 +284,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public Stats getStats(Long userId) {
-        CountDownLatch countDownLatch = new CountDownLatch(8);
+        //使用线程池＋future来实现
+        CountDownLatch countDownLatch = new CountDownLatch(10);
         //获取粉丝数
         Future<Integer> fanCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询粉丝数",Thread.currentThread().getName());
@@ -314,7 +323,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             countDownLatch.countDown();
             return commonFollowCount;
         });
-        //使用线程池＋future来实现
         //获取博客数
         Future<Integer> blogCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询博客数",Thread.currentThread().getName());
@@ -346,12 +354,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return orderCount;
         });
         //获取关注店铺数量
-        Future<Integer> collectCountFuture = executorService.submit(() -> {
+        Future<Integer> followShopCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询收藏数",Thread.currentThread().getName());
             FollowDTO followDTO=new FollowDTO();
             followDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
             followDTO.setUserId(userId);
             Integer collectCount = remoteFollowService.getFollowCount(followDTO);
+            countDownLatch.countDown();
+            return collectCount;
+        });
+        //获取点赞博客数
+        Future<Integer> blogLikeCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询点赞博客数",Thread.currentThread().getName());
+            LikeDTO likeDTO=new LikeDTO();
+            likeDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
+            likeDTO.setUserId(userId);
+            Integer blogLikeCount = remoteLikeService.getLikeCount(likeDTO);
+            countDownLatch.countDown();
+            return blogLikeCount;
+        });
+        //获取收藏博客数
+        Future<Integer> blogStarCountFuture = executorService.submit(() -> {
+            log.info("线程：{}开始查询收藏博客数",Thread.currentThread().getName());
+            StarDTO starDTO=new StarDTO();
+            starDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
+            starDTO.setUserId(userId);
+            Integer collectCount = remoteStarService.getStarCount(starDTO);
             countDownLatch.countDown();
             return collectCount;
         });
@@ -367,7 +395,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     .likeCount(likeCountFuture.get())
                     .commentCount(commentCountFuture.get())
                     .orderCount(orderCountFuture.get())
-                    .collectCount(collectCountFuture.get())
+                    .followShopCount(followShopCountFuture.get())
+                    .blogLikeCount(blogLikeCountFuture.get())
+                    .blogStarCount(blogStarCountFuture.get())
                     .build();
             return stats;
         } catch (Exception e) {
