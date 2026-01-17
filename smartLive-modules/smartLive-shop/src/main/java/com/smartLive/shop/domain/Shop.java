@@ -94,6 +94,10 @@ public class Shop extends BaseEntity implements Serializable
     @TableField(exist = false)
     private Boolean isStared;
 
+    /** 是否关注 */
+    @TableField(exist = false)
+    private Boolean isFollowed;
+
     private void updateLocation() {
         if (this.y != null && this.x != null) {
             this.location = this.y + "," + this.x;

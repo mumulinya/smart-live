@@ -26,7 +26,9 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
+import com.smartLive.interaction.api.dto.FollowDTO;
 import com.smartLive.interaction.api.dto.StarDTO;
 import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.service.IShopTypeService;
@@ -65,6 +67,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private RedisService redisService;
     @Autowired
     private RemoteStarService remoteStarService;
+    @Autowired
+    RemoteFollowService remoteFollowService;
     /**
      * 查询店铺
      *
@@ -191,11 +195,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         //是否收藏
         isShopStared(shop);
+        //是否关注
+        isShopFollowed(shop);
         return shop;
     }
 
     /**
-     * 判断当前用户是否已经收藏博客
+     * 判断当前用户是否已经收藏店铺
      * @param shop
      */
     private void isShopStared(Shop shop) {
@@ -214,6 +220,26 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //判断当前用户是否已经收藏
         Boolean isStared = remoteStarService.isStar(starDTO);
         shop.setIsStared(isStared);
+    }
+    /**
+     * 判断当前用户是否已经收藏店铺
+     * @param shop
+     */
+    private void isShopFollowed(Shop shop) {
+        UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            //未登录,不用查询是否点赞
+            shop.setIsFollowed(false);
+            return;
+        }
+        //获取当前登录用户
+        Long userId = user.getId();
+        FollowDTO followDTO = new FollowDTO();
+        followDTO.setUserId(userId);
+        followDTO.setSourceId(shop.getId());
+        followDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
+        Boolean isFollowed = remoteFollowService.isFollowed(followDTO);
+        shop.setIsFollowed(isFollowed);
     }
     /**
      * 缓存穿透
