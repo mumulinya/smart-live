@@ -182,6 +182,12 @@ public interface IBlogService extends IService<Blog>
      */
     List<Blog> getBlogListByIds(List<Long> sourceIdList);
     /**
+     * 置顶博客
+     *
+     * @return 结果
+     */
+    boolean isPin(Blog blog);
+    /**
      * 批量更新点赞数
      * @param updateMap
      * @return

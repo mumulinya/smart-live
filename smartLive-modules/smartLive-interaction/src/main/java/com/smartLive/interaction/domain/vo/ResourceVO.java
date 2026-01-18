@@ -28,4 +28,12 @@ public class ResourceVO {
     private String presentPrice;
     //店铺名
     private String shopName;
+    //区域
+    private String area;
+    /** 均价，取整数 */
+    private String avgPrice;
+    /** 评论数量 */
+    private Integer comments;
+    /** 评分，1~5分，乘10保存，避免小数 */
+    private Integer score;
 }

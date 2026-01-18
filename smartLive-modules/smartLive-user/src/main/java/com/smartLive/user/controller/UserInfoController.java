@@ -52,4 +52,17 @@ public class UserInfoController {
             return Result.fail("更新用户信息失败：" + e.getMessage());
         }
     }
+
+    /**
+     * 更新背景图
+     */
+    @PostMapping("/updateBackgroundImage")
+    public Result updateBackgroundImage(@RequestBody UserInfoDTO userInfoDTO) {
+        Boolean result = userInfoService.updateBackgroundImage(userInfoDTO);
+        if (result) {
+            return Result.ok("操作成功");
+        } else {
+            return Result.fail("操作失败");
+        }
+    }
 }

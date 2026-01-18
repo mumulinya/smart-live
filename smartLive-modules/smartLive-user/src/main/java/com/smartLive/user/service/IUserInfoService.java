@@ -1,6 +1,7 @@
 package com.smartLive.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.smartLive.user.DTO.UserInfoDTO;
 import com.smartLive.user.domain.UserInfo;
 
 import java.util.Date;
@@ -54,4 +55,8 @@ public interface IUserInfoService extends IService<UserInfo> {
      * 根据用户ID列表查询用户信息列表
      */
     List<UserInfo> listByUserIds(List<Long> userIds);
+    /**
+     * 更新用户背景图片
+     */
+    Boolean updateBackgroundImage(UserInfoDTO userInfoDTO);
 }

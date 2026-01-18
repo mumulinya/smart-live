@@ -60,6 +60,9 @@ public class Blog extends BaseEntity implements Serializable
     /** 评论数量 */
     @Excel(name = "评论数量")
     private Integer comments;
+    /** 置顶 */
+    @Excel(name = "置顶")
+    private Boolean pin;
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

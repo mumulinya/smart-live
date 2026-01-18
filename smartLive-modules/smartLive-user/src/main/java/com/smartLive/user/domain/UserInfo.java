@@ -5,6 +5,7 @@ import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.smartLive.common.core.annotation.Excel;
@@ -17,6 +18,7 @@ import com.smartLive.common.core.web.domain.BaseEntity;
  * @date 2025-09-21
  */
 @TableName("user_info")
+@Data
 public class UserInfo extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -56,6 +58,9 @@ public class UserInfo extends BaseEntity implements Serializable
     /** 会员级别，0~9级,0代表未开通会员 */
     @Excel(name = "会员级别，0~9级,0代表未开通会员")
     private String level;
+    /**背景图片 */
+    @Excel(name = "背景图片")
+    private String backgroundImage;
 
     public void setUserId(Long userId) 
     {

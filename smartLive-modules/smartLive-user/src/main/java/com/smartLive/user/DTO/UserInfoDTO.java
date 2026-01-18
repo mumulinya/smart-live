@@ -1,12 +1,14 @@
 package com.smartLive.user.DTO;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 
 import java.util.Date;
 
 /**
  * 用户信息DTO
  */
+@Data
 public class UserInfoDTO {
     
     private Long userId;
@@ -15,7 +17,9 @@ public class UserInfoDTO {
     private Integer fans;
     private Integer followee;
     private Integer gender;
-    
+    private String backgroundImage;
+
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date birthday;
     

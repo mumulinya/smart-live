@@ -383,6 +383,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public List<Blog> queryBlogByUserId(Integer current, Long userId) {
         Page<Blog> page = query()
                 .eq("user_id", userId)
+                .orderByDesc("pin")
                 .orderByAsc("create_time")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<Blog> records = page.getRecords();
@@ -432,6 +433,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public ScrollResult queryBlogByFollow(Long max, Integer offset) {
+        if(UserContextHolder.getUser() == null){
+            return new ScrollResult();
+        }
         //获取当前登录用户
         Long userId = UserContextHolder.getUser().getId();
         String key = RedisConstants.FEED_KEY + userId;
@@ -503,6 +507,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         // 根据用户查询
         Page<Blog> page = query()
                 .eq("user_id", user.getId())
+                .orderByDesc("pin")
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
@@ -583,6 +588,25 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             isBlogLiked(blog);
         });
         return blogList;
+    }
+
+    /**
+     * 置顶博客
+     *
+     * @param blog
+     * @return 结果
+     */
+    @Override
+    public boolean isPin(Blog blog) {
+        boolean update = this.lambdaUpdate()
+                .eq(Blog::getId, blog.getId())
+                .set(Blog::getPin, blog.getPin())
+                .update();
+        if (update) {
+            //更新缓存
+            flashRedisBlogCache(blog.getId());
+        }
+        return update;
     }
 
     /**
@@ -871,7 +895,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     private void flashRedisBlogCache(Long blogId) {
         //清空缓存
-        redisService.deleteObject(RedisConstants.CACHE_BLOG_TYPE_KEY+blogId);
+        redisService.deleteObject(RedisConstants.CACHE_BLOG_KEY+blogId);
     }
     /**
      * 清空博客列表缓存

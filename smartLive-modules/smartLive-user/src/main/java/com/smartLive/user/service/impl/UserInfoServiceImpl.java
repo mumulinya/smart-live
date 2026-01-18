@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.user.DTO.UserInfoDTO;
 import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.mapper.UserInfoMapper;
 import com.smartLive.user.service.IUserInfoService;
@@ -164,5 +165,18 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("user_id", userIds);
         return list(queryWrapper);
+    }
+
+    /**
+     * 更新用户背景图片
+     *
+     * @param userInfoDTO
+     */
+    @Override
+    public Boolean updateBackgroundImage(UserInfoDTO userInfoDTO) {
+        boolean update = update().set("background_image", userInfoDTO.getBackgroundImage())
+                .eq("user_id", userInfoDTO.getUserId())
+                .update();
+        return update;
     }
 }

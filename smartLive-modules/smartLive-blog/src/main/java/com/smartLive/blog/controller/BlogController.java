@@ -219,4 +219,13 @@ public class BlogController extends BaseController
     public Result queryBlogByFollow(@RequestParam(value = "lastId") Long max, @RequestParam(value = "offset", defaultValue = "0") Integer offset) {
         return Result.ok(blogService.queryBlogByFollow(max, offset));
     }
+    //是否置顶
+    @PutMapping("/isPin")
+    public Result isPin(@RequestBody Blog blog){
+        boolean pin = blogService.isPin(blog);
+        if (pin){
+            return Result.ok("操作成功");
+        }else
+            return Result.fail("操作失败");
+    }
 }
