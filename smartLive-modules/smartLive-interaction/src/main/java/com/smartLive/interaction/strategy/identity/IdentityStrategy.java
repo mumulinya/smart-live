@@ -1,6 +1,4 @@
 package com.smartLive.interaction.strategy.identity;
-import com.smartLive.interaction.domain.vo.SocialInfoVO;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 /**
@@ -15,5 +13,5 @@ public interface IdentityStrategy<T> {
      /**
       * 获取关注列表
       */
-     List<SocialInfoVO> getFollowList(List<Long> sourceIdList);
+     List<T> getFollowList(List<Long> sourceIdList);
 }

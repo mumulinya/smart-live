@@ -3,9 +3,6 @@ package com.smartLive.interaction.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.interaction.domain.Follow;
-import com.smartLive.interaction.domain.vo.SocialInfoVO;
-
-
 import java.util.List;
 
 
@@ -84,7 +81,7 @@ public interface IFollowService extends IService<Follow>
       * @param follow
      * @return
      */
-    List<SocialInfoVO> common(Follow follow, Integer current);
+    List<?> common(Follow follow, Integer current);
     /**
      * 推送数据给粉丝
      */
@@ -94,13 +91,13 @@ public interface IFollowService extends IService<Follow>
      * 获取粉丝列表
      * @return
      */
-    List<SocialInfoVO> getFans(Follow follow,Integer current);
+    List<?> getFans(Follow follow,Integer current);
 
     /**
      * 获取关注列表
      * @return
      */
-    List<SocialInfoVO> getFollows(Follow follow,Integer current);
+    List<?> getFollows(Follow follow,Integer current);
     /**
      * 获取关注数
      * @return

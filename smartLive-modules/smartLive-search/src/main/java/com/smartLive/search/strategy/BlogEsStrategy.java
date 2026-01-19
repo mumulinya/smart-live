@@ -48,6 +48,7 @@ public class BlogEsStrategy implements EsSyncStrategy {
     @Override
     public boolean batchInsert(String indexName, List<Object> dataList) throws IOException {
         List<BlogDoc> docList = EsTool.convertList(dataList, BlogDoc.class);
+
         return blogEsService.batchInsert(indexName, docList,  data -> data.getId().toString());
     }
 

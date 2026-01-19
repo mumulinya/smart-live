@@ -2,8 +2,6 @@ package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.interaction.domain.Like;
-import com.smartLive.interaction.domain.vo.ResourceVO;
-import com.smartLive.interaction.domain.vo.SocialInfoVO;
 import java.util.List;
 
 
@@ -36,14 +34,14 @@ public interface ILikeService extends IService<Like> {
      * @param
      * @return 点赞记录
      */
-    List<ResourceVO> queryLikeRecord(Like like, Integer current);
+    List<?> queryLikeRecord(Like like, Integer current);
     /**
      * 查询点赞用户列表
      *
      * @param
      * @return 点赞用户列表
      */
-    List<SocialInfoVO> queryLikeUserList(Like like);
+    List<?> queryLikeUserList(Like like);
     /**
      * 判断是否点赞
      *

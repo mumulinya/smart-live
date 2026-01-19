@@ -10,7 +10,6 @@ import com.smartLive.common.core.enums.StarTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Star;
-import com.smartLive.interaction.domain.vo.ResourceVO;
 import com.smartLive.interaction.mapper.StarMapper;
 import com.smartLive.interaction.service.IStarService;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
@@ -200,7 +199,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      * @return
      */
     @Override
-    public List<ResourceVO> getStarList(Star star, Integer current) {
+    public List<?> getStarList(Star star, Integer current) {
         // 1. 获取对应的枚举策略
         ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
@@ -233,7 +232,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
        if(sourceIdList.isEmpty()){
            return Collections.emptyList();
        }
-        List<ResourceVO> resourceList = resourceStrategy.getResourceList(sourceIdList);
+        List<?> resourceList = resourceStrategy.getResourceList(sourceIdList);
         return resourceList;
     }
     /**

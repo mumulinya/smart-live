@@ -13,7 +13,6 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Follow;
-import com.smartLive.interaction.domain.vo.SocialInfoVO;
 import com.smartLive.interaction.mapper.FollowMapper;
 import com.smartLive.interaction.service.IFollowService;
 import com.smartLive.interaction.strategy.identity.IdentityStrategy;
@@ -204,7 +203,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public List<SocialInfoVO> common(Follow follow, Integer current) {
+    public List<?> common(Follow follow, Integer current) {
         IdentityTypeEnum identityTypeEnum = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (identityTypeEnum == null) {
             log.error("关注类型错误");
@@ -218,7 +217,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
         List<Long> idList = commonFollowPage.getRecords();
         IdentityStrategy identityStrategy = identityStrategyMap.get(identityTypeEnum.getCode());
-        List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(idList);
+        List<?> socialInfoVOList = identityStrategy.getFollowList(idList);
         return socialInfoVOList;
     }
 
@@ -260,7 +259,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public List<SocialInfoVO> getFans(Follow follow,Integer current) {
+    public List<?> getFans(Follow follow,Integer current) {
         // 1. 获取对应的枚举策略
         IdentityTypeEnum identityType = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (identityType == null) {
@@ -290,7 +289,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
        if(sourceIdList.isEmpty()){
            return Collections.emptyList();
        }
-        List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(sourceIdList);
+        List<?> socialInfoVOList = identityStrategy.getFollowList(sourceIdList);
         return socialInfoVOList;
     }
 
@@ -301,7 +300,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public List<SocialInfoVO> getFollows(Follow follow,Integer current) {
+    public List<?> getFollows(Follow follow,Integer current) {
 //        // 1. 获取对应的枚举策略
         IdentityTypeEnum identityType = IdentityTypeEnum.getByCode(follow.getSourceType());
         if (identityType == null) {
@@ -330,7 +329,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         if(sourceIdList.isEmpty()){
             return Collections.emptyList();
         }
-        List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(sourceIdList);
+        List<?> socialInfoVOList = identityStrategy.getFollowList(sourceIdList);
         return socialInfoVOList;
     }
 

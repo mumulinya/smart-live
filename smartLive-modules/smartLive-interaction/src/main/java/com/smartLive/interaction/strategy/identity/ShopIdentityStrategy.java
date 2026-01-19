@@ -1,16 +1,11 @@
 package com.smartLive.interaction.strategy.identity;
 
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.enums.IdentityTypeEnum;
-import com.smartLive.interaction.domain.vo.SocialInfoVO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.domain.ShopDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
-import java.util.stream.Collectors;
-
 @Component
 public class ShopIdentityStrategy implements IdentityStrategy<ShopDTO> {
 
@@ -28,19 +23,11 @@ public class ShopIdentityStrategy implements IdentityStrategy<ShopDTO> {
      * @return
      */
     @Override
-    public List<SocialInfoVO> getFollowList(List<Long> sourceIdList) {
+    public List<ShopDTO> getFollowList(List<Long> sourceIdList) {
         List<ShopDTO> shopList = remoteShopService.getShopList(sourceIdList);
         if (shopList == null || shopList.isEmpty()) {
             return null;
         }
-        List<SocialInfoVO> socialInfoVOList = shopList.stream().map(shop -> SocialInfoVO.builder()
-                .isFollow(true)
-                .id(shop.getId())
-                .name(shop.getName())
-                .icon(shop.getImages())
-                .introduce(shop.getRemark())
-                .build()
-        ).collect(Collectors.toList());
-        return socialInfoVOList;
+        return shopList;
     }
 }

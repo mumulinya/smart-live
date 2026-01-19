@@ -2,16 +2,13 @@ package com.smartLive.interaction.strategy.resource;
 
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.interaction.domain.Comment;
-import com.smartLive.interaction.domain.vo.ResourceVO;
 import com.smartLive.interaction.service.ICommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
-public class CommentResourceStrategy implements ResourceStrategy {
+public class CommentResourceStrategy implements ResourceStrategy<Comment> {
 
     @Autowired
     private ICommentService iCommentService;
@@ -29,20 +26,11 @@ public class CommentResourceStrategy implements ResourceStrategy {
      * @param sourceIdList
      */
     @Override
-    public List<ResourceVO> getResourceList(List<Long> sourceIdList) {
+    public List<Comment> getResourceList(List<Long> sourceIdList) {
        List<Comment> commentList = iCommentService.getCommentListByIds(sourceIdList);
         if (commentList.isEmpty()) {
             return null;
         }
-        List<ResourceVO> resourceVOList = commentList.stream().map(comment -> ResourceVO.builder()
-                .id(comment.getId())
-                .userAvatar(comment.getUserIcon())
-                .userName(comment.getNickName())
-                .images(comment.getImages())
-                .content(comment.getContent())
-                .isLike(true)
-                .build()
-        ).collect(Collectors.toList());
-        return resourceVOList;
+        return commentList;
     }
 }

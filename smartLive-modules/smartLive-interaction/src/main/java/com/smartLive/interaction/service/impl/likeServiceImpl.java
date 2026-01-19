@@ -10,8 +10,6 @@ import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Like;
-import com.smartLive.interaction.domain.vo.ResourceVO;
-import com.smartLive.interaction.domain.vo.SocialInfoVO;
 import com.smartLive.interaction.mapper.LikeMapper;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.strategy.identity.IdentityStrategy;
@@ -134,7 +132,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
      * @param like@return 点赞记录
      */
     @Override
-    public List<ResourceVO> queryLikeRecord(Like like, Integer current) {
+    public List<?> queryLikeRecord(Like like, Integer current) {
         ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(like.getSourceType());
         if (resourceTypeEnum == null) {
             log.error("点赞类型错误");
@@ -146,7 +144,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         if (sourceIdList == null || sourceIdList.isEmpty()) {
             return null;
         }
-        List<ResourceVO> resourceVOList = resourceStrategy.getResourceList(sourceIdList);
+        List<?> resourceVOList = resourceStrategy.getResourceList(sourceIdList);
         return resourceVOList;
     }
 
@@ -156,7 +154,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
      * @param like@return 点赞用户列表
      */
     @Override
-    public List<SocialInfoVO> queryLikeUserList(Like like) {
+    public List<?> queryLikeUserList(Like like) {
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         if (likeTypeEnum == null) {
             log.error("点赞类型错误");
@@ -173,7 +171,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         //解析其中的用户id
         List<Long> userIdList = top5.stream().map(obj -> Long.valueOf(obj.toString())).collect(Collectors.toList());
         log.info("查询点赞用户列表: {}", userIdList);
-        List<SocialInfoVO> socialInfoVOList = identityStrategy.getFollowList(userIdList);
+        List<?> socialInfoVOList = identityStrategy.getFollowList(userIdList);
         return socialInfoVOList;
     }
 
