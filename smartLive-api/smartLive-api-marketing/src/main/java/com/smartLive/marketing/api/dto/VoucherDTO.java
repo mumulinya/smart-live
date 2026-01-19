@@ -63,7 +63,23 @@ public class VoucherDTO extends BaseEntity implements Serializable
     /** 1,上架; 2,下架; 3,过期 */
     @Excel(name = "1,上架; 2,下架; 3,过期")
     private Integer status;
+    /**
+     * 有效期类型：1-固定日期，2-动态有效期（领券后N天有效）
+     */
+    private Integer validityType;
 
+    /**
+     * 固定日期的开始/结束时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date useStartTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date useEndTime;
+
+    /**
+     * 动态有效期：购买后多少天有效
+     */
+    private Integer validDays;
     /**
      * 库存
      */

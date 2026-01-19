@@ -94,6 +94,14 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-order</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-interaction</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-interaction</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>

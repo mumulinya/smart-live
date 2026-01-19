@@ -46,5 +46,5 @@ public interface RemoteVoucherService {
      * 获取优惠券列表
      */
     @GetMapping("/inner/voucher/getVoucherListByIds")
-    List<VoucherDTO> getVoucherListByIds(List<Long> sourceIdList);
+    List<VoucherDTO> getVoucherListByIds(@RequestParam("sourceIdList")List<Long> sourceIdList);
 }

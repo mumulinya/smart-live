@@ -17,6 +17,10 @@ import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.api.RemoteFollowService;
+import com.smartLive.interaction.api.RemoteStarService;
+import com.smartLive.interaction.api.dto.FollowDTO;
+import com.smartLive.interaction.api.dto.StarDTO;
 import com.smartLive.marketing.domain.SeckillVoucher;
 import com.smartLive.marketing.service.ISeckillVoucherService;
 import com.smartLive.marketing.until.RedisIdWorker;
@@ -56,6 +60,11 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
     @Autowired
     private RemoteShopService remoteShopService;
+
+    @Autowired
+    private RemoteStarService remoteStarService;
+    @Autowired
+    private RemoteFollowService remoteFollowService;
     @Resource
     private RedisIdWorker redisIdWorker;
 
@@ -89,6 +98,18 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         Voucher voucher = voucherMapper.selectVoucherById(id);
         if (voucher != null){
             querySeckill(voucher);
+            //判断是否收藏
+            StarDTO starDTO=new StarDTO();
+            starDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+            starDTO.setSourceId(id);
+            Boolean isStar = remoteStarService.isStar(starDTO);
+            voucher.setIsStar(isStar);
+            //判断是否收藏
+            FollowDTO followDTO=new FollowDTO();
+            followDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+            followDTO.setSourceId(id);
+            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+            voucher.setIsFollow(isFollow);
         }
         return voucher;
     }
@@ -406,7 +427,13 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      */
     @Override
     public List<Voucher> getVoucherListByIds(List<Long> sourceIdList) {
-        return query().in("id", sourceIdList).list();
+        List<Voucher> voucherList = query().in("id", sourceIdList).list();
+        voucherList.forEach(voucher -> {
+            if(voucher!= null){
+                querySeckill(voucher);
+            }
+        });
+        return voucherList;
     }
 
     /**

@@ -14,13 +14,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="actualValue"    column="actual_value"    />
         <result property="type"    column="type"    />
         <result property="status"    column="status"    />
+        <result property="validityType"    column="validity_type"    />
+        <result property="useStartTime"    column="use_start_time"    />
+        <result property="useEndTime"    column="use_end_time"    />
+        <result property="validDays"    column="valid_days"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateTime"    column="update_time"    />
     </resultMap>
 
     <sql id="selectVoucherVo">
         select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, create_time, update_time from voucher
-    </sql>
+            select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, validity_type, use_start_time, use_end_time, valid_days, create_time, update_time from voucher</sql>
 
     <select id="selectVoucherList" parameterType="com.smartLive.marketing.domain.Voucher" resultMap="VoucherResult">
         <include refid="selectVoucherVo"/>
@@ -37,8 +41,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
     
     <select id="selectVoucherById" parameterType="Long" resultMap="VoucherResult">
-        <include refid="selectVoucherVo"/>
-        where id = #{id}
+        SELECT
+            v.`id`, v.`shop_id`, v.`title`, v.`sub_title`, v.`rules`, v.`pay_value`,
+            v.`actual_value`, v.`type`,v.`validity_type`,v.`use_start_time`,v.`use_end_time`,v.`valid_days`,sv.`stock` , sv.begin_time , sv.end_time
+        FROM voucher v
+                 LEFT JOIN  seckill_voucher sv ON v.id = sv.voucher_id
+        WHERE  v.id = #{id}
     </select>
 
     <insert id="insertVoucher" parameterType="com.smartLive.marketing.domain.Voucher" useGeneratedKeys="true" keyProperty="id">
@@ -100,7 +108,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="queryVoucherOfShop" resultType="com.smartLive.marketing.domain.Voucher" parameterType="java.lang.Long">
         SELECT
             v.`id`, v.`shop_id`, v.`title`, v.`sub_title`, v.`rules`, v.`pay_value`,
-            v.`actual_value`, v.`type`, sv.`stock` , sv.begin_time , sv.end_time
+            v.`actual_value`, v.`type`,v.`validity_type`,v.`use_start_time`,v.`use_end_time`,v.`valid_days`,sv.`stock` , sv.begin_time , sv.end_time
         FROM voucher v
                  LEFT JOIN  seckill_voucher sv ON v.id = sv.voucher_id
         WHERE v.shop_id = #{shopId} AND v.status = 1

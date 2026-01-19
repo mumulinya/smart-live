@@ -85,7 +85,7 @@ public class VoucherInnerController extends BaseController {
      * 获取优惠券列表
      */
     @GetMapping("/getVoucherListByIds")
-    public List<Voucher> getVoucherListByIds(List<Long> sourceIdList){
+    public List<Voucher> getVoucherListByIds(@RequestParam("sourceIdList")List<Long> sourceIdList){
         return voucherService.getVoucherListByIds(sourceIdList);
     }
 }

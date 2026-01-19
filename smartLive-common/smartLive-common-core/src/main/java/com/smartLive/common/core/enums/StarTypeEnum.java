@@ -24,8 +24,12 @@ public enum StarTypeEnum {
     SHOP_STAR(GlobalBizTypeEnum.SHOP.getCode(), "店铺的收藏",GlobalBizTypeEnum.SHOP.getBizDomain(),
             RedisConstants.SHOP_STAR_KEY,
             RedisConstants.SHOP_STAR_COUNT_KEY,
-            RedisConstants.SHOP_STAR_DIRTY_KEY);
-
+            RedisConstants.SHOP_STAR_DIRTY_KEY),
+    // 2. 代金券收藏配置
+    Voucher_STAR(GlobalBizTypeEnum.VOUCHER.getCode(), "代金券的收藏",GlobalBizTypeEnum.VOUCHER.getBizDomain(),
+            RedisConstants.VOUCHER_STAR_KEY,
+            RedisConstants.VOUCHER_STAR_COUNT_KEY,
+            RedisConstants.VOUCHER_STAR_DIRTY_KEY);
     /**
      * 业务类型编码 (与 ResourceTypeEnum 保持一致)
      */

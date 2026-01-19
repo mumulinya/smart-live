@@ -62,7 +62,23 @@ public class Voucher extends BaseEntity implements Serializable
     /** 1,上架; 2,下架; 3,过期 */
     @Excel(name = "1,上架; 2,下架; 3,过期")
     private Integer status;
+    /**
+     * 有效期类型：1-固定日期，2-动态有效期（领券后N天有效）
+     */
+    private Integer validityType;
 
+    /**
+     * 固定日期的开始/结束时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date useStartTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date useEndTime;
+
+    /**
+     * 动态有效期：领取后多少天有效
+     */
+    private Integer validDays;
     /**
      * 库存
      */
@@ -70,14 +86,14 @@ public class Voucher extends BaseEntity implements Serializable
     private Integer stock;
 
     /**
-     * 生效时间
+     * 开始时间
      */
     @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date beginTime;
 
     /**
-     * 失效时间
+     * 结束时间
      */
     @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -88,4 +104,10 @@ public class Voucher extends BaseEntity implements Serializable
     //店铺类型
     @TableField(exist = false)
     private Long typeId;
+    //是否收藏
+    @TableField(exist = false)
+    private Boolean isStar;
+    //是否关注
+    @TableField(exist = false)
+    private Boolean IsFollow;
 }

@@ -33,7 +33,9 @@ public class RedisConstants {
     public static final String FANS_USER_KEY = "fans:user:";
     public static final String FOLLOW_SHOP_KEY = "follow:shop:";
     public static final String FANS_SHOP_KEY = "fans:shop:";
-    /**
+    public static final String FOLLOW_VOUCHER_KEY = "follow:voucher:";
+    public static final String FANS_VOUCHER_KEY = "fans:voucher:";
+     /**
      * 推送新闻
      */
     public static final String FEED_KEY = "feed:";
@@ -81,6 +83,10 @@ public class RedisConstants {
     public static final String SHOP_STAR_DIRTY_KEY = "shop:star:dirty:";
     //代金券收藏
     public static final String VOUCHER_STAR_KEY = "voucher:star:";
+    //代金券收藏总数
+    public static final String VOUCHER_STAR_COUNT_KEY = "voucher:star:count:";
+    //代金券收藏脏数据列表
+    public static final String VOUCHER_STAR_DIRTY_KEY = "voucher:star:dirty:";
     //评论收藏
     public static final String COMMENT_STAR_KEY = "comment:star:";
     /**

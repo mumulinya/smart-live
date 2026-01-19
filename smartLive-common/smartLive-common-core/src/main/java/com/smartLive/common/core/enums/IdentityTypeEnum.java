@@ -12,7 +12,10 @@ public enum IdentityTypeEnum {
     //用户信息
     USER_IDENTITY(GlobalBizTypeEnum.USER.getCode(), "user","用户信息",RedisConstants.FOLLOW_USER_KEY, RedisConstants.FANS_USER_KEY),
     //店铺信息
-    SHOP_IDENTITY(GlobalBizTypeEnum.SHOP.getCode(), "shop","店铺信息",RedisConstants.FOLLOW_SHOP_KEY, RedisConstants.FANS_SHOP_KEY);
+    SHOP_IDENTITY(GlobalBizTypeEnum.SHOP.getCode(), "shop","店铺信息",RedisConstants.FOLLOW_SHOP_KEY, RedisConstants.FANS_SHOP_KEY),
+    //代金券信息
+    VOUCHER_IDENTITY(GlobalBizTypeEnum.VOUCHER.getCode(), "voucher","代金券信息",RedisConstants.FOLLOW_VOUCHER_KEY, RedisConstants.FANS_VOUCHER_KEY);
+
     private final Integer code;
     /**
      * 业务域标识
