@@ -235,9 +235,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String idStr = StrUtil.join(",",userIdList);
         List<User> userList = query().in("id", userIdList).last("order by field(id," + idStr + ")").list();
         userList = userList.stream().map(user -> {
-            UserInfo userInfo = userInfoService.getByUserId(user.getId());
-            if(userInfo != null){
-                user.setIntroduce(userInfo.getIntroduce());
+            if(user != null){
+                //查询用户是否关注当前用户
+                isFollow(user);
+                UserInfo userInfo = userInfoService.getByUserId(user.getId());
+                if(userInfo != null){
+                    user.setIntroduce(userInfo.getIntroduce());
+                }
             }
             return user;
         }).collect(Collectors.toList());
@@ -254,12 +258,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public User queryUserById(Long id) {
         User user = getById(id);
         if(user!= null){
-            queryUserInfo(user);
-            FollowDTO followDTO=new FollowDTO();
-            followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
-            followDTO.setSourceId(id);
-            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
-            user.setIsFollow(isFollow);
+            //查询用户是否关注当前用户
+            isFollow(user);
         }
         return (user);
     }
@@ -484,5 +484,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             });
         }
         return "发布成功";
+    }
+
+    /**
+     * 判断用户是否被当前用户关注
+     * @param user
+     */
+    private void isFollow(User user){
+        FollowDTO followDTO=new FollowDTO();
+        followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
+        followDTO.setSourceId(user.getId());
+        Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+        user.setIsFollow(isFollow);
     }
 }
