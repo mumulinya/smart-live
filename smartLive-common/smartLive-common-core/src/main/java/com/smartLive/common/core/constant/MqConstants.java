@@ -20,8 +20,6 @@ public class MqConstants {
     public static final Integer DELAY_TIME = 15 * 60000; // 15分钟 = 900000 毫秒
     // 博客交换机
     public static final String  BLOG_EXCHANGE_NAME = "blog.direct";
-    public static final String  BLOG_FEED_QUEUE = "blog.feed.queue";
-    public static final String  BLOG_FEED_ROUTING = "blog.feed.user";
     public static final String  BLOG_COMMENT_QUEUE = "blog.comment.queue";
     public static final String  BLOG_COMMENT_ROUTING = "blog.comment.add";
     //博客死信交换机
@@ -47,42 +45,12 @@ public class MqConstants {
      */
     //推送数据交换机
     public static final String  INTERACT_FEED_EXCHANGE_NAME = "interact.feed.topic";
-    //紧急数据推送队列
-    public static final String  INTERACT_FEED_URGENT_QUEUE = "interact.feed.urgent.queue";
     //普通数据推送队列
-    public static final String  INTERACT_FEED_NORMAL_QUEUE = "interact.feed.normal.queue";
+    public static final String  INTERACT_FEED_QUEUE = "interact.feed.queue";
     //博客推送
     public static final String  INTERACT_FEED_BLOG_ROUTING = "interact.feed.blog";
     //代金券推送
     public static final String  INTERACT_FEED_VOUCHER_ROUTING = "interact.feed.voucher";
-    //秒杀代金券推送
-    public static final String  INTERACT_FEED_SECKILL_VOUCHER_ROUTING = "interact.feed.seckill.voucher";
-
-    //评论数据交换机
-    public static final String  INTERACT_COMMENT_EXCHANGE_NAME = "interact.comment.topic";
-    //评论创建前缀
-    public static final String  INTERACT_PREFIX_CREATE_COMMENT = "interact.create.comment";
-    //评论删除前缀
-    public static final String  INTERACT_PREFIX_DELETE_COMMENT = "interact.delete.comment";
-    //博客更新评论队列
-    public static final String  INTERACT_COMMENT_BLOG_QUEUE = "interact.comment.blog.queue";
-    //博客创建评论路由
-    public static final String  INTERACT_CREATE_COMMENT_BLOG_ROUTING = "interact.create.comment.blog";
-    //博客删除评论路由
-    public static final String  INTERACT_DELETE_COMMENT_BLOG_ROUTING = "interact.delete.comment.blog";
-
-    //店铺更新评论队列
-    public static final String  INTERACT_COMMENT_SHOP_QUEUE = "interact.comment.shop.queue";
-    //店铺创建评论路由
-    public static final String  INTERACT_CREATE_COMMENT_SHOP_ROUTING = "interact.create.comment.shop";
-    //店铺删除评论路由
-    public static final String  INTERACT_DELETE_COMMENT_SHOP_ROUTING = "interact.delete.comment.shop";
-
-
-    //用户交换机
-    public static final String  USER_EXCHANGE_NAME = "user.direct";
-    public static final String  USER_FOLLOW_QUEUE = "user.follow.queue";
-    public static final String  USER_FOLLOW_ROUTING = "user.follow.add";
 
     //ai交换机
     public static final String AI_EXCHANGE_NAME = "ai.direct";

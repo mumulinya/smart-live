@@ -23,7 +23,7 @@ public class FollowListener {
     private ExecutorService executorService;
     //普通数据推送
     @RabbitListener(bindings=@QueueBinding(
-            value = @Queue(name = MqConstants.INTERACT_FEED_NORMAL_QUEUE,declare = "true"),
+            value = @Queue(name = MqConstants.INTERACT_FEED_QUEUE,declare = "true"),
             exchange = @Exchange(name = MqConstants.INTERACT_FEED_EXCHANGE_NAME,type = ExchangeTypes.TOPIC),
             key = {
                     MqConstants.INTERACT_FEED_BLOG_ROUTING,
@@ -31,20 +31,7 @@ public class FollowListener {
             }
     ))
     public void handleSendNormalToFollowers(FeedEventMessage feedEventMessage){
-        executorService.execute(() -> {
-            followService.pushToFollowers(feedEventMessage);
-        });
-    }
-    //紧急数据推送
-    @RabbitListener(bindings=@QueueBinding(
-            value = @Queue(name = MqConstants.INTERACT_FEED_URGENT_QUEUE,declare = "true"),
-            exchange = @Exchange(name = MqConstants.INTERACT_FEED_EXCHANGE_NAME,type = ExchangeTypes.TOPIC),
-            key = {
-                    MqConstants.INTERACT_FEED_BLOG_ROUTING,
-                    MqConstants.INTERACT_FEED_VOUCHER_ROUTING,
-            }
-    ))
-    public void handleSendUrgentToFollowers(FeedEventMessage feedEventMessage){
+        log.info("推送数据是：{}为"+feedEventMessage);
         executorService.execute(() -> {
             followService.pushToFollowers(feedEventMessage);
         });

@@ -35,17 +35,11 @@ public class RedisConstants {
     public static final String FANS_SHOP_KEY = "fans:shop:";
     public static final String FOLLOW_VOUCHER_KEY = "follow:voucher:";
     public static final String FANS_VOUCHER_KEY = "fans:voucher:";
-     /**
-     * 推送新闻
-     */
-    public static final String FEED_KEY = "feed:";
     /**
      * 推送数据
      */
     //博文推送
     public static final String BLOG_FEED_KEY = "feed:blog:";
-    //秒杀代金券推送
-    public static final String SECKILL_VOUCHER_FEED_KEY = "feed:seckill:voucher:";
     //优惠券推送
     public static final String VOUCHER_FEED_KEY = "feed:voucher:";
 

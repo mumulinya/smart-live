@@ -12,6 +12,7 @@ import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
 import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
 import com.smartLive.common.core.domain.ScrollResult;
@@ -411,11 +412,15 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (!success) {
             throw new BusinessException("新增博文失败");
         }
-        //推送笔记id给所有粉丝
-        BlogDTO blogDTO = BeanUtil.copyProperties(blog, BlogDTO.class);
         //发送rabbitMq消息 推送笔记id给粉丝
-//        rabbitTemplate.convertAndSend(MqConstants.BLOG_EXCHANGE_NAME, MqConstants.BLOG_FEED_ROUTING, blogDTO);
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.BLOG_EXCHANGE_NAME, MqConstants.BLOG_FEED_ROUTING, blogDTO);
+        FeedEventMessage feedEventMessage = FeedEventMessage.builder()
+                .sourceId(blog.getUserId())
+                .sourceType(GlobalBizTypeEnum.USER.getCode())
+                .bizId(blog.getId())
+                .bizType(GlobalBizTypeEnum.BLOG.getCode())
+                .publishTime(blog.getCreateTime())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_FEED_EXCHANGE_NAME, MqConstants.INTERACT_FEED_BLOG_ROUTING, feedEventMessage);
         //添加es数据
         publish(new String[]{blog.getId().toString()});
         //更新redis缓存
@@ -438,7 +443,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         //获取当前登录用户
         Long userId = UserContextHolder.getUser().getId();
-        String key = RedisConstants.FEED_KEY + userId;
+        String key = RedisConstants.BLOG_FEED_KEY + userId;
         //查询收件箱 关注的用户发布的博客
         Set<ZSetOperations.TypedTuple<Object>> typedTuples = redisService.getCacheZSetReverseRangeByScore(key, 0,max , offset, 2);
         if (typedTuples == null || typedTuples.isEmpty()) {

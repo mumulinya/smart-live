@@ -50,11 +50,6 @@ public class FollowController {
         return Result.ok(followServiceImpl.common(follow,current));
     }
 
-    //把数据推送给所有粉丝
-    @PostMapping("/pushToFollowers")
-    public void pushToFollowers(@RequestBody FeedEventMessage feedEventMessage){
-        followServiceImpl.pushToFollowers(feedEventMessage);
-    }
     //获取粉丝列表
     @GetMapping("/fans")
     public Result getFans(Follow follow,@RequestParam("current") Integer current){

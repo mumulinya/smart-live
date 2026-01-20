@@ -15,9 +15,7 @@ public enum FeedTypeEnum {
     //博客推送
     BLOG_FEED(GlobalBizTypeEnum.BLOG.getCode(), RedisConstants.BLOG_FEED_KEY, "博客", GlobalBizTypeEnum.BLOG.getBizDomain()),
     //代金券推送
-    VOUCHER_FEED(GlobalBizTypeEnum.VOUCHER.getCode(), RedisConstants.VOUCHER_FEED_KEY, "代金券", GlobalBizTypeEnum.VOUCHER.getBizDomain()),
-    //秒杀代金券推送
-    SECKILL_VOUCHER_FEED(GlobalBizTypeEnum.VOUCHER.getCode(), RedisConstants.SECKILL_VOUCHER_FEED_KEY, "秒杀代金券", GlobalBizTypeEnum.VOUCHER.getBizDomain());
+    VOUCHER_FEED(GlobalBizTypeEnum.VOUCHER.getCode(), RedisConstants.VOUCHER_FEED_KEY, "代金券", GlobalBizTypeEnum.VOUCHER.getBizDomain());
     private final Integer code;
     private final String feedKeyPrefix;
     private final String desc;

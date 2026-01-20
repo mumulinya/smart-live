@@ -235,8 +235,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return;
         }
         String fansKey = followType.getFansKeyPrefix() + feedEventMessage.getSourceId();
-        Set<Object> userIdSet= redisService.getCacheZSetRange(fansKey, 0, -1);
-        List<Long> userIdList = userIdSet.stream().map(obj -> (Long) obj).collect(Collectors.toList());
+        Set<String> userIdSet= redisService.getCacheZSetRange(fansKey, 0, -1);
+        List<Long> userIdList = userIdSet.stream().map(Long::valueOf).collect(Collectors.toList());
         //推送笔记id给所有粉丝
         // 查询笔记作者下的所有粉丝
         if(userIdList.isEmpty()){
