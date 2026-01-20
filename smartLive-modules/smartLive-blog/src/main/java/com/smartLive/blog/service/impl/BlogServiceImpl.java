@@ -12,6 +12,7 @@ import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
 import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
@@ -403,9 +404,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public Long saveBlog(Blog blog) {
         blog.setUserId(UserContextHolder.getUser().getId());
-        ShopDTO shopDTO = remoteShopService.getShopById(blog.getShopId());
-        if(shopDTO!= null){
-            blog.setTypeId(shopDTO.getTypeId());
+       if (blog.getShopId() != null) {
+           ShopDTO shopDTO = remoteShopService.getShopById(blog.getShopId());
+           if(shopDTO!= null){
+               blog.setTypeId(shopDTO.getTypeId());
+           }
         }
         // 保存探店笔记
         boolean success = save(blog);
@@ -414,10 +417,14 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         //发送rabbitMq消息 推送笔记id给粉丝
         FeedEventMessage feedEventMessage = FeedEventMessage.builder()
-                .sourceId(blog.getUserId())
+                //事件类型
+                .feedType(FeedTypeEnum.USER_FEED.getCode())
+                //发送者类型
                 .sourceType(GlobalBizTypeEnum.USER.getCode())
-                .bizId(blog.getId())
+                .sourceId(blog.getUserId())
+                //发送数据类型
                 .bizType(GlobalBizTypeEnum.BLOG.getCode())
+                .bizId(blog.getId())
                 .publishTime(blog.getCreateTime())
                 .build();
         MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_FEED_EXCHANGE_NAME, MqConstants.INTERACT_FEED_BLOG_ROUTING, feedEventMessage);
@@ -443,7 +450,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         //获取当前登录用户
         Long userId = UserContextHolder.getUser().getId();
-        String key = RedisConstants.BLOG_FEED_KEY + userId;
+        String key = RedisConstants.USER_FEED_KEY+GlobalBizTypeEnum.BLOG.getBizDomain()+":" + userId;
         //查询收件箱 关注的用户发布的博客
         Set<ZSetOperations.TypedTuple<Object>> typedTuples = redisService.getCacheZSetReverseRangeByScore(key, 0,max , offset, 2);
         if (typedTuples == null || typedTuples.isEmpty()) {

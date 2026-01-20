@@ -12,14 +12,17 @@ import java.util.Arrays;
 @Getter
 @AllArgsConstructor
 public enum FeedTypeEnum {
-    //博客推送
-    BLOG_FEED(GlobalBizTypeEnum.BLOG.getCode(), RedisConstants.BLOG_FEED_KEY, "博客", GlobalBizTypeEnum.BLOG.getBizDomain()),
-    //代金券推送
-    VOUCHER_FEED(GlobalBizTypeEnum.VOUCHER.getCode(), RedisConstants.VOUCHER_FEED_KEY, "代金券", GlobalBizTypeEnum.VOUCHER.getBizDomain());
+    //全部推送
+    ALL_FEED(0, RedisConstants.ALL_FEED_KEY, "全部"),
+    //用户推送
+    USER_FEED(1, RedisConstants.USER_FEED_KEY, "用户"),
+    //店铺上新推送
+    SHOP_FEED(2, RedisConstants.SHOP_FEED_KEY, "店铺"),
+    //商品推送
+    ITEM_FEED(3, RedisConstants.ITEM_FEED_KEY, "商品");
     private final Integer code;
     private final String feedKeyPrefix;
     private final String desc;
-    private final String bizDomain; // 用于 MQ 或 Redis Key
 
     /**
      * 根据 code 获取枚举对象 (用于数据库值转枚举)
@@ -34,7 +37,10 @@ public enum FeedTypeEnum {
                 .findFirst()
                 .orElse(null); // 或者抛出异常，看业务需求
     }
-
+    // 生成最终 Redis Key 的工具方法
+    public String getFullKey(Long userId) {
+        return this.feedKeyPrefix + userId;
+    }
     /**
      * 校验类型是否合法
      */

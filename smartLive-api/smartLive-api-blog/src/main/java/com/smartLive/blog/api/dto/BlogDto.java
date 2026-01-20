@@ -70,4 +70,8 @@ public class BlogDto extends BaseEntity implements Serializable
      */
     @TableField(exist = false)
     private Boolean isLike;
+    /**
+     * 数据类型
+     */
+    private String DataType;
 }

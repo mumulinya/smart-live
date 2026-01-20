@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.IdentityTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
@@ -246,11 +247,17 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             log.info("推送数据给粉丝失败，没有粉丝");
             return;
         }
+        //获取发送数据源的类型
+        String bizDomain = GlobalBizTypeEnum.getByCode(feedEventMessage.getBizType()).getBizDomain();
         for (Long userId : userIdList) {
             //推送
-            String feedKeyPrefix = FeedTypeEnum.getByCode(feedEventMessage.getBizType()).getFeedKeyPrefix();
+            String feedKeyPrefix = FeedTypeEnum.getByCode(feedEventMessage.getFeedType()).getFeedKeyPrefix();
             String key = feedKeyPrefix + userId;
-            redisService.setCacheZSet(key, feedEventMessage.getBizId().toString(), System.currentTimeMillis());
+            redisService.setCacheZSet(key, bizDomain+":"+feedEventMessage.getBizId().toString(), System.currentTimeMillis());
+            //推送
+            String allFeedFeedKeyPrefix = FeedTypeEnum.ALL_FEED.getFeedKeyPrefix();
+            String allFeedKey = allFeedFeedKeyPrefix + userId;
+            redisService.setCacheZSet(allFeedKey, bizDomain+":"+feedEventMessage.getBizId().toString(), System.currentTimeMillis());
         }
     }
     /**

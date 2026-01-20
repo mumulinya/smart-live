@@ -148,20 +148,6 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 点赞博文
-     * @param id
-     * @return
-     */
-    @PutMapping("/like/{id}")
-    public Result likeBlog(@PathVariable("id") Long id) {
-        Boolean b = blogService.likeBlog(id);
-        if (b) {
-            return Result.ok("操作成功");
-        }
-        return Result.fail("操作失败");
-    }
-
-    /**
      * 查询我的博文
      * @param current
      * @return

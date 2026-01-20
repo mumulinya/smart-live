@@ -13,6 +13,8 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FeedEventMessage {
+    // 0. 事件类型
+    private Integer feedType;
     // 1. 谁发的？(Sender)
     private Integer sourceType;  // 发送者类型 (FollowTypeEnum: USER/SHOP)
     private Long sourceId;       // 发送者ID (用户ID 或 店铺ID)

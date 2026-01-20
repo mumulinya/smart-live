@@ -38,10 +38,14 @@ public class RedisConstants {
     /**
      * 推送数据
      */
-    //博文推送
-    public static final String BLOG_FEED_KEY = "feed:blog:";
-    //优惠券推送
-    public static final String VOUCHER_FEED_KEY = "feed:voucher:";
+    //全部推送
+    public static final String ALL_FEED_KEY = "feed:all:";
+    //用户推送
+    public static final String USER_FEED_KEY = "feed:user:";
+    //店铺推送
+    public static final String SHOP_FEED_KEY = "feed:shop:";
+    //商品推送
+    public static final String ITEM_FEED_KEY = "feed:item:";
 
     /**
      *  点赞数据

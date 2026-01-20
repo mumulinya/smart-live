@@ -29,4 +29,11 @@ public enum GlobalBizTypeEnum {
         }
         return null;
     }
+    public static GlobalBizTypeEnum getByBizDomain(String bizDomain){
+        if (bizDomain == null) return null;
+        for (GlobalBizTypeEnum e : values()) {
+            if (e.bizDomain.equals(bizDomain)) return e;
+        }
+        return null;
+    }
 }

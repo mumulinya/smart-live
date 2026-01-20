@@ -33,6 +33,9 @@ public  class BlogResourceStrategy implements ResourceStrategy<BlogDto> {
         if (blogList == null) {
             return null;
         }
+        blogList.forEach(blogDto -> {
+            blogDto.setDataType("blog");
+        });
         return blogList;
     }
 }
