@@ -1,8 +1,7 @@
 package com.smartLive.marketing.api;
 
 import com.smartLive.common.core.constant.ServiceNameConstants;
-import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.marketing.api.dto.VoucherDTO;
+import com.smartLive.marketing.api.DTO.VoucherDTO;
 import com.smartLive.marketing.api.factory.RemoteVoucherFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

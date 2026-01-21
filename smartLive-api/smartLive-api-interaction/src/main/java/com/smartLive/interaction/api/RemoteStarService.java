@@ -1,7 +1,6 @@
 package com.smartLive.interaction.api;
 import com.smartLive.common.core.constant.ServiceNameConstants;
-import com.smartLive.common.core.domain.R;
-import com.smartLive.interaction.api.dto.StarDTO;
+import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.interaction.api.factory.RemoteStarFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;

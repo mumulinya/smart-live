@@ -1,4 +1,4 @@
-package com.smartLive.interaction.api.dto;
+package com.smartLive.interaction.api.DTO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

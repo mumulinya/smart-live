@@ -1,7 +1,6 @@
 package com.smartLive.interaction.api.factory;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.interaction.api.RemoteStarService;
-import com.smartLive.interaction.api.dto.StarDTO;
+import com.smartLive.interaction.api.DTO.StarDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;

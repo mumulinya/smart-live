@@ -1,8 +1,7 @@
 package com.smartLive.shop.api.factory;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.shop.api.RemoteShopService;
-import com.smartLive.shop.api.domain.ShopDTO;
-import com.smartLive.shop.api.domain.ShopTypeDTO;
+import com.smartLive.shop.api.DTO.ShopDTO;
+import com.smartLive.shop.api.DTO.ShopTypeDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;

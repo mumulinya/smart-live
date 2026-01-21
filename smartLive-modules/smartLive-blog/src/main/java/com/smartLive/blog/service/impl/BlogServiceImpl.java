@@ -1,6 +1,5 @@
 package com.smartLive.blog.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
@@ -25,14 +24,12 @@ import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteLikeService;
 import com.smartLive.interaction.api.RemoteStarService;
-import com.smartLive.interaction.api.dto.LikeDTO;
-import com.smartLive.interaction.api.dto.StarDTO;
+import com.smartLive.interaction.api.DTO.LikeDTO;
+import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.shop.api.RemoteShopService;
-import com.smartLive.shop.api.domain.ShopDTO;
+import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
-import com.smartLive.user.api.domain.BlogDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.patterns.AnyTypePattern;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ZSetOperations;

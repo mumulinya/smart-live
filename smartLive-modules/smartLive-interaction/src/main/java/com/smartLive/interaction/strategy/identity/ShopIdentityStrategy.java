@@ -2,7 +2,7 @@ package com.smartLive.interaction.strategy.identity;
 
 import com.smartLive.common.core.enums.IdentityTypeEnum;
 import com.smartLive.shop.api.RemoteShopService;
-import com.smartLive.shop.api.domain.ShopDTO;
+import com.smartLive.shop.api.DTO.ShopDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.List;

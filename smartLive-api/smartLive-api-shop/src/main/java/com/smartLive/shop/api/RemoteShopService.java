@@ -1,8 +1,8 @@
 package com.smartLive.shop.api;
 
 import com.smartLive.common.core.constant.ServiceNameConstants;
-import com.smartLive.shop.api.domain.ShopDTO;
-import com.smartLive.shop.api.domain.ShopTypeDTO;
+import com.smartLive.shop.api.DTO.ShopDTO;
+import com.smartLive.shop.api.DTO.ShopTypeDTO;
 import com.smartLive.shop.api.factory.RemoteShopFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;

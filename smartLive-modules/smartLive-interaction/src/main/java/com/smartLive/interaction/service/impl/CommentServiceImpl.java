@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
-import com.smartLive.blog.api.dto.BlogDto;
+import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
@@ -19,7 +19,7 @@ import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
-import com.smartLive.shop.api.domain.ShopDTO;
+import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -260,7 +260,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         List<Comment> list = query().list();
         list.stream().forEach(c -> {
             if (c.getSourceType() == 1) {
-                BlogDto blog = remoteBlogService.getBlogById(c.getSourceId());
+                BlogDTO blog = remoteBlogService.getBlogById(c.getSourceId());
                 if ((blog.getTitle() != null))
                     c.setSourceName(blog.getTitle());
             } else if (c.getSourceType() == 2) {

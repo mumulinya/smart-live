@@ -6,7 +6,7 @@ import com.smartLive.ai.service.ai.AIClient;
 import com.smartLive.ai.service.rag.impl.CommentRagService;
 import com.smartLive.ai.strategy.handlers.ChatHandler;
 import com.smartLive.interaction.api.RemoteCommentService;
-import com.smartLive.interaction.api.dto.CommentDTO;
+import com.smartLive.interaction.api.DTO.CommentDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

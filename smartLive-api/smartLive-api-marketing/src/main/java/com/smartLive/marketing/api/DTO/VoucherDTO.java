@@ -1,4 +1,4 @@
-package com.smartLive.marketing.api.dto;
+package com.smartLive.marketing.api.DTO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

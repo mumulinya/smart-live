@@ -7,7 +7,7 @@ import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.marketing.api.RemoteVoucherService;
 import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.shop.api.RemoteShopService;
-import com.smartLive.shop.api.domain.ShopDTO;
+import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

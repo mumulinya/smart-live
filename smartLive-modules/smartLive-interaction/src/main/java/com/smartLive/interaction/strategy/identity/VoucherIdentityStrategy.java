@@ -1,10 +1,8 @@
 package com.smartLive.interaction.strategy.identity;
 
 import com.smartLive.common.core.enums.IdentityTypeEnum;
-import com.smartLive.common.core.enums.ResourceTypeEnum;
-import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.marketing.api.RemoteVoucherService;
-import com.smartLive.marketing.api.dto.VoucherDTO;
+import com.smartLive.marketing.api.DTO.VoucherDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

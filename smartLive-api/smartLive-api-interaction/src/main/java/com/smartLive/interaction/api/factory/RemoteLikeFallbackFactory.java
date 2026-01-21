@@ -1,7 +1,7 @@
 package com.smartLive.interaction.api.factory;
 
 import com.smartLive.interaction.api.RemoteLikeService;
-import com.smartLive.interaction.api.dto.LikeDTO;
+import com.smartLive.interaction.api.DTO.LikeDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;

@@ -1,9 +1,7 @@
 package com.smartLive.marketing.api.factory;
 
-import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.api.RemoteVoucherService;
-import com.smartLive.marketing.api.dto.VoucherDTO;
+import com.smartLive.marketing.api.DTO.VoucherDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;

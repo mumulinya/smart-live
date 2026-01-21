@@ -1,7 +1,7 @@
 package com.smartLive.ai.tools;
 
 import com.smartLive.ai.service.rag.ICommentRagService;
-import com.smartLive.interaction.api.dto.CommentDTO;
+import com.smartLive.interaction.api.DTO.CommentDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;

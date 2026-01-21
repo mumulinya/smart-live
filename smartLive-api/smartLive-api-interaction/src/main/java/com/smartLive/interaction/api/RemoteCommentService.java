@@ -1,13 +1,11 @@
 package com.smartLive.interaction.api;
 
 import com.smartLive.common.core.constant.ServiceNameConstants;
-import com.smartLive.common.core.domain.R;
-import com.smartLive.interaction.api.dto.CommentDTO;
+import com.smartLive.interaction.api.DTO.CommentDTO;
 import com.smartLive.interaction.api.factory.RemoteCommentFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 

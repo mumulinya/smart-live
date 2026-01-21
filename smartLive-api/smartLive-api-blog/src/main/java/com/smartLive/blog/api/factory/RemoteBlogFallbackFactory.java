@@ -1,7 +1,6 @@
 package com.smartLive.blog.api.factory;
 
-import com.smartLive.blog.api.dto.BlogDto;
-import com.smartLive.common.core.domain.R;
+import com.smartLive.blog.api.DTO.BlogDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -19,7 +18,7 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
         return new RemoteBlogService() {
 
             @Override
-            public BlogDto getBlogById(Long id) {
+            public BlogDTO getBlogById(Long id) {
                 log.error("查询博客失败:{}", cause.getMessage());
                 return null;
             }
@@ -58,7 +57,7 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
              * @param sourceIdList
              */
             @Override
-            public List<BlogDto> getBlogListByIds(List<Long> sourceIdList) {
+            public List<BlogDTO> getBlogListByIds(List<Long> sourceIdList) {
                 log.error("查询博客列表失败:{}", cause.getMessage());
                 return null;
             }

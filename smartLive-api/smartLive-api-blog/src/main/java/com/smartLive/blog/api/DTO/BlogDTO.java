@@ -1,14 +1,11 @@
-package com.smartLive.blog.api.dto;
+package com.smartLive.blog.api.DTO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.Data;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
 
@@ -19,7 +16,7 @@ import java.io.Serializable;
  * @date 2025-09-21
  */
 @Data
-public class BlogDto extends BaseEntity implements Serializable
+public class BlogDTO extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
 

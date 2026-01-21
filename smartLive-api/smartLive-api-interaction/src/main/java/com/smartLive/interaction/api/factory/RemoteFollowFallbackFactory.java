@@ -1,8 +1,6 @@
 package com.smartLive.interaction.api.factory;
-import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.api.RemoteFollowService;
-import com.smartLive.interaction.api.dto.FollowDTO;
+import com.smartLive.interaction.api.DTO.FollowDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;

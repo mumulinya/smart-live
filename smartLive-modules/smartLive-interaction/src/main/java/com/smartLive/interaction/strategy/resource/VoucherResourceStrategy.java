@@ -2,7 +2,7 @@ package com.smartLive.interaction.strategy.resource;
 
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.marketing.api.RemoteVoucherService;
-import com.smartLive.marketing.api.dto.VoucherDTO;
+import com.smartLive.marketing.api.DTO.VoucherDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.List;

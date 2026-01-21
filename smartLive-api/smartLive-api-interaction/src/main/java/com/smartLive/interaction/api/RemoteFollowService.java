@@ -1,7 +1,7 @@
 package com.smartLive.interaction.api;
 
 import com.smartLive.common.core.constant.ServiceNameConstants;
-import com.smartLive.interaction.api.dto.FollowDTO;
+import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.factory.RemoteFollowFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;

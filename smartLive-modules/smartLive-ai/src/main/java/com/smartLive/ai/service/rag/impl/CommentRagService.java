@@ -1,12 +1,11 @@
 package com.smartLive.ai.service.rag.impl;
 
 import com.smartLive.ai.service.rag.ICommentRagService;
-import com.smartLive.interaction.api.dto.CommentDTO;
+import com.smartLive.interaction.api.DTO.CommentDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 

@@ -1,16 +1,15 @@
 package com.smartLive.interaction.strategy.resource;
 
 import com.smartLive.blog.api.RemoteBlogService;
-import com.smartLive.blog.api.dto.BlogDto;
+import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
-public  class BlogResourceStrategy implements ResourceStrategy<BlogDto> {
+public  class BlogResourceStrategy implements ResourceStrategy<BlogDTO> {
     @Autowired
     private RemoteBlogService remoteBlogService;
     /**
@@ -27,9 +26,9 @@ public  class BlogResourceStrategy implements ResourceStrategy<BlogDto> {
      * @param sourceIdList
      */
     @Override
-    public List<BlogDto> getResourceList(List<Long> sourceIdList) {
+    public List<BlogDTO> getResourceList(List<Long> sourceIdList) {
 
-        List<BlogDto> blogList= remoteBlogService.getBlogListByIds(sourceIdList);
+        List<BlogDTO> blogList= remoteBlogService.getBlogListByIds(sourceIdList);
         if (blogList == null) {
             return null;
         }

@@ -1,12 +1,10 @@
 package com.smartLive.blog.api;
 
-import com.smartLive.blog.api.dto.BlogDto;
+import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.blog.api.factory.RemoteBlogFallbackFactory;
 import com.smartLive.common.core.constant.ServiceNameConstants;
 
-import com.smartLive.common.core.domain.R;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +21,7 @@ public interface RemoteBlogService {
      * @return
      */
     @GetMapping("/inner/blog/getBlogById/{id}")
-    BlogDto getBlogById(@PathVariable("id") Long id);
+    BlogDTO getBlogById(@PathVariable("id") Long id);
 
     /**
      * 获取博客数
@@ -53,7 +51,7 @@ public interface RemoteBlogService {
      * 获取博客列表
      */
     @GetMapping("/inner/blog/getBlogListByIds")
-    List<BlogDto> getBlogListByIds(@RequestParam("sourceIdList")  List<Long> sourceIdList);
+    List<BlogDTO> getBlogListByIds(@RequestParam("sourceIdList")  List<Long> sourceIdList);
 
     /**
      * 批量更新点赞数
