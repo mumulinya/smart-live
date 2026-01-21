@@ -1,29 +1,23 @@
-package com.smartLive.shop.api.DTO;
+package com.smartLive.interaction.domain.VO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 店铺对象 tb_shop
- * 
- * @author mumulin
- * @date 2025-09-21
+ * @Description: 店铺VO
+ * @Author:  mumulin
+ * @Date:
  */
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class ShopDTO extends BaseEntity implements Serializable
-{
-    private static final long serialVersionUID = 1L;
-
+public class ShopVO {
     /** 主键 */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

@@ -71,9 +71,7 @@ public class VoucherDTO extends BaseEntity implements Serializable
     /**
      * 固定日期的开始/结束时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date useStartTime;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date useEndTime;
 
     /**
@@ -83,26 +81,28 @@ public class VoucherDTO extends BaseEntity implements Serializable
     /**
      * 库存
      */
-    @TableField(exist = false)
     private Integer stock;
 
     /**
      * 生效时间
      */
-    @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date beginTime;
 
     /**
      * 失效时间
      */
-    @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
     //店铺名称
-    @TableField(exist = false)
     private String shopName;
+    //店铺图片
+    private String shopImages;
     //店铺类型
-    @TableField(exist = false)
     private Long typeId;
+    /**
+     * 创建时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
 }

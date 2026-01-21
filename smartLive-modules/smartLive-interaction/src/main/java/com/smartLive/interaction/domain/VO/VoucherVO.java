@@ -1,32 +1,25 @@
-package com.smartLive.marketing.domain;
+package com.smartLive.interaction.domain.VO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.smartLive.common.core.annotation.Excel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.smartLive.common.core.annotation.Excel;
-import com.smartLive.common.core.web.domain.BaseEntity;
-import java.io.Serializable;
+
 import java.util.Date;
 
 /**
- * 优惠券对象 tb_voucher
- * 
- * @author 木木林
- * @date 2025-09-21
+ * @Description: 代金券VO
+ * @Author:  mumulin
+ * @Date:
  */
-@TableName("voucher")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Voucher extends BaseEntity implements Serializable
-{
-    private static final long serialVersionUID = 1L;
-
+public class VoucherVO {
     /** 主键 */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -76,7 +69,7 @@ public class Voucher extends BaseEntity implements Serializable
     private Date useEndTime;
 
     /**
-     * 动态有效期：领取后多少天有效
+     * 动态有效期：购买后多少天有效
      */
     private Integer validDays;
     /**
@@ -86,39 +79,37 @@ public class Voucher extends BaseEntity implements Serializable
     private Integer stock;
 
     /**
-     * 开始时间
+     * 生效时间
      */
     @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date beginTime;
 
     /**
-     * 结束时间
+     * 失效时间
      */
     @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
     //店铺名称
-    @TableField(exist = false)
     private String shopName;
-    //店铺类型
-    @TableField(exist = false)
-    private Long typeId;
     //店铺logo
-    @TableField(exist = false)
     private String shopLogo;
     //店铺图片
-    @TableField(exist = false)
     private String shopImages;
-    //是否收藏
-    @TableField(exist = false)
-    private Boolean isStar;
-    //是否关注
-    @TableField(exist = false)
-    private Boolean IsFollow;
+    //店铺类型
+    private Long typeId;
     /**
-     * 创建时间
+     * 数据类型
+     */
+    private String dataType;
+    /**
+     * 动作
+     */
+    private String action;
+    /**
+     * 发布时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date createTime;
+    private Date publishTime;  // 发布时间
 }

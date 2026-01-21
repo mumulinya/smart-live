@@ -37,7 +37,6 @@ public class SyncTask {
     private Map<Integer, StarStrategy> starStrategyMap;
     @Autowired
     private ExecutorService executorService;
-    // ... 其他服务
 
     // 每 30 秒执行一次
     @Scheduled(cron = "0/30 * * * * ?")

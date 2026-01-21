@@ -136,7 +136,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      */
     void querySeckill(Voucher v){
         SeckillVoucher seckillVoucher = seckillVoucherService.query().eq("voucher_id", v.getId()).one();
-        if(v.getType()==1){
+        if(v.getType()==1&&seckillVoucher!=null){
             v.setStock(seckillVoucher.getStock());
             v.setBeginTime(seckillVoucher.getBeginTime());
             v.setEndTime(seckillVoucher.getEndTime());
@@ -388,6 +388,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         if(shopDTO != null){
             voucher.setShopName(shopDTO.getName());
             voucher.setTypeId(shopDTO.getTypeId());
+            voucher.setShopImages(shopDTO.getImages());
         }
     }
 
@@ -430,7 +431,10 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         List<Voucher> voucherList = query().in("id", sourceIdList).list();
         voucherList.forEach(voucher -> {
             if(voucher!= null){
-                querySeckill(voucher);
+                if(voucher.getType() == 1){
+                    querySeckill(voucher);
+                }
+                queryVoucherShopMessage(voucher);
             }
         });
         return voucherList;
