@@ -2,8 +2,10 @@ package com.smartLive.user.controller;
 
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.DTO.UserInfoDTO;
+import com.smartLive.user.domain.User;
 import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.service.IUserInfoService;
+import com.smartLive.user.service.IUserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +21,8 @@ public class UserInfoController {
 
     @Autowired
     private IUserInfoService userInfoService;
-
+    @Autowired
+    private IUserService userService;
     /**
      * 获取用户信息
      */
@@ -27,8 +30,14 @@ public class UserInfoController {
     public Result getUserInfo( @PathVariable("userId") Long userId) {
         try {
             UserInfo userInfo = userInfoService.getByUserId(userId);
+            User byId = userService.getById(userId);
+            System.out.println(byId.getPassword());
+            if (byId.getPassword() == null || " ".equals(byId.getPassword())) {
+                userInfo.setHasPassword(false);
+            }else {
+                userInfo.setHasPassword(true);
+            }
             return Result.ok(userInfo);
-            
         } catch (Exception e) {
             return Result.fail("获取用户信息失败：" + e.getMessage());
         }

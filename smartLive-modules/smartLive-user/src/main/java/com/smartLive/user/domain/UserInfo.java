@@ -3,6 +3,7 @@ package com.smartLive.user.domain;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -61,6 +62,9 @@ public class UserInfo extends BaseEntity implements Serializable
     /**背景图片 */
     @Excel(name = "背景图片")
     private String backgroundImage;
+    /** 是否有密码 */
+    @TableField(exist = false)
+    private Boolean hasPassword;
 
     public void setUserId(Long userId) 
     {

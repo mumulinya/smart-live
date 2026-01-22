@@ -46,6 +46,7 @@ public class feedServiceImpl implements IFeedService {
         // 时间戳
         Map<String, Map<Long, Long>> timeMap = new HashMap<>();
         for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
+            long time = tuple.getScore().longValue();
             String val = tuple.getValue().toString();
             // 解析: new:voucher:101 -> [new, voucher, 101]
             String[] parts = val.split(":");
@@ -53,18 +54,18 @@ public class feedServiceImpl implements IFeedService {
             String action = parts.length > 2 ? parts[0] : "";
             Long id = Long.valueOf(parts[parts.length - 1]);
             if (idMap.containsKey(type)) {
-                Map<Long, String> integerStringMap = idMap.get(type);
-                integerStringMap.put(id,action);
-                idMap.put(type, integerStringMap);
+                // 获取该类型的 Action 集合，存储动态 ID 和对应的动态事件 (Action)
+                idMap.get(type).put(id, action);
+                // 获取该类型的 Time 集合，存储动态 ID 和对应的动态时间 (Redis Score)
+                timeMap.get(type).put(id, time);
             } else {
                 idMap.put(type, new HashMap<>(Map.of(id, action)));
+                timeMap.put(type, new HashMap<>(Map.of(id, time)));
             }
+
             // 滚动分页逻辑
-            long time = tuple.getScore().longValue();
             if (time == minTime) os++;
             else { minTime = time; os = 1; }
-            //把时间存入 timeMap，供后面使用
-            timeMap.computeIfAbsent(type, k -> new HashMap<>()).put(id, time);
         }
         List<Object> voList = Lists.newArrayList();
         idMap.forEach((k, v) -> {

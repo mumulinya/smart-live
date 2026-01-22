@@ -7,6 +7,7 @@ import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.LoginFormDTO;
 import com.smartLive.user.api.domain.UserDTO;
@@ -32,20 +33,19 @@ public class UserLoginService {
      * 登录功能
      * @param loginForm 登录参数，包含手机号、验证码；或者手机号、密码
      */
-    public Result login(LoginFormDTO loginForm) {
+    public String login(LoginFormDTO loginForm) {
         //获取传入的电话号码和验证码
         String phone = loginForm.getPhone();
         String code = loginForm.getCode();
         // TODO 从redis中获取验证码
         String redisCode=redisService.getCacheObject(RedisConstants.LOGIN_CODE_KEY+ phone);
-        System.out.println("redis验证码为"+redisCode);
         //判断当前电话号码是否正确
         if (RegexUtils.isPhoneInvalid( phone)) {
             throw new BusinessException("手机号格式错误！");
         }
         //判断验证码和电话号码是否一致
         if (redisCode == null || !code.equals(redisCode)) {
-//            return Result.fail("验证码错误");
+            throw new BusinessException("验证码错误");
         }
         //根据电话号码查询用户信息
         UserDTO user = remoteAppUserService.getUserInfoByPhone(phone);
@@ -72,7 +72,7 @@ public class UserLoginService {
         redisService.setCacheMap(tokenKey, userMap);
         //设置token有效期
         redisService.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
-        return Result.ok(token);
+        return getToken(user);
     }
     /**
      * 登出功能
@@ -85,5 +85,41 @@ public class UserLoginService {
         //TODO 删除redis中的token
         redisService.deleteObject(RedisConstants.LOGIN_USER_KEY+token);
         return Result.ok();
+    }
+
+    public String loginByPassword(LoginFormDTO loginForm) {
+        String phone = loginForm.getPhone();
+        String password = loginForm.getPassword();
+        //根据电话号码查询用户信息
+        UserDTO user = remoteAppUserService.getUserInfoByPhone(phone);
+        boolean b = SecurityUtils.matchesPassword(password, user.getPassword());
+        if(!b){
+            throw new BusinessException("密码错误");
+        }
+        return getToken(user);
+    }
+    /**
+     * 获取token
+     * @param user
+     * @return
+     */
+    public String getToken(UserDTO user){
+        // TODO 把用户信息存入redis当中
+        //将User对象转换为hashMap对象存储
+        UserDTO userDto= BeanUtil.copyProperties(user, UserDTO.class);
+        Map<String, Object> userMap = BeanUtil.beanToMap(userDto, new HashMap<>(),
+                CopyOptions.create()
+                        //忽略空值
+                        .setIgnoreNullValue(true)
+                        //把userDto字段值转为字符串
+                        .setFieldValueEditor((fieldName, fieldValue) -> fieldValue == null ? "" : fieldValue.toString()));
+        //随机生成token
+        String token= UUID.randomUUID().toString();
+        //存储
+        String tokenKey=RedisConstants.LOGIN_USER_KEY+token;
+        redisService.setCacheMap(tokenKey, userMap);
+        //设置token有效期
+        redisService.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+        return token;
     }
 }

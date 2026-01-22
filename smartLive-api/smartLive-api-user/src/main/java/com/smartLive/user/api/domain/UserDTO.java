@@ -13,4 +13,5 @@ public class UserDTO {
     private String icon;
     private Boolean isFollow;
     private String introduce;
+    private String password;
 }

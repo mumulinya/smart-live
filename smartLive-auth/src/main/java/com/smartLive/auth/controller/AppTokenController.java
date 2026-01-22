@@ -25,9 +25,17 @@ public class AppTokenController
     @PostMapping("/appLogin")
     public Result login(@RequestBody LoginFormDTO loginForm){
         // TODO 实现登录功能
-        return userLoginService.login(loginForm);
+        return Result.ok(userLoginService.login(loginForm));
     }
-
+    /**
+     * 登录功能
+     * @param loginForm 登录参数，包含手机号、验证码；或者手机号、密码
+     */
+    @PostMapping("/appLoginByPassword")
+    public Result loginByPassword(@RequestBody LoginFormDTO loginForm){
+        // TODO 实现登录功能
+        return Result.ok(userLoginService.loginByPassword(loginForm));
+    }
     /**
      * 登出功能
      * @return 无

@@ -1,6 +1,8 @@
 package com.smartLive.user.controller;
 
 import java.util.List;
+
+import com.smartLive.common.security.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.UserDTO;
@@ -135,6 +137,11 @@ public class UserController extends BaseController
             // 没有详情，应该是第一次查看详情
             return Result.ok();
         }
+        User byId = userService.getById(userId);
+        if (byId.getPassword() == null|| "".equals(byId.getPassword())) {
+            info.setHasPassword(false);
+        }
+        info.setHasPassword(true);
         info.setCreateTime(null);
         info.setUpdateTime(null);
         // 返回
@@ -168,6 +175,26 @@ public class UserController extends BaseController
         Long userId = UserContextHolder.getUser().getId();
         user.setId(userId);
         return Result.ok(userService.updateUser(user));
+    }
+
+    /**
+     * 修改用户密码
+     */
+    @PostMapping("/updatePassword")
+    Result updateUserPassWord(@RequestBody User user){
+        Long userId = UserContextHolder.getUser().getId();
+        user.setId(userId);
+        return Result.ok(userService.updateUserPassWord(user));
+    }
+    /**
+     * 设置用户密码
+     */
+    @PostMapping("/setPassword")
+    Result setUserPassWord(@RequestBody User user){
+        Long userId = UserContextHolder.getUser().getId();
+        user.setId(userId);
+        user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
+        return Result.ok(userService.updateById(user));
     }
     /**
      * 获取用户统计信息

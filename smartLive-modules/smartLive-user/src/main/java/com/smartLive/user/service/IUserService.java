@@ -111,4 +111,12 @@ public interface IUserService extends IService<User>
      * @param
      * @return 发布结果
      */
-    String publish( String[] ids);}
+    String publish( String[] ids);
+
+    /**
+     * 修改用户密码
+     * @param user
+     * @return
+     */
+    Boolean updateUserPassWord(User user);
+}

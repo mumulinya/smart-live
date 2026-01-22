@@ -56,7 +56,15 @@ public class User extends BaseEntity
     /** 城市 */
     @TableField(exist = false)
     private String city;
-
+    /** 新密码 */
+    @TableField(exist = false)
+    private String newPassword;
+    /** 旧密码 */
+    @TableField(exist = false)
+    private String oldPassword;
+    /** 是否有密码 */
+    @TableField(exist = false)
+    private Boolean hasPassword;
     public void setId(Long id) 
     {
         this.id = id;

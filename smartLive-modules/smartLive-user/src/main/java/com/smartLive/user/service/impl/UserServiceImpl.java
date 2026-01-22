@@ -17,12 +17,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
 import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteLikeService;
@@ -276,6 +278,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user.setCity(userInfo.getCity());
         }
     }
+
+    /**
+     * 修改用户密码
+     *
+     * @param user
+     * @return
+     */
+    @Override
+    public Boolean updateUserPassWord(User user) {
+        User byId = getById(user.getId());
+        if (byId != null){
+            if(byId.getPassword() == null){
+                throw new BusinessException("用户密码不能为空");
+            }
+            String rawPassword = byId.getPassword();
+            if(user.getNewPassword() == null){
+                throw new BusinessException("新密码不能为空");
+            }
+            if(user.getOldPassword()== null){
+                throw new BusinessException("旧密码不能为空");
+            }
+            String oldPassword = user.getOldPassword();
+            if(SecurityUtils.matchesPassword(rawPassword,oldPassword)){
+                throw new BusinessException("旧密码输入错误");
+            }
+            byId.setPassword(SecurityUtils.encryptPassword(user.getNewPassword()));
+            return updateById(byId);
+        }
+        return false;
+    }
+
     /**
      * 获取用户统计信息
      *
