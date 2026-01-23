@@ -2,6 +2,7 @@ package com.smartlive.chat.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.smartLive.common.core.annotation.Excel;
@@ -16,6 +17,7 @@ import java.util.Date;
  * @date 2025-10-05
  */
 @TableName("chat_messages")
+@Data
 public class ChatMessages extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -47,76 +49,21 @@ public class ChatMessages extends BaseEntity
     @TableField(fill = FieldFill.INSERT)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-
-    @Override
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    @Override
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
-
-    public void setId(Long id)
-    {
-        this.id = id;
-    }
-
-    public Long getId() 
-    {
-        return id;
-    }
-
-    public void setSessionId(Long sessionId) 
-    {
-        this.sessionId = sessionId;
-    }
-
-    public Long getSessionId() 
-    {
-        return sessionId;
-    }
-
-    public void setFromUid(Long fromUid) 
-    {
-        this.fromUid = fromUid;
-    }
-
-    public Long getFromUid() 
-    {
-        return fromUid;
-    }
-
-    public void setToUid(Long toUid) 
-    {
-        this.toUid = toUid;
-    }
-
-    public Long getToUid() 
-    {
-        return toUid;
-    }
-
-    public void setContent(String content) 
-    {
-        this.content = content;
-    }
-
-    public String getContent() 
-    {
-        return content;
-    }
-
-    public void setStatus(Long status) 
-    {
-        this.status = status;
-    }
-
-    public Long getStatus() 
-    {
-        return status;
-    }
+    /**
+     * 目标日期
+     */
+    @TableField(exist = false)
+    private String targetDate;
+    /**
+     * 消息方向
+     */
+    @TableField(exist = false)
+    private String direction;
+    /**
+     * 锚点ID
+     */
+    @TableField(exist = false)
+    private Long anchorId;
 
     @Override
     public String toString() {

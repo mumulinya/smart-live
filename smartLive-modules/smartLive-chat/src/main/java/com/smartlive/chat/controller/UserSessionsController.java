@@ -82,7 +82,7 @@ public class UserSessionsController extends BaseController
     {
         return Result.ok(userSessionsService.deleteUserSessionsByIds(ids));
     }
-    //是否置顶
+    //置顶
     @PutMapping("/isPin")
     public Result isPin(@RequestBody UserSessions userSessions){
         boolean pin = userSessionsService.isPin(userSessions);
@@ -90,5 +90,16 @@ public class UserSessionsController extends BaseController
             return Result.ok("操作成功");
         }else
         return Result.fail("操作失败");
+    }
+    /**
+     * 修改用户会话背景图
+     */
+    @PutMapping("/backgroundImage")
+    public Result updateBackgroundImage(@RequestBody UserSessions userSessions){
+        boolean b = userSessionsService.updateBackgroundImage(userSessions);
+        if (!b){
+            return Result.fail("操作失败");
+        }else
+        return Result.ok("操作成功");
     }
 }

@@ -67,6 +67,8 @@ public class UserSessions
     private Date lastTime;
     /** 置顶 */
     private Boolean pin;
+    /** 背景图 */
+    private String backgroundImage;
 
     public void setId(Long id) 
     {

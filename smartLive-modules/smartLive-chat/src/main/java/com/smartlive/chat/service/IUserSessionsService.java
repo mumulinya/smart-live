@@ -73,4 +73,9 @@ public interface IUserSessionsService extends IService<UserSessions>
      * @return 结果
      */
     boolean isPin(UserSessions userSessions);
+    /**
+     * 修改会话列表背景图片
+     *
+     */
+    boolean updateBackgroundImage(UserSessions userSessions);
 }

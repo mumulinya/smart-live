@@ -1,7 +1,10 @@
 package com.smartlive.chat.service;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
+import cn.hutool.db.DaoTemplate;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartlive.chat.domain.ChatMessages;
 
@@ -60,5 +63,10 @@ public interface IChatMessagesService extends IService<ChatMessages>
      * @return 结果
      */
     public int deleteChatMessagesById(Long id);
-
+    /**
+     * 获取用户聊天记录的日期
+      * @param sessionId
+     * @return
+     */
+    List<String> getHistoryDates(Long sessionId);
 }

@@ -79,4 +79,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+    <select id="selectActiveDates" resultType="java.lang.String">
+        SELECT DATE_FORMAT(create_time, '%Y-%m-%d') AS chat_date
+        FROM chat_messages
+        WHERE session_id = #{sessionId}
+        GROUP BY chat_date
+        ORDER BY chat_date DESC
+    </select>
+
 </mapper>

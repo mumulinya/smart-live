@@ -30,7 +30,7 @@ public class ChatMessagesController extends BaseController
      * 查询用户聊天消息列表
      */
     @GetMapping("/list")
-    public Result list(ChatMessages chatMessages,@RequestParam("current") Integer current)
+    public Result list(ChatMessages chatMessages,@RequestParam(value = "current",defaultValue = "1") Integer current)
     {
         List<ChatMessages> list = chatMessagesService.selectChatMessagesList(chatMessages,current);
         return Result.ok(list);
@@ -76,5 +76,12 @@ public class ChatMessagesController extends BaseController
     public AjaxResult remove(@PathVariable Long[] ids)
     {
         return toAjax(chatMessagesService.deleteChatMessagesByIds(ids));
+    }
+    /**
+     * 获取用户聊天消息历史记录的日期
+     */
+    @GetMapping("/history/dates")
+    public Result getHistoryDates(@RequestParam("sessionId") Long sessionId) {
+        return Result.ok(chatMessagesService.getHistoryDates(sessionId));
     }
 }

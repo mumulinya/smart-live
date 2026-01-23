@@ -60,4 +60,10 @@ public interface ChatMessagesMapper extends BaseMapper<ChatMessages>
      * @return 结果
      */
     public int deleteChatMessagesByIds(Long[] ids);
+    /**
+     * 获取用户聊天记录的日期
+      * @param sessionId
+     * @return
+     */
+    List<String> selectActiveDates(Long sessionId);
 }

@@ -30,8 +30,10 @@ public class UserInfoController {
     public Result getUserInfo( @PathVariable("userId") Long userId) {
         try {
             UserInfo userInfo = userInfoService.getByUserId(userId);
+            if (userInfo == null) {
+                return Result.ok("");
+            }
             User byId = userService.getById(userId);
-            System.out.println(byId.getPassword());
             if (byId.getPassword() == null || " ".equals(byId.getPassword())) {
                 userInfo.setHasPassword(false);
             }else {

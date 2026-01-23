@@ -187,4 +187,18 @@ public class UserSessionsServiceImpl  extends ServiceImpl<UserSessionsMapper, Us
                 .update();
         return update;
     }
+
+    /**
+     * 修改会话列表背景图片
+     *
+     * @param userSessions
+     */
+    @Override
+    public boolean updateBackgroundImage(UserSessions userSessions) {
+        boolean update = this.lambdaUpdate()
+                .eq(UserSessions::getId, userSessions.getId())
+                .set(UserSessions::getBackgroundImage, userSessions.getBackgroundImage())
+                .update();
+        return update;
+    }
 }

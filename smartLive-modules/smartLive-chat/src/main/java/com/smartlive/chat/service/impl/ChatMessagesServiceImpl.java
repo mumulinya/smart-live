@@ -1,15 +1,18 @@
 package com.smartlive.chat.service.impl;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.StringUtils;
 import com.smartlive.chat.domain.ChatSessions;
 import com.smartlive.chat.handle.NettyChatHandler;
 import com.smartlive.chat.service.IChatMessagesService;
@@ -68,11 +71,36 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
         Long userId = UserContextHolder.getUser().getId();
         // 这里需要根据你的会话表结构来获取对方用户ID
         Long fromUserId = getOtherUserIdFromSession(chatMessages.getSessionId(), userId);
-        Page<ChatMessages> page = query()
-                .eq("session_id",chatMessages.getSessionId())
-                .orderByDesc("create_time")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        List<ChatMessages> chatMessagesList = page.getRecords();
+        String targetDate = chatMessages.getTargetDate();
+        List<ChatMessages> chatMessagesList = new ArrayList<>();
+        if (chatMessages.getDirection() != null && chatMessages.getDirection().equals("new")){
+            chatMessagesList=query()
+                    .eq("session_id", chatMessages.getSessionId())
+                    .gt(chatMessages.getAnchorId()!=null, "id", chatMessages.getAnchorId())
+                    .orderByAsc("id")
+                    .last("limit " + SystemConstants.MAX_PAGE_SIZE)
+                    .list();
+        }else if(chatMessages.getDirection() != null && chatMessages.getDirection().equals("old")){
+            chatMessagesList=query()
+                    .eq("session_id", chatMessages.getSessionId())
+                    .lt(chatMessages.getAnchorId()!=null, "id", chatMessages.getAnchorId())
+                    .orderByDesc("id")
+                    .last("limit " + SystemConstants.MAX_PAGE_SIZE)
+                    .list();
+        }else if(StringUtils.isNotBlank(targetDate)) {
+            chatMessagesList=query()
+                    .eq("session_id", chatMessages.getSessionId())
+                    .ge("create_time", targetDate)
+                    .orderByAsc("create_time")
+                    .last("limit " + SystemConstants.MAX_PAGE_SIZE)
+                    .list();
+        }else{
+            chatMessagesList=query()
+                    .eq("session_id", chatMessages.getSessionId())
+                    .orderByDesc("create_time")
+                    .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE))
+                    .getRecords();
+        }
         // 判断列表中是否有未读消息
         boolean hasUnreadMessages = chatMessagesList.stream()
                 .anyMatch(msg -> msg.getStatus() == 2&& msg.getToUid().equals(userId));
@@ -174,6 +202,14 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
         return chatMessagesMapper.deleteChatMessagesById(id);
     }
 
-
-
+    /**
+     * 获取用户聊天记录的日期
+     *
+     * @param sessionId
+     * @return
+     */
+    @Override
+    public List<String> getHistoryDates(Long sessionId) {
+        return chatMessagesMapper.selectActiveDates(sessionId);
+    }
 }
