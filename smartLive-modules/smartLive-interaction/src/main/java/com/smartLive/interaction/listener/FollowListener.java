@@ -31,7 +31,7 @@ public class FollowListener {
             }
     ))
     public void handleSendNormalToFollowers(FeedEventMessage feedEventMessage){
-        log.info("推送数据是：{}为"+feedEventMessage);
+        log.info("推送数据是：{}为",feedEventMessage);
         executorService.execute(() -> {
             followService.pushToFollowers(feedEventMessage);
         });

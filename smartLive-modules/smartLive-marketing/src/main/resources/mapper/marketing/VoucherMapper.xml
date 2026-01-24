@@ -23,8 +23,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectVoucherVo">
-        select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, create_time, update_time from voucher
-            select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, validity_type, use_start_time, use_end_time, valid_days, create_time, update_time from voucher</sql>
+    select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, validity_type, use_start_time, use_end_time, valid_days, create_time, update_time from voucher</sql>
 
     <select id="selectVoucherList" parameterType="com.smartLive.marketing.domain.Voucher" resultMap="VoucherResult">
         <include refid="selectVoucherVo"/>
@@ -42,7 +41,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <select id="selectVoucherById" parameterType="Long" resultMap="VoucherResult">
         SELECT
-            v.`id`, v.`shop_id`, v.`title`, v.`sub_title`, v.`rules`, v.`pay_value`,
+            v.`id`, v.`shop_id`, v.`title`, v.`sub_title`, v.`rules`, v.`pay_value`,v.`status`,
             v.`actual_value`, v.`type`,v.`validity_type`,v.`use_start_time`,v.`use_end_time`,v.`valid_days`,sv.`stock` , sv.begin_time , sv.end_time
         FROM voucher v
                  LEFT JOIN  seckill_voucher sv ON v.id = sv.voucher_id
@@ -57,12 +56,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="subTitle != null">sub_title,</if>
             <if test="rules != null">rules,</if>
             <if test="payValue != null and payValue != ''">pay_value,</if>
+            <if test="validityType!= null and validityType!=''">validity_type,</if>
+            <if test="useStartTime != null and useStartTime!='' ">use_start_time,</if>
+            <if test="useEndTime != null and useEndTime != ''">use_end_time,</if>
+            <if test="validDays != null and validDays!=''" >valid_days,</if>
             <if test="actualValue != null">actual_value,</if>
             <if test="type != null and type != ''">type,</if>
             <if test="status != null and status != ''">status,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
-         </trim>
+                     <if test="useEndTime != null and useEndTime != ''">use_end_time,</if></trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="shopId != null">#{shopId},</if>
             <if test="title != null and title != ''">#{title},</if>
@@ -70,6 +73,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="rules != null">#{rules},</if>
             <if test="payValue != null and payValue != ''">#{payValue},</if>
             <if test="actualValue != null">#{actualValue},</if>
+            <if test="validityType!= null and validityType!=''">#{validityType},</if>
+            <if test="useStartTime != null and useStartTime!='' ">#{useStartTime},</if>
+            <if test="useEndTime != null and useEndTime != ''">#{useEndTime},</if>
+            <if test="validDays != null and validDays!=''" >#{validDays},</if>
             <if test="type != null and type != ''">#{type},</if>
             <if test="status != null and status != ''">#{status},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -86,6 +93,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="rules != null">rules = #{rules},</if>
             <if test="payValue != null and payValue != ''">pay_value = #{payValue},</if>
             <if test="actualValue != null">actual_value = #{actualValue},</if>
+            <if test="validityType!= null and validityType!=''">validity_type=#{validityType},</if>
+            <if test="useStartTime != null and useStartTime!='' ">use_start_time=#{useStartTime},</if>
+            <if test="useEndTime != null and useEndTime != ''">use_end_time=#{useEndTime},</if>
+            <if test="validDays != null and validDays!=''" >valid_days=#{validDays},</if>
             <if test="type != null and type != ''">type = #{type},</if>
             <if test="status != null and status != ''">status = #{status},</if>
             <if test="createTime != null">create_time = #{createTime},</if>

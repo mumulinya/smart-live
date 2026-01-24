@@ -249,15 +249,19 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
         //获取发送数据源的类型
         String bizDomain = GlobalBizTypeEnum.getByCode(feedEventMessage.getBizType()).getBizDomain();
+        String feedKeyPrefix = FeedTypeEnum.getByCode(feedEventMessage.getFeedType()).getFeedKeyPrefix();
+        String value = bizDomain+":"+feedEventMessage.getBizId().toString();
+        if(feedEventMessage.getAction()!=null){
+            value=feedEventMessage.getAction()+":"+value;
+        }
         for (Long userId : userIdList) {
             //推送
-            String feedKeyPrefix = FeedTypeEnum.getByCode(feedEventMessage.getFeedType()).getFeedKeyPrefix();
             String key = feedKeyPrefix + userId;
-            redisService.setCacheZSet(key, bizDomain+":"+feedEventMessage.getBizId().toString(), System.currentTimeMillis());
+            redisService.setCacheZSet(key, value, System.currentTimeMillis());
             //推送
             String allFeedFeedKeyPrefix = FeedTypeEnum.ALL_FEED.getFeedKeyPrefix();
             String allFeedKey = allFeedFeedKeyPrefix + userId;
-            redisService.setCacheZSet(allFeedKey, bizDomain+":"+feedEventMessage.getBizId().toString(), System.currentTimeMillis());
+            redisService.setCacheZSet(allFeedKey, value, System.currentTimeMillis());
         }
     }
     /**

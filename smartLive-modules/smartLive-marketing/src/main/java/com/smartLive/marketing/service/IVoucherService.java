@@ -71,7 +71,7 @@ public interface IVoucherService extends IService<Voucher>
      * 添加秒杀券
      * @param voucher
      */
-    void addSeckillVoucher(Voucher voucher);
+    boolean addSeckillVoucher(Voucher voucher);
 
     /**
      * 秒杀优惠券
@@ -131,4 +131,32 @@ public interface IVoucherService extends IService<Voucher>
      * @return 优惠券列表
      */
     List<Voucher> getVoucherListByIds(List<Long> sourceIdList);
+    /**
+     * 获取优惠券
+     *
+     * @param id 优惠券id
+     * @return 优惠券
+     */
+    Voucher getVoucherById(Long id);
+    /**
+     * 添加库存
+     *
+     * @param id 优惠券id
+     * @return 添加结果
+     */
+    int addStock(Long id);
+    /**
+     * 修改优惠券状态
+     *
+     * @param voucher 优惠券
+     * @return 修改结果
+     */
+    Boolean changeStatus(Voucher voucher);
+    /**
+     * 优惠券价格下降
+     *
+     * @param id 优惠券id
+     * @return 优惠券价格下降结果
+     */
+    int priceReduced(Long id);
 }

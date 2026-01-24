@@ -24,4 +24,5 @@ public class FeedEventMessage {
     private Integer bizType;   // 业务类型 (BizTypeEnum: BLOG/COUPON/GOODS)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date publishTime;  // 发布时间
+    private String action;     // 动作 (ACTION_TYPE: NEW/RESTOCK)
 }

@@ -1,15 +1,15 @@
 package com.smartLive.marketing.service.impl;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
+import com.smartLive.common.core.enums.FeedTypeEnum;
+import com.smartLive.common.core.enums.ItemActionType;
+import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
 import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
@@ -28,6 +28,7 @@ import com.smartLive.order.api.DTO.VoucherOrderDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.RabbitUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +105,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             starDTO.setSourceId(id);
             Boolean isStar = remoteStarService.isStar(starDTO);
             voucher.setIsStar(isStar);
-            //判断是否收藏
+            //判断是否关注
             FollowDTO followDTO=new FollowDTO();
             followDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
             followDTO.setSourceId(id);
@@ -155,14 +156,59 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         voucher.setCreateTime(DateUtils.getNowDate());
         //添加秒杀券
         if(voucher.getType()==1){
-            addSeckillVoucher(voucher);
-            return 1;
+            boolean b = addSeckillVoucher(voucher);
+            if (b){
+                sendNewVoucherMessageToMQ(voucher);
+                return 1;
+            }
+            return 0;
         }
         //保存优惠券
         int i = voucherMapper.insertVoucher(voucher);
+        if(i>0){
+            //发送消息推送动态
+            sendNewVoucherMessageToMQ(voucher);
+        }
         return i;
     }
-
+    /**
+     * 店铺发布新代金券，更新用户动态
+     * @param voucher
+     */
+    public void  sendNewVoucherMessageToMQ(Voucher voucher){
+        FeedEventMessage feedEventMessage= FeedEventMessage
+                .builder()
+                .feedType(FeedTypeEnum.SHOP_FEED.getCode())
+                .sourceType(GlobalBizTypeEnum.SHOP.getCode())
+                .sourceId(voucher.getShopId())
+                .bizType(GlobalBizTypeEnum.VOUCHER.getCode())
+                .bizId(voucher.getId())
+                .publishTime(DateUtils.getNowDate())
+                //动态动作 新品
+                .action(ItemActionType.NEW_ITEM.getCode())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+                MqConstants.INTERACT_FEED_EXCHANGE_NAME,
+                MqConstants.INTERACT_FEED_VOUCHER_ROUTING,
+                feedEventMessage);
+    }
+    public void sendVoucherActionMessageToMQ(Long voucherId,ItemActionType itemActionType){
+        FeedEventMessage feedEventMessage= FeedEventMessage
+                .builder()
+                .feedType(FeedTypeEnum.ITEM_FEED.getCode())
+                .sourceType(GlobalBizTypeEnum.VOUCHER.getCode())
+                .sourceId(voucherId)
+                .bizType(GlobalBizTypeEnum.VOUCHER.getCode())
+                .bizId(voucherId)
+                .publishTime(DateUtils.getNowDate())
+                //动态动作 新品
+                .action(itemActionType.getCode())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+                MqConstants.INTERACT_FEED_EXCHANGE_NAME,
+                MqConstants.INTERACT_FEED_VOUCHER_ROUTING,
+                feedEventMessage);
+    }
     /**
      * 修改优惠券
      *
@@ -178,15 +224,49 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             SeckillVoucher seckillVoucher = seckillVoucherService.query().eq("voucher_id", voucher.getId()).one();
             if(voucher.getType()==1){
                 seckillVoucher.setStock(voucher.getStock());
+                seckillVoucher.setBeginTime(voucher.getBeginTime());
+                seckillVoucher.setEndTime(voucher.getEndTime());
+                seckillVoucher.setUpdateTime(DateUtils.getNowDate());
+                seckillVoucherService.updateById(seckillVoucher);
+                //更新redis库存数据
+                redisService.setCacheObject(RedisConstants.SECKILL_STOCK_KEY+voucher.getId(),voucher.getStock());
             }
-            seckillVoucher.setBeginTime(voucher.getBeginTime());
-            seckillVoucher.setEndTime(voucher.getEndTime());
-            seckillVoucher.setUpdateTime(DateUtils.getNowDate());
-            seckillVoucherService.updateById(seckillVoucher);
             //更新es数据
             publish(new String[]{voucher.getId().toString()});
         }
         return i;
+    }
+
+    /**
+     * 修改优惠券状态
+     *
+     * @param voucher 优惠券
+     * @return 修改结果
+     */
+    @Override
+    public Boolean changeStatus(Voucher voucher) {
+        boolean b = updateById(voucher);
+        if (b){
+            //更新es数据
+            publish(new String[]{voucher.getId().toString()});
+            if (voucher.getStatus()==1){
+                //上架，发送mq消息更新用户动态
+                sendVoucherActionMessageToMQ(voucher.getId(), ItemActionType.RESHELF);
+            }
+        }
+        return b;
+    }
+
+    /**
+     * 优惠券价格下降
+     *
+     * @param id 优惠券id
+     * @return 优惠券价格下降结果
+     */
+    @Override
+    public int priceReduced(Long id) {
+        sendVoucherActionMessageToMQ(id,ItemActionType.PRICE_DROP);
+        return 1;
     }
 
     /**
@@ -198,9 +278,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     @Override
     public int deleteVoucherByIds(Long[] ids)
     {
-        //        int i = userMapper.deleteShopByIds(ids);
-//        //删除es数据
-//        if (i > 0) {
+        int i = voucherMapper.deleteVoucherByIds(ids);
+        //删除es数据
+        if (i > 0) {
         for (Long id : ids) {
             executorService.submit(()->{
                 log.info("线程“{}删除es数据id为：{}", id);
@@ -215,7 +295,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 //               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE,MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,esInsertRequest);
             });
         }
-//        }
+        }
         return 1;
     }
 
@@ -350,19 +430,26 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @param voucher
      */
     @Override
-    public void addSeckillVoucher(Voucher voucher) {
+    public boolean addSeckillVoucher(Voucher voucher) {
         // 保存优惠券
-        save(voucher);
-        // 保存秒杀信息
-        SeckillVoucher seckillVoucher = new SeckillVoucher();
-        seckillVoucher.setVoucherId(voucher.getId());
-        seckillVoucher.setStock(voucher.getStock());
-        seckillVoucher.setBeginTime(voucher.getBeginTime());
-        seckillVoucher.setEndTime(voucher.getEndTime());
-        seckillVoucherService.save(seckillVoucher);
-        //把秒杀库存写入redis
-        String key= RedisConstants.SECKILL_STOCK_KEY + voucher.getId();
-        redisService.setCacheObject(key, voucher.getStock());
+        boolean save = save(voucher);
+        if(save){
+            // 保存秒杀信息
+            SeckillVoucher seckillVoucher = new SeckillVoucher();
+            seckillVoucher.setVoucherId(voucher.getId());
+            seckillVoucher.setStock(voucher.getStock());
+            seckillVoucher.setBeginTime(voucher.getBeginTime());
+            seckillVoucher.setEndTime(voucher.getEndTime());
+            boolean b = seckillVoucherService.save(seckillVoucher);
+            if(b){
+                //把秒杀库存写入redis
+                String key= RedisConstants.SECKILL_STOCK_KEY + voucher.getId();
+                redisService.setCacheObject(key, voucher.getStock());
+                return true;
+            }
+            return false;
+        }
+        return false;
     }
 
     /**
@@ -437,7 +524,50 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 queryVoucherShopMessage(voucher);
             }
         });
+        log.info("查询优惠券列表：{}", voucherList);
         return voucherList;
+    }
+
+    /**
+     * 获取优惠券
+     *
+     * @param id 优惠券id
+     * @return 优惠券
+     */
+    @Override
+    public Voucher getVoucherById(Long id) {
+        Voucher voucher = voucherMapper.selectVoucherById(id);
+        if (voucher != null){
+            //查询是否是秒杀代金券
+            querySeckill(voucher);
+            //判断是否收藏
+            StarDTO starDTO=new StarDTO();
+            starDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+            starDTO.setSourceId(id);
+            Boolean isStar = remoteStarService.isStar(starDTO);
+            voucher.setIsStar(isStar);
+            //判断是否关注
+            FollowDTO followDTO=new FollowDTO();
+            followDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+            followDTO.setSourceId(id);
+            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+            voucher.setIsFollow(isFollow);
+        }
+        return voucher;
+    }
+
+    /**
+     * 添加库存
+     *
+     * @param id 优惠券id
+     * @return 添加结果
+     */
+    @Override
+    public int addStock(Long id) {
+        log.info("发送mq消息，更新用户动态");
+        //发送消息，更新用户动态
+       sendVoucherActionMessageToMQ(id, ItemActionType.RESTOCK);
+        return 1;
     }
 
     /**

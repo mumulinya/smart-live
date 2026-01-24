@@ -39,7 +39,7 @@ public class SyncTask {
     private ExecutorService executorService;
 
     // 每 30 秒执行一次
-    @Scheduled(cron = "0/30 * * * * ?")
+//    @Scheduled(cron = "0/30 * * * * ?")
     public void executeTask() {
         log.info("开始执行数据数量同步任务...");
             //执行点赞数同步

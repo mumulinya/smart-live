@@ -29,8 +29,6 @@ import com.smartLive.common.core.web.page.TableDataInfo;
 public class VoucherController extends BaseController {
     @Autowired
     private IVoucherService voucherService;
-    @Autowired
-    private ISeckillVoucherService seckillVoucherService;
 
     /**
      * 查询优惠券列表
@@ -65,7 +63,7 @@ public class VoucherController extends BaseController {
      * 获取优惠券详细信息
      */
     @RequiresPermissions("marketing:voucher:query")
-//    @GetMapping(value = "/{id}")
+    @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {
         return success(voucherService.selectVoucherById(id));
     }
@@ -89,14 +87,34 @@ public class VoucherController extends BaseController {
     public AjaxResult edit(@RequestBody Voucher voucher) {
         return toAjax(voucherService.updateVoucher(voucher));
     }
-
+    /**
+     * 代金券新增库存
+     */
+    @PostMapping("/addStock/{id}")
+    public AjaxResult addStock(@PathVariable("id") Long id) {
+        return toAjax(voucherService.addStock(id));
+    }
+    /**
+     * 代金券降价
+     */
+    @PostMapping("/priceReduced/{id}")
+    public AjaxResult priceReduced(@PathVariable("id") Long id) {
+        return toAjax(voucherService.priceReduced(id));
+    }
+    /**
+     * 修改代金券状态
+     */
+    @PutMapping("/changeStatus")
+    public AjaxResult changeStatus(@RequestBody Voucher voucher) {
+        return toAjax(voucherService.changeStatus(voucher));
+    }
     /**
      * 删除优惠券
      */
     @RequiresPermissions("marketing:voucher:remove")
     @Log(title = "优惠券", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable Long[] ids) {
+    public AjaxResult remove(@PathVariable("ids") Long[] ids) {
         return toAjax(voucherService.deleteVoucherByIds(ids));
     }
 
@@ -141,9 +159,14 @@ public class VoucherController extends BaseController {
         return Result.ok(voucherList);
     }
 
-    @GetMapping(value = "/{id}")
+    /**
+     * 根据代金券id获取代金券
+     * @param id
+     * @return
+     */
+    @GetMapping(value = "/getVoucherById/{id}")
     public Result getVoucherById(@PathVariable("id") Long id) {
-        return Result.ok(voucherService.selectVoucherById(id));
+        return Result.ok(voucherService.getVoucherById(id));
     }
 
     /**
@@ -164,61 +187,5 @@ public class VoucherController extends BaseController {
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
         return Result.ok(voucherService.buyVoucher(voucherId, userId));
-    }
-
-    /**
-     *   秒杀优惠券(ai代买)
-     */
-    @PostMapping("/orderSeckillVoucher")
-    public Result orderSeckillVoucher(@RequestParam("id") Long voucherId, @RequestParam("userId") Long userId) {
-        return Result.ok(voucherService.seckillVoucher(voucherId, userId));
-    }
-    /**
-     * 购买优惠券(ai代买)
-     */
-    @PostMapping("/orderVoucher")
-    public Result orderVoucher(@RequestParam("id") Long voucherId,@RequestParam("userId") Long userId) {
-        return Result.ok(voucherService.buyVoucher(voucherId, userId));
-    }
-
-    /**
-     * 更新优惠券库存
-     *
-     * @param voucherId 优惠券id
-     * @return
-     */
-    @PostMapping("/{voucherId}")
-    public R<Boolean> updateSeckillVoucherByVoucherId(@PathVariable("voucherId") Long voucherId) {
-        return R.ok(seckillVoucherService.updateSeckillVoucherByVoucherId(voucherId));
-    }
-    /**
-     * 恢复秒杀券库存
-     */
-    @PostMapping("/recover/{id}")
-    R<Boolean> recoverVoucherStock(@PathVariable("id") Long voucherId){
-        return R.ok(seckillVoucherService.recoverVoucherStock(voucherId));
-    }
-    @PostMapping("/listSeckillVoucherByVoucher")
-    public List<Voucher> listSeckillVoucher(@RequestBody Voucher voucher) {
-        return voucherService.listSeckillVoucher(voucher);
-    }
-
-    @GetMapping("/listVoucher")
-    public List<Voucher> listVoucher() {
-        return voucherService.listVoucher();
-    }
-    /**
-     * 获取代金券总数
-     */
-    @GetMapping("/total")
-    R<Integer> getCouponTotal(){
-        return R.ok(voucherService.getCouponTotal());
-    }
-    /**
-     * 获取优惠券列表
-     */
-    @GetMapping("/getVoucherListByIds")
-    R<List<Voucher>> getVoucherListByIds(List<Long> sourceIdList){
-        return R.ok(voucherService.getVoucherListByIds(sourceIdList));
     }
 }
