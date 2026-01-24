@@ -16,7 +16,8 @@ public enum GlobalBizTypeEnum {
     SHOP(2, "店铺", "shop"),
     BLOG(3, "博客", "blog"),      // 注意：原来是1，现在改成了3
     VOUCHER(4, "代金券", "voucher"), // 注意：原来是3，现在改成了4
-    COMMENT(5, "评论", "comment");   // 注意：原来是4，现在改成了5
+    COMMENT(5, "评论", "comment"),   // 注意：原来是4，现在改成了5
+    GROUP_BUY(6, "团购", "group_buy");
 
     private final Integer code;
     private final String desc;
