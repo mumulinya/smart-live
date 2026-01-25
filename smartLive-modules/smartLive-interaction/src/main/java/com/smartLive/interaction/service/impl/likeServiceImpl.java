@@ -2,6 +2,7 @@ package com.smartLive.interaction.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.enums.IdentityTypeEnum;
@@ -9,17 +10,21 @@ import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.mapper.LikeMapper;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.strategy.identity.IdentityStrategy;
+import com.smartLive.interaction.strategy.like.LikeStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
+import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -36,7 +41,11 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
     @Autowired
     private Map<Integer, ResourceStrategy> resourceStrategyMap;
     @Autowired
+    private Map<Integer, LikeStrategy> likeStrategyMap;
+    @Autowired
     private  RedisService redisService;
+    @Autowired
+    private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
 
     /**
      * 点赞或取消点赞
@@ -64,6 +73,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
 
         //判断当前用户是否已经点赞
         String key = likeKeyPrefix+ like.getSourceId();
+        String likeCountKey = likedCountKeyPrefix + like.getSourceId();
         Double score = redisService.getCacheZSetScore(key, userId.toString());
         boolean isLiked = false;
         if (score != null) {
@@ -71,17 +81,26 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             isLiked = true;
         } else {
             // 3. 【第二层判断】Redis 里没有，必须查数据库确认！(防止缓存过期导致的误判)
-            // 假设你使用的是 MyBatis-Plus
             long count = this.count(new LambdaQueryWrapper<Like>()
                     .eq(Like::getUserId, userId)
                     .eq(Like::getSourceType, like.getSourceType())
                     .eq(Like::getSourceId, like.getSourceId()));
             if (count > 0) {
                 isLiked = true;
-                // 💡 可选优化：既然数据库有但Redis没有，说明缓存丢了。
-                // 此时可以顺手把 Redis 补回去 (缓存预热)，或者直接往下走取消逻辑也没问题。
-
+                //把点赞用户列表添加到redis
+                List<Like> likeList = query()
+                        .eq("source_type", like.getSourceType())
+                        .eq("source_id", like.getSourceId())
+                        .list();
+                saveLikeIdListToRedis(key, likeList);
             }
+        }
+        //获取点赞数量
+        Integer likeCount = redisService.getCacheObject(likeCountKey);
+        if (likeCount == null) {
+            //从数据库获取点赞数量并且写入到redis
+            likeCount = likeStrategyMap.get(like.getSourceType()).getLikeCount(like.getSourceId());
+            redisService.setCacheObject(likeCountKey, likeCount);
         }
         if (isLiked) {
             //删除点赞记录
@@ -93,7 +112,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                 //删除用户点赞信息
                 redisService.removeCacheZSetObject(key, userId.toString());
                 //记录点赞数量
-                redisService.decrementCacheValue(likedCountKeyPrefix+ like.getSourceId());
+                redisService.decrementCacheValue(likeCountKey);
                 //记录脏数据
                 redisService.setCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
             }
@@ -107,7 +126,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                 //保存用户点赞信息
                 redisService.setCacheZSet(key, userId.toString(), System.currentTimeMillis());
                 //记录点赞数量
-                redisService.incrementCacheValue(likedCountKeyPrefix+ like.getSourceId());
+                redisService.incrementCacheValue(likeCountKey);
                 //记录脏数据
                 redisService.setCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
             }
@@ -122,7 +141,14 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
      */
     @Override
     public Integer queryLikeCount(Like like) {
-        Integer likeCount = query().eq("source_type", like.getSourceType()).eq("user_id", like.getUserId()).count().intValue();
+        LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
+        String likeCountKey = likeTypeEnum.getLikedCountKeyPrefix() + like.getSourceId();
+        Integer likeCount = redisService.getCacheObject(likeCountKey);
+        if (likeCount == null) {
+            //从数据库获取点赞数量并且写入到redis
+            likeCount = likeStrategyMap.get(like.getSourceType()).getLikeCount(like.getSourceId());
+            redisService.setCacheObject(likeCountKey, likeCount);
+        }
         return likeCount;
     }
 
@@ -134,16 +160,36 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
     @Override
     public List<?> queryLikeRecord(Like like, Integer current) {
         ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(like.getSourceType());
+        LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         if (resourceTypeEnum == null) {
             log.error("点赞类型错误");
             return null;
         }
         ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceTypeEnum.getCode());
-        List<Long> sourceIdList = query().select("source_id").eq("source_type", like.getSourceType()).eq("user_id", like.getUserId()).list().stream().map(Like::getSourceId).collect(Collectors.toList());
+        List<Long> sourceIdList=queryRedisSourceIdsTool.queryRedisIdPage(likeTypeEnum.getLikeKeyPrefix(), like.getUserId(), current, 5).getRecords();
         log.info("资源id：{}", sourceIdList);
         if (sourceIdList == null || sourceIdList.isEmpty()) {
-            return null;
+            sourceIdList = query().select("source_id").eq("source_type", like.getSourceType()).eq("user_id", like.getUserId()).list().stream().map(Like::getSourceId).collect(Collectors.toList());
         }
+        if (sourceIdList.isEmpty()) {
+            //获取粉丝id
+            List<Like> sourceList = query()
+                    .eq("source_type",like.getSourceType())
+                    .eq("user_id", like.getUserId())
+                    .orderByDesc("create_time") // 添加排序
+                    .list();
+            if(!sourceList.isEmpty()){
+                sourceIdList = sourceList.stream().map(Like::getSourceId).collect(Collectors.toList());
+                //截取
+                if(!sourceIdList.isEmpty()){
+                    //截取当前页
+                    sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
+                }
+                //存入redis
+                saveLikeIdListToRedis(likeTypeEnum.getLikeKeyPrefix()+like.getUserId(),sourceList);
+            }
+        }
+
         List<?> resourceVOList = resourceStrategy.getResourceList(sourceIdList);
         return resourceVOList;
     }
@@ -164,12 +210,25 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         String key = likeKeyPrefix + like.getSourceId();
         //查询top5的点赞数 zrange key 0 4
         Set<Object> top5 =redisService.getCacheZSetRange(key, 0, 4);
+        List<Long> userIdList;
         if (top5 == null || top5.isEmpty()) {
-            return null;
+         List<Like> userList = query()
+                    .eq("source_type", like.getSourceType())
+                    .eq("source_id", like.getSourceId())
+                    .orderByDesc("create_time")
+                    .list();
+            //写入redis
+            saveLikeIdListToRedis(likeKeyPrefix+like.getSourceId(),userList);
+            userIdList = userList.stream().map(Like::getUserId).collect(Collectors.toList());
+            userIdList = userIdList.size() > 4  ? userIdList.subList(0, 4) : userIdList;
+        }else {
+            //解析其中的用户id
+            userIdList = top5.stream().map(obj -> Long.valueOf(obj.toString())).collect(Collectors.toList());
+        }
+        if (userIdList == null || userIdList.isEmpty()) {
+            return Collections.emptyList();
         }
         IdentityStrategy identityStrategy = identityStrategyMap.get(IdentityTypeEnum.USER_IDENTITY.getCode());
-        //解析其中的用户id
-        List<Long> userIdList = top5.stream().map(obj -> Long.valueOf(obj.toString())).collect(Collectors.toList());
         log.info("查询点赞用户列表: {}", userIdList);
         List<?> socialInfoVOList = identityStrategy.getFollowList(userIdList);
         return socialInfoVOList;
@@ -195,11 +254,33 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             return false;
         }
         String key =likeTypeEnum.getLikeKeyPrefix()+ like.getSourceId();
-//        //判断是否关注 从数据库中查询
-//        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
         //判断是否关注 从redis的zSet集合中查询
         //如果分数不为 null，说明元素存在（已关注）；如果为 null，说明不存在（未关注）
         Boolean isLike = redisService.getCacheZSetScore(key, userId.toString()) != null;
-        return isLike;
+        if (isLike) {
+            //已点赞
+            return true;
+        }
+        //判断是否点赞 从数据库中查询
+        Long count = this.count(new LambdaQueryWrapper<Like>()
+                .eq(Like::getUserId, userId)
+                .eq(Like::getSourceType, like.getSourceType())
+                .eq(Like::getSourceId, like.getSourceId()));
+        return count > 0;
+    }
+    /**
+     * 保存点赞用户列表到Redis
+     *
+     * @param key
+      * @param likeList
+     */
+    private void saveLikeIdListToRedis(String key,List<Like> likeList) {
+        Set<ZSetOperations.TypedTuple<String>> followIdListSet = likeList.stream()
+                .map(t -> {
+                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getSourceId().toString(), (double) t.getCreateTime().getTime());
+                    return tuple;
+                })
+                .collect(Collectors.toSet());
+        redisService.setCacheZSet(key, followIdListSet);
     }
 }

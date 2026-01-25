@@ -715,6 +715,18 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
+     * 获取博客点赞数
+     *
+     * @param sourceId
+     * @return
+     */
+    @Override
+    public Integer getBlogLikeCount(Long sourceId) {
+        Blog blog = queryBlogById(sourceId);
+        return blog.getLiked();
+    }
+
+    /**
      * 刷新缓存
      *
      * @return

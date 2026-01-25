@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(contextId = "remoteVoucherService", value = ServiceNameConstants.MARKETING_SERVICE, fallbackFactory = RemoteVoucherFallbackFactory.class)
 public interface RemoteVoucherService {
@@ -16,20 +17,23 @@ public interface RemoteVoucherService {
      * 更新优惠券
      */
     @PostMapping("/inner/voucher/{id}")
-     Boolean updateVoucherById(@PathVariable("id") Long voucherId);
+    Boolean updateVoucherById(@PathVariable("id") Long voucherId);
 
     @GetMapping("/inner/voucher/{id}")
     VoucherDTO getVoucherById(@PathVariable("id") Long voucherId);
+
     /**
      * 恢复库存
      */
     @PostMapping("/inner/voucher/recover/{id}")
     Boolean recoverVoucherStock(@PathVariable("id") Long voucherId);
+
     /**
      * 获取代金券总数
      */
     @GetMapping("/inner/voucher/total")
     Integer getCouponTotal();
+
     /**
      * 秒杀优惠券
      */
@@ -41,9 +45,20 @@ public interface RemoteVoucherService {
      */
     @PostMapping("/inner/voucher/orderVoucher")
     Long buyVoucher(@RequestParam("id") Long voucherId, @RequestParam("userId") Long userId);
+
     /**
      * 获取优惠券列表
      */
     @GetMapping("/inner/voucher/getVoucherListByIds")
-    List<VoucherDTO> getVoucherListByIds(@RequestParam("sourceIdList")List<Long> sourceIdList);
+    List<VoucherDTO> getVoucherListByIds(@RequestParam("sourceIdList") List<Long> sourceIdList);
+
+    /**
+     * 批量更新点赞数
+     */
+    @PostMapping("/inner/voucher/updateStarCountBatch")
+    Boolean updateStarCountBatch(@RequestParam("updateMap") Map<Long, Integer> updateMap);
+     /**
+     * 获取点赞数
+     */
+    Integer getVoucherStarCount(Long sourceId);
 }

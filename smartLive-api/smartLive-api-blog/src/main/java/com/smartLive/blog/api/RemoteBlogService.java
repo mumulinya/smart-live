@@ -33,12 +33,12 @@ public interface RemoteBlogService {
     Integer getBlogCount(@PathVariable("userId") Long userId);
 
     /**
-     * 获取博客点赞数
+     * 获取用户点赞数
      *
      * @param userId
      * @return
      */
-    @GetMapping("/inner/blog/getLikeCount/{userId}")
+    @GetMapping("/inner/blog/getUserLikeCount/{userId}")
     Integer getLikeCount(@PathVariable("userId") Long userId);
 
     /**
@@ -69,4 +69,14 @@ public interface RemoteBlogService {
      */
     @PostMapping("/inner/blog/updateStarCountBatch")
     Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
+    /**
+     * 获取博客点赞数
+     */
+    @GetMapping("/inner/blog/getBlogLikeCount/{sourceId}")
+    Integer getBlogLikeCount(@PathVariable("sourceId") Long sourceId);
+    /**
+     * 获取博客收藏数
+     */
+    @GetMapping("/inner/blog/getBlogStarCount/{sourceId}")
+    Integer getStarCount(@PathVariable("sourceId") Long sourceId);
 }

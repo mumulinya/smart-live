@@ -31,4 +31,15 @@ public class BlogLikeStrategy implements LikeStrategy {
             log.info("同步数据失败");
         }
     }
+
+    /**
+     * 获取点赞数
+     *
+     * @param sourceId 业务ID
+     * @return 点赞数
+     */
+    @Override
+    public Integer getLikeCount(Long sourceId) {
+        return remoteBlogService.getBlogLikeCount(sourceId);
+    }
 }

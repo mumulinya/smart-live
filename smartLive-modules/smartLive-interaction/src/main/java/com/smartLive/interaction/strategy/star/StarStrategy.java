@@ -18,4 +18,10 @@ public interface StarStrategy {
      * @param updateMap key: 业务ID, value: 最新点赞数
      */
     void transStarCountFromRedis2DB(Map<Long, Integer> updateMap);
+    /**
+     * 获取收藏数
+     * @param sourceId 业务ID
+     * @return 点赞数
+     */
+    Integer getStarCount(Long sourceId);
 }

@@ -94,6 +94,17 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
                 log.error("批量更新收藏数失败:{}", cause.getMessage());
                 return false;
             }
+
+            /**
+             * 获取博客点赞数
+             *
+             * @param sourceId
+             */
+            @Override
+            public Integer getBlogLikeCount(Long sourceId) {
+                log.error("查询博客点赞数失败:{}", cause.getMessage());
+                return 0;
+            }
         };
  }
 }

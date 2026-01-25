@@ -32,4 +32,15 @@ public class BlogStarStrategy implements StarStrategy {
             log.info("同步数据失败");
         }
     }
+
+    /**
+     * 获取收藏数
+     *
+     * @param sourceId 业务ID
+     * @return 点赞数
+     */
+    @Override
+    public Integer getStarCount(Long sourceId) {
+        return remoteBlogService.getStarCount(sourceId);
+    }
 }

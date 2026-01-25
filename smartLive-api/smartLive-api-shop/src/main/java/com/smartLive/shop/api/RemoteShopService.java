@@ -15,25 +15,25 @@ public interface RemoteShopService {
      * 根据商家名称查询商家信息
      */
     @GetMapping("/inner/shop/{shopName}")
-     ShopDTO getShopByShopName(@PathVariable("shopName") String shopName);
+    ShopDTO getShopByShopName(@PathVariable("shopName") String shopName);
 
     /**
      * 更新商家评论数
      */
     @PostMapping("/inner/shop/updateCommentById/{id}")
-     Boolean updateCommentById(@PathVariable("id") Long shopId);
+    Boolean updateCommentById(@PathVariable("id") Long shopId);
 
     /**
      * 根据条件查询商家信息
      */
     @PostMapping("/inner/shop/getShopList")
-     List<ShopDTO> queryShopList(@RequestBody ShopDTO shopDTo);
+    List<ShopDTO> queryShopList(@RequestBody ShopDTO shopDTo);
 
     /**
      * 查询商铺类型列表
      */
     @GetMapping("/inner/shop/shop-type/getShopListByType")
-     List<ShopTypeDTO> getShopTypeList();
+    List<ShopTypeDTO> getShopTypeList();
 
 
     /**
@@ -49,22 +49,29 @@ public interface RemoteShopService {
      * 获取商家总数
      */
     @GetMapping("/inner/shop/getShopTotal")
-     Integer getShopTotal();
+    Integer getShopTotal();
 
     /**
      * 获取最近创建商家
      */
     @GetMapping("/inner/shop/getRecentShops")
-     List<ShopDTO> getRecentShops(@RequestParam("limit") Integer limit);
+    List<ShopDTO> getRecentShops(@RequestParam("limit") Integer limit);
 
     /**
      * 批量更新商家评论数
      */
     @PostMapping("/inner/shop/updateCommentCountBatch")
-     Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap);
+    Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap);
+
     /**
      * 批量更新商家收藏数
      */
     @PostMapping("/inner/shop/updateStarCountBatch")
     Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
+
+    /**
+     * 获取商家收藏数
+     */
+    @GetMapping("/inner/shop/getStarCount/{sourceId}")
+    Integer getStarCount(@PathVariable("sourceId") Long sourceId);
 }

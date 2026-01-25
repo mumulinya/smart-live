@@ -5,20 +5,26 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.enums.StarTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.mapper.StarMapper;
 import com.smartLive.interaction.service.IStarService;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
+import com.smartLive.interaction.strategy.star.StarStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +44,8 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
     private Map<Integer, ResourceStrategy> resourceStrategyMap;
+    @Autowired
+    private Map<Integer, StarStrategy> starStrategyMap;
     /**
      * 查询关注
      * 
@@ -136,17 +144,23 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         String starCountKeyPrefix = resourceType.getStarCountKeyPrefix();
         String starDirtyKeyPrefix = resourceType.getStarDirtyKeyPrefix();
         String key =starKeyPrefix+userId;
+        String starCountKey =starCountKeyPrefix+star.getSourceId();
         //判断是收藏还是取消收藏
         if(star.getIsStar()){
             //收藏
             star.setUserId(userId);
             star.setCreateTime(DateUtils.getNowDate());
             boolean save = save(star);
+            Integer starCount = redisService.getCacheObject(starCountKey);
+            if (starCount == null) {
+                starCount=starStrategyMap.get(star.getSourceType()).getStarCount(star.getSourceId());
+                redisService.setCacheObject(starCountKey,starCount);
+            }
             if (save) {
                 //收藏成功，添加收藏到redis
                 redisService.setCacheZSet(key, star.getSourceId().toString(), System.currentTimeMillis());
                 //记录点赞数量
-                redisService.incrementCacheValue(starCountKeyPrefix+ star.getSourceId());
+                redisService.incrementCacheValue(starCountKey);
                 //记录脏数据
                 redisService.setCacheSet(starDirtyKeyPrefix, star.getSourceId().toString());
             }
@@ -157,7 +171,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                 //取消收藏成功成功，从redis中删除收藏
                 redisService.removeCacheZSetObject(key, star.getSourceId().toString());
                 //记录收藏数量
-                redisService.decrementCacheValue(starCountKeyPrefix+ star.getSourceId());
+                redisService.decrementCacheValue(starCountKey);
                 //记录脏数据
                 redisService.setCacheSet(starDirtyKeyPrefix, star.getSourceId().toString());
             }
@@ -188,9 +202,12 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         String key =resourceType.getStarKeyPrefix()+userId;
         //判断是否关注 从redis的set集合中查询
         Boolean isMember = redisService.getCacheZSetScore(key, star.getSourceId().toString()) != null;
-//        //判断是否关注 从数据库中查询
-//        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
-        return isMember;
+        if (isMember) {
+            return true;
+        }
+       //判断是否关注 从数据库中查询
+        Integer count = query().eq("user_id", userId).eq("source_type", star.getSourceType()).eq("source_id", star.getSourceId()).count().intValue();
+        return count > 0;
     }
 
     /**
@@ -211,22 +228,24 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         //从redis获取
         Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(resourceType.getCollectKeyPrefix(), star.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
+        //redis获取失败，从数据库获取
         if (sourceIdList.isEmpty()) {
-            //redis获取失败，从数据库获取
-            //获取来源id
-             sourceIdList = query()
-                    .select("source_id")
-                    .eq("source_type", star.getSourceType())
+            //获取粉丝id
+            List<Star> sourceList = query()
+                    .eq("source_type",star.getSourceType())
                     .eq("user_id", star.getUserId())
                     .orderByDesc("create_time") // 添加排序
-                    .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
-                    .getRecords()
-                    .stream()
-                    .map(Star::getSourceId)
-                    .collect(Collectors.toList());
-        }
-        if (sourceIdList.isEmpty()) {
-            return Collections.emptyList();
+                    .list();
+            if(!sourceList.isEmpty()){
+                sourceIdList = sourceList.stream().map(Star::getSourceId).collect(Collectors.toList());
+                //截取
+                if(!sourceIdList.isEmpty()){
+                    //截取当前页
+                    sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
+                }
+                //存入redis
+                saveStarIdListToRedis(resourceType.getCollectKeyPrefix()+star.getUserId(),sourceList);
+            }
         }
         //根据id查询数据
        if(sourceIdList.isEmpty()){
@@ -235,6 +254,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         List<?> resourceList = resourceStrategy.getResourceList(sourceIdList);
         return resourceList;
     }
+
     /**
      * 获取收藏数量
      *
@@ -243,6 +263,29 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      */
     @Override
     public Integer getStarCount(Star star) {
-        return query().eq("source_type", star.getSourceType()).eq("user_id", star.getUserId()).count().intValue();
+        StarTypeEnum starTypeEnum = StarTypeEnum.getByCode(star.getSourceType());
+        String starCountKey = starTypeEnum.getStarCountKeyPrefix() + star.getSourceId();
+        Integer starCount = redisService.getCacheObject(starCountKey);
+        if (starCount == null) {
+            //从数据库获取点赞数量并且写入到redis
+            starCount = starStrategyMap.get(star.getSourceType()).getStarCount(star.getSourceId());
+            redisService.setCacheObject(starCountKey, starCount);
+        }
+        return starCount;
+    }
+    /**
+     * 保存id列表到redis
+     *
+     * @param key
+     * @param sourceList
+     */
+    private void saveStarIdListToRedis(String key, List<Star> sourceList) {
+        Set<ZSetOperations.TypedTuple<String>> followIdListSet = sourceList.stream()
+                .map(t -> {
+                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getSourceId().toString(), (double) t.getCreateTime().getTime());
+                    return tuple;
+                })
+                .collect(Collectors.toSet());
+        redisService.setCacheZSet(key, followIdListSet);
     }
 }

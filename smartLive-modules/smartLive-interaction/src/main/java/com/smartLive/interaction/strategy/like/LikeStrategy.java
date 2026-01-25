@@ -20,4 +20,10 @@ public interface LikeStrategy {
      * @param updateMap key: 业务ID, value: 最新点赞数
      */
     void transLikeCountFromRedis2DB(Map<Long, Integer> updateMap);
+    /**
+     * 获取点赞数
+     * @param sourceId 业务ID
+     * @return 点赞数
+     */
+    Integer getLikeCount(Long sourceId);
 }

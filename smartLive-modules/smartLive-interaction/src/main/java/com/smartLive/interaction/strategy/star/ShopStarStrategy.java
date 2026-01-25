@@ -26,4 +26,15 @@ public class ShopStarStrategy implements StarStrategy {
         // 调用博客服务的批量更新接口
         remoteShopService.updateStarCountBatch(updateMap);
     }
+
+    /**
+     * 获取收藏数
+     *
+     * @param sourceId 业务ID
+     * @return 点赞数
+     */
+    @Override
+    public Integer getStarCount(Long sourceId) {
+        return remoteShopService.getStarCount(sourceId);
+    }
 }

@@ -153,4 +153,11 @@ public interface ICommentService extends IService<Comment> {
      * @return
      *  */
     Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
+    /**
+     * 获取评论点赞数
+     *
+     * @param sourceId
+     * @return
+     */
+    Integer getCommentLikeCount(Long sourceId);
 }

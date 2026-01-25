@@ -53,7 +53,7 @@ public class BlogInnerController extends BaseController
      * @param userId
      * @return
      */
-    @GetMapping("/getLikeCount/{userId}")
+    @GetMapping("/getUserLikeCount/{userId}")
     Integer getLikeCount( @PathVariable("userId")Long userId){
         return blogService.getLikeCount(userId);
     }
@@ -91,5 +91,12 @@ public class BlogInnerController extends BaseController
     @PostMapping("/updateStarCountBatch")
     Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return blogService.updateStarCountBatch(updateMap);
+    }
+    /**
+     * 获取博客点赞数
+     */
+    @GetMapping("/inner/blog/getBlogLikeCount/{sourceId}")
+    Integer getBlogLikeCount(@PathVariable("sourceId") Long sourceId){
+        return blogService.getBlogLikeCount(sourceId);
     }
 }

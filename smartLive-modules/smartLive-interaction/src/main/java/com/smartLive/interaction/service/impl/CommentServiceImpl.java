@@ -423,4 +423,16 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         return true;
     }
+
+    /**
+     * 获取评论点赞数
+     *
+     * @param sourceId
+     * @return
+     */
+    @Override
+    public Integer getCommentLikeCount(Long sourceId) {
+        Comment comment = getById(sourceId);
+        return comment.getLiked();
+    }
 }

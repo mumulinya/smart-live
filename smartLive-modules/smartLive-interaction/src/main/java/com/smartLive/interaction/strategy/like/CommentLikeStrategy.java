@@ -24,4 +24,15 @@ public class CommentLikeStrategy implements LikeStrategy {
         // 调用博客服务的批量更新接口
         commentService.updateLikeCountBatch(updateMap);
     }
+
+    /**
+     * 获取点赞数
+     *
+     * @param sourceId 业务ID
+     * @return 点赞数
+     */
+    @Override
+    public Integer getLikeCount(Long sourceId) {
+        return commentService.getCommentLikeCount(sourceId);
+    }
 }

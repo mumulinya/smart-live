@@ -205,4 +205,10 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
+    /**
+     * 获取博客点赞数
+     * @param sourceId
+     * @return
+     */
+    Integer getBlogLikeCount(Long sourceId);
 }
