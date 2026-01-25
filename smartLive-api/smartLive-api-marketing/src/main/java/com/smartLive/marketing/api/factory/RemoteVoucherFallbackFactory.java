@@ -7,6 +7,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -79,6 +80,28 @@ public class RemoteVoucherFallbackFactory implements FallbackFactory<RemoteVouch
             public List<VoucherDTO> getVoucherListByIds(List<Long> sourceIdList) {
                 log.error("获取优惠券列表失败:{}", throwable.getMessage());
                 return null;
+            }
+
+            /**
+             * 批量更新点赞数
+             *
+             * @param updateMap
+             */
+            @Override
+            public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
+                log.error("批量更新点赞数失败:{}", throwable.getMessage());
+                return false;
+            }
+
+            /**
+             * 获取点赞数
+             *
+             * @param sourceId
+             */
+            @Override
+            public Integer getVoucherStarCount(Long sourceId) {
+                log.error("获取优惠券点赞数失败:{}", throwable.getMessage());
+                return 0;
             }
         };
     }

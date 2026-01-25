@@ -219,6 +219,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
     public List<?> getStarList(Star star, Integer current) {
         // 1. 获取对应的枚举策略
         ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
+        StarTypeEnum starTypeEnum = StarTypeEnum.getByCode(star.getSourceType());
         if (resourceType == null) {
 
             return Collections.emptyList();
@@ -226,7 +227,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         //根据关注类型从关注策略工程获取bean
         ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceType.getCode());
         //从redis获取
-        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(resourceType.getCollectKeyPrefix(), star.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
+        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(starTypeEnum.getStarKeyPrefix(), star.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
         //redis获取失败，从数据库获取
         if (sourceIdList.isEmpty()) {
@@ -241,10 +242,10 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                 //截取
                 if(!sourceIdList.isEmpty()){
                     //截取当前页
-                    sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
+                    sourceIdList = sourceIdList.size() > SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
                 }
                 //存入redis
-                saveStarIdListToRedis(resourceType.getCollectKeyPrefix()+star.getUserId(),sourceList);
+                saveStarIdListToRedis(starTypeEnum.getStarKeyPrefix()+star.getUserId(),sourceList);
             }
         }
         //根据id查询数据

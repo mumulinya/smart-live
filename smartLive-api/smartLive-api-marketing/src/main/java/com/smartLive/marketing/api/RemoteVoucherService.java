@@ -4,10 +4,8 @@ import com.smartLive.common.core.constant.ServiceNameConstants;
 import com.smartLive.marketing.api.DTO.VoucherDTO;
 import com.smartLive.marketing.api.factory.RemoteVoucherFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -56,9 +54,10 @@ public interface RemoteVoucherService {
      * 批量更新点赞数
      */
     @PostMapping("/inner/voucher/updateStarCountBatch")
-    Boolean updateStarCountBatch(@RequestParam("updateMap") Map<Long, Integer> updateMap);
+    Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
      /**
      * 获取点赞数
      */
+     @GetMapping("/inner/voucher/getVoucherStarCount")
     Integer getVoucherStarCount(Long sourceId);
 }

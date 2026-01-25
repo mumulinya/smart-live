@@ -110,6 +110,17 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
                 log.error("批量更新商家收藏数失败:{}", cause.getMessage());
                 return false;
             }
+
+            /**
+             * 获取商家收藏数
+             *
+             * @param sourceId
+             */
+            @Override
+            public Integer getStarCount(Long sourceId) {
+                log.error("获取商家收藏数失败:{}", cause.getMessage());
+                return 0;
+            }
         };
     }
 }

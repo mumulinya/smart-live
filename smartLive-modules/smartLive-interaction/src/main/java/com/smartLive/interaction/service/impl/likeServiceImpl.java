@@ -1,6 +1,7 @@
 package com.smartLive.interaction.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
@@ -166,30 +167,17 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             return null;
         }
         ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceTypeEnum.getCode());
-        List<Long> sourceIdList=queryRedisSourceIdsTool.queryRedisIdPage(likeTypeEnum.getLikeKeyPrefix(), like.getUserId(), current, 5).getRecords();
-        log.info("资源id：{}", sourceIdList);
-        if (sourceIdList == null || sourceIdList.isEmpty()) {
-            sourceIdList = query().select("source_id").eq("source_type", like.getSourceType()).eq("user_id", like.getUserId()).list().stream().map(Like::getSourceId).collect(Collectors.toList());
-        }
-        if (sourceIdList.isEmpty()) {
-            //获取粉丝id
-            List<Like> sourceList = query()
-                    .eq("source_type",like.getSourceType())
-                    .eq("user_id", like.getUserId())
-                    .orderByDesc("create_time") // 添加排序
-                    .list();
-            if(!sourceList.isEmpty()){
-                sourceIdList = sourceList.stream().map(Like::getSourceId).collect(Collectors.toList());
-                //截取
-                if(!sourceIdList.isEmpty()){
-                    //截取当前页
-                    sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
-                }
-                //存入redis
-                saveLikeIdListToRedis(likeTypeEnum.getLikeKeyPrefix()+like.getUserId(),sourceList);
-            }
-        }
-
+        //获取粉丝id
+        List<Long> sourceIdList = query()
+                .select("source_id")
+                .eq("source_type",like.getSourceType())
+                .eq("user_id", like.getUserId())
+                .orderByDesc("create_time") //
+                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
+                .getRecords()
+                .stream()
+                .map(Like::getSourceId)
+                .collect(Collectors.toList());
         List<?> resourceVOList = resourceStrategy.getResourceList(sourceIdList);
         return resourceVOList;
     }
