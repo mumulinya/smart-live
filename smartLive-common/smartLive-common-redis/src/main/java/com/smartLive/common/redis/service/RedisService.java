@@ -27,6 +27,8 @@ public class RedisService
 {
     @Autowired
     public RedisTemplate redisTemplate;
+    @Autowired
+    public StringRedisTemplate stringRedisTemplate;
 
     /**
      * 缓存基本的对象，Integer、String、实体类等
@@ -579,7 +581,7 @@ public class RedisService
      */
     public <T> T executeScript(RedisScript<T> script, List<String> keys, Object... args) {
         // 使用 stringRedisTemplate 执行，确保参数和结果都作为 String 处理 (或根据 Script 定义自动转换)
-        return (T) redisTemplate.execute(script, keys, args);
+        return (T) stringRedisTemplate.execute(script, keys, args);
     }
     /**
      * 获得缓存的基本对象列表

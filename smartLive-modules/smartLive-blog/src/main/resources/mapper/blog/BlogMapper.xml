@@ -20,7 +20,7 @@
     </resultMap>
 
     <sql id="selectBlogVo">
-        select id, shop_id, type_id, user_id, title, images, content, liked,, comments, create_time, update_time from blog
+        select id, shop_id, type_id, user_id, title, images, content, liked,comments, create_time, update_time from blog
     </sql>
 
     <select id="selectBlogList" parameterType="com.smartLive.blog.domain.Blog" resultMap="BlogResult">

@@ -99,18 +99,19 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         Voucher voucher = voucherMapper.selectVoucherById(id);
         if (voucher != null){
             querySeckill(voucher);
-            //判断是否收藏
-            StarDTO starDTO=new StarDTO();
-            starDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
-            starDTO.setSourceId(id);
-            Boolean isStar = remoteStarService.isStar(starDTO);
-            voucher.setIsStar(isStar);
-            //判断是否关注
-            FollowDTO followDTO=new FollowDTO();
-            followDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
-            followDTO.setSourceId(id);
-            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
-            voucher.setIsFollow(isFollow);
+            queryVoucherShopMessage(voucher);
+//            //判断是否收藏
+//            StarDTO starDTO=new StarDTO();
+//            starDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+//            starDTO.setSourceId(id);
+//            Boolean isStar = remoteStarService.isStar(starDTO);
+//            voucher.setIsStar(isStar);
+//            //判断是否关注
+//            FollowDTO followDTO=new FollowDTO();
+//            followDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+//            followDTO.setSourceId(id);
+//            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+//            voucher.setIsFollow(isFollow);
         }
         return voucher;
     }
@@ -323,12 +324,6 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         //获取订单id
         Long orderId = redisIdWorker.nextId("order");
         //1.执行lua脚本
-//        Long result = stringRedisTemplate.execute(
-//                SECKILL_SCRIPT,
-//                Collections.emptyList(),
-//                voucherId.toString(),
-//                userId.toString(),
-//                String.valueOf(orderId));
         Long result = redisService.executeScript(SECKILL_SCRIPT,
                 Collections.emptyList(),
                 voucherId.toString(),

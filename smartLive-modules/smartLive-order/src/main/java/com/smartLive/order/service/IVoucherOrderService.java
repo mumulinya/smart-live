@@ -2,6 +2,8 @@ package com.smartLive.order.service;
 
 import java.util.List;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.order.domain.VO.VoucherOrderVO;
 import com.smartLive.order.domain.VoucherOrder;
 
 /**
@@ -71,7 +73,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * 获取当前用户订单列表
      * @return
      */
-    List<VoucherOrder> queryMyVoucherOrderList(Long userId,Integer current);
+    List<VoucherOrderVO> queryMyVoucherOrderList(Long userId,Integer current);
 
     /**
      * 支付订单
@@ -116,4 +118,10 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @return
      */
     Integer getOrderTotal();
+    /**
+     * 根据id获取订单详情
+     * @param id
+     * @return
+     */
+    VoucherOrderVO getOrderById(Long id);
 }

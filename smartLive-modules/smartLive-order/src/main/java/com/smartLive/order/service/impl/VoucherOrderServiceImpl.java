@@ -1,5 +1,6 @@
 package com.smartLive.order.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.MqConstants;
@@ -7,11 +8,13 @@ import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.exception.BusinessException;
+import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.marketing.api.RemoteVoucherService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.marketing.api.DTO.VoucherDTO;
+import com.smartLive.order.domain.VO.VoucherOrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -221,14 +224,29 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return
      */
     @Override
-    public List<VoucherOrder> queryMyVoucherOrderList(Long userId,Integer current) {
+    public List<VoucherOrderVO> queryMyVoucherOrderList(Long userId,Integer current) {
         Page<VoucherOrder> result = query()
                 .eq("user_id", userId)
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<VoucherOrder> list = result.getRecords();
-        log.info("查询当前用户订单列表:{}", list);
-        return list;
+        List<VoucherOrderVO> voucherOrderVOList=new ArrayList<>();
+        list.forEach(v -> {
+            VoucherOrderVO voucherOrderVO = new VoucherOrderVO();
+            BeanUtils.copyProperties(v, voucherOrderVO);;
+            VoucherDTO voucher  = remoteVoucherService.getVoucherById(v.getVoucherId());
+            if(voucher!=null) {
+                voucherOrderVO.setShopId(voucher.getShopId());
+                voucherOrderVO.setShopName(voucher.getShopName());
+                voucherOrderVO.setRules(voucher.getRules());
+                voucherOrderVO.setPayValue(voucher.getPayValue());
+                voucherOrderVO.setActualValue(voucher.getActualValue());
+                voucherOrderVO.setTitle(voucher.getTitle());
+                voucherOrderVO.setSubTitle(voucher.getSubTitle());
+            }
+            voucherOrderVOList.add(voucherOrderVO);
+        });
+        return voucherOrderVOList;
     }
 
     /**
@@ -338,5 +356,31 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Override
     public Integer getOrderTotal() {
         return query().count().intValue();
+    }
+    /**
+     * 根据id查询订单
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public VoucherOrderVO getOrderById(Long id) {
+        VoucherOrder voucherOrder = selectVoucherOrderById(id);
+        if (voucherOrder != null) {
+            VoucherOrderVO voucherOrderVO = new VoucherOrderVO();
+            BeanUtils.copyProperties(voucherOrder, voucherOrderVO);;
+            VoucherDTO voucher  = remoteVoucherService.getVoucherById(voucherOrder.getVoucherId());
+            if(voucher!=null) {
+                voucherOrderVO.setShopId(voucher.getShopId());
+                voucherOrderVO.setShopName(voucher.getShopName());
+                voucherOrderVO.setRules(voucher.getRules());
+                voucherOrderVO.setPayValue(voucher.getPayValue());
+                voucherOrderVO.setActualValue(voucher.getActualValue());
+                voucherOrderVO.setTitle(voucher.getTitle());
+                voucherOrderVO.setSubTitle(voucher.getSubTitle());
+            }
+            return voucherOrderVO;
+        }
+        return null;
     }
 }

@@ -88,4 +88,8 @@ public class VoucherInnerController extends BaseController {
     public List<Voucher> getVoucherListByIds(@RequestParam("sourceIdList")List<Long> sourceIdList){
         return voucherService.getVoucherListByIds(sourceIdList);
     }
+    @GetMapping("/{id}")
+    public Voucher getVoucherById(@PathVariable("id") Long voucherId){
+        return voucherService.selectVoucherById(voucherId);
+    }
 }

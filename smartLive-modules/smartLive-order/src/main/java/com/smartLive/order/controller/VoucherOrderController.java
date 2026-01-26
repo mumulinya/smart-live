@@ -1,6 +1,8 @@
 package com.smartLive.order.controller;
 
 import java.util.List;
+
+import com.smartLive.order.domain.VO.VoucherOrderVO;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
@@ -106,8 +108,18 @@ public class VoucherOrderController extends BaseController
     public Result queryMyVoucherOrderList(@RequestParam(value = "current", defaultValue = "1") Integer current) {
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
-        List<VoucherOrder> voucherOrderList = voucherOrderService.queryMyVoucherOrderList(userId, current);
+        List<VoucherOrderVO> voucherOrderList = voucherOrderService.queryMyVoucherOrderList(userId, current);
         return Result.ok(voucherOrderList);
+    }
+
+    /**
+     * 根据订单id查询订单
+     * @param id
+     * @return
+     */
+    @GetMapping("/getOrderById/{id}")
+    public Result getOrderById(@PathVariable("id") Long id){
+        return Result.ok(voucherOrderService.getOrderById(id));
     }
     /**
      * 支付订单
