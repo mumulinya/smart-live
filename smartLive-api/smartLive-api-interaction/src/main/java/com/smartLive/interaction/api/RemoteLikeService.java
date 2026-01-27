@@ -30,4 +30,10 @@ public interface RemoteLikeService {
      */
     @GetMapping("/inner/like/getCommonLikeCount")
      Integer getCommonLikeCount(@SpringQueryMap LikeDTO likeDTO);
+    /**
+     * 获取用户点赞数
+     * @return
+     */
+    @GetMapping("/inner/like/getUserLikeCount")
+     Integer getUserLikeCount(@SpringQueryMap LikeDTO likeDTO);
 }

@@ -318,7 +318,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Stats getStats(Long userId) {
         //使用线程池＋future来实现
-        CountDownLatch countDownLatch = new CountDownLatch(10);
+        CountDownLatch countDownLatch = new CountDownLatch(7);
         //获取粉丝数
         Future<Integer> fanCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询粉丝数",Thread.currentThread().getName());
@@ -339,12 +339,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             countDownLatch.countDown();
             return followCount;
         });
-        // 当前用户id
+        // 当前用户
         com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        // 获取共同关注数
         Future<Integer> commonFollowCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询共同关注数",Thread.currentThread().getName());
             Integer commonFollowCount = 0;
-            if (user != null) {
+            // 判断当前查询用户是否是当前登录用户
+            if (user != null&&user.getId() != userId) {
                 Long currentUserId = user.getId();
                 FollowDTO followDTO=new FollowDTO();
                 followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
@@ -363,56 +364,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             countDownLatch.countDown();
             return blogCount;
         });
-        //获取点赞数
+        //获取获赞数
         Future<Integer> likeCountFuture = executorService.submit(() -> {
             log.info("线程：{}开始查询点赞数",Thread.currentThread().getName());
             Integer likeCount = remoteBlogService.getLikeCount(userId);
             countDownLatch.countDown();
             return likeCount;
         });
-        //获取发表评论数量
-        Future<Integer> commentCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询发表评论数",Thread.currentThread().getName());
-            CommentDTO commentDTO = new CommentDTO();
-            commentDTO.setUserId(userId);
-            Integer commentCount = remoteCommentService.getCommentCount(commentDTO);
-            countDownLatch.countDown();
-            return commentCount;
-        });
-        //获取订单数量
-        Future<Integer> orderCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询订单数",Thread.currentThread().getName());
-            Integer orderCount =  remoteOrderService.getOrderCount(userId);
-            countDownLatch.countDown();
-            return orderCount;
-        });
-        //获取关注店铺数量
-        Future<Integer> followShopCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询收藏数",Thread.currentThread().getName());
-            FollowDTO followDTO=new FollowDTO();
-            followDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
-            followDTO.setUserId(userId);
-            Integer collectCount = remoteFollowService.getFollowCount(followDTO);
-            countDownLatch.countDown();
-            return collectCount;
-        });
-        //获取点赞博客数
+//        //获取发表评论数量
+//        Future<Integer> commentCountFuture = executorService.submit(() -> {
+//            log.info("线程：{}开始查询发表评论数",Thread.currentThread().getName());
+//            CommentDTO commentDTO = new CommentDTO();
+//            commentDTO.setUserId(userId);
+//            Integer commentCount = remoteCommentService.getCommentCount(commentDTO);
+//            countDownLatch.countDown();
+//            return commentCount;
+//        });
+//        //获取订单数量
+//        Future<Integer> orderCountFuture = executorService.submit(() -> {
+//            log.info("线程：{}开始查询订单数",Thread.currentThread().getName());
+//            Integer orderCount =  remoteOrderService.getOrderCount(userId);
+//            countDownLatch.countDown();
+//            return orderCount;
+//        });
+//        //获取关注店铺数量
+//        Future<Integer> followShopCountFuture = executorService.submit(() -> {
+//            log.info("线程：{}开始查询收藏数",Thread.currentThread().getName());
+//            FollowDTO followDTO=new FollowDTO();
+//            followDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
+//            followDTO.setUserId(userId);
+//            Integer collectCount = remoteFollowService.getFollowCount(followDTO);
+//            countDownLatch.countDown();
+//            return collectCount;
+//        });
+        //获取用户点赞博客数
         Future<Integer> blogLikeCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询点赞博客数",Thread.currentThread().getName());
             LikeDTO likeDTO=new LikeDTO();
             likeDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
             likeDTO.setUserId(userId);
-            Integer blogLikeCount = remoteLikeService.getLikeCount(likeDTO);
+            Integer blogLikeCount = remoteLikeService.getUserLikeCount(likeDTO);
             countDownLatch.countDown();
             return blogLikeCount;
         });
-        //获取收藏博客数
+        //获取用户收藏博客数
         Future<Integer> blogStarCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询收藏博客数",Thread.currentThread().getName());
             StarDTO starDTO=new StarDTO();
             starDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
             starDTO.setUserId(userId);
-            Integer collectCount = remoteStarService.getStarCount(starDTO);
+            Integer collectCount = remoteStarService.getUserStarCount(starDTO);
             countDownLatch.countDown();
             return collectCount;
         });
@@ -426,9 +425,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     .commonFollowCount(commonFollowCountFuture.get())
                     .fansCount(fanCountFuture.get())
                     .likeCount(likeCountFuture.get())
-                    .commentCount(commentCountFuture.get())
-                    .orderCount(orderCountFuture.get())
-                    .followShopCount(followShopCountFuture.get())
+//                    .commentCount(commentCountFuture.get())
+//                    .orderCount(orderCountFuture.get())
+//                    .followShopCount(followShopCountFuture.get())
                     .blogLikeCount(blogLikeCountFuture.get())
                     .blogStarCount(blogStarCountFuture.get())
                     .build();

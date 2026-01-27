@@ -87,4 +87,6 @@ public class Comment extends BaseEntity
     /** 是否是AI生成的评论 */
     @TableField(exist = false)
     private Boolean isAIGenerated;
+    @TableField(exist = false)
+    private String shopImages;
 }

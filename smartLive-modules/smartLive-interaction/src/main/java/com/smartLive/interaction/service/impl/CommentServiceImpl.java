@@ -15,6 +15,8 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.Like;
+import com.smartLive.interaction.domain.VO.CommentVO;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
@@ -25,6 +27,8 @@ import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
@@ -143,23 +147,31 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         List<Long> commentIdList = longPage.getRecords();
         List<Comment> list=new ArrayList<>();
         if(commentIdList != null && commentIdList.size() > 0){
-             list = listByIds(commentIdList);
+             list = lambdaQuery().in(Comment::getId, commentIdList).orderByDesc(Comment::getLiked).list();
         }
         //如果redis里面没有数据，则从数据库里面获取
         if(list == null || list.size() == 0){
             log.info("从数据库里面获取");
-            Page<Comment> page = query().eq("source_id", comment.getSourceId())
+             list = query()
+                    .eq("source_id", comment.getSourceId())
                     .eq("source_type", comment.getSourceType())
                     .eq("parent_id", 0)
-                    .orderByDesc("create_time")
-                    .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-             list = page.getRecords();
+                    .orderByDesc("liked")
+                    .list();
+             saveCommentListToRedis(commentKeyPrefix+comment.getSourceId(), list);
+            //截取
+            if(!list.isEmpty()){
+                //截取当前页
+                list = list.size() > SystemConstants.DEFAULT_PAGE_SIZE ? list.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : list;
+            }
         }
-        List<Long> parentIdList = list.stream().map(Comment::getSourceId).collect(Collectors.toList());
+        List<Long> parentIdList = list.stream().map(Comment::getId).collect(Collectors.toList());
         //获取子评论
         if (!parentIdList.isEmpty()) {
+            log.info("获取子评论{}",parentIdList);
             // 假设你的实体类叫 UserComment
-            List<Comment> comments = lambdaQuery().in(Comment::getParentId, parentIdList).list();
+            List<Comment> comments = lambdaQuery().in(Comment::getAnswerId, parentIdList).list();
+            log.info("获取子评论{}",comments);
             list.addAll(comments);
         }
         list.stream().forEach(c -> {
@@ -234,19 +246,26 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 获取我的评论
+     * 获取用户的评论
      *
      * @param current
      * @return
      */
     @Override
-    public List<Comment> getCommentOfMe(Comment comment,Integer current) {
+    public List<Comment> getCommentOfUser(Comment comment,Integer current) {
         Page<Comment> page = query()
                 .eq("source_type", comment.getSourceType())
+                .eq("parent_id", 0)
                 .eq("user_id", comment.getUserId())
                 .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Comment> list = page.getRecords();
+        list.stream().forEach(c -> {
+            ShopDTO shop = remoteShopService.getShopById(c.getSourceId());
+            if (shop != null) {
+                c.setSourceName(shop.getName());
+            }
+        });
         return list;
     }
 
@@ -434,5 +453,45 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public Integer getCommentLikeCount(Long sourceId) {
         Comment comment = getById(sourceId);
         return comment.getLiked();
+    }
+
+    /**
+     * 根据id获取评论详情
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public Comment getCommentById(Long id) {
+        Comment comment = getById(id);
+        if (comment != null) {
+            ShopDTO shop = remoteShopService.getShopById(comment.getSourceId());
+            if(shop!=null){
+                comment.setSourceName(shop.getName());
+                comment.setShopImages(shop.getImages());
+            }
+            UserDTO userDTO = remoteAppUserService.queryUserById(comment.getUserId());
+            if(userDTO!=null){
+                comment.setNickName(userDTO.getNickName());
+                comment.setUserIcon(userDTO.getIcon());
+            }
+        }
+        return comment;
+    }
+    /**
+     * 保存点赞用户列表到Redis
+     *
+     * @param key
+      * @param commentList
+     */
+    private void saveCommentListToRedis(String key,List<Comment> commentList) {
+        log.info("保存点赞用户列表到Redis{}",commentList);
+        Set<ZSetOperations.TypedTuple<String>> followIdListSet = commentList.stream()
+                .map(t -> {
+                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getId().toString(), (double) t.getCreateTime().getTime());
+                    return tuple;
+                })
+                .collect(Collectors.toSet());
+        redisService.setCacheZSet(key, followIdListSet);
     }
 }

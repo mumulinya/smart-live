@@ -125,11 +125,14 @@ public class CommentController extends BaseController
 
         return Result.ok(commentService.deleteComment(comment));
     }
-    @GetMapping("/of/me")
-    public Result getCommentOfMe(Comment comment,@RequestParam("current") Integer current){
-        return Result.ok(commentService.getCommentOfMe(comment,current));
+    @GetMapping("/of/user")
+    public Result getCommentOfUser(Comment comment,@RequestParam("current") Integer current){
+        return Result.ok(commentService.getCommentOfUser(comment,current));
     }
-
+    @GetMapping("/getComment/{id}")
+    public Result getCommentById(@PathVariable("id")Long id){
+        return Result.ok(commentService.getCommentById(id));
+    }
     @PostMapping("/aiCreateComment")
     public Result aiCreateComment(){
          commentService.aiCreateComment();

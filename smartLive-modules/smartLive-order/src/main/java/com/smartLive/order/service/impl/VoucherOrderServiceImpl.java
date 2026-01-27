@@ -224,9 +224,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return
      */
     @Override
-    public List<VoucherOrderVO> queryMyVoucherOrderList(Long userId,Integer current) {
+    public List<VoucherOrderVO> queryMyVoucherOrderList(VoucherOrder voucherOrder, Integer current) {
         Page<VoucherOrder> result = query()
-                .eq("user_id", userId)
+                .eq("user_id", voucherOrder.getUserId())
+                .eq(voucherOrder.getStatus()!=null, "status", voucherOrder.getStatus())
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<VoucherOrder> list = result.getRecords();

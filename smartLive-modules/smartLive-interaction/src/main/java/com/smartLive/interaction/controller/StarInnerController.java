@@ -1,9 +1,11 @@
 package com.smartLive.interaction.controller;
 
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.service.IStarService;
 import jakarta.annotation.Resource;
+import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,7 +30,7 @@ public class StarInnerController {
         return isStar;
     }
     /**
-     * 获取用户收藏的数量
+     * 获取收藏的数
      * @param
      * @return
      */
@@ -36,5 +38,13 @@ public class StarInnerController {
     Integer getStarCount(Star star){
         Integer followShopCount=starService.getStarCount(star);
         return followShopCount;
+    }
+    /**
+     * 获取用户收藏数量
+     * @return
+     */
+    @GetMapping("/getUserStarCount")
+    Integer getUserStarCount(@SpringQueryMap Star star){
+        return starService.getUserStarCount(star);
     }
 }

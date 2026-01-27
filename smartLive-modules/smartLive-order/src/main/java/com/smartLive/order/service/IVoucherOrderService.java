@@ -73,7 +73,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * 获取当前用户订单列表
      * @return
      */
-    List<VoucherOrderVO> queryMyVoucherOrderList(Long userId,Integer current);
+    List<VoucherOrderVO> queryMyVoucherOrderList(VoucherOrder voucherOrder,Integer current);
 
     /**
      * 支付订单

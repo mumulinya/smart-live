@@ -48,8 +48,8 @@ public class RemoteStarFallbackFactory implements FallbackFactory<RemoteStarServ
              * @return
              */
             @Override
-            public Integer getStarShopCount(StarDTO starDTO) {
-                log.error("获取用户关注店铺数量失败:{}",cause.getMessage());
+            public Integer getUserStarCount(StarDTO starDTO) {
+                log.error("获取用户收藏数量失败:{}",cause.getMessage());
                 return 0;
             }
         };

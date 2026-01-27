@@ -105,10 +105,11 @@ public class VoucherOrderController extends BaseController
      * 获取当前用户订单列表
      */
     @GetMapping("/of/me")
-    public Result queryMyVoucherOrderList(@RequestParam(value = "current", defaultValue = "1") Integer current) {
+    public Result queryMyVoucherOrderList(VoucherOrder voucherOrder,@RequestParam(value = "current", defaultValue = "1") Integer current) {
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
-        List<VoucherOrderVO> voucherOrderList = voucherOrderService.queryMyVoucherOrderList(userId, current);
+        voucherOrder.setUserId(userId);
+        List<VoucherOrderVO> voucherOrderList = voucherOrderService.queryMyVoucherOrderList(voucherOrder, current);
         return Result.ok(voucherOrderList);
     }
 

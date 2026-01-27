@@ -11,6 +11,7 @@ import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.mapper.LikeMapper;
@@ -152,7 +153,19 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         }
         return likeCount;
     }
-
+    /**
+     * 获取用户点赞数
+     *
+     * @param
+     * @return 点赞数
+     */
+    @Override
+    public Integer getUserLikeCount(Like like) {
+        Integer count = query().eq("source_type", like.getSourceType())
+                .eq("user_id", like.getUserId())
+                .count().intValue();
+        return count;
+    }
     /**
      * 查询点赞列表
      *

@@ -203,17 +203,4 @@ public class UserController extends BaseController
     public Result getStats(@PathVariable("userId") Long userId){
         return Result.ok(userService.getStats(userId));
     }
-
-
-//    /app/user/info/stats/{userId} - 获取用户统计信息
-//
-///app/user/follow/fans - 获取粉丝列表
-//
-///app/user/follow/follows - 获取关注列表
-//
-///app/user/follow/{userId} - 关注用户
-//
-///app/user/follow/{userId} - 取消关注
-//
-///app/review/of/me - 获取我的评价
 }

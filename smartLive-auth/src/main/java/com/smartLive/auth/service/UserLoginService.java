@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.smartLive.auth.until.RegexUtils;
 import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.redis.service.RedisService;
@@ -84,6 +85,8 @@ public class UserLoginService {
         String token = request.getHeader("authorization");
         //TODO 删除redis中的token
         redisService.deleteObject(RedisConstants.LOGIN_USER_KEY+token);
+        //TODO 删除用户信息
+        UserContextHolder.removeUser();
         return Result.ok();
     }
 
@@ -92,6 +95,10 @@ public class UserLoginService {
         String password = loginForm.getPassword();
         //根据电话号码查询用户信息
         UserDTO user = remoteAppUserService.getUserInfoByPhone(phone);
+        if (user == null) {
+            //用户不存在
+            throw new BusinessException("用户不存在");
+        }
         boolean b = SecurityUtils.matchesPassword(password, user.getPassword());
         if(!b){
             throw new BusinessException("密码错误");

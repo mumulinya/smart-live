@@ -2,6 +2,8 @@ package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.VO.CommentVO;
+
 import java.util.List;
 import java.util.Map;
 
@@ -86,12 +88,12 @@ public interface ICommentService extends IService<Comment> {
     Boolean deleteComment(Comment comment);
 
     /**
-     * 获取我的评论
+     * 获取用户的评论
      *
      * @param current
      * @return
      */
-    List<Comment> getCommentOfMe(Comment comment,Integer current);
+    List<Comment> getCommentOfUser(Comment comment,Integer current);
 
     /**
      * 获取评论列表
@@ -160,4 +162,11 @@ public interface ICommentService extends IService<Comment> {
      * @return
      */
     Integer getCommentLikeCount(Long sourceId);
+    /**
+     * 根据id获取评论详情
+     *
+     * @param id
+     * @return
+     */
+    Comment getCommentById(Long id);
 }

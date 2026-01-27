@@ -40,6 +40,18 @@ public class RemoteLikeFallbackFactory implements FallbackFactory<RemoteLikeServ
                 log.error("查询共同点赞数失败:{}", cause.getMessage());
                 return 0;
             }
+
+            /**
+             * 获取用户点赞数
+             *
+             * @param likeDTO
+             * @return
+             */
+            @Override
+            public Integer getUserLikeCount(LikeDTO likeDTO) {
+                log.error("查询用户点赞数失败:{}", cause.getMessage());
+                return 0;
+            }
         };
     }
 }

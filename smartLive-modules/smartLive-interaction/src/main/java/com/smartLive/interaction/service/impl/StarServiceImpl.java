@@ -274,6 +274,18 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         }
         return starCount;
     }
+
+    /**
+     * 获取用户收藏数量
+     *
+     * @param star@return
+     */
+    @Override
+    public Integer getUserStarCount(Star star) {
+        Integer count = query().eq("user_id", star.getUserId()).eq("source_type", star.getSourceType()).count().intValue();
+        return count;
+    }
+
     /**
      * 保存id列表到redis
      *
