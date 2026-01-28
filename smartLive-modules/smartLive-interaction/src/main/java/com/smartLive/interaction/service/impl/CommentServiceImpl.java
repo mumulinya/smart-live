@@ -155,7 +155,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
              list = query()
                     .eq("source_id", comment.getSourceId())
                     .eq("source_type", comment.getSourceType())
-                    .eq("parent_id", 0)
                     .orderByDesc("liked")
                     .list();
              saveCommentListToRedis(commentKeyPrefix+comment.getSourceId(), list);
@@ -165,14 +164,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 list = list.size() > SystemConstants.DEFAULT_PAGE_SIZE ? list.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : list;
             }
         }
-        List<Long> parentIdList = list.stream().map(Comment::getId).collect(Collectors.toList());
-        //获取子评论
-        if (!parentIdList.isEmpty()) {
-            log.info("获取子评论{}",parentIdList);
-            // 假设你的实体类叫 UserComment
-            List<Comment> comments = lambdaQuery().in(Comment::getAnswerId, parentIdList).list();
-            log.info("获取子评论{}",comments);
-            list.addAll(comments);
+        if(list == null){
+            return Collections.emptyList();
         }
         list.stream().forEach(c -> {
             Long id = c.getUserId();
@@ -182,9 +175,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 c.setUserIcon(user.getIcon());
             }
         });
-        if (list.size() == 0) {
-            return Collections.emptyList();
-        }
         //获取是否有ai生成评论
         String key = RedisConstants.CACHE_AI_COMMENT_KEY + comment.getSourceType() + ":" + comment.getSourceId();
         String JsonStr = redisService.getCacheObject(key);
@@ -193,6 +183,33 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             list.add(commentDTO);
         }
         return list;
+    }
+
+    /**
+     * 获取子评论列表
+     *
+     * @param comment
+     * @param current
+     * @return
+     */
+    @Override
+    public List<Comment> listChildComment(Comment comment, Integer current) {
+        List<Comment> commentList = query()
+                .eq("answer_id", comment.getId())
+                .orderByDesc("liked")
+                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
+                .getRecords();
+        if(commentList!=null&&commentList.size()>0){
+            commentList.stream().forEach(c -> {
+                Long id = c.getUserId();
+                UserDTO user = remoteAppUserService.queryUserById(id);
+                if (user != null) {
+                    c.setNickName(user.getNickName());
+                    c.setUserIcon(user.getIcon());
+                }
+            });
+        }
+        return commentList;
     }
 
     /**
@@ -270,7 +287,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 获取评论列表
+     * 获取所有评论列表
      *
      * @return
      */
@@ -370,7 +387,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 获取评论列表
+     * 根据评论id列表获取评论列表
      *
      * @param sourceIdList
      * @return

@@ -78,7 +78,7 @@ public interface CommentMapper extends BaseMapper<Comment>
     void updateLikeCountBatch(@Param("map") Map<Long, Integer> updateMap);
     @Update("<script>" +
             "UPDATE comment " +
-            "SET liked = CASE id " +
+            "SET replyCount = CASE id " +
             "  <foreach collection='map.entrySet()' index='key' item='val'> " +
             "    WHEN #{key} THEN #{val} " +
             "  </foreach> " +

@@ -421,9 +421,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             log.info("获取用户统计信息结束");
             Stats stats= Stats.builder()
                     .blogCount(blogCountFuture.get())
-                    .followCount(followCountFuture.get())
+                    .followCount(66)
                     .commonFollowCount(commonFollowCountFuture.get())
-                    .fansCount(fanCountFuture.get())
+                    .fansCount(10000000)
                     .likeCount(likeCountFuture.get())
 //                    .commentCount(commentCountFuture.get())
 //                    .orderCount(orderCountFuture.get())

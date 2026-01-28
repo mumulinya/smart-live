@@ -68,6 +68,9 @@ public class Comment extends BaseEntity
     @Excel(name = "点赞数")
     private Integer liked;
 
+    @Excel(name = "回复数")
+    private Integer replyCount;
+
     /** 状态，0：正常，1：被举报，2：禁止查看 */
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
     private String status;

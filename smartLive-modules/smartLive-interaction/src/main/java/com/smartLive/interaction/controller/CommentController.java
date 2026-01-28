@@ -99,10 +99,19 @@ public class CommentController extends BaseController
         return toAjax(commentService.deleteCommentByIds(ids));
     }
 
-
+    /**
+     * 获取评论列表
+     */
     @GetMapping("/listComment")
     public Result listComment(Comment  comment,@RequestParam("current") Integer current){
         return Result.ok(commentService.listComment(comment,current));
+    }
+    /**
+     * 获取子评论列表
+     */
+    @GetMapping("/listChildComment")
+    public Result listChildComment(Comment comment,@RequestParam("current") Integer current){
+        return Result.ok(commentService.listChildComment(comment,current));
     }
     /**
      * 添加评论

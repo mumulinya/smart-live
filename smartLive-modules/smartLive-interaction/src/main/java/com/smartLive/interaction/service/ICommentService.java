@@ -169,4 +169,12 @@ public interface ICommentService extends IService<Comment> {
      * @return
      */
     Comment getCommentById(Long id);
+    /**
+     * 获取子评论列表
+     *
+     * @param comment
+     * @param current
+     * @return
+     */
+    List<Comment> listChildComment(Comment comment, Integer current);
 }
