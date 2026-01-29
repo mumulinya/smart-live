@@ -21,7 +21,7 @@ public enum ResourceTypeEnum {
 
     // 2. 店铺
     SHOP_RESOURCE(GlobalBizTypeEnum.SHOP.getCode(), "店铺资源", GlobalBizTypeEnum.SHOP.getBizDomain(),
-            RedisConstants.SHOP_COMMENT_KEY, null),
+            null, null),
 
     // 3. 代金券
     VOUCHER_RESOURCE(GlobalBizTypeEnum.VOUCHER.getCode(), "代金券资源", GlobalBizTypeEnum.VOUCHER.getBizDomain(),
@@ -29,8 +29,9 @@ public enum ResourceTypeEnum {
 
     // 4. 评论 (支持楼中楼)
     COMMENT_RESOURCE(GlobalBizTypeEnum.COMMENT.getCode(), "评论资源", GlobalBizTypeEnum.COMMENT.getBizDomain(),
-            RedisConstants.COMMENT_COMMENT_KEY, RedisConstants.COMMENT_STAR_KEY);
-
+            RedisConstants.COMMENT_COMMENT_KEY,null),
+    REVIEW_RESOURCE(GlobalBizTypeEnum.REVIEW.getCode(), "评价资源", GlobalBizTypeEnum.REVIEW.getBizDomain(),
+            RedisConstants.REVIEW_COMMENT_KEY, RedisConstants.REVIEW_STAR_KEY);
 
     /**
      * 业务类型编码 (数据库存储值)

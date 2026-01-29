@@ -2,61 +2,76 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.smartLive.interaction.mapper.CommentMapper">
+<mapper namespace="com.smartLive.interaction.mapper.ReviewMapper">
 
-    <resultMap type="com.smartLive.interaction.domain.Comment" id="CommentResult">
+    <resultMap type="com.smartLive.interaction.domain.Review" id="ReviewResult">
         <result property="id"    column="id"    />
         <result property="userId"    column="user_id"    />
+        <result property="shopId"    column="shop_id"    />
+        <result property="orderId"    column="order_id"    />
         <result property="sourceType"    column="source_type"    />
         <result property="sourceId"    column="source_id"    />
-        <result property="parentId"    column="parent_id"    />
-        <result property="answerId"    column="answer_id"    />
         <result property="images"    column="images"    />
         <result property="content"    column="content"    />
         <result property="liked"    column="liked"    />
         <result property="replyCount"    column="reply_count"    />
         <result property="status"    column="status"    />
+        <result property="score"     column="score"    />
+        <result property="serviceScore"    column="service_score"    />
+        <result property="tasteScore"    column="taste_score"    />
+        <result property="envScore"    column="env_score"    />
+        <result property="isAnonymous"    column="is_anonymous"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateTime"    column="update_time"    />
     </resultMap>
 
-    <sql id="selectCommentVo">
-        select id, user_id, source_type, source_id, parent_id, answer_id, images, content, liked, reply_count,status, create_time, update_time from comment
+    <sql id="selectReviewVo">
+        select id, user_id, source_type, source_id, shop_id, order_id,score, service_score, taste_score, env_score, is_anonymous, images, content, liked, reply_count,status, rating, create_time, update_time from review
     </sql>
 
-    <select id="selectCommentList" parameterType="com.smartLive.interaction.domain.Comment" resultMap="CommentResult">
-        <include refid="selectCommentVo"/>
+    <select id="selectReviewList" parameterType="com.smartLive.interaction.domain.Review" resultMap="ReviewResult">
+        <include refid="selectReviewVo"/>
         <where>
             <if test="userId != null "> and user_id = #{userId}</if>
             <if test="sourceType != null "> and source_type = #{sourceType}</if>
             <if test="sourceId != null "> and source_id = #{sourceId}</if>
-            <if test="parentId != null "> and parent_id = #{parentId}</if>
-            <if test="answerId != null "> and answer_id = #{answerId}</if>
+            <if test="shopId != null "> and shop_id = #{shopId}</if>
+            <if test="orderId != null "> and order_id = #{orderId}</if>
             <if test="images != null  and images != ''"> and images = #{images}</if>
             <if test="content != null  and content != ''"> and content = #{content}</if>
             <if test="liked != null "> and liked = #{liked}</if>
              <if test="replyCount != null "> and reply_count = #{replyCount}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="score != null "> and score = #{score}</if>
+            <if test="serviceScore != null "> and service_score = #{serviceScore}</if>
+            <if test="tasteScore != null "> and taste_score = #{tasteScore}</if>
+            <if test="envScore != null "> and env_score = #{envScore}</if>
+            <if test="isAnonymous != null "> and is_anonymous = #{isAnonymous}</if>
         </where>
     </select>
 
-    <select id="selectCommentById" parameterType="Long" resultMap="CommentResult">
-        <include refid="selectCommentVo"/>
+    <select id="selectReviewById" parameterType="Long" resultMap="ReviewResult">
+        <include refid="selectReviewVo"/>
         where id = #{id}
     </select>
 
-    <insert id="insertComment" parameterType="com.smartLive.interaction.domain.Comment" useGeneratedKeys="true" keyProperty="id">
-        insert into comment
+    <insert id="insertReview" parameterType="com.smartLive.interaction.domain.Review" useGeneratedKeys="true" keyProperty="id">
+        insert into review
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userId != null">user_id,</if>
             <if test="sourceType != null">source_type,</if>
             <if test="sourceId != null">source_id,</if>
-            <if test="parentId != null">parent_id,</if>
-            <if test="answerId != null">answer_id,</if>
+            <if test="shopId != null">shop_id,</if>
+            <if test="orderId != null">order_id,</if>
             <if test="images != null">images,</if>
             <if test="content != null and content != ''">content,</if>
             <if test="liked != null">liked,</if>
             <if test="status != null">status,</if>
+            <if test="score != null">score,</if>
+            <if test="serviceScore != null">service_score,</if>
+            <if test="tasteScore != null">taste_score,</if>
+            <if test="envScore != null">env_score,</if>
+            <if test="isAnonymous != null">is_anonymous,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
         </trim>
@@ -64,41 +79,51 @@
             <if test="userId != null">#{userId},</if>
             <if test="sourceType != null">#{sourceType},</if>
             <if test="sourceId != null">#{sourceId},</if>
-            <if test="parentId != null">#{parentId},</if>
-            <if test="answerId != null">#{answerId},</if>
+            <if test="shopId != null">#{shopId},</if>
+            <if test="orderId != null">#{orderId},</if>
             <if test="images != null">#{images},</if>
             <if test="content != null and content != ''">#{content},</if>
             <if test="liked != null">#{liked},</if>
             <if test="status != null">#{status},</if>
+            <if test="score != null">#{score},</if>
+            <if test="serviceScore != null">#{serviceScore},</if>
+            <if test="tasteScore != null">#{tasteScore},</if>
+            <if test="envScore != null">#{envScore},</if>
+            <if test="isAnonymous != null">#{isAnonymous},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
         </trim>
     </insert>
 
-    <update id="updateComment" parameterType="com.smartLive.interaction.domain.Comment">
-        update comment
+    <update id="updateReview" parameterType="com.smartLive.interaction.domain.Review">
+        update review
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null">user_id = #{userId},</if>
             <if test="sourceType != null">source_type = #{sourceType},</if>
             <if test="sourceId != null">source_id = #{sourceId},</if>
-            <if test="parentId != null">parent_id = #{parentId},</if>
-            <if test="answerId != null">answer_id = #{answerId},</if>
+            <if test="shopId != null">shop_id = #{shopId},</if>
+            <if test="orderId != null">order_id = #{orderId},</if>
             <if test="images != null">images = #{images},</if>
             <if test="content != null and content != ''">content = #{content},</if>
             <if test="liked != null">liked = #{liked},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="score != null">score = #{score},</if>
+            <if test="serviceScore != null">service_score = #{serviceScore},</if>
+            <if test="tasteScore != null">taste_score = #{tasteScore},</if>
+            <if test="envScore != null">env_score = #{envScore},</if>
+            <if test="isAnonymous != null">is_anonymous = #{isAnonymous},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
         where id = #{id}
     </update>
 
-    <delete id="deleteCommentById" parameterType="Long">
-        delete from comment where id = #{id}
+    <delete id="deleteReviewById" parameterType="Long">
+        delete from review where id = #{id}
     </delete>
 
-    <delete id="deleteCommentByIds" parameterType="String">
-        delete from comment where id in
+    <delete id="deleteReviewByIds" parameterType="String">
+        delete from review where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

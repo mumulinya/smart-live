@@ -174,7 +174,6 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
     @Override
     public List<?> queryLikeRecord(Like like, Integer current) {
         ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(like.getSourceType());
-        LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         if (resourceTypeEnum == null) {
             log.error("点赞类型错误");
             return null;
@@ -251,6 +250,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         // 1. 获取对应的枚举策略
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         if (likeTypeEnum == null) {
+            log.info("like{}",like);
             log.error("点赞类型错误");
             return false;
         }

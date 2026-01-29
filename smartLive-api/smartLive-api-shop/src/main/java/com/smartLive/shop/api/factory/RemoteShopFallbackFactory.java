@@ -95,7 +95,7 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
              * @param updateMap
              */
             @Override
-            public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
+            public Boolean updateReviewCountBatch(Map<Long, Integer> updateMap) {
                 log.error("批量更新商家评论数失败:{}", cause.getMessage());
                 return false;
             }

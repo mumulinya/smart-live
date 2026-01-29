@@ -65,7 +65,7 @@ public interface ShopMapper extends BaseMapper<Shop>
     public int deleteShopByIds(String[] ids);
     @Update("<script>" +
             "UPDATE blog " +
-            "SET comments" +
+            "SET reviews" +
             " = CASE id " +
             "  <foreach collection='map.entrySet()' index='key' item='val'> " +
             "    WHEN #{key} THEN #{val} " +
@@ -76,7 +76,7 @@ public interface ShopMapper extends BaseMapper<Shop>
             "    #{key} " +
             "  </foreach>" +
             "</script>")
-    void updateCommentCountBatch(@Param("map") Map<Long, Integer> updateMap);
+    void updateReviewCountBatch(@Param("map") Map<Long, Integer> updateMap);
     @Update("<script>" +
             "UPDATE shop " +
             "SET stared" +

@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 评论类型总枚举
+ * 评价类型总枚举
  * 职责：
  * 1. 评论类型编码 (数据库存储值)
  * 2. 提供策略模式所需的 Bean 名称 (strategyName)
@@ -13,24 +13,14 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum CommentTypeEnum {
-
-    // 1. 博客评论配置
-    BLOG_COMMENT(GlobalBizTypeEnum.BLOG.getCode(), "博客的评论",GlobalBizTypeEnum.BLOG.getBizDomain(),
-            RedisConstants.BLOG_COMMENT_KEY,
-            RedisConstants.BLOG_COMMENT_COUNT_KEY,
-            RedisConstants.BLOG_COMMENT_DIRTY_KEY),
-
-    // 2. 评论评论配置
-    COMMENT_COMMENT(GlobalBizTypeEnum.COMMENT.getCode(), "评论的评论",GlobalBizTypeEnum.COMMENT.getBizDomain(),
-            RedisConstants.COMMENT_COMMENT_KEY,
-            RedisConstants.COMMENT_COMMENT_COUNT_KEY,
-            RedisConstants.COMMENT_COMMENT_DIRTY_KEY),
-    // 2. 评价评论配置
-    REVIEW_COMMENT(GlobalBizTypeEnum.REVIEW.getCode(), "评价的评论",GlobalBizTypeEnum.REVIEW.getBizDomain(),
-            RedisConstants.REVIEW_COMMENT_KEY,
-            RedisConstants.REVIEW_COMMENT_COUNT_KEY,
-            RedisConstants.REVIEW_COMMENT_DIRTY_KEY );
+public enum ReviewTypeEnum {
+    // 店铺评价配置
+        SHOP_REVIEW(GlobalBizTypeEnum.SHOP.getCode(), "店铺的评价",GlobalBizTypeEnum.SHOP.getBizDomain(),
+        RedisConstants.SHOP_REVIEW_KEY,
+        RedisConstants.SHOP_REVIEW_COUNT_KEY,
+        RedisConstants.SHOP_REVIEW_DIRTY_KEY),
+    // 代金券评价配置
+    VOUCHER_REVIEW(GlobalBizTypeEnum.VOUCHER.getCode(), "代金券的评价",GlobalBizTypeEnum.VOUCHER.getBizDomain(), RedisConstants.VOUCHER_REVIEW_KEY, RedisConstants.VOUCHER_REVIEW_COUNT_KEY, RedisConstants.VOUCHER_REVIEW_DIRTY_KEY);
 
     /**
      * 业务类型编码 (与 ResourceTypeEnum 保持一致)
@@ -51,27 +41,27 @@ public enum CommentTypeEnum {
      * 1. 用户点赞关系 Key (Set结构: 存userId)
      * e.g. likes:blog:101 -> {user1, user2}
      */
-    private final String commentKeyPrefix;
+    private final String reviewKeyPrefix;
 
     /**
      * 2. 点赞计数 Key (String结构: 存数字)
      * e.g. likes:count:blog:101 -> 99
      */
-    private final String commentCountKeyPrefix;
+    private final String reviewCountKeyPrefix;
 
     /**
      * 3. 脏数据 Key (Set结构: 存bizId，用于定时任务同步)
      * e.g. likes:dirty:blog -> {101, 102}
      */
-    private final String commentDirtyKeyPrefix;
+    private final String reviewDirtyKeyPrefix;
 
     /**
      * 根据 code 获取枚举
      * 如果传入不支持点赞的 code (如店铺 2)，这里直接返回 null
      */
-    public static CommentTypeEnum getByCode(Integer code) {
+    public static ReviewTypeEnum getByCode(Integer code) {
         if (code == null) return null;
-        for (CommentTypeEnum e : values()) {
+        for (ReviewTypeEnum e : values()) {
             if (e.code.equals(code)) return e;
         }
         return null;

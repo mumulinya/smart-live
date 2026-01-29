@@ -83,9 +83,9 @@ public class ShopInnerController extends BaseController {
     /**
      * 批量更新商家评论数
      */
-    @PostMapping("/updateCommentCountBatch")
-   public Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap){
-        return shopService.updateCommentCountBatch(updateMap);
+    @PostMapping("/updateReviewCountBatch")
+   public Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap){
+        return shopService.updateReviewCountBatch(updateMap);
     }
     /**
      * 批量更新商家收藏数

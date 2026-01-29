@@ -11,6 +11,7 @@ import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.enums.CommentTypeEnum;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.AIGenerateRequest;
@@ -19,6 +20,7 @@ import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.VO.CommentVO;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
+import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
@@ -27,6 +29,7 @@ import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -45,6 +48,7 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService {
     @Autowired
     private CommentMapper commentMapper;
+    private ILikeService iLikeService;
 
     @Autowired
     private RemoteAppUserService remoteAppUserService;
@@ -60,6 +64,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
     private RedisService redisService;
+    @Autowired
+    public CommentServiceImpl(@Lazy ILikeService iLikeService) {
+        this.iLikeService = iLikeService;
+    }
     /**
      * 查询评论
      *
@@ -157,9 +165,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                     .eq("source_type", comment.getSourceType())
                     .orderByDesc("liked")
                     .list();
-             saveCommentListToRedis(commentKeyPrefix+comment.getSourceId(), list);
             //截取
             if(!list.isEmpty()){
+                //保存到redis里面
+                saveCommentListToRedis(commentKeyPrefix+comment.getSourceId(), list);
                 //截取当前页
                 list = list.size() > SystemConstants.DEFAULT_PAGE_SIZE ? list.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : list;
             }
@@ -169,6 +178,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         list.stream().forEach(c -> {
             Long id = c.getUserId();
+            //判断是否点赞
+            Like like = new Like();
+            like.setSourceType(GlobalBizTypeEnum.COMMENT.getCode());
+            like.setSourceId(c.getId());
+            c.setIsLike(iLikeService.isLike(like));
             UserDTO user = remoteAppUserService.queryUserById(id);
             if (user != null) {
                 c.setNickName(user.getNickName());
@@ -201,6 +215,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .getRecords();
         if(commentList!=null&&commentList.size()>0){
             commentList.stream().forEach(c -> {
+                Like like = new Like();
+                like.setSourceType(GlobalBizTypeEnum.COMMENT.getCode());
+                like.setSourceId(c.getId());
+                c.setIsLike(iLikeService.isLike(like));
                 Long id = c.getUserId();
                 UserDTO user = remoteAppUserService.queryUserById(id);
                 if (user != null) {

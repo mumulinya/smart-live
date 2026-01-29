@@ -10,22 +10,20 @@ import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.util.Date;
 
 /**
- * 评论对象 tb_comments
+ * 评价对象 tb_comments
  *
  * @author mumulin
  * @date 2025-10-02
  */
-@TableName("comment")
+@TableName("review")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Comment extends BaseEntity
+public class Review extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
@@ -36,6 +34,12 @@ public class Comment extends BaseEntity
     /** 用户id */
     @Excel(name = "用户id")
     private Long userId;
+    /** 店铺id */
+    @Excel(name = "店铺id")
+    private Long shopId;
+    /** 订单id */
+    @Excel(name = "订单id")
+    private Long orderId;
 
     /** 来源类型  1（店铺）, 2（文章）, 3（团购）等。 */
     @Excel(name = "来源类型  1", readConverterExp = "店=铺")
@@ -48,32 +52,43 @@ public class Comment extends BaseEntity
     @Excel(name = "来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。")
     private Long sourceId;
 
-    /** 关联的1级评论id，如果是一级评论，则值为0 */
-    @Excel(name = "关联的1级评论id，如果是一级评论，则值为0")
-    private Long parentId;
-
-    /** 回复的评论id */
-    @Excel(name = "回复的评论id")
-    private Long answerId;
-
-    /** 评论的图片 */
+    /** 评价的图片 */
     @Excel(name = "评论的图片")
     private String images;
 
-    /** 回复的内容 */
-    @Excel(name = "回复的内容")
+    /** 内容 */
+    @Excel(name = "内容")
     private String content;
 
     /** 点赞数 */
     @Excel(name = "点赞数")
     private Integer liked;
-
+    /** 回复数 */
     @Excel(name = "回复数")
     private Integer replyCount;
+    /** 收藏数 */
+    @Excel(name = "收藏数")
+    private Integer stared;
 
     /** 状态，0：正常，1：被举报，2：禁止查看 */
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
     private String status;
+
+    /** 评分 */
+    @Excel(name = "评分")
+    private Integer score;
+    /** 服务评分 */
+    @Excel(name = "服务评分")
+    private Short serviceScore;
+    /** 口味评分 */
+    @Excel(name = "口味评分")
+    private Short tasteScore;
+    /** 环境评分 */
+    @Excel(name = "环境评分")
+    private Short envScore;
+    /** 是否匿名 */
+    @Excel(name = "是否匿名")
+    private Boolean isAnonymous;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
@@ -83,11 +98,16 @@ public class Comment extends BaseEntity
     /** 用户头像 */
     @TableField(exist = false)
     private String userIcon;
-    /** 是否是AI生成的评论 */
-    @TableField(exist = false)
-    private Boolean isAIGenerated;
     @TableField(exist = false)
     private String shopImages;
+    /**
+     * 是否点赞过了
+     */
     @TableField(exist = false)
     private Boolean isLike;
+    /**
+     * 是否收藏过了
+     */
+    @TableField(exist = false)
+    private Boolean isStared;
 }

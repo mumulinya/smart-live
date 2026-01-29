@@ -152,12 +152,12 @@ public interface IShopService extends IService<Shop> {
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
     /**
-     * 批量更新商铺评论数
+     * 批量更新商铺评价数
      *
-     * @param updateMap 商铺id和评论数
+     * @param updateMap 商铺id和评价数
      * @return 批量更新结果
      */
-    Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
+    Boolean updateReviewCountBatch(Map<Long, Integer> updateMap);
 }
 
 

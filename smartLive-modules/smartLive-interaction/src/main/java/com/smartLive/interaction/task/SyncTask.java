@@ -3,10 +3,12 @@ package com.smartLive.interaction.task;
 import cn.hutool.core.collection.CollUtil;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
+import com.smartLive.common.core.enums.ReviewTypeEnum;
 import com.smartLive.common.core.enums.StarTypeEnum;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.strategy.comment.CommentStrategy;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
+import com.smartLive.interaction.strategy.review.ReviewStrategy;
 import com.smartLive.interaction.strategy.star.StarStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,10 +38,12 @@ public class SyncTask {
     @Autowired
     private Map<Integer, StarStrategy> starStrategyMap;
     @Autowired
+    private Map<Integer, ReviewStrategy> reviewStrategyMap;
+    @Autowired
     private ExecutorService executorService;
 
     // 每 30 秒执行一次
-//    @Scheduled(cron = "0/30 * * * * ?")
+    @Scheduled(cron = "0/30 * * * * ?")
     public void executeTask() {
         log.info("开始执行数据数量同步任务...");
             //执行点赞数同步
@@ -106,6 +110,27 @@ public class SyncTask {
                 }
             });
             log.info("同步收藏数完成");
+        });
+           //执行评价数同步
+          executorService.execute(() -> {
+            log.info("开始同步评价数...");
+            Arrays.stream(ReviewTypeEnum.values()).forEach(reviewType -> {
+                // 1. 只有配置了 Redis Key 的才处理
+                if (reviewType.getReviewCountKeyPrefix() == null || reviewType.getReviewDirtyKeyPrefix() == null) {
+                    return;
+                }
+                String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix();
+                String DIRTY_KEY = reviewType.getReviewDirtyKeyPrefix();
+                String TEMP_KEY = DIRTY_KEY + ":TEMP";
+                //调用策略
+                ReviewStrategy strategy = reviewStrategyMap.get(reviewType.getCode());
+                if (strategy != null) {
+                    sync(reviewType.getDesc(),reviewCountKeyPrefix, DIRTY_KEY, TEMP_KEY, map -> strategy.transReviewCountFromRedis2DB(map));
+                } else {
+                    log.warn("类型[{}]没有对应的同步策略，跳过", reviewType.getDesc());
+                }
+            });
+            log.info("同步评价数完成");
         });
     }
     private void sync(String desc,String countKeyPrefix, String DIRTY_KEY, String TEMP_KEY, Consumer<Map<Long, Integer>> dbAction){

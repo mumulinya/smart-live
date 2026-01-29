@@ -22,7 +22,13 @@ public enum LikeTypeEnum {
     COMMENT_LIKE(GlobalBizTypeEnum.COMMENT.getCode(), "评论点赞",GlobalBizTypeEnum.COMMENT.getBizDomain(),
             RedisConstants.COMMENT_LIKED_KEY, 
             RedisConstants.COMMENT_LIKED_COUNT_KEY, 
-            RedisConstants.COMMENT_LIKED_DIRTY_KEY);
+            RedisConstants.COMMENT_LIKED_DIRTY_KEY),
+
+    // 2. 评价点赞配置
+    REVIEW_LIKE(GlobalBizTypeEnum.REVIEW.getCode(), "评价点赞",GlobalBizTypeEnum.REVIEW.getBizDomain(),
+            RedisConstants.REVIEW_LIKED_KEY,
+            RedisConstants.REVIEW_LIKED_COUNT_KEY,
+            RedisConstants.REVIEW_LIKED_DIRTY_KEY);
 
     /**
      * 业务类型编码 (与 ResourceTypeEnum 保持一致)

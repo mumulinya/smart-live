@@ -773,7 +773,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 批量更新结果
      */
     @Override
-    public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
+    public Boolean updateReviewCountBatch(Map<Long, Integer> updateMap) {
         if (CollUtil.isEmpty(updateMap)) {
             return false;
         }
@@ -788,11 +788,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 for (Long key : batchKeys) {
                     batchMap.put(key, updateMap.get(key));
                 }
-                baseMapper.updateCommentCountBatch(batchMap);
+                baseMapper.updateReviewCountBatch(batchMap);
             }
         } else {
             // 数量少直接执行
-            baseMapper.updateCommentCountBatch(updateMap);
+            baseMapper.updateReviewCountBatch(updateMap);
         }
         flushCache();
         return true;

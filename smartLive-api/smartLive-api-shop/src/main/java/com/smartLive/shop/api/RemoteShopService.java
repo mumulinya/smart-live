@@ -58,10 +58,10 @@ public interface RemoteShopService {
     List<ShopDTO> getRecentShops(@RequestParam("limit") Integer limit);
 
     /**
-     * 批量更新商家评论数
+     * 批量更新商家评价数
      */
-    @PostMapping("/inner/shop/updateCommentCountBatch")
-    Boolean updateCommentCountBatch(@RequestBody Map<Long, Integer> updateMap);
+    @PostMapping("/inner/shop/updateReviewCountBatch")
+    Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap);
 
     /**
      * 批量更新商家收藏数

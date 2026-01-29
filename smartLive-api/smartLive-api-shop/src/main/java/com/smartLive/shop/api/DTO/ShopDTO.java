@@ -56,7 +56,7 @@ public class ShopDTO extends BaseEntity implements Serializable
     private Integer sold;
 
     /** 评论数量 */
-    private Integer comments;
+    private Integer reviews;
 
     /** 评分，1~5分，乘10保存，避免小数 */
     private Integer score;
