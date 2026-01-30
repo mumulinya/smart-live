@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
@@ -700,5 +703,81 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             });
         }
         return "发布成功";
+    }
+
+    /**
+     * 批量更新评价数
+     *
+     * @param updateMap 批量更新评价数
+     * @return 批量更新评价数结果
+     */
+    @Override
+    public Boolean updateReviewCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
+        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
+        if (updateMap.size() > 500) {
+            // 分批逻辑 (每500条提交一次)
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateReviewCountBatch(batchMap);
+            }
+        } else {
+            // 数量少直接执行
+            baseMapper.updateReviewCountBatch(updateMap);
+        }
+        return true;
+    }
+    /**
+     * 批量更新商铺收藏数
+     *
+     * @param updateMap 商铺id和收藏数
+     * @return 更新结果
+     */
+    @Override
+    public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
+        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
+        if (updateMap.size() > 500) {
+            // 分批逻辑 (每500条提交一次)
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateStarCountBatch(batchMap);
+            }
+        } else {
+            // 数量少直接执行
+            baseMapper.updateStarCountBatch(updateMap);
+        }
+        return true;
+    }
+
+    /**
+     * 获取代金券收藏数
+     *
+     * @param sourceId 优惠券id
+     * @return 收藏数
+     */
+    @Override
+    public Integer getVoucherStarCount(Long sourceId) {
+        Voucher voucher = lambdaQuery()
+                .select(Voucher::getStars)
+                .eq(Voucher::getId, sourceId)
+                .one();
+        return voucher != null ? voucher.getStars() : 0;
     }
 }

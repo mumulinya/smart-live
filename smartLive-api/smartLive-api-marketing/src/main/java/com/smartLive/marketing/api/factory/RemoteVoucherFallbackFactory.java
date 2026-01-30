@@ -100,8 +100,19 @@ public class RemoteVoucherFallbackFactory implements FallbackFactory<RemoteVouch
              */
             @Override
             public Integer getVoucherStarCount(Long sourceId) {
-                log.error("获取优惠券点赞数失败:{}", throwable.getMessage());
+                log.error("获取优惠券收藏数失败:{}", throwable.getMessage());
                 return 0;
+            }
+
+            /**
+             * 批量更新评价数
+             *
+             * @param updateMap
+             */
+            @Override
+            public Boolean updateReviewCountBatch(Map<Long, Integer> updateMap) {
+                log.error("批量更新评价数失败:{}", throwable.getMessage());
+                return false;
             }
         };
     }

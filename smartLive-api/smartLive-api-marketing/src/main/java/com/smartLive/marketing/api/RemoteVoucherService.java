@@ -51,13 +51,18 @@ public interface RemoteVoucherService {
     List<VoucherDTO> getVoucherListByIds(@RequestParam("sourceIdList") List<Long> sourceIdList);
 
     /**
-     * 批量更新点赞数
+     * 批量收藏点赞数
      */
     @PostMapping("/inner/voucher/updateStarCountBatch")
     Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
      /**
-     * 获取点赞数
+     * 获取收藏数
      */
      @GetMapping("/inner/voucher/getVoucherStarCount")
     Integer getVoucherStarCount(Long sourceId);
+     /**
+     * 批量更新评价数
+     */
+     @PostMapping("/inner/voucher/updateReviewCountBatch")
+    Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap);
 }

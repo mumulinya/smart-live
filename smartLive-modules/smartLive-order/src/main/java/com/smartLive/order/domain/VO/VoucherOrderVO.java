@@ -1,13 +1,8 @@
 package com.smartLive.order.domain.VO;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,39 +12,81 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 优惠券订单返回对象
- * 
- * @author mumulin
+ * 优惠券订单返回对象 (View Object)
+ * 用于前端展示订单详情
+ * * @author mumulin
  * @date 2025-09-21
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class VoucherOrderVO extends BaseEntity  implements Serializable
+public class VoucherOrderVO extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
-    private  Long id;
+
+    /** 订单ID (防止前端精度丢失，序列化为String) */
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long id;
 
     /** 下单的用户id */
     private Long userId;
 
     /** 购买的代金券id */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long voucherId;
+
     /** 代金券标题 */
     private String title;
+
     /** 副标题 */
     private String subTitle;
-    /** 支付金额，单位是分。例如200代表2元 */
+
+    /** * 代金券单价/原价
+     * (注意：这是券的面额或单价，不是订单总实付)
+     */
     private String payValue;
 
-    /** 抵扣金额，单位是分。例如200代表2元 */
+    /** 抵扣金额，单位是分 */
     private Long actualValue;
+
+    // ========== 新增核心展示字段 ==========
+
+    /** * 订单实付总金额 (单位: 分)
+     * (新增：展示用户实际支付了多少钱)
+     */
+    private Long payAmount;
+
+    /** * 购买数量
+     * (新增：展示用户买了多少张)
+     */
+    private Integer amount;
+
+    /** * 评价状态
+     * 0：未评价；1：已评价
+     * (新增：用于前端判断显示"去评价"还是"查看评价"按钮)
+     */
+    private Integer reviewStatus;
+
+    /** * 评价时间
+     * (新增：展示评价日期)
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date reviewTime;
+
+    /**
+     * 退款金额 (单位: 分)
+     * (新增：如果有退款，展示退了多少)
+     */
+    private Long refundAmount;
+
+    // ====================================
 
     /** 支付方式 1：余额支付；2：支付宝；3：微信 */
     private Integer payType;
 
     /** 订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款 */
     private Integer status;
+
     /** 使用规则 */
     private String rules;
 
@@ -64,11 +101,14 @@ public class VoucherOrderVO extends BaseEntity  implements Serializable
     /** 退款时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date refundTime;
+
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
+
     /** 店铺id */
     private Long shopId;
+
     /** 店铺名称 */
     private String shopName;
 }

@@ -1,6 +1,8 @@
 package com.smartLive.marketing.service;
 
 import java.util.List;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.marketing.domain.Voucher;
 
@@ -159,4 +161,25 @@ public interface IVoucherService extends IService<Voucher>
      * @return 优惠券价格下降结果
      */
     int priceReduced(Long id);
+    /**
+     * 批量更新评价数
+     *
+     * @param updateMap 批量更新评价数
+     * @return 批量更新评价数结果
+     */
+    Boolean updateReviewCountBatch(Map<Long, Integer> updateMap);
+    /**
+     * 批量更新代金券收藏数
+     *
+     * @param updateMap 商铺id和收藏数
+     * @return 更新结果
+     */
+    Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
+    /**
+     * 获取代金券收藏数
+     *
+     * @param sourceId 优惠券id
+     * @return 收藏数
+     */
+    Integer getVoucherStarCount(Long sourceId);
 }

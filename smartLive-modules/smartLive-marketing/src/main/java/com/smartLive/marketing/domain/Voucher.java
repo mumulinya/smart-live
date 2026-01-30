@@ -62,6 +62,14 @@ public class Voucher extends BaseEntity implements Serializable
     /** 1,上架; 2,下架; 3,过期 */
     @Excel(name = "1,上架; 2,下架; 3,过期")
     private Integer status;
+    /** 销量*/
+    private Integer sold;
+    //评价数
+    private Integer reviews;
+    //粉丝数
+    private Integer fans;
+    //收藏数
+    private Integer stars;
     /**
      * 有效期类型：1-固定日期，2-动态有效期（领券后N天有效）
      */

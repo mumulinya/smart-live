@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 优惠券内部Controller
@@ -88,8 +89,32 @@ public class VoucherInnerController extends BaseController {
     public List<Voucher> getVoucherListByIds(@RequestParam("sourceIdList")List<Long> sourceIdList){
         return voucherService.getVoucherListByIds(sourceIdList);
     }
+    /**
+     * 获取优惠券信息
+     */
     @GetMapping("/{id}")
     public Voucher getVoucherById(@PathVariable("id") Long voucherId){
         return voucherService.selectVoucherById(voucherId);
+    }
+    /**
+     * 批量收藏点赞数
+     */
+    @PostMapping("/updateStarCountBatch")
+    Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap){
+        return voucherService.updateStarCountBatch(updateMap);
+    }
+    /**
+     * 获取收藏数
+     */
+    @GetMapping("/getVoucherStarCount")
+    Integer getVoucherStarCount(Long sourceId){
+        return voucherService.getVoucherStarCount(sourceId);
+    }
+    /**
+     * 批量更新评价数
+     */
+    @PostMapping("/updateReviewCountBatch")
+    Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap){
+        return voucherService.updateReviewCountBatch(updateMap);
     }
 }

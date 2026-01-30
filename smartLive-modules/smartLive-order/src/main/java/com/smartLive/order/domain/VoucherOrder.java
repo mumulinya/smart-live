@@ -19,15 +19,14 @@ import com.smartLive.common.core.web.domain.BaseEntity;
 
 /**
  * 优惠券订单表对象 tb_voucher_order
- * 
- * @author mumulin
+ * * @author mumulin
  * @date 2025-09-21
  */
 @TableName("voucher_order")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class VoucherOrder extends BaseEntity  implements Serializable
+public class VoucherOrder extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
@@ -45,12 +44,39 @@ public class VoucherOrder extends BaseEntity  implements Serializable
     private Long voucherId;
 
     /** 支付方式 1：余额支付；2：支付宝；3：微信 */
-    @Excel(name = "支付方式 1：余额支付；2：支付宝；3：微信")
+    @Excel(name = "支付方式", readConverterExp = "1=余额支付,2=支付宝,3=微信")
     private Integer payType;
 
     /** 订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款 */
-    @Excel(name = "订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款")
+    @Excel(name = "订单状态", readConverterExp = "1=未支付,2=已支付,3=已核销,4=已取消,5=退款中,6=已退款")
     private Integer status;
+
+    // ========== 新增核心交易字段 Start ==========
+
+    /** 实付金额 (单位: 分) */
+    @Excel(name = "实付金额(分)")
+    private Long payAmount;
+
+    /** 购买数量 */
+    @Excel(name = "购买数量")
+    private Integer amount;
+
+    /** 第三方支付流水号 */
+    @Excel(name = "第三方支付流水号")
+    private String outTradeNo;
+
+    // ========== 评价相关字段 (Comment 改为 Review) Start ==========
+
+    /** 评价状态 0：未评价；1：已评价 */
+    @Excel(name = "评价状态", readConverterExp = "0=未评价,1=已评价")
+    private Integer reviewStatus;
+
+    /** 评价时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "评价时间", width = 30, dateFormat = "yyyy-MM-dd")
+    private Date reviewTime;
+
+    // ========== 时间与退款字段 Start ==========
 
     /** 支付时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -66,12 +92,19 @@ public class VoucherOrder extends BaseEntity  implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "退款时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date refundTime;
+
+    /** 退款金额 (单位: 分) */
+    @Excel(name = "退款金额(分)")
+    private Long refundAmount;
+
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date createTime;
-    /** 店铺id */
+
+    // ========== 非数据库字段 ==========
+
+    /** 店铺id (业务逻辑使用，不存入订单表) */
     @TableField(exist = false)
     private Long shopId;
-
 }

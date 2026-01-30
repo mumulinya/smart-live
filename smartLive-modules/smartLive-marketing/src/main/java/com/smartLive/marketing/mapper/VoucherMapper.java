@@ -1,9 +1,12 @@
 package com.smartLive.marketing.mapper;
 
 import java.util.List;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.smartLive.marketing.domain.Voucher;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * 优惠券Mapper接口
@@ -67,5 +70,40 @@ public interface VoucherMapper extends BaseMapper<Voucher>
      * @return
      */
     List<Voucher> queryVoucherOfShop(@Param("shopId") Long shopId);
-
+    /**
+     * 批量更新优惠券的评价数
+     * @param updateMap
+     */
+    @Update("<script>" +
+            "UPDATE voucher " +
+            "SET reviews" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateReviewCountBatch(@Param("map") Map<Long, Integer> updateMap);
+    /**
+     * 批量更新店铺的收藏数
+     * @param
+     */
+    @Update("<script>" +
+            "UPDATE shop " +
+            "SET stared" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateStarCountBatch(@Param("map")Map<Long, Integer> batchMap);
 }

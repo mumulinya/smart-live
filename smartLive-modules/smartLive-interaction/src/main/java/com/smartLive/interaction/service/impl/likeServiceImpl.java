@@ -6,17 +6,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.UserDTO;
-import com.smartLive.common.core.enums.IdentityTypeEnum;
+import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
-import com.smartLive.interaction.api.DTO.LikeDTO;
-import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.mapper.LikeMapper;
 import com.smartLive.interaction.service.ILikeService;
-import com.smartLive.interaction.strategy.identity.IdentityStrategy;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
@@ -38,8 +35,6 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements ILikeService {
-    @Autowired
-    private Map<Integer, IdentityStrategy> identityStrategyMap;
     @Autowired
     private Map<Integer, ResourceStrategy> resourceStrategyMap;
     @Autowired
@@ -179,7 +174,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             return null;
         }
         ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceTypeEnum.getCode());
-        //获取粉丝id
+        //获取资源id
         List<Long> sourceIdList = query()
                 .select("source_id")
                 .eq("source_type",like.getSourceType())
@@ -228,9 +223,11 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         if (userIdList == null || userIdList.isEmpty()) {
             return Collections.emptyList();
         }
-        IdentityStrategy identityStrategy = identityStrategyMap.get(IdentityTypeEnum.USER_IDENTITY.getCode());
+//        IdentityStrategy identityStrategy = identityStrategyMap.get(FollowTypeEnum.USER_IDENTITY.getCode());
+//        List<?> socialInfoVOList = identityStrategy.getFollowList(userIdList);
         log.info("查询点赞用户列表: {}", userIdList);
-        List<?> socialInfoVOList = identityStrategy.getFollowList(userIdList);
+        ResourceStrategy resourceStrategy = resourceStrategyMap.get(FollowTypeEnum.USER_IDENTITY.getCode());
+        List<UserDTO> socialInfoVOList = resourceStrategy.getResourceList(userIdList);
         return socialInfoVOList;
     }
 

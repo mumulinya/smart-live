@@ -63,8 +63,12 @@ public interface ShopMapper extends BaseMapper<Shop>
      * @return 结果
      */
     public int deleteShopByIds(String[] ids);
+    /**
+     * 批量更新店铺的评价数
+     * @param updateMap
+     */
     @Update("<script>" +
-            "UPDATE blog " +
+            "UPDATE shop " +
             "SET reviews" +
             " = CASE id " +
             "  <foreach collection='map.entrySet()' index='key' item='val'> " +
@@ -77,6 +81,10 @@ public interface ShopMapper extends BaseMapper<Shop>
             "  </foreach>" +
             "</script>")
     void updateReviewCountBatch(@Param("map") Map<Long, Integer> updateMap);
+    /**
+     * 批量更新店铺的收藏数
+     * @param
+     */
     @Update("<script>" +
             "UPDATE shop " +
             "SET stared" +

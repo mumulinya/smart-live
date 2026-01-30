@@ -433,7 +433,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             star.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
             star.setSourceId(review.getId());
             review.setIsStared(starService.isStar(star));
-            ShopDTO shop = remoteShopService.getShopById(review.getSourceId());
+            ShopDTO shop = remoteShopService.getShopById(review.getShopId());
             if(shop!=null){
                 review.setSourceName(shop.getName());
                 review.setShopImages(shop.getImages());

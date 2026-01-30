@@ -16,7 +16,7 @@ public class ReviewCommentStrategy implements CommentStrategy {
 
     @Override
     public Integer getType() {
-        return ResourceTypeEnum.SHOP_RESOURCE.getCode();
+        return ResourceTypeEnum.REVIEW_RESOURCE.getCode();
     }
 
     @Override

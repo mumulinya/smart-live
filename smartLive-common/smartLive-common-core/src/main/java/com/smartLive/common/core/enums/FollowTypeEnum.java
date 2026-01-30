@@ -8,7 +8,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum IdentityTypeEnum {
+public enum FollowTypeEnum {
     //用户信息
     USER_IDENTITY(GlobalBizTypeEnum.USER.getCode(), "user","用户信息",RedisConstants.FOLLOW_USER_KEY, RedisConstants.FANS_USER_KEY),
     //店铺信息
@@ -34,8 +34,8 @@ public enum IdentityTypeEnum {
      */
     private final String fansKeyPrefix;   // "fans:user:", "fans:shop:"
     // 简单的根据 code 获取枚举的方法
-    public static IdentityTypeEnum getByCode(Integer code) {
-        for (IdentityTypeEnum e : values()) {
+    public static FollowTypeEnum getByCode(Integer code) {
+        for (FollowTypeEnum e : values()) {
             if (e.code.equals(code)) return e;
         }
         return null;
