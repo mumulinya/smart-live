@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 收藏Star
+ * 收藏服务内部接口
  *
  * @author mumulin
  * @date 2025-09-21
@@ -21,8 +21,8 @@ public class StarInnerController {
     private IStarService starService;
     /**
      * 查询是否收藏
-      * @param
-     * @return
+     * @param star 收藏查询条件
+     * @return 是否收藏
      */
     @GetMapping("/isStar")
     public Boolean isStar(Star star){
@@ -30,9 +30,9 @@ public class StarInnerController {
         return isStar;
     }
     /**
-     * 获取收藏的数
-     * @param
-     * @return
+     * 获取收藏的数量
+     * @param star 收藏查询条件
+     * @return 收藏数量
      */
     @GetMapping("/getStarCount")
     Integer getStarCount(Star star){
@@ -41,7 +41,8 @@ public class StarInnerController {
     }
     /**
      * 获取用户收藏数量
-     * @return
+     * @param star 收藏查询条件
+     * @return 用户收藏数量
      */
     @GetMapping("/getUserStarCount")
     Integer getUserStarCount(@SpringQueryMap Star star){

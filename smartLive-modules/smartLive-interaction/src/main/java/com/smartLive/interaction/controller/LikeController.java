@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 点赞服务外部接口
+ * 用于处理用户对外的点赞相关操作
  */
 @RestController
 @RequestMapping("/like")
@@ -18,8 +19,8 @@ public class LikeController {
 
     /**
      * 点赞或取消点赞
-     * @param like
-     * @return
+     * @param like 点赞实体
+     * @return 操作结果
      */
     @PutMapping()
     public Result likeBlog(@RequestBody Like like) {
@@ -27,8 +28,8 @@ public class LikeController {
     }
     /**
      * 查询点赞数
-     * @param
-     * @return
+     * @param like 点赞查询条件
+     * @return 点赞数
      */
     @GetMapping("/likeCount")
     public Result queryBlogLikes(Like like) {
@@ -36,6 +37,9 @@ public class LikeController {
     }
     /**
      * 查询点赞记录
+     * @param like 点赞查询条件
+     * @param current 当前页码
+     * @return 点赞记录
      */
     @GetMapping("/likeRecord")
     public Result queryLikeRecord(Like like, @RequestParam("current")Integer current) {
@@ -43,6 +47,8 @@ public class LikeController {
     }
     /**
      * 查询点赞用户列表
+     * @param like 点赞查询条件
+     * @return 点赞用户列表
      */
     @GetMapping("/likeUserList")
     public Result queryLikeUserList(Like like) {

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.annotation.Resource;
 
 /**
- * 关注Controller
+ * 关注管理外部接口
  *
  * @author mumulin
  * @date 2025-09-21
@@ -19,9 +19,8 @@ public class FollowController {
     private IFollowService followServiceImpl;
     /**
      * 关注或取关
-     * @param
-     * @param
-     * @return
+     * @param follow 关注实体
+     * @return 操作结果
      */
     @PutMapping()
     public Result follow(@RequestBody Follow follow) {
@@ -50,20 +49,30 @@ public class FollowController {
         return Result.ok(followServiceImpl.common(follow,current));
     }
 
-    //获取粉丝列表
+    /**
+     * 获取粉丝列表
+     * @param follow 关注查询条件
+     * @param current 当前页码
+     * @return 粉丝列表
+     */
     @GetMapping("/fans")
     public Result getFans(Follow follow,@RequestParam("current") Integer current){
         return Result.ok(followServiceImpl.getFans(follow,current));
     }
-    //获取关注列表
+    /**
+     * 获取关注列表
+     * @param follow 关注查询条件
+     * @param current 当前页码
+     * @return 关注列表
+     */
     @GetMapping("/follows")
     public Result getFollows(Follow follow,@RequestParam("current") Integer current){
         return Result.ok(followServiceImpl.getFollows(follow,current));
     }
     /**
      * 获取关注数
-     * @param follow
-     * @return
+     * @param follow 关注查询条件
+     * @return 关注数
      */
     @GetMapping("/getFollowCount")
     public Result getFollowCount(Follow follow){
@@ -72,8 +81,8 @@ public class FollowController {
     }
     /**
      * 获取粉丝数
-     * @param follow
-     * @return
+     * @param follow 关注查询条件
+     * @return 粉丝数
      */
     @GetMapping("/getFanCount")
     public Result getFanCount(Follow follow){
@@ -82,8 +91,8 @@ public class FollowController {
     }
     /**
      * 获取共同关注数
-      * @param follow
-     * @return
+     * @param follow 关注查询条件
+     * @return 共同关注数
      */
     @GetMapping("/getCommonFollowCount")
     public Result getCommonCount(Follow follow){

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 评论Controller
+ * 评论管理内部接口
  * 
  * @author mumulin
  * @date 2025-09-21
@@ -31,6 +31,9 @@ public class CommentInnerController extends BaseController
     @Autowired
     private ICommentService commentService;
 
+    /**
+     * AI创建评论（内部接口）
+     */
     @PostMapping("/aiCreateComment")
     public Result aiCreateComment(){
          commentService.aiCreateComment();
@@ -38,7 +41,7 @@ public class CommentInnerController extends BaseController
     }
     /**
      * 获取所有评论列表
-     * @return
+     * @return 评论列表
      */
     @GetMapping("/list")
     List<Comment> getCommentList(){
@@ -47,8 +50,8 @@ public class CommentInnerController extends BaseController
 
     /**
      * 获取评论数量
-     * @param
-     * @return
+     * @param comment 评论查询条件
+     * @return 评论数量
      */
     @GetMapping("/getCommentCount")
     Integer getCommentCount( Comment comment){
@@ -56,7 +59,7 @@ public class CommentInnerController extends BaseController
     }
     /**
      * 获取评论总数
-     * @return
+     * @return 评论总数
      */
     @GetMapping("/getCommentTotal")
     Integer getCommentTotal(){

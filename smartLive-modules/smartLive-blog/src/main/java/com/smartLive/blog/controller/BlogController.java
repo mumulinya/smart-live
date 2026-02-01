@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 博客Controller
+ * 博客管理外部接口
  * 
  * @author mumulin
  * @date 2025-09-21
@@ -29,7 +29,8 @@ public class BlogController extends BaseController
     private IBlogService blogService;
 
     /**
-     * 查询博客列表
+     * 查询博客列表（带权限控制）
+     * 权限: business:blog:list
      */
     @RequiresPermissions("business:blog:list")
     @GetMapping("/list")
@@ -41,7 +42,8 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 导出博客列表
+     * 导出博客列表（带权限控制）
+     * 权限: business:blog:export
      */
     @RequiresPermissions("business:blog:export")
     @Log(title = "博客", businessType = BusinessType.EXPORT)
@@ -53,6 +55,9 @@ public class BlogController extends BaseController
         util.exportExcel(response, list, "博客数据");
     }
 
+    /**
+     * 获取博客列表
+     */
     @GetMapping("/blogList")
     public AjaxResult blogList(Blog blog)
     {
@@ -61,7 +66,7 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 刷新缓存
+     * 刷新博客缓存
      */
     @GetMapping("/flushCache")
     public AjaxResult flushCache() {
@@ -69,7 +74,8 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 获取博客详细信息
+     * 获取博客详细信息（带权限控制）
+     * 权限: business:blog:query
      */
     @RequiresPermissions("business:blog:query")
 //    @GetMapping(value = "/{id}")
@@ -100,7 +106,8 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 删除博客列表
+     * 删除博客列表（带权限控制）
+     * 权限: business:blog:remove
      */
     @RequiresPermissions("business:blog:remove")
     @Log(title = "博客", businessType = BusinessType.DELETE)
@@ -111,7 +118,7 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 删除博客
+     * 删除单个博客
      */
     @Log(title = "博客", businessType = BusinessType.DELETE)
     @DeleteMapping("remove/{id}")
@@ -129,7 +136,7 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 发布博客
+     * 发布指定ID的博客
      */
     @PostMapping("/publish/{ids}")
     public AjaxResult allPublish(@PathVariable String[] ids) {
@@ -139,8 +146,8 @@ public class BlogController extends BaseController
 
     /**
      * 发布博文
-     * @param blog
-     * @return
+     * @param blog 博客实体
+     * @return 操作结果
      */
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog ) {
@@ -149,8 +156,9 @@ public class BlogController extends BaseController
 
     /**
      * 查询我的博文
-     * @param current
-     * @return
+     * @param blog 博客查询条件
+     * @param current 当前页码
+     * @return 我的博文列表
      */
     @GetMapping("/of/me")
     public Result queryMyBlog(Blog blog,@RequestParam(value = "current", defaultValue = "1") Integer current) {
@@ -160,22 +168,28 @@ public class BlogController extends BaseController
 
     /**
      * 查询热门博文
-     * @param current
-     * @return
+     * @param current 当前页码
+     * @return 热门博文列表
      */
     @GetMapping("/hot")
     public Result queryHotBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
 
         return Result.ok(blogService.queryHotBlog(current));
     }
+    /**
+     * 根据分类查询博客
+     * @param typeId 分类ID
+     * @param current 当前页码
+     * @return 分类下的博客列表
+     */
     @GetMapping("/category/{typeId}")
     public Result queryBlogByCategory(@PathVariable("typeId") Long typeId,@RequestParam(value = "current", defaultValue = "1") Integer current) {
         return Result.ok(blogService.queryBlogByCategory(typeId,current));
     }
     /**
      * 查询博文详情
-     * @param id
-     * @return
+     * @param id 博客ID
+     * @return 博客详情
      */
     @GetMapping("/{id}")
     public Result queryBlogById(@PathVariable("id") Long id) {
@@ -185,9 +199,9 @@ public class BlogController extends BaseController
 
     /**
      * 查询用户发布的博文
-     * @param current
-     * @param userId
-     * @return
+     * @param current 当前页码
+     * @param userId 用户ID
+     * @return 用户发布的博客列表
      */
     @GetMapping("/of/user")
     public Result queryBlogByUserId(
@@ -197,15 +211,19 @@ public class BlogController extends BaseController
     }
     /**
      * 查询关注用户发布的博文
-     * @param max
-     * @param offset
-     * @return
+     * @param max 最大ID
+     * @param offset 偏移量
+     * @return 关注用户的博客列表
      */
     @GetMapping("/of/follow")
     public Result queryBlogByFollow(@RequestParam(value = "lastId") Long max, @RequestParam(value = "offset", defaultValue = "0") Integer offset) {
         return Result.ok(blogService.queryBlogByFollow(max, offset));
     }
-    //是否置顶
+    /**
+     * 设置博客是否置顶
+     * @param blog 博客实体
+     * @return 操作结果
+     */
     @PutMapping("/isPin")
     public Result isPin(@RequestBody Blog blog){
         boolean pin = blogService.isPin(blog);

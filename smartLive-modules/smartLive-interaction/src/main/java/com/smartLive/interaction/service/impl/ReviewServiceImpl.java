@@ -270,6 +270,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         Page<Review> page = query()
                 .eq("user_id", review.getUserId())
                 .eq("status", review.getStatus())
+                .orderByDesc("create_time")
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Review> list = page.getRecords();

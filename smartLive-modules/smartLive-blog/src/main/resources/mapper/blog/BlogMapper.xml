@@ -87,7 +87,7 @@
             <if test="content != null and content != ''">content = #{content},</if>
             <if test="liked != null">liked = #{liked},</if>
             <if test="comments != null">comments = #{comments},</if>
-            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="status != null ">status = #{status},</if>
             <if test="pin != null">pin = #{pin},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>

@@ -9,6 +9,7 @@ import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
 /**
  * 点赞服务内部接口
+ * 用于微服务间内部调用
  */
 @RestController
 @RequestMapping("/inner/like")
@@ -17,8 +18,8 @@ public class LikeInnerController {
     private ILikeService likeRecordService;
     /**
      * 查询是否点赞
-     * @param
-     * @return
+     * @param like 点赞查询条件
+     * @return 是否点赞
      */
     @GetMapping("/isLike")
     public Boolean  isLike (Like like) {
@@ -26,8 +27,8 @@ public class LikeInnerController {
     }
     /**
      * 查询点赞数
-     * @param
-     * @return
+     * @param like 点赞查询条件
+     * @return 点赞数
      */
     @GetMapping("/getLikeCount")
     public Integer queryBlogLikes(Like like) {
@@ -35,7 +36,8 @@ public class LikeInnerController {
     }
     /**
      * 获取用户点赞数
-     * @return
+     * @param like 点赞查询条件
+     * @return 用户点赞数
      */
     @GetMapping("/getUserLikeCount")
     Integer getUserLikeCount(@SpringQueryMap Like like){

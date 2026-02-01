@@ -94,8 +94,10 @@ public class BlogInnerController extends BaseController
     }
     /**
      * 获取博客点赞数
+     * @param sourceId 博客ID
+     * @return 博客点赞数
      */
-    @GetMapping("/inner/blog/getBlogLikeCount/{sourceId}")
+    @GetMapping("/getBlogLikeCount/{sourceId}")
     Integer getBlogLikeCount(@PathVariable("sourceId") Long sourceId){
         return blogService.getBlogLikeCount(sourceId);
     }

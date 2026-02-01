@@ -19,9 +19,10 @@ public class FeedController {
     private IFeedService feedService;
     /**
      * 分页获取用户动态列表
-      * @param lastId
-     * @param offset
-     * @return
+     * @param feedType 动态类型
+     * @param lastId 上一次请求最后一条动态的ID
+     * @param offset 偏移量
+     * @return 动态列表
      */
     @GetMapping
     public Result getFeedList(@RequestParam(value = "feedType",defaultValue = "0") Integer feedType,@RequestParam(value = "lastId") Long lastId, @RequestParam(value = "offset", defaultValue = "0") Integer offset) {

@@ -91,7 +91,7 @@ public class ReviewController extends BaseController
     }
 
     /**
-     * 删除评论
+     * 删除评价（带权限控制）
      */
     @RequiresPermissions("review:review:remove")
     @Log(title = "评论", businessType = BusinessType.DELETE)
@@ -133,7 +133,7 @@ public class ReviewController extends BaseController
         return Result.fail("添加失败");
     }
     /**
-     * 删除评论
+     * 删除评价
      */
     @PostMapping("/removeReview")
     public Result removeReview(@RequestBody Review review)
