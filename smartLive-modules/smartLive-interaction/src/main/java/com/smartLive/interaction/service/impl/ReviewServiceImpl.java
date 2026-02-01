@@ -19,6 +19,7 @@ import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.service.IReviewService;
 import com.smartLive.interaction.service.IStarService;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
+import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.user.api.RemoteAppUserService;
@@ -58,6 +59,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     private ILikeService likeService;
     private IStarService starService;
+    @Autowired
+    private RemoteOrderService remoteOrderService;
+
     @Autowired
     public ReviewServiceImpl(@Lazy ILikeService likeService, @Lazy IStarService starService) {
         this.likeService = likeService;
@@ -157,6 +161,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             log.info("从数据库里面获取");
              list = query()
                     .eq("source_id", review.getSourceId())
+                     .eq("status", 0)
                     .eq("source_type", review.getSourceType())
                     .orderByDesc("liked")
                     .list();
@@ -211,6 +216,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         review.setCreateTime(DateUtils.getNowDate());
         int i = reviewMapper.insertReview(review);
         if (i > 0) {
+            Long orderId = review.getOrderId();
+            //更新订单评价状态，设置为已评价
+            if (orderId != null) {
+                remoteOrderService.updateOrderReviewStatus(orderId);
+            }
             ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
             String reviewKeyPrefix = reviewType.getReviewKeyPrefix()+ review.getSourceId();
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
@@ -259,6 +269,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     public List<Review> getReviewOfUser(Review review,Integer current) {
         Page<Review> page = query()
                 .eq("user_id", review.getUserId())
+                .eq("status", review.getStatus())
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Review> list = page.getRecords();

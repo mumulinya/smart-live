@@ -153,8 +153,8 @@ public class BlogController extends BaseController
      * @return
      */
     @GetMapping("/of/me")
-    public Result queryMyBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
-        List<Blog> blogList=blogService.queryMyBlog(current);
+    public Result queryMyBlog(Blog blog,@RequestParam(value = "current", defaultValue = "1") Integer current) {
+        List<Blog> blogList=blogService.queryMyBlog(blog,current);
         return Result.ok(blogList);
     }
 

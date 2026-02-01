@@ -128,6 +128,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if(i > 0){
             //更新es数据
             publish(new String[]{blog.getId().toString()});
+            flashRedisBlogCache(blog.getId());
         }
         return i;
     }
@@ -297,6 +298,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         // 根据用户查询
         Page<Blog> page = query()
+                .eq("status",0)
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         // 获取当前页数据
@@ -382,6 +384,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public List<Blog> queryBlogByUserId(Integer current, Long userId) {
         Page<Blog> page = query()
                 .eq("user_id", userId)
+                .eq("status",0)
                 .orderByDesc("pin")
                 .orderByAsc("create_time")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
@@ -411,6 +414,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         boolean success = save(blog);
         if (!success) {
             throw new BusinessException("新增博文失败");
+        }
+        //保存草稿
+        if(blog.getStatus() == 1){
+            return blog.getId();
         }
         //发送rabbitMq消息 推送笔记id给粉丝
         FeedEventMessage feedEventMessage = FeedEventMessage.builder()
@@ -511,11 +518,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public List<Blog> queryMyBlog(Integer current) {
+    public List<Blog> queryMyBlog(Blog b,Integer current) {
         UserDTO user = UserContextHolder.getUser();
         // 根据用户查询
         Page<Blog> page = query()
                 .eq("user_id", user.getId())
+                .eq("status",b.getStatus())
                 .orderByDesc("pin")
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));

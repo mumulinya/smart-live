@@ -49,4 +49,13 @@ public class InnerVoucherOrderController extends BaseController
     Integer getOrderTotal(){
         return voucherOrderService.getOrderTotal();
     }
+    /**
+     * 修改订单评论状态
+     * @param orderId
+     * @return
+     */
+    @PutMapping("/updateOrderReviewStatus/{orderId}")
+    Integer updateOrderReviewStatus(@PathVariable("orderId") Long orderId) {
+        return voucherOrderService.updateOrderReviewStatus(orderId);
+    }
 }

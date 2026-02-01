@@ -14,6 +14,7 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.mapper.LikeMapper;
 import com.smartLive.interaction.service.ILikeService;
+import com.smartLive.interaction.strategy.StrategyExecutor;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
@@ -96,7 +97,8 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         Integer likeCount = redisService.getCacheObject(likeCountKey);
         if (likeCount == null) {
             //从数据库获取点赞数量并且写入到redis
-            likeCount = likeStrategyMap.get(like.getSourceType()).getLikeCount(like.getSourceId());
+            likeCount = StrategyExecutor.executeStrategy(likeStrategyMap, like.getSourceType(), 
+                strategy -> strategy.getLikeCount(like.getSourceId()), 0);
             redisService.setCacheObject(likeCountKey, likeCount);
         }
         if (isLiked) {
@@ -143,7 +145,8 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         Integer likeCount = redisService.getCacheObject(likeCountKey);
         if (likeCount == null) {
             //从数据库获取点赞数量并且写入到redis
-            likeCount = likeStrategyMap.get(like.getSourceType()).getLikeCount(like.getSourceId());
+            likeCount = StrategyExecutor.executeStrategy(likeStrategyMap, like.getSourceType(), 
+                strategy -> strategy.getLikeCount(like.getSourceId()), 0);
             redisService.setCacheObject(likeCountKey, likeCount);
         }
         return likeCount;

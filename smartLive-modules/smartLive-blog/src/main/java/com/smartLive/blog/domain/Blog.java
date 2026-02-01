@@ -63,7 +63,9 @@ public class Blog extends BaseEntity implements Serializable
     /** 置顶 */
     @Excel(name = "置顶")
     private Boolean pin;
-
+    /** 状态，0：正常，1：草稿，2：禁止查看 */
+    @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
+    private Short status;
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

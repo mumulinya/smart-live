@@ -30,6 +30,18 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
                 log.error("获取订单总数失败:{}", cause.getMessage());
                 return 0;
             }
+
+            /**
+             * 修改订单评论状态
+             *
+             * @param orderId
+             * @return
+             */
+            @Override
+            public Integer updateOrderReviewStatus(Long orderId) {
+                log.error("修改订单评论状态失败:{}", cause.getMessage());
+                return 0;
+            }
         };
 
     }

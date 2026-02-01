@@ -3,8 +3,8 @@ package com.smartLive.interaction.strategy.comment;
 import java.util.Map;
 
 /**
- * 点赞行为策略接口
- * 职责：处理点赞数据的持久化、同步等写操作
+ * 评论行为策略接口
+ * 职责：处理评论数据的持久化、同步等写操作
  */
 public interface CommentStrategy {
 

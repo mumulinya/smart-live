@@ -124,4 +124,10 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @return
      */
     VoucherOrderVO getOrderById(Long id);
+    /**
+     * 修改订单评价状态
+     * @param orderId
+     * @return
+     */
+    Integer updateOrderReviewStatus(Long orderId);
 }

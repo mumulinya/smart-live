@@ -119,7 +119,7 @@ public interface IBlogService extends IService<Blog>
      * @param current
      * @return
      */
-    List<Blog> queryMyBlog(Integer current);
+    List<Blog> queryMyBlog(Blog blog,Integer current);
 
 /**
      * 查询博客详情

@@ -121,7 +121,7 @@ public class ReviewController extends BaseController
         return Result.fail("添加失败");
     }
     /**
-     * 修改评论
+     * 修改评价
      */
     @PutMapping("/updateReview")
     public Result updateReview(@RequestBody Review review)
@@ -145,14 +145,15 @@ public class ReviewController extends BaseController
     public Result getReviewOfUser(Review review,@RequestParam("current") Integer current){
         return Result.ok(reviewService.getReviewOfUser(review,current));
     }
+    /**
+     * 获取评论
+     */
     @GetMapping("/getReview/{id}")
     public Result getReviewById(@PathVariable("id")Long id){
         return Result.ok(reviewService.getReviewById(id));
     }
-
     /**
-     * 获取评论数量
-     * @param
+     * 获取评价总数
      * @return
      */
     @GetMapping("/getReviewCount")

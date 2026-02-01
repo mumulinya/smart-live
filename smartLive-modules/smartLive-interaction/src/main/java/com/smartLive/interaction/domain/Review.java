@@ -70,7 +70,7 @@ public class Review extends BaseEntity
     @Excel(name = "收藏数")
     private Integer stared;
 
-    /** 状态，0：正常，1：被举报，2：禁止查看 */
+    /** 状态，0：正常，1：草稿，2：禁止查看 */
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
     private String status;
 

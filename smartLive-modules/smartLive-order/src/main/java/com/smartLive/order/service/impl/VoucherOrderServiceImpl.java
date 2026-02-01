@@ -220,7 +220,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     /**
      * 获取当前用户订单列表
      *
-     * @param userId
+     * @param voucherOrder
      * @return
      */
     @Override
@@ -228,6 +228,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         Page<VoucherOrder> result = query()
                 .eq("user_id", voucherOrder.getUserId())
                 .eq(voucherOrder.getStatus()!=null, "status", voucherOrder.getStatus())
+                .eq(voucherOrder.getReviewStatus()!=null, "review_status", voucherOrder.getReviewStatus())
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<VoucherOrder> list = result.getRecords();
@@ -383,5 +384,17 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return voucherOrderVO;
         }
         return null;
+    }
+
+    /**
+     * 修改订单评价状态
+     *
+     * @param orderId
+     * @return
+     */
+    @Override
+    public Integer updateOrderReviewStatus(Long orderId) {
+        boolean update = update().eq("id", orderId).set("review_status", 1).update();
+        return update==true?1:0;
     }
 }
