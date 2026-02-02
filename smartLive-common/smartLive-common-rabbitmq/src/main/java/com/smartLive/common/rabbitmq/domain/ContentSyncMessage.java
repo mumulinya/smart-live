@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 
-public class SearchIndexMessage {
+public class ContentSyncMessage {
     private String indexName;
     private Long  id;
     private Object data;

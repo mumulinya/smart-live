@@ -1,7 +1,10 @@
 package com.smartLive.search.strategy;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.search.domain.BlogDoc;
 import com.smartLive.search.utils.EsTool;
 import lombok.extern.slf4j.Slf4j;
@@ -13,12 +16,17 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 @Component
@@ -63,12 +71,19 @@ public class BlogEsStrategy implements EsSyncStrategy {
                 || response.status() == RestStatus.OK) {
             log.info("博客ES插入/更新成功：index={}, id={}, result={}",
                     indexName, id, response.getResult());
+            UserResourceMessage userResourceMessage = UserResourceMessage
+                    .builder()
+                    .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
+                    .sourceType(GlobalBizTypeEnum.BLOG.getCode())
+                    .sourceId(doc.getId())
+                    .data(doc)
+                    .build();
+            updateUserResource(userResourceMessage);
             return true;
         }
         log.error("博客ES插入/更新失败：index={}, id={}, status={}, result={}",
                 indexName, id, response.status(), response.getResult());
         return false;
-
     }
 
     /**
@@ -127,6 +142,133 @@ public class BlogEsStrategy implements EsSyncStrategy {
         }
         log.info("博客ES删除成功：index={}, id={}", indexName, id);
         return true;
+    }
+
+    /**
+     * @param
+     * @return
+     */
+    @Override
+    public boolean insertUserResource(UserResourceMessage userResourceMessage) throws IOException {
+        BlogDoc doc = EsTool.convertToObject((Map) userResourceMessage.getData(), BlogDoc.class);
+        // 1. 数据校验
+        validateBlog(doc);
+        doc.setSourceType(userResourceMessage.getSourceType());
+        doc.setSourceId(userResourceMessage.getSourceId());
+        doc.setActionType(userResourceMessage.getActionType());
+        // 2. 转换为JSON
+        String json = objectMapper.writeValueAsString(doc);
+        // 3. 执行ES插入/更新
+        IndexRequest request = new IndexRequest(userResourceMessage.getIndexName())
+                .id(userResourceMessage.getId())
+                .source(json, XContentType.JSON);
+        IndexResponse response = esClient.index(request, RequestOptions.DEFAULT);
+        if (response.status() == RestStatus.CREATED
+                || response.status() == RestStatus.OK) {
+            log.info("博客ES插入/更新成功：index={}, id={}, result={}",
+                    userResourceMessage.getIndexName(), userResourceMessage.getId(), response.getResult());
+            return true;
+        }
+        log.error("博客ES插入/更新失败：index={}, id={}, status={}, result={}",
+                userResourceMessage.getIndexName(), userResourceMessage.getId(), response.status(), response.getResult());
+        return false;
+    }
+
+
+/**
+ * 根据 sourceId 和 sourceType 批量更新
+ * 场景：博主改了标题，ES里所有收藏了这篇博客的记录（不管属于哪个用户）都要同步更新标题
+ */
+    @Override
+    public boolean updateUserResource(UserResourceMessage msg) throws IOException {
+        // 1. 校验关键条件
+        if (msg.getSourceId() == null || msg.getSourceType() == null) {
+            log.error("更新用户资源失败：sourceId 或 sourceType 为空{}",msg);
+            return false;
+        }
+
+        // 2. 将消息数据转为 BlogDoc 对象
+        // msg.getData() 是一个 Map 或者 JSON 字符串，根据你的实际情况转换
+        BlogDoc newBlogData = (BlogDoc) msg.getData();
+
+        if (newBlogData == null) {
+            return false;
+        }
+
+        // 3. 准备 UpdateByQueryRequest
+        UpdateByQueryRequest request = new UpdateByQueryRequest(msg.getIndexName());
+
+        // 4. 设置查询条件 (WHERE)
+        // 逻辑：sourceId = 博客ID 且 sourceType = 博客类型
+        request.setQuery(QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("sourceId", msg.getSourceId()))
+                .must(QueryBuilders.termQuery("sourceType", msg.getSourceType())));
+
+        // 5. 准备参数 Map (SET 的值)
+        // ★★★ 核心：这里做字段映射！把 BlogDoc 的字段映射到 ES 的字段 ★★★
+        Map<String, Object> params = new HashMap<>();
+
+        // 映射 1: blog.title -> es.title
+        if (newBlogData.getTitle() != null) {
+            params.put("newTitle", newBlogData.getTitle());
+        }
+
+        // 映射 2: blog.images -> es.imageUrl
+        // (你的BlogDoc叫images，但收藏列表通常只需要一张封面图，所以ES里一般叫imageUrl)
+        if (newBlogData.getImages() != null) {
+            // 如果 images 是逗号分隔的 "url1,url2"，我们可能只取第一张作为封面
+            String cover = newBlogData.getImages().split(",")[0];
+            params.put("newImage", cover);
+        }
+
+        // 映射 3: blog.content -> es.subTitle
+        // (收藏列表不需要展示几千字的正文，通常把 content 当作 subTitle 简介)
+        if (newBlogData.getContent() != null) {
+            // 截取前 50 个字作为简介，防止数据过大
+            String summary = newBlogData.getContent().length() > 50
+                    ? newBlogData.getContent().substring(0, 50)
+                    : newBlogData.getContent();
+            params.put("newSubTitle", summary);
+        }
+
+        // 6. 动态构建 Script 脚本
+        // 只有当参数存在时，才生成对应的更新语句，防止把 ES 里的数据覆盖成 null
+        StringBuilder scriptCode = new StringBuilder();
+
+        if (params.containsKey("newTitle")) {
+            scriptCode.append("ctx._source.title = params.newTitle;");
+        }
+        if (params.containsKey("newImage")) {
+            // 注意：这里 ctx._source.imageUrl 必须是你 ES 索引里实际定义的字段名
+            scriptCode.append("ctx._source.imageUrl = params.newImage;");
+        }
+        if (params.containsKey("newSubTitle")) {
+            scriptCode.append("ctx._source.subTitle = params.newSubTitle;");
+        }
+
+        // 如果没有需要更新的字段，直接返回
+        if (scriptCode.length() == 0) {
+            log.info("没有需要更新的字段，跳过");
+            return true;
+        }
+
+        request.setScript(new Script(
+                ScriptType.INLINE,
+                "painless",
+                scriptCode.toString(),
+                params
+        ));
+
+        // 7. 忽略并发冲突并执行
+        request.setConflicts("proceed");
+        try {
+            BulkByScrollResponse response = esClient.updateByQuery(request, RequestOptions.DEFAULT);
+            log.info("同步更新成功，影响条数：{}", response.getUpdated());
+            return true;
+        } catch (Exception e) {
+            log.error("同步更新用户资源失败", e);
+            return false;
+        }
     }
     /**
      * 博客数据校验（特有的校验逻辑）

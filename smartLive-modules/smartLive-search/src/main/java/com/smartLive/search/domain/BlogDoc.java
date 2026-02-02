@@ -63,21 +63,7 @@ public class BlogDoc extends BaseEntity implements Serializable
      */
     private String name;
 
-    /**
-     * 获取格式化的创建时间字符串（用于ES存储）
-     */
-    public String getCreateTimeFormatted() {
-        if (createTime == null) {
-            return null;
-        }
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return sdf.format(createTime);
-    }
-
-    /**
-     * 获取时间戳（用于ES存储）
-     */
-    public Long getCreateTimeTimestamp() {
-        return createTime != null ? createTime.getTime() : null;
-    }
+    private String actionType;
+    private Integer sourceType;
+    private Long sourceId;
 }

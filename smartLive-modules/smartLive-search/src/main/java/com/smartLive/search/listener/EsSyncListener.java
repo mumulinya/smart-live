@@ -1,8 +1,9 @@
 package com.smartLive.search.listener;
 
 import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
-import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
+import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
+import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
+import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.search.strategy.EsSyncStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -22,8 +23,11 @@ public class EsSyncListener {
     private Map<Integer, EsSyncStrategy> esStrategyMap;
     @Autowired
     private ExecutorService executorService;
-
-    // ==================== 单条插入 ====================
+    /**
+     * 处理单条插入
+     *
+     * @param request
+     */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
@@ -34,7 +38,7 @@ public class EsSyncListener {
                             MqConstants.ES_ROUTING_BLOG_INSERT
                     })
     })
-    public void handleSingleInsert(SearchIndexMessage request) {
+    public void handleSingleInsert(ContentSyncMessage request) {
        executorService.submit(()->{
            log.info("Es接收单条插入请求: {}", request);
            // 1. 获取策略
@@ -53,7 +57,11 @@ public class EsSyncListener {
        });
     }
 
-    // ==================== 批量插入 ====================
+    /**
+     * 处理批量插入
+     *
+     * @param request
+     */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
@@ -64,7 +72,7 @@ public class EsSyncListener {
                             MqConstants.ES_ROUTING_BLOG_BATCH_INSERT
                     })
     })
-    public void handleBatchInsert(SearchIndexBatchMessage request) {
+    public void handleBatchInsert(ContentBatchSyncMessage request) {
         executorService.submit(()->{
             log.info("Es接收批量插入请求: {}", request);
             log.info("esStrategyMap为：{}", esStrategyMap);
@@ -82,7 +90,11 @@ public class EsSyncListener {
         });
     }
 
-    // ==================== 删除 ====================
+    /**
+     * 处理删除
+     *
+     * @param request
+     */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_DELETE_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
@@ -93,7 +105,7 @@ public class EsSyncListener {
                             MqConstants.ES_ROUTING_SHOP_DELETE
                     })
     })
-    public void handleDelete(SearchIndexMessage request) {
+    public void handleDelete(ContentSyncMessage request) {
        executorService.submit(()->{
            log.info("Es接收删除请求: id={}", request.getId());
            EsSyncStrategy strategy = esStrategyMap.get(request.getType());
@@ -108,5 +120,31 @@ public class EsSyncListener {
                log.error("Es删除异常", e);
            }
            });
+    }
+
+    @RabbitListener(bindings = {
+            @QueueBinding(value = @Queue(name = MqConstants.ES_USER_RESOURCE_QUEUE, declare = "true"),
+                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
+                    key = {
+                            MqConstants.ES_ROUTING_USER_RESOURCE_INSERT,
+                    })
+    })
+    public void handleUserResourceInsert(UserResourceMessage request) {
+        executorService.submit(()->{
+            log.info("Es接收单条插入请求: {}", request);
+            // 1. 获取策略
+            EsSyncStrategy strategy = esStrategyMap.get(request.getSourceType());
+            if (strategy == null) {
+                log.error("Es单条插入失败：未找到策略 dataType={}", request.getSourceType());
+                return;
+            }
+            try {
+                // 2. 直接委托给策略执行
+                boolean success = strategy.insertUserResource(request);
+                log.info("Es单条插入结果: {}, type={}", success, request.getSourceType());
+            } catch (Exception e) {
+                log.error("Es单条插入异常", e);
+            }
+        });
     }
 }

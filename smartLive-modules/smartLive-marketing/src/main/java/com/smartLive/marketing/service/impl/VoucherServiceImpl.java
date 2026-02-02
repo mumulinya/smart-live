@@ -13,8 +13,8 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.core.enums.ItemActionType;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
-import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
-import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
+import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
+import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
@@ -31,7 +31,6 @@ import com.smartLive.order.api.DTO.VoucherOrderDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.connection.RabbitUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -288,13 +287,13 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         for (Long id : ids) {
             executorService.submit(()->{
                 log.info("线程“{}删除es数据id为：{}", id);
-                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
-                searchIndexMessage.setId(id);
-                searchIndexMessage.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
-                searchIndexMessage.setType(GlobalBizTypeEnum.VOUCHER.getCode());
+                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                contentSyncMessage.setId(id);
+                contentSyncMessage.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+                contentSyncMessage.setType(GlobalBizTypeEnum.VOUCHER.getCode());
                 //发起rabbitMq信息删除es数据
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_VOUCHER_DELETE,esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_DELETE, searchIndexMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_DELETE, contentSyncMessage);
                 //发起rabbitmq信息删除milvus数据
 //               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE,MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,esInsertRequest);
             });
@@ -646,7 +645,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 //                   queryVoucherShopMessage(voucher);
                 });
                 // 创建请求并发送
-                SearchIndexBatchMessage request = new SearchIndexBatchMessage();
+                ContentBatchSyncMessage request = new ContentBatchSyncMessage();
                 request.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
                 request.setData(vouchers);
                 request.setType(GlobalBizTypeEnum.VOUCHER.getCode());
@@ -689,17 +688,17 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 }
                 querySeckill(voucher);
                 queryVoucherShopMessage(voucher);
-                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
-                searchIndexMessage.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
-                searchIndexMessage.setData(voucher);
-                searchIndexMessage.setId(voucher.getId());
-                searchIndexMessage.setType(GlobalBizTypeEnum.VOUCHER.getCode());
+                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                contentSyncMessage.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+                contentSyncMessage.setData(voucher);
+                contentSyncMessage.setId(voucher.getId());
+                contentSyncMessage.setType(GlobalBizTypeEnum.VOUCHER.getCode());
                 log.info("发送的优惠券信息为{}", voucher);
                 //发送rabbitmq消息数据插入es
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, searchIndexMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, contentSyncMessage);
                 //发送rabbitmq消息数据插入Milvus
-               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_INSERT, searchIndexMessage);
+               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_INSERT, contentSyncMessage);
             });
         }
         return "发布成功";

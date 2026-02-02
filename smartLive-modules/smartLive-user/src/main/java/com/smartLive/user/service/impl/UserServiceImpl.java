@@ -18,8 +18,8 @@ import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.exception.BusinessException;
-import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
-import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
+import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
+import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -29,7 +29,6 @@ import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteLikeService;
 import com.smartLive.interaction.api.RemoteStarService;
-import com.smartLive.interaction.api.DTO.CommentDTO;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
@@ -173,13 +172,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         for (Long id : ids) {
             executorService.submit(()->{
                 log.info("线程：{}开始删除es数据id：{}",Thread.currentThread().getName(),id);
-                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
-                searchIndexMessage.setId(id);
-                searchIndexMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-                    searchIndexMessage.setType(GlobalBizTypeEnum.USER.getCode());
+                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                contentSyncMessage.setId(id);
+                contentSyncMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+                    contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
                 //发起rabbitMq信息删除
 //                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_DELETE, searchIndexMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_DELETE, contentSyncMessage);
             });
         }
 //        }
@@ -472,7 +471,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                         }
                 );
                 // 创建请求并发送
-                SearchIndexBatchMessage request = new SearchIndexBatchMessage();
+                ContentBatchSyncMessage request = new ContentBatchSyncMessage();
                 request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
                 request.setData(users);
                 request.setType(GlobalBizTypeEnum.USER.getCode());
@@ -506,13 +505,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     return;
                 }
                 queryUserInfo(user);
-                SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
-                searchIndexMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-                searchIndexMessage.setData(user);
-                searchIndexMessage.setId(user.getId());
-                searchIndexMessage.setType(GlobalBizTypeEnum.USER.getCode());
+                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                contentSyncMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+                contentSyncMessage.setData(user);
+                contentSyncMessage.setId(user.getId());
+                contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
 //                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, searchIndexMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, contentSyncMessage);
             });
         }
         return "发布成功";

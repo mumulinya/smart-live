@@ -2,7 +2,6 @@ package com.smartLive.interaction.strategy.star;
 
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.interaction.service.IReviewService;
-import com.smartLive.marketing.api.RemoteVoucherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,7 +19,11 @@ public class ReviewStarStrategy implements StarStrategy {
     public Integer getType() {
         return ResourceTypeEnum.REVIEW_RESOURCE.getCode();
     }
-
+    /**
+     * 同步收藏数据到DB
+     *
+     * @param updateMap
+     */
     @Override
     public void transStarCountFromRedis2DB(Map<Long, Integer> updateMap) {
         log.info("正在调用代金券服务，同步数据");

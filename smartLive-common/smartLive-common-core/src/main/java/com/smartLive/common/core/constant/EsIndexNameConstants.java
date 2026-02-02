@@ -9,4 +9,6 @@ public class EsIndexNameConstants {
     public static final String BLOG_INDEX_NAME = "blog_index";
     public static final String USER_INDEX_NAME = "user_index";
     public static final String  VOUCHER_INDEX_NAME = "voucher_index";
+
+    public static final String USER_RESOURCE_INDEX_NAME="user_resource_index";
 }

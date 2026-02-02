@@ -13,13 +13,14 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
-import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
-import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
+import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
+import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.core.domain.ScrollResult;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteLikeService;
@@ -149,13 +150,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         for (Long id : ids) {
             executorService.submit(()->{
                log.info("删除es数据：{}", id);
-               SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
-               searchIndexMessage.setId(id);
-               searchIndexMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-               searchIndexMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
+               ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+               contentSyncMessage.setId(id);
+               contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+               contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
                 //发起rabbitMq信息删除
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE,esInsertRequest);
-               MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, searchIndexMessage);
+               MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, contentSyncMessage);
                //更新redis缓存
                flashRedisBlogCache(id);
                latch.countDown();
@@ -185,12 +186,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     {
         int i = blogMapper.deleteBlogById(id);
         if(i > 0){
-            SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
-            searchIndexMessage.setId(id);
-            searchIndexMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-            searchIndexMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
+            ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+            contentSyncMessage.setId(id);
+            contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+            contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
             //发起rabbitMq信息删除
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, searchIndexMessage);
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, contentSyncMessage);
             //更新redis缓存
             flashRedisBlogCache(id);
         }
@@ -404,6 +405,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public Long saveBlog(Blog blog) {
         blog.setUserId(UserContextHolder.getUser().getId());
+        blog.setCreateTime(DateUtils.getNowDate());
        if (blog.getShopId() != null) {
            ShopDTO shopDTO = remoteShopService.getShopById(blog.getShopId());
            if(shopDTO!= null){
@@ -434,6 +436,18 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_FEED_EXCHANGE_NAME, MqConstants.INTERACT_FEED_BLOG_ROUTING, feedEventMessage);
         //添加es数据
         publish(new String[]{blog.getId().toString()});
+        //添加用户es数据
+        String id= blog.getUserId()+"_"+GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+blog.getId().toString();
+        UserResourceMessage userResourceMessage = UserResourceMessage.builder()
+                .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
+                .id(id)
+                .userId(blog.getUserId())
+                .sourceId(blog.getId())
+                .sourceType(GlobalBizTypeEnum.BLOG.getCode())
+                .actionType(UserResourceActionTypeConstants.USER_RESOURCE_ACTION_PUBLISH)
+                .data(blog)
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_RESOURCE_INSERT, userResourceMessage);
         //更新redis缓存
         redisService.deleteObject(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
         //返回id
@@ -851,7 +865,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                     blog.setIcon(user.getIcon());
                 });
                 // 创建请求并发送
-                SearchIndexBatchMessage request = new SearchIndexBatchMessage();
+                ContentBatchSyncMessage request = new ContentBatchSyncMessage();
                 request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
                 request.setData(blogs);
                 request.setType(GlobalBizTypeEnum.BLOG.getCode());
@@ -902,16 +916,16 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                   return;
               }
               queryBlogUser(blog);
-              SearchIndexMessage searchIndexMessage = new SearchIndexMessage();
-              searchIndexMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-              searchIndexMessage.setData(blog);
-              searchIndexMessage.setId(blog.getId());
-              searchIndexMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
+              ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+              contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+              contentSyncMessage.setData(blog);
+              contentSyncMessage.setId(blog.getId());
+              contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
 //              rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BLOG_INSERT, esInsertRequest);
               MqMessageSendUtils.sendMqMessage(rabbitTemplate,
                       MqConstants.ES_EXCHANGE,
                       MqConstants.ES_ROUTING_BLOG_INSERT,
-                      searchIndexMessage);
+                      contentSyncMessage);
           });
         }
         return "发布成功";

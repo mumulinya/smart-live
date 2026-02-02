@@ -24,4 +24,11 @@ public interface StarStrategy {
      * @return 收藏数
      */
     Integer getStarCount(Long sourceId);
+    /**
+     * 同步数据到ES
+     * 使用 default 关键字提供默认空实现
+     * 只有需要同步搜索的资源（如博客、店铺）才需要重写此方法
+     */
+    default void syncUserResource(Long userId,Long sourceId) {
+    }
 }

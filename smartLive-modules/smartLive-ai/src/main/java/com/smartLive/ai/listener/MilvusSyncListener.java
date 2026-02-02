@@ -1,9 +1,8 @@
 package com.smartLive.ai.listener;
-import com.smartLive.ai.entity.request.MilvusInsertRequest;
 import com.smartLive.ai.strategy.milvus.MilvusSyncStrategy;
 import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.common.rabbitmq.domain.SearchIndexBatchMessage;
-import com.smartLive.common.rabbitmq.domain.SearchIndexMessage;
+import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
+import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -34,7 +33,7 @@ public class MilvusSyncListener {
                             MqConstants.MILVUS_ROUTING_SHOP_INSERT,
                             MqConstants.MILVUS_ROUTING_BLOG_INSERT})
     })
-    public void handleSingleInsert(SearchIndexMessage request) {
+    public void handleSingleInsert(ContentSyncMessage request) {
       executorService.submit(()->{
           log.info("线程：{}接收Milvus单条插入请求: {}",Thread.currentThread().getName(), request);
           // 1. 获取策略
@@ -60,7 +59,7 @@ public class MilvusSyncListener {
                             MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT,
                             MqConstants.MILVUS_ROUTING_BLOG_BATCH_INSERT})
     })
-    public void handleBatchInsert(SearchIndexBatchMessage request) {
+    public void handleBatchInsert(ContentBatchSyncMessage request) {
        executorService.submit(()->{
            log.info("线程：{}接收Milvus批量插入请求: {}",Thread.currentThread().getName(), request);
            MilvusSyncStrategy strategy = milvusStrategyMap.get(request.getType());
@@ -85,7 +84,7 @@ public class MilvusSyncListener {
                             MqConstants.MILVUS_ROUTING_SHOP_DELETE,
                             MqConstants.MILVUS_ROUTING_BLOG_DELETE})
     })
-    public void handleDelete(SearchIndexMessage request) {
+    public void handleDelete(ContentSyncMessage request) {
         executorService.submit(()->{
             log.info("线程：{}接收Milvus删除请求: id={}",Thread.currentThread().getName(), request.getId());
             MilvusSyncStrategy strategy = milvusStrategyMap.get(request.getType());

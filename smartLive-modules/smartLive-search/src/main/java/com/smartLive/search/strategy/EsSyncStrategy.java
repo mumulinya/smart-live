@@ -1,5 +1,8 @@
 package com.smartLive.search.strategy;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
@@ -35,4 +38,21 @@ public interface EsSyncStrategy {
      * @return 是否成功
      */
     boolean delete(String indexName, String id) throws IOException;
+
+    /**
+     *
+     * @param request
+     * @return
+     */
+   default boolean insertUserResource(UserResourceMessage request) throws IOException {
+       return true;
+   }
+    /**
+     * 更新用户资源
+     * @param userResourceMessage
+     * @return
+     */
+     default boolean updateUserResource(UserResourceMessage userResourceMessage) throws IOException {
+         return true;
+     }
 }

@@ -73,6 +73,8 @@ public class MqConstants {
     public static final String ES_BATCH_INSERT_QUEUE = "es.sync.batch.insert.queue";
     public static final String ES_DELETE_QUEUE = "es.sync.delete.queue";
 
+    public static final String ES_USER_RESOURCE_QUEUE = "es.sync.user.resource.queue";
+
     // ==================== Milvus 交换机 ====================
     public static final String MILVUS_EXCHANGE = "milvus.sync.exchange";
 
@@ -92,6 +94,7 @@ public class MqConstants {
     public static final String ES_ROUTING_USER_INSERT = "es.user.insert";
     public static final String ES_ROUTING_SHOP_INSERT = "es.shop.insert";
     public static final String ES_ROUTING_BLOG_INSERT = "es.blog.insert";
+    public static final String ES_ROUTING_USER_RESOURCE_INSERT="es.userResource.insert";
 
     public static final String ES_ROUTING_VOUCHER_BATCH_INSERT = "es.voucher.batch.insert";
     public static final String ES_ROUTING_USER_BATCH_INSERT = "es.user.batch.insert";
