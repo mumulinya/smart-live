@@ -2,6 +2,7 @@ package com.smartLive.interaction.strategy.star;
 
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.MqConstants;
+import com.smartLive.common.core.constant.UserResourceActionTypeConstants;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.rabbitmq.configure.RabbitTemplateConfig;
@@ -56,14 +57,15 @@ public class VoucherStarStrategy implements StarStrategy{
     public void syncUserResource(Long userId, Long sourceId) {
         VoucherDTO voucher = remoteVoucherService.getVoucherById(sourceId);
         //文档id
-        String  id = userId+"_"+GlobalBizTypeEnum.VOUCHER.getBizDomain()+"_"+voucher.getId().toString();
+        String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_STAR;
+        String  id = userId+"_"+actionType+"_"+GlobalBizTypeEnum.VOUCHER.getBizDomain()+"_"+voucher.getId().toString();
         UserResourceMessage userResourceMessage = UserResourceMessage.builder()
                 .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
                 .id(id)
                 .userId(userId)
                 .sourceType(ResourceTypeEnum.VOUCHER_RESOURCE.getCode())
                 .sourceId(sourceId)
-                .actionType("star")
+                .actionType(actionType)
                 .data(voucher)
                 .build();
         //发送消息

@@ -128,6 +128,8 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                 redisService.incrementCacheValue(likeCountKey);
                 //记录脏数据
                 redisService.setCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
+                //保存用户点赞资源到es
+                StrategyExecutor.executeStrategyVoid(likeStrategyMap, like.getSourceType(), strategy -> strategy.syncUserResource(userId, like.getSourceId()));
             }
         }
         return true;
@@ -215,6 +217,9 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                     .eq("source_id", like.getSourceId())
                     .orderByDesc("create_time")
                     .list();
+         if (userList == null || userList.isEmpty()) {
+            return Collections.emptyList();
+        }
             //写入redis
             saveLikeIdListToRedis(likeKeyPrefix+like.getSourceId(),userList);
             userIdList = userList.stream().map(Like::getUserId).collect(Collectors.toList());

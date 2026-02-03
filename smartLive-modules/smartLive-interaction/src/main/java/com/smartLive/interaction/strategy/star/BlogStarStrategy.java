@@ -4,6 +4,7 @@ import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.MqConstants;
+import com.smartLive.common.core.constant.UserResourceActionTypeConstants;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
@@ -55,13 +56,15 @@ public class BlogStarStrategy implements StarStrategy {
     @Override
     public void syncUserResource(Long userId,Long sourceId) {
         BlogDTO blog = remoteBlogService.getBlogById(sourceId);
+        String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_STAR;
+        String  id = userId+"_"+actionType+"_"+GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+blog.getId().toString();
         UserResourceMessage userResourceMessage = UserResourceMessage.builder()
                 .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
-                .id(GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+sourceId)
+                .id(id)
                 .userId(userId)
-                .sourceType(ResourceTypeEnum.VOUCHER_RESOURCE.getCode())
+                .sourceType(ResourceTypeEnum.BLOG_RESOURCE.getCode())
                 .sourceId(sourceId)
-                .actionType("star")
+                .actionType(actionType)
                 .data(blog)
                 .build();
         //发送消息

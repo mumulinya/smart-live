@@ -2,6 +2,9 @@ package com.smartLive.search.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.EsIndexNameConstants;
+import com.smartLive.common.core.constant.ResourceTypeConstants;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.search.domain.BlogDoc;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
@@ -31,14 +34,11 @@ public class EsTool {
         if (data instanceof BlogDoc) {
             BlogDoc blog = (BlogDoc) data;
             jsonMap.put("id", blog.getId());
-            jsonMap.put("shopId", blog.getShopId());
             jsonMap.put("typeId", blog.getTypeId());
-            jsonMap.put("userId", blog.getUserId());
             jsonMap.put("title", blog.getTitle());
             jsonMap.put("images", blog.getImages());
             jsonMap.put("content", blog.getContent());
             jsonMap.put("liked", blog.getLiked());
-            jsonMap.put("comments", blog.getComments());
             if (blog.getCreateTime() != null) {
                 jsonMap.put("createTime", blog.getCreateTime().getTime());
             }
@@ -109,6 +109,41 @@ public class EsTool {
         return jsonMap;
     }
     /**
+     * 根据数据类型获取索引的默认搜索字段
+     */
+
+    public static String[] getDefaultSearchFields(Integer type) {
+        switch (type) {
+            case ResourceTypeConstants.BLOG_CODE: return new String[]{"title", "content", "name"};
+            case ResourceTypeConstants.SHOP_CODE: return new String[]{"name", "area", "address"};
+            case ResourceTypeConstants.USER_CODE: return new String[]{"nickName", "introduce", "city","id"};
+            case ResourceTypeConstants.VOUCHER_CODE: return new String[]{"title", "subTitle", "shopName"};
+            default: return new String[]{};
+        }
+    }
+    /**
+     * 根据数据类型将搜索结果转换为对象列表
+     */
+    public static List<? extends Object> convertSearchResult(Integer type, SearchResponse response) throws Exception {
+        switch (type) {
+            case ResourceTypeConstants.BLOG_CODE:
+                return ResponseConverter.convertToBlogList(response);
+            case ResourceTypeConstants.SHOP_CODE:
+                return ResponseConverter.convertToShopList(response);
+            case ResourceTypeConstants.USER_CODE:
+                return ResponseConverter.convertToUserList(response);
+            case ResourceTypeConstants.VOUCHER_CODE:
+                return ResponseConverter.convertToVoucherList(response);
+            default:
+                // 返回原始命中数据
+                List<Map<String, Object>> result = new ArrayList<>();
+                for (SearchHit hit : response.getHits().getHits()) {
+                    result.add(hit.getSourceAsMap());
+                }
+                return result;
+        }
+    }
+    /**
      * 获取索引的默认搜索字段
      */
 
@@ -116,7 +151,7 @@ public class EsTool {
         switch (indexName) {
             case EsIndexNameConstants.BLOG_INDEX_NAME: return new String[]{"title", "content", "name"};
             case EsIndexNameConstants.SHOP_INDEX_NAME: return new String[]{"name", "area", "address"};
-            case EsIndexNameConstants.USER_INDEX_NAME: return new String[]{"nickName", "introduce", "city"};
+            case EsIndexNameConstants.USER_INDEX_NAME: return new String[]{"nickName", "introduce","id"};
             case EsIndexNameConstants.VOUCHER_INDEX_NAME: return new String[]{"title", "subTitle", "shopName"};
             default: return new String[]{};
         }
@@ -128,10 +163,10 @@ public class EsTool {
         switch (indexName) {
             case EsIndexNameConstants.BLOG_INDEX_NAME:
                 return ResponseConverter.convertToBlogList(response);
-            case EsIndexNameConstants.SHOP_INDEX_NAME:
-                return ResponseConverter.convertToShopList(response);
             case EsIndexNameConstants.USER_INDEX_NAME:
                 return ResponseConverter.convertToUserList(response);
+            case EsIndexNameConstants.SHOP_INDEX_NAME:
+                return ResponseConverter.convertToShopList(response);
             case EsIndexNameConstants.VOUCHER_INDEX_NAME:
                 return ResponseConverter.convertToVoucherList(response);
             default:
@@ -143,6 +178,7 @@ public class EsTool {
                 return result;
         }
     }
+
     /**
      * 批量转换LinkedHashMap列表到指定类型
      */

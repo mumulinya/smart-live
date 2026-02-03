@@ -162,7 +162,7 @@ public class SearchServiceImpl implements ISearchService {
      */
     @Override
     public Boolean insertSearchHistory(Long userId,String keyword){
-        String key = RedisConstants.SEARCH_HISTORY_KEY + userId;
+        String key= RedisConstants.SEARCH_INDEX_HISTORY_KEY+userId;
         double score = System.currentTimeMillis();
         // 先删除已存在的相同关键词
         redisService.removeCacheZSetObject(key, keyword);

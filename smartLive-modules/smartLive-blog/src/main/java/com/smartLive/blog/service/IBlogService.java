@@ -211,4 +211,10 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     Integer getBlogLikeCount(Long sourceId);
+    /**
+     * 获取博客收藏数
+     * @param sourceId
+     * @return
+     */
+    Integer getBlogStarCount(Long sourceId);
 }

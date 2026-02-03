@@ -145,7 +145,7 @@ public class BlogController extends BaseController
 
 
     /**
-     * 发布博文
+     * 新增博文
      * @param blog 博客实体
      * @return 操作结果
      */

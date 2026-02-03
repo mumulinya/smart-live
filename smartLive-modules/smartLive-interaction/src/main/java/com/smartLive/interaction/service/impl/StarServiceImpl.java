@@ -163,6 +163,8 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                 redisService.incrementCacheValue(starCountKey);
                 //记录脏数据
                 redisService.setCacheSet(starDirtyKeyPrefix, star.getSourceId().toString());
+                //同步个人资源到es
+                starStrategyMap.get(star.getSourceType()).syncUserResource(userId, star.getSourceId());
             }
         }else{
             //取消收藏

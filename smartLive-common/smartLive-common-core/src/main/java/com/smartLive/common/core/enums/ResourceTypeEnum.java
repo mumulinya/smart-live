@@ -15,6 +15,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ResourceTypeEnum {
+    USER_RESOURCE(GlobalBizTypeEnum.USER.getCode(), "用户资源", GlobalBizTypeEnum.USER.getBizDomain(),
+            null, null),
     // 1. 博客
     BLOG_RESOURCE(GlobalBizTypeEnum.BLOG.getCode(), "博客资源", GlobalBizTypeEnum.BLOG.getBizDomain(),
             RedisConstants.BLOG_COMMENT_KEY, RedisConstants.BLOG_STAR_KEY),

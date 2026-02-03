@@ -36,11 +36,11 @@ public class BlogInnerController extends BaseController
      * @return
      */
     @GetMapping("/getBlogById/{id}")
-    Blog getBlogById( @PathVariable("id")Long id){
+    Blog getBlogById( @PathVariable("id") Long id){
         return blogService.getBlogById(id);
     }
     /**
-     * 获取博客数量
+     * 获取用户博客数量
      * @param userId
      * @return
      */
@@ -100,5 +100,12 @@ public class BlogInnerController extends BaseController
     @GetMapping("/getBlogLikeCount/{sourceId}")
     Integer getBlogLikeCount(@PathVariable("sourceId") Long sourceId){
         return blogService.getBlogLikeCount(sourceId);
+    }
+    /**
+     * 获取博客收藏数
+     */
+    @GetMapping("/getBlogStarCount/{sourceId}")
+    Integer getStarCount(@PathVariable("sourceId") Long sourceId){
+        return blogService.getBlogStarCount(sourceId);
     }
 }

@@ -140,7 +140,7 @@ public class SearchController {
     @GetMapping("/history")
     public Result getSearchHistory(@RequestParam("userId") Long userId) {
         try {
-            String key= RedisConstants.SEARCH_HISTORY_KEY+userId;
+            String key= RedisConstants.SEARCH_INDEX_HISTORY_KEY+userId;
             Set<Object> history = redisService.getCacheZSetReverseRange(key, 0, 9);
             return Result.ok(new ArrayList<>(history));
         } catch (Exception e) {
@@ -152,7 +152,7 @@ public class SearchController {
     @DeleteMapping("/history")
     public Result clearSearchHistory(@RequestParam("userId") Long userId) {
         try {
-            String key = "search:history:" + userId;
+            String key= RedisConstants.SEARCH_INDEX_HISTORY_KEY+userId;
             redisService.deleteObject(key);
             return Result.ok("搜索历史已清空");
         } catch (Exception e) {

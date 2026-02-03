@@ -1,4 +1,4 @@
-package com.smartLive.interaction.strategy.star;
+package com.smartLive.interaction.strategy.follow;
 
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.MqConstants;
@@ -7,10 +7,11 @@ import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.interaction.strategy.star.StarStrategy;
 import com.smartLive.marketing.api.DTO.VoucherDTO;
-import com.smartLive.shop.api.DTO.ShopDTO;
-import com.smartLive.shop.api.RemoteShopService;
+import com.smartLive.marketing.api.RemoteVoucherService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
@@ -18,24 +19,31 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
-public class ShopStarStrategy implements StarStrategy{
+@Slf4j
+public class VoucherFollowStrategy implements FollowStrategy {
 
-    private final RemoteShopService remoteShopService;
+    private final RemoteVoucherService remoteVoucherService;
     private final RabbitTemplate rabbitTemplate;
 
     @Override
     public Integer getType() {
-        return ResourceTypeEnum.SHOP_RESOURCE.getCode();
+        return ResourceTypeEnum.VOUCHER_RESOURCE.getCode();
     }
     /**
-     * 同步收藏数据到DB
+     * 同步数据到DB
      *
      * @param updateMap
      */
     @Override
     public void transStarCountFromRedis2DB(Map<Long, Integer> updateMap) {
+        log.info("正在调用代金券服务，同步数据");
         // 调用博客服务的批量更新接口
-        remoteShopService.updateStarCountBatch(updateMap);
+        Boolean b = remoteVoucherService.updateStarCountBatch(updateMap);
+        if (b) {
+            log.info("同步数据成功");
+        } else {
+            log.info("同步数据失败");
+        }
     }
 
     /**
@@ -47,17 +55,18 @@ public class ShopStarStrategy implements StarStrategy{
      */
     @Override
     public void syncUserResource(Long userId, Long sourceId) {
-        ShopDTO shop = remoteShopService.getShopById(sourceId);
-        String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_STAR;
-        String  id = userId+"_"+actionType+"_"+GlobalBizTypeEnum.SHOP.getBizDomain()+"_"+shop.getId().toString();
+        VoucherDTO voucher = remoteVoucherService.getVoucherById(sourceId);
+        //文档id
+        String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_FOLLOW;
+        String  id = userId+"_"+actionType+"_"+GlobalBizTypeEnum.VOUCHER.getBizDomain()+"_"+voucher.getId().toString();
         UserResourceMessage userResourceMessage = UserResourceMessage.builder()
                 .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
                 .id(id)
                 .userId(userId)
-                .sourceType(ResourceTypeEnum.SHOP_RESOURCE.getCode())
+                .sourceType(ResourceTypeEnum.VOUCHER_RESOURCE.getCode())
                 .sourceId(sourceId)
                 .actionType(actionType)
-                .data(shop)
+                .data(voucher)
                 .build();
         //发送消息
         MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_RESOURCE_INSERT, userResourceMessage);
@@ -71,6 +80,6 @@ public class ShopStarStrategy implements StarStrategy{
      */
     @Override
     public Integer getStarCount(Long sourceId) {
-        return remoteShopService.getStarCount(sourceId);
+        return remoteVoucherService.getVoucherStarCount(sourceId);
     }
 }

@@ -74,8 +74,28 @@ public class VoucherDoc extends BaseEntity implements Serializable
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
+    /**
+     * 有效期类型：1-固定日期，2-动态有效期（领券后N天有效）
+     */
+    private Integer validityType;
+
+    /**
+     * 固定日期的开始/结束时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date useStartTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date useEndTime;
+
+    /**
+     * 动态有效期：领取后多少天有效
+     */
+    private Integer validDays;
     //店铺名称
     private String shopName;
     //店铺类型
     private Long typeId;
+    private String actionType;
+    private Integer sourceType;
+    private Long sourceId;
 }

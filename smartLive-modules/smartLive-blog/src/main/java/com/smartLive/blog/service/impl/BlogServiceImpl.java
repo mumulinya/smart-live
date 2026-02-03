@@ -437,14 +437,15 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         //添加es数据
         publish(new String[]{blog.getId().toString()});
         //添加用户es数据
-        String id= blog.getUserId()+"_"+GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+blog.getId().toString();
-        UserResourceMessage userResourceMessage = UserResourceMessage.builder()
+        String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_PUBLISH;
+        queryBlogUser(blog);
+        String  id = blog.getUserId()+"_"+actionType+"_"+GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+blog.getId().toString();        UserResourceMessage userResourceMessage = UserResourceMessage.builder()
                 .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
                 .id(id)
                 .userId(blog.getUserId())
                 .sourceId(blog.getId())
                 .sourceType(GlobalBizTypeEnum.BLOG.getCode())
-                .actionType(UserResourceActionTypeConstants.USER_RESOURCE_ACTION_PUBLISH)
+                .actionType(actionType)
                 .data(blog)
                 .build();
         MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_RESOURCE_INSERT, userResourceMessage);
@@ -560,7 +561,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Blog getBlogById(Long id) {
-        Blog blog = blogMapper.selectBlogById(id);
+        Blog blog = query().eq("id", id).one();
+        queryBlogUser(blog);
         return blog;
     }
 
@@ -744,8 +746,20 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Integer getBlogLikeCount(Long sourceId) {
-        Blog blog = queryBlogById(sourceId);
+        Blog blog = query().eq("id", sourceId).one();
         return blog.getLiked();
+    }
+
+    /**
+     * 获取博客收藏数
+     *
+     * @param sourceId
+     * @return
+     */
+    @Override
+    public Integer getBlogStarCount(Long sourceId) {
+        Blog blog = query().eq("id", sourceId).one();
+        return blog.getStared();
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.smartLive.interaction.strategy.star;
+package com.smartLive.interaction.strategy.follow;
 
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.MqConstants;
@@ -7,7 +7,6 @@ import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
-import com.smartLive.marketing.api.DTO.VoucherDTO;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,7 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
-public class ShopStarStrategy implements StarStrategy{
+public class ShopFollowStrategy implements FollowStrategy {
 
     private final RemoteShopService remoteShopService;
     private final RabbitTemplate rabbitTemplate;
@@ -48,7 +47,7 @@ public class ShopStarStrategy implements StarStrategy{
     @Override
     public void syncUserResource(Long userId, Long sourceId) {
         ShopDTO shop = remoteShopService.getShopById(sourceId);
-        String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_STAR;
+        String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_FOLLOW;
         String  id = userId+"_"+actionType+"_"+GlobalBizTypeEnum.SHOP.getBizDomain()+"_"+shop.getId().toString();
         UserResourceMessage userResourceMessage = UserResourceMessage.builder()
                 .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)

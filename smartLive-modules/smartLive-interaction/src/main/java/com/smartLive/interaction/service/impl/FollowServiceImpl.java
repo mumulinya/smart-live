@@ -16,6 +16,7 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.mapper.FollowMapper;
 import com.smartLive.interaction.service.IFollowService;
+import com.smartLive.interaction.strategy.follow.FollowStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,11 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Autowired
     private Map<Integer, ResourceStrategy> resourceStrategyMap;
-
+    /**
+     * 策略模式
+     */
+    @Autowired
+    private Map<Integer, FollowStrategy> followStrategyMap  ;
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
@@ -155,6 +160,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 //关注成功，添加关注到redis
                 redisService.setCacheZSet(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(targetFansKey, userId.toString(), System.currentTimeMillis());
+                //同步个人资源到es
+                followStrategyMap.get(follow.getSourceType()).syncUserResource(userId, follow.getSourceId());
             }
             return save;
         }else{

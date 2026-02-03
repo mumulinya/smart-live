@@ -28,7 +28,6 @@ public class ShopDoc extends BaseEntity implements Serializable
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /** 商铺名称 */
@@ -71,7 +70,9 @@ public class ShopDoc extends BaseEntity implements Serializable
 
     // 添加location字段
     private String location;
-
+    private String actionType;
+    private Integer sourceType;
+    private Long sourceId;
     private void updateLocation() {
         if (this.x != null && this.y != null) {
             this.location = this.y + "," + this.x; // geo_point格式：lat,lon

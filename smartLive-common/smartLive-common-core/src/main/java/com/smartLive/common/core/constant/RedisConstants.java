@@ -141,9 +141,14 @@ public class RedisConstants {
     public static final String CACHE_AI_COMMENT_KEY = "cache:aiComment:";
     public static final long CACHE_AI_COMMENT_TTL = 600L;
     /**
-     * 搜索历史
+     * 用户的首页搜索历史
      */
-    public static final String SEARCH_HISTORY_KEY = "search:history:";
+    public static final String SEARCH_INDEX_HISTORY_KEY = "search:index:history:";
+
+    /**
+     * 用户的个人中心搜索历史
+     */
+    public static final String SEARCH_USER_HISTORY_KEY = "search:user:history:";
     public static final Integer SEARCH_HISTORY_TTL = 30;//30天
     /**
      * 热门搜索

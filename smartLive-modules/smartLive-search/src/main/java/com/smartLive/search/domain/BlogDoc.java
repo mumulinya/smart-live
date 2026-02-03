@@ -20,19 +20,10 @@ import java.util.Date;
 public class BlogDoc extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
-
     private Long id;
-
-    /** 商户id */
-    @Excel(name = "商户id")
-    private Long shopId;
 
     /** 博客类型id */
     private Long typeId;
-
-    /** 用户id */
-    @Excel(name = "用户id")
-    private Long userId;
 
     /** 标题 */
     @Excel(name = "标题")
@@ -46,9 +37,6 @@ public class BlogDoc extends BaseEntity implements Serializable
 
     /** 点赞数量 */
     private Integer liked;
-
-    /** 评论数量 */
-    private Integer comments;
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
