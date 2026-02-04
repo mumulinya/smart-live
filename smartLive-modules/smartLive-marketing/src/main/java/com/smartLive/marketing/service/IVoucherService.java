@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.smartLive.marketing.domain.VO.VoucherVO;
 import com.smartLive.marketing.domain.Voucher;
 
 /**
@@ -20,7 +21,14 @@ public interface IVoucherService extends IService<Voucher>
      * @param id 优惠券主键
      * @return 优惠券
      */
-     Voucher selectVoucherById(Long id);
+     VoucherVO selectVoucherById(Long id);
+    /**
+     * 鏌ヨ浼樻儬鍒?锛堢粰鍐呴儴鎺ュ彛浣跨敤锛?
+     *
+     * @param id 浼樻儬鍒镐富閿?
+     * @return 浼樻儬鍒?
+     */
+     Voucher selectVoucherEntityById(Long id);
 
     /**
      * 查询优惠券列表
@@ -28,7 +36,14 @@ public interface IVoucherService extends IService<Voucher>
      * @param voucher 优惠券
      * @return 优惠券集合
      */
-     List<Voucher> selectVoucherList(Voucher voucher);
+     List<Voucher> selectVoucherEntityList(Voucher voucher);
+    /**
+     * 鏌ヨ浼樻儬鍒稿垪琛?
+     *
+     * @param voucher 浼樻儬鍒?
+     * @return 浼樻儬鍒搴旂敤VO闆嗗悎
+     */
+     List<VoucherVO> selectVoucherList(Voucher voucher);
 
     /**
      * 新增优惠券
@@ -67,7 +82,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param shopId
      * @return
      */
-    List<Voucher> queryVoucherOfShop(Long shopId);
+    List<VoucherVO> queryVoucherOfShop(Long shopId);
 
     /**
      * 添加秒杀券
@@ -139,7 +154,7 @@ public interface IVoucherService extends IService<Voucher>
      * @param id 优惠券id
      * @return 优惠券
      */
-    Voucher getVoucherById(Long id);
+    VoucherVO getVoucherById(Long id);
     /**
      * 添加库存
      *

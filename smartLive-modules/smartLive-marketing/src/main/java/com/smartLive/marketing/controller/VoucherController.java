@@ -3,9 +3,8 @@ package com.smartLive.marketing.controller;
 import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.marketing.service.ISeckillVoucherService;
+import com.smartLive.marketing.domain.VO.VoucherVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import com.smartLive.common.log.annotation.Log;
@@ -37,14 +36,14 @@ public class VoucherController extends BaseController {
     @GetMapping("/list")
     public TableDataInfo list(Voucher voucher) {
         startPage();
-        List<Voucher> list = voucherService.selectVoucherList(voucher);
+        List<VoucherVO> list = voucherService.selectVoucherList(voucher);
         return getDataTable(list);
     }
 
 
     @GetMapping("/voucherList")
     public AjaxResult voucherList(Voucher voucher) {
-        List<Voucher> list = voucherService.selectVoucherList(voucher);
+        List<VoucherVO> list = voucherService.selectVoucherList(voucher);
         return success(list);
     }
     /**
@@ -54,7 +53,7 @@ public class VoucherController extends BaseController {
     @Log(title = "优惠券", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, Voucher voucher) {
-        List<Voucher> list = voucherService.selectVoucherList(voucher);
+        List<Voucher> list = voucherService.selectVoucherEntityList(voucher);
         ExcelUtil<Voucher> util = new ExcelUtil<Voucher>(Voucher.class);
         util.exportExcel(response, list, "优惠券数据");
     }
@@ -155,7 +154,7 @@ public class VoucherController extends BaseController {
      */
     @GetMapping("/list/{shopId}")
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
-        List<Voucher> voucherList = voucherService.queryVoucherOfShop(shopId);
+        List<VoucherVO> voucherList = voucherService.queryVoucherOfShop(shopId);
         return Result.ok(voucherList);
     }
 
@@ -188,4 +187,5 @@ public class VoucherController extends BaseController {
         Long userId = UserContextHolder.getUser().getId();
         return Result.ok(voucherService.buyVoucher(voucherId, userId));
     }
+
 }

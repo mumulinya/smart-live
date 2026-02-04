@@ -94,7 +94,7 @@ public class VoucherInnerController extends BaseController {
      */
     @GetMapping("/{id}")
     public Voucher getVoucherById(@PathVariable("id") Long voucherId){
-        return voucherService.selectVoucherById(voucherId);
+        return voucherService.selectVoucherEntityById(voucherId);
     }
     /**
      * 批量收藏点赞数

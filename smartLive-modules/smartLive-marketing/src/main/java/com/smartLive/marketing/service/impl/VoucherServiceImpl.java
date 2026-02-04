@@ -25,6 +25,7 @@ import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.marketing.domain.SeckillVoucher;
+import com.smartLive.marketing.domain.VO.VoucherVO;
 import com.smartLive.marketing.service.ISeckillVoucherService;
 import com.smartLive.marketing.until.RedisIdWorker;
 import com.smartLive.order.api.DTO.VoucherOrderDTO;
@@ -33,6 +34,7 @@ import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -96,7 +98,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @return 优惠券
      */
     @Override
-    public Voucher selectVoucherById(Long id)
+    public VoucherVO selectVoucherById(Long id)
     {
         Voucher voucher = voucherMapper.selectVoucherById(id);
         if (voucher != null){
@@ -115,6 +117,29 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 //            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
 //            voucher.setIsFollow(isFollow);
         }
+        return convertToVoucherVO(voucher);
+    }
+
+    @Override
+    public Voucher selectVoucherEntityById(Long id)
+    {
+        Voucher voucher = voucherMapper.selectVoucherById(id);
+        if (voucher != null){
+            querySeckill(voucher);
+            queryVoucherShopMessage(voucher);
+//            //鍒ゆ柇鏄惁鏀惰棌
+//            StarDTO starDTO=new StarDTO();
+//            starDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+//            starDTO.setSourceId(id);
+//            Boolean isStar = remoteStarService.isStar(starDTO);
+//            voucher.setIsStar(isStar);
+//            //鍒ゆ柇鏄惁鍏虫敞
+//            FollowDTO followDTO=new FollowDTO();
+//            followDTO.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+//            followDTO.setSourceId(id);
+//            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+//            voucher.setIsFollow(isFollow);
+        }
         return voucher;
     }
 
@@ -125,13 +150,20 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @return 优惠券
      */
     @Override
-    public List<Voucher> selectVoucherList(Voucher voucher)
+    public List<Voucher> selectVoucherEntityList(Voucher voucher)
     {
         List<Voucher> voucherList = voucherMapper.selectVoucherList(voucher);
         voucherList.forEach(v -> {
             querySeckill(v);
         });
         return voucherList;
+    }
+
+    @Override
+    public List<VoucherVO> selectVoucherList(Voucher voucher)
+    {
+        List<Voucher> voucherList = selectVoucherEntityList(voucher);
+        return convertToVoucherVOList(voucherList);
     }
 
     /**
@@ -414,11 +446,11 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @return
      */
     @Override
-    public List<Voucher> queryVoucherOfShop(Long shopId) {
+    public List<VoucherVO> queryVoucherOfShop(Long shopId) {
         // 查询优惠券信息
         List<Voucher> vouchers = getBaseMapper().queryVoucherOfShop(shopId);
         // 返回结果
-        return vouchers;
+        return convertToVoucherVOList(vouchers);
     }
 
     /**
@@ -474,6 +506,26 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             voucher.setTypeId(shopDTO.getTypeId());
             voucher.setShopImages(shopDTO.getImages());
         }
+    }
+
+    private VoucherVO convertToVoucherVO(Voucher voucher) {
+        if (voucher == null) {
+            return null;
+        }
+        VoucherVO voucherVO = new VoucherVO();
+        BeanUtils.copyProperties(voucher, voucherVO);
+        return voucherVO;
+    }
+
+    private List<VoucherVO> convertToVoucherVOList(List<Voucher> voucherList) {
+        if (voucherList == null || voucherList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<VoucherVO> voList = new ArrayList<>(voucherList.size());
+        for (Voucher voucher : voucherList) {
+            voList.add(convertToVoucherVO(voucher));
+        }
+        return voList;
     }
 
     /**
@@ -532,7 +584,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      * @return 优惠券
      */
     @Override
-    public Voucher getVoucherById(Long id) {
+    public VoucherVO getVoucherById(Long id) {
         Voucher voucher = voucherMapper.selectVoucherById(id);
         if (voucher != null){
             //查询是否是秒杀代金券
@@ -550,7 +602,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             Boolean isFollow = remoteFollowService.isFollowed(followDTO);
             voucher.setIsFollow(isFollow);
         }
-        return voucher;
+        return convertToVoucherVO(voucher);
     }
 
     /**
