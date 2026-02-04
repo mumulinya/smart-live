@@ -12,7 +12,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 优惠券订单返回对象 (View Object)
+ * 订单返回对象 (View Object)
  * 用于前端展示订单详情
  * * @author mumulin
  * @date 2025-09-21
@@ -20,7 +20,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class VoucherOrderVO extends BaseEntity implements Serializable
+public class OrderVO extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
@@ -31,9 +31,12 @@ public class VoucherOrderVO extends BaseEntity implements Serializable
     /** 下单的用户id */
     private Long userId;
 
-    /** 购买的代金券id */
+    /** 来源ID（可以是代金券ID、商品ID等） */
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long voucherId;
+    private Long sourceId;
+
+    /** 来源类型 1：代金券；2：商品；3：服务 */
+    private Integer sourceType;
 
     /** 代金券标题 */
     private String title;

@@ -7,8 +7,10 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.domain.Blog;
+import com.smartLive.blog.domain.VO.BlogVO;
 import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
+import org.springframework.beans.BeanUtils;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
@@ -70,6 +72,34 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private RemoteLikeService remoteLikeService;
     @Autowired
     private RemoteStarService remoteStarService;
+
+    /**
+     * 将Blog实体转换为BlogVO
+     * @param blog Blog实体
+     * @return BlogVO对象
+     */
+    private BlogVO convertToBlogVO(Blog blog) {
+        if (blog == null) {
+            return null;
+        }
+        BlogVO blogVO = new BlogVO();
+        BeanUtils.copyProperties(blog, blogVO);
+        return blogVO;
+    }
+
+    /**
+     * 将Blog列表转换为BlogVO列表
+     * @param blogList Blog实体列表
+     * @return BlogVO列表
+     */
+    private List<BlogVO> convertToBlogVOList(List<Blog> blogList) {
+        if (CollUtil.isEmpty(blogList)) {
+            return new ArrayList<>();
+        }
+        return blogList.stream()
+                .map(this::convertToBlogVO)
+                .collect(Collectors.toList());
+    }
 
     /**
      * 查询博客
@@ -208,7 +238,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public Blog queryBlogById(Long id) {
+    public BlogVO queryBlogById(Long id) {
         //从redis查询博客缓存
         String key= RedisConstants.CACHE_BLOG_KEY+id;
         String blogJson =redisService.getCacheObject(key);
@@ -218,7 +248,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             isBlogLiked(blog);
             //判断当前用户是否已经收藏
             isBlogStared(blog);
-            return blog;
+            return convertToBlogVO(blog);
         }
         //根据博客id查询博客信息
         Blog blog = getById(id);
@@ -232,7 +262,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         //查询blog是否被点赞
         isBlogLiked(blog);
         //返回结果
-        return blog;
+        return convertToBlogVO(blog); // Changed from return blog;
     }
 
     /**
@@ -287,7 +317,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
 
-    public List<Blog> queryHotBlog(Integer current) {
+    public List<BlogVO> queryHotBlog(Integer current) {
         //从redis查询热门博客
         String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
         List<Blog> blogList = getBlogListFromRedis(key);
@@ -295,7 +325,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             blogList.forEach(blog ->{
                 isBlogLiked(blog);
             });
-            return blogList;
+            return convertToBlogVOList(blogList);
         }
         // 根据用户查询
         Page<Blog> page = query()
@@ -312,7 +342,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //把查询结果写入redis
             redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
-        return blogList;
+        return convertToBlogVOList(blogList); // Changed from return blogList;
     }
 
     /**
@@ -382,7 +412,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public List<Blog> queryBlogByUserId(Integer current, Long userId) {
+    public List<BlogVO> queryBlogByUserId(Integer current, Long userId) {
         Page<Blog> page = query()
                 .eq("user_id", userId)
                 .eq("status",0)
@@ -393,7 +423,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         records.forEach(blog ->{
             isBlogLiked(blog);
         });
-        return records;
+        return convertToBlogVOList(records);
     }
 
     /**
@@ -533,7 +563,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public List<Blog> queryMyBlog(Blog b,Integer current) {
+    public List<BlogVO> queryMyBlog(Blog b,Integer current) {
         UserDTO user = UserContextHolder.getUser();
         // 根据用户查询
         Page<Blog> page = query()
@@ -550,7 +580,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //查询blog是否被点赞
             isBlogLiked(blog);
         });
-        return blogList;
+        return convertToBlogVOList(blogList);
     }
 
     /**
@@ -560,10 +590,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public Blog getBlogById(Long id) {
+    public BlogVO getBlogById(Long id) {
         Blog blog = query().eq("id", id).one();
         queryBlogUser(blog);
-        return blog;
+        return convertToBlogVO(blog);
     }
 
     /**
@@ -783,13 +813,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return
      */
     @Override
-    public List<Blog> queryBlogByCategory(Long typeId, Integer current) {
+    public List<BlogVO> queryBlogByCategory(Long typeId, Integer current) {
         //从redis查询分类博客
         String key= RedisConstants.CACHE_BLOG_TYPE_KEY + typeId+":"+ current;
         List<Blog> blogList = getBlogListFromRedis(key);
         if (blogList != null) {
                 blogList.forEach(blog -> isBlogLiked(blog));
-            return blogList;
+            return convertToBlogVOList(blogList);
         }
         Page<Blog> page = query()
                 .select("images","liked","user_id","title","id")
@@ -807,7 +837,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //把查询结果写入redis
             redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
-        return blogList;
+        return convertToBlogVOList(blogList);
     }
     /**
      * 从redis中获取博客列表

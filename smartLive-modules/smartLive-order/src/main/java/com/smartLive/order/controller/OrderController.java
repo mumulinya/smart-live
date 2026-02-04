@@ -2,7 +2,7 @@ package com.smartLive.order.controller;
 
 import java.util.List;
 
-import com.smartLive.order.domain.VO.VoucherOrderVO;
+import com.smartLive.order.domain.VO.OrderVO;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
@@ -12,92 +12,92 @@ import org.springframework.web.bind.annotation.*;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
-import com.smartLive.order.domain.VoucherOrder;
-import com.smartLive.order.service.IVoucherOrderService;
+import com.smartLive.order.domain.Order;
+import com.smartLive.order.service.IOrderService;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.page.TableDataInfo;
 
 /**
- * 优惠券订单表Controller
+ * 订单表Controller
  * 
  * @author mumulin
  * @date 2025-09-21
  */
 @RestController
-@RequestMapping("/voucher-order")
-public class VoucherOrderController extends BaseController
+@RequestMapping("/order")
+public class OrderController extends BaseController
 {
     @Autowired
-    private IVoucherOrderService voucherOrderService;
+    private IOrderService orderService;
 
     /**
-     * 查询优惠券订单表列表
+     * 查询订单表列表
      */
     @RequiresPermissions("business:order:list")
     @GetMapping("/list")
-    public TableDataInfo list(VoucherOrder voucherOrder)
+    public TableDataInfo list(Order order)
     {
         startPage();
-        List<VoucherOrder> list = voucherOrderService.selectVoucherOrderList(voucherOrder);
+        List<Order> list = orderService.selectOrderList(order);
         return getDataTable(list);
     }
 
     /**
-     * 导出优惠券订单表列表
+     * 导出订单表列表
      */
     @RequiresPermissions("business:order:export")
-    @Log(title = "优惠券订单表", businessType = BusinessType.EXPORT)
+    @Log(title = "订单表", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, VoucherOrder voucherOrder)
+    public void export(HttpServletResponse response, Order order)
     {
-        List<VoucherOrder> list = voucherOrderService.selectVoucherOrderList(voucherOrder);
-        ExcelUtil<VoucherOrder> util = new ExcelUtil<VoucherOrder>(VoucherOrder.class);
-        util.exportExcel(response, list, "优惠券订单表数据");
+        List<Order> list = orderService.selectOrderList(order);
+        ExcelUtil<Order> util = new ExcelUtil<Order>(Order.class);
+        util.exportExcel(response, list, "订单表数据");
     }
 
     /**
-     * 获取优惠券订单表详细信息
+     * 获取订单表详细信息
      */
     @RequiresPermissions("business:order:query")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(voucherOrderService.selectVoucherOrderById(id));
+        return success(orderService.selectOrderById(id));
     }
 
     /**
-     * 新增优惠券订单表
+     * 新增订单表
      */
     @RequiresPermissions("business:order:add")
-    @Log(title = "优惠券订单表", businessType = BusinessType.INSERT)
+    @Log(title = "订单表", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody VoucherOrder voucherOrder)
+    public AjaxResult add(@RequestBody Order order)
     {
-        return toAjax(voucherOrderService.insertVoucherOrder(voucherOrder));
+        return toAjax(orderService.insertOrder(order));
     }
 
     /**
-     * 修改优惠券订单表
+     * 修改订单表
      */
     @RequiresPermissions("business:order:edit")
-    @Log(title = "优惠券订单表", businessType = BusinessType.UPDATE)
+    @Log(title = "订单表", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody VoucherOrder voucherOrder)
+    public AjaxResult edit(@RequestBody Order order)
     {
-        return toAjax(voucherOrderService.updateVoucherOrder(voucherOrder));
+        return toAjax(orderService.updateOrder(order));
     }
 
     /**
-     * 删除优惠券订单表
+     * 删除订单表
      */
     @RequiresPermissions("business:order:remove")
-    @Log(title = "优惠券订单表", businessType = BusinessType.DELETE)
+    @Log(title = "订单表", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
-        return toAjax(voucherOrderService.deleteVoucherOrderByIds(ids));
+        return toAjax(orderService.deleteOrderByIds(ids));
     }
 
 
@@ -105,12 +105,12 @@ public class VoucherOrderController extends BaseController
      * 获取当前用户订单列表
      */
     @GetMapping("/of/me")
-    public Result queryMyVoucherOrderList(VoucherOrder voucherOrder,@RequestParam(value = "current", defaultValue = "1") Integer current) {
+    public Result queryMyOrderList(Order order,@RequestParam(value = "current", defaultValue = "1") Integer current) {
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
-        voucherOrder.setUserId(userId);
-        List<VoucherOrderVO> voucherOrderList = voucherOrderService.queryMyVoucherOrderList(voucherOrder, current);
-        return Result.ok(voucherOrderList);
+        order.setUserId(userId);
+        List<OrderVO> orderList = orderService.queryMyOrderList(order, current);
+        return Result.ok(orderList);
     }
 
     /**
@@ -120,14 +120,15 @@ public class VoucherOrderController extends BaseController
      */
     @GetMapping("/getOrderById/{id}")
     public Result getOrderById(@PathVariable("id") Long id){
-        return Result.ok(voucherOrderService.getOrderById(id));
+        return Result.ok(orderService.getOrderById(id));
     }
+    
     /**
      * 支付订单
      */
      @PostMapping("/pay/{id}")
     public Result pay(@PathVariable("id") Long id) {
-         Integer pay = voucherOrderService.pay(id);
+         Integer pay = orderService.pay(id);
          if(pay>0){
              return Result.ok("支付成功");
          }
@@ -135,38 +136,41 @@ public class VoucherOrderController extends BaseController
     }
 
     /**
-     * 支付订单
+     * 使用订单
      */
     @PostMapping("/use/{id}")
     public Result use(@PathVariable("id") Long id) {
-        Integer use = voucherOrderService.use(id);
+        Integer use = orderService.use(id);
         if(use>0){
-            return Result.ok("支付成功");
+            return Result.ok("使用成功");
         }
-        return Result.fail("支付失败");
+        return Result.fail("使用失败");
     }
+    
     /**
      * 取消订单
      */
     @PostMapping("/cancel/{id}")
     public Result cancel(@PathVariable("id") Long id) {
-        Integer cancel = voucherOrderService.cancel(id);
+        Integer cancel = orderService.cancel(id);
         if(cancel>0){
             return Result.ok("取消成功");
         }
         return Result.fail("取消失败");
     }
+    
     /**
      * 退款订单
      */
     @PostMapping("/refund/{id}")
     public Result refund(@PathVariable("id") Long id) {
-        Integer refund = voucherOrderService.refund(id);
+        Integer refund = orderService.refund(id);
         if(refund>0){
             return Result.ok("退款成功");
         }
         return Result.fail("退款失败");
     }
+    
     /**
      * 获取订单数量
      * @param userId
@@ -174,14 +178,15 @@ public class VoucherOrderController extends BaseController
      */
     @GetMapping("/getOrderCount/{userId}")
     R<Integer> getCommentCount(@PathVariable("userId")Long userId){
-        return R.ok(voucherOrderService.getOrderCount(userId));
+        return R.ok(orderService.getOrderCount(userId));
     }
+    
     /**
      * 获取订单总数
      * @return
      */
     @GetMapping("/getOrderTotal")
     R<Integer> getOrderTotal(){
-        return R.ok(voucherOrderService.getOrderTotal());
+        return R.ok(orderService.getOrderTotal());
     }
 }

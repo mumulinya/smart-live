@@ -3,77 +3,77 @@ package com.smartLive.order.service;
 import java.util.List;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.order.domain.VO.VoucherOrderVO;
-import com.smartLive.order.domain.VoucherOrder;
+import com.smartLive.order.domain.VO.OrderVO;
+import com.smartLive.order.domain.Order;
 
 /**
- * 优惠券订单表Service接口
+ * 订单表Service接口
  * 
  * @author mumulin
  * @date 2025-09-21
  */
-public interface IVoucherOrderService  extends IService<VoucherOrder>
+public interface IOrderService  extends IService<Order>
 {
     /**
-     * 查询优惠券订单表
+     * 查询订单表
      * 
-     * @param id 优惠券订单表主键
-     * @return 优惠券订单表
+     * @param id 订单表主键
+     * @return 订单表
      */
-     VoucherOrder selectVoucherOrderById(Long id);
+     Order selectOrderById(Long id);
 
     /**
-     * 查询优惠券订单表列表
+     * 查询订单表列表
      * 
-     * @param voucherOrder 优惠券订单表
-     * @return 优惠券订单表集合
+     * @param order 订单表
+     * @return 订单表集合
      */
-     List<VoucherOrder> selectVoucherOrderList(VoucherOrder voucherOrder);
+     List<Order> selectOrderList(Order order);
 
     /**
-     * 新增优惠券订单表
+     * 新增订单表
      * 
-     * @param voucherOrder 优惠券订单表
+     * @param order 订单表
      * @return 结果
      */
-     int insertVoucherOrder(VoucherOrder voucherOrder);
+     int insertOrder(Order order);
 
     /**
-     * 修改优惠券订单表
+     * 修改订单表
      * 
-     * @param voucherOrder 优惠券订单表
+     * @param order 订单表
      * @return 结果
      */
-     int updateVoucherOrder(VoucherOrder voucherOrder);
+     int updateOrder(Order order);
 
     /**
-     * 批量删除优惠券订单表
+     * 批量删除订单表
      * 
-     * @param ids 需要删除的优惠券订单表主键集合
+     * @param ids 需要删除的订单表主键集合
      * @return 结果
      */
-     int deleteVoucherOrderByIds(Long[] ids);
+     int deleteOrderByIds(Long[] ids);
 
     /**
-     * 删除优惠券订单表信息
+     * 删除订单表信息
      * 
-     * @param id 优惠券订单表主键
+     * @param id 订单表主键
      * @return 结果
      */
-     int deleteVoucherOrderById(Long id);
+     int deleteOrderById(Long id);
 
     /**
      *实现一人一单
-     * @param voucher
+     * @param order
      * @return
      */
-    void createVoucherOrder(VoucherOrder voucher);
+    void createOrder(Order order);
 
     /**
      * 获取当前用户订单列表
      * @return
      */
-    List<VoucherOrderVO> queryMyVoucherOrderList(VoucherOrder voucherOrder,Integer current);
+    List<OrderVO> queryMyOrderList(Order order,Integer current);
 
     /**
      * 支付订单
@@ -84,7 +84,7 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
     Integer pay(Long id );
 
     /**
-     * 退款订单
+     * 取消订单
      * @param id
      * @param
      * @return
@@ -113,17 +113,20 @@ public interface IVoucherOrderService  extends IService<VoucherOrder>
      * @return
      */
     Integer getOrderCount(Long userId);
+    
     /**
      * 获取订单总数
      * @return
      */
     Integer getOrderTotal();
+    
     /**
      * 根据id获取订单详情
      * @param id
      * @return
      */
-    VoucherOrderVO getOrderById(Long id);
+    OrderVO getOrderById(Long id);
+    
     /**
      * 修改订单评价状态
      * @param orderId

@@ -2,12 +2,13 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.smartLive.order.mapper.VoucherOrderMapper">
+<mapper namespace="com.smartLive.order.mapper.OrderMapper">
 
-    <resultMap type="com.smartLive.order.domain.VoucherOrder" id="VoucherOrderResult">
+    <resultMap type="com.smartLive.order.domain.Order" id="OrderResult">
         <result property="id"           column="id"    />
         <result property="userId"       column="user_id"    />
-        <result property="voucherId"    column="voucher_id"    />
+        <result property="sourceId"     column="source_id"    />
+        <result property="sourceType"   column="source_type"  />
         <result property="payType"      column="pay_type"    />
         <result property="status"       column="status"    />
 
@@ -24,18 +25,19 @@
         <result property="updateTime"   column="update_time"    />
     </resultMap>
 
-    <sql id="selectVoucherOrderVo">
-        select id, user_id, voucher_id, pay_type, status,
+    <sql id="selectOrderVo">
+        select id, user_id, source_id, source_type, pay_type, status,
                pay_amount, amount, out_trade_no, review_status, review_time, refund_amount,
                create_time, pay_time, use_time, refund_time, update_time
-        from voucher_order
+        from `order`
     </sql>
 
-    <select id="selectVoucherOrderList" parameterType="com.smartLive.order.domain.VoucherOrder" resultMap="VoucherOrderResult">
-        <include refid="selectVoucherOrderVo"/>
+    <select id="selectOrderList" parameterType="com.smartLive.order.domain.Order" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
         <where>
             <if test="userId != null "> and user_id = #{userId}</if>
-            <if test="voucherId != null "> and voucher_id = #{voucherId}</if>
+            <if test="sourceId != null "> and source_id = #{sourceId}</if>
+            <if test="sourceType != null "> and source_type = #{sourceType}</if>
             <if test="payType != null  and payType != ''"> and pay_type = #{payType}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
             <if test="payTime != null "> and pay_time = #{payTime}</if>
@@ -46,17 +48,18 @@
         </where>
     </select>
 
-    <select id="selectVoucherOrderById" parameterType="Long" resultMap="VoucherOrderResult">
-        <include refid="selectVoucherOrderVo"/>
+    <select id="selectOrderById" parameterType="Long" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
         where id = #{id}
     </select>
 
-    <insert id="insertVoucherOrder" parameterType="com.smartLive.order.domain.VoucherOrder">
-        insert into voucher_order
+    <insert id="insertOrder" parameterType="com.smartLive.order.domain.Order">
+        insert into `order`
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">id,</if>
             <if test="userId != null">user_id,</if>
-            <if test="voucherId != null">voucher_id,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="sourceType != null">source_type,</if>
             <if test="payType != null">pay_type,</if>
             <if test="status != null">status,</if>
             <if test="payAmount != null">pay_amount,</if>
@@ -75,7 +78,8 @@
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null">#{id},</if>
             <if test="userId != null">#{userId},</if>
-            <if test="voucherId != null">#{voucherId},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="sourceType != null">#{sourceType},</if>
             <if test="payType != null">#{payType},</if>
             <if test="status != null">#{status},</if>
             <if test="payAmount != null">#{payAmount},</if>
@@ -93,11 +97,12 @@
         </trim>
     </insert>
 
-    <update id="updateVoucherOrder" parameterType="com.smartLive.order.domain.VoucherOrder">
-        update voucher_order
+    <update id="updateOrder" parameterType="com.smartLive.order.domain.Order">
+        update `order`
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null">user_id = #{userId},</if>
-            <if test="voucherId != null">voucher_id = #{voucherId},</if>
+            <if test="sourceId != null">source_id = #{sourceId},</if>
+            <if test="sourceType != null">source_type = #{sourceType},</if>
             <if test="payType != null">pay_type = #{payType},</if>
             <if test="status != null">status = #{status},</if>
             <if test="payAmount != null">pay_amount = #{payAmount},</if>
@@ -116,12 +121,12 @@
         where id = #{id}
     </update>
 
-    <delete id="deleteVoucherOrderById" parameterType="Long">
-        delete from voucher_order where id = #{id}
+    <delete id="deleteOrderById" parameterType="Long">
+        delete from `order` where id = #{id}
     </delete>
 
-    <delete id="deleteVoucherOrderByIds" parameterType="String">
-        delete from voucher_order where id in
+    <delete id="deleteOrderByIds" parameterType="String">
+        delete from `order` where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

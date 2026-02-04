@@ -1,6 +1,7 @@
 package com.smartLive.blog.controller;
 
 import com.smartLive.blog.domain.Blog;
+import com.smartLive.blog.domain.VO.BlogVO;
 import com.smartLive.blog.service.IBlogService;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.controller.BaseController;
@@ -162,7 +163,7 @@ public class BlogController extends BaseController
      */
     @GetMapping("/of/me")
     public Result queryMyBlog(Blog blog,@RequestParam(value = "current", defaultValue = "1") Integer current) {
-        List<Blog> blogList=blogService.queryMyBlog(blog,current);
+        List<BlogVO> blogList=blogService.queryMyBlog(blog,current);
         return Result.ok(blogList);
     }
 

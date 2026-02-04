@@ -2,6 +2,7 @@ package com.smartLive.blog.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.blog.domain.Blog;
+import com.smartLive.blog.domain.VO.BlogVO;
 import com.smartLive.common.core.domain.ScrollResult;
 import java.util.List;
 import java.util.Map;
@@ -67,14 +68,14 @@ public interface IBlogService extends IService<Blog>
      * @param id
      * @return
      */
-    Blog queryBlogById(Long id);
+    BlogVO queryBlogById(Long id);
 
     /**
      * 查询最热博客
      * @param current
      * @return
      */
-    List<Blog> queryHotBlog(Integer current);
+    List<BlogVO> queryHotBlog(Integer current);
 
     /**
      * 点赞博客
@@ -90,7 +91,7 @@ public interface IBlogService extends IService<Blog>
      * @param userId
      * @return
      */
-    List<Blog> queryBlogByUserId(Integer current, Long userId);
+    List<BlogVO> queryBlogByUserId(Integer current, Long userId);
 
     /**
      * 保存博客
@@ -119,14 +120,14 @@ public interface IBlogService extends IService<Blog>
      * @param current
      * @return
      */
-    List<Blog> queryMyBlog(Blog blog,Integer current);
+    List<BlogVO> queryMyBlog(Blog blog,Integer current);
 
 /**
      * 查询博客详情
      * @param id
      * @return
      */
-    Blog getBlogById(Long id);
+    BlogVO getBlogById(Long id);
     /**
      * 查询用户博客数量
      * @param userId
@@ -154,7 +155,7 @@ public interface IBlogService extends IService<Blog>
      * @param current
      * @return
      */
-    List<Blog> queryBlogByCategory(Long typeId, Integer current);
+    List<BlogVO> queryBlogByCategory(Long typeId, Integer current);
 
     /**
      * 全部发布博客

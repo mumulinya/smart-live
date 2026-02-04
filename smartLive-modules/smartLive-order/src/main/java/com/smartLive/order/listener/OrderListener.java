@@ -4,8 +4,8 @@ import com.rabbitmq.client.Channel;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
-import com.smartLive.order.domain.VoucherOrder;
-import com.smartLive.order.service.impl.VoucherOrderServiceImpl;
+import com.smartLive.order.domain.Order;
+import com.smartLive.order.service.impl.OrderServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -17,14 +17,15 @@ import java.io.IOException;
 
 @Component
 @Slf4j
-public class OrderVoucherListener {
+public class OrderListener {
 
     @Autowired
-    private VoucherOrderServiceImpl voucherOrderService;
+    private OrderServiceImpl orderService;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
-    //秒杀券监听
+    
+    //秒杀订单监听
     @RabbitListener(bindings=@QueueBinding(
             value = @Queue(name = MqConstants.ORDER_SECKILL_QUEUE,
                     declare = "true",
@@ -39,16 +40,16 @@ public class OrderVoucherListener {
             exchange = @Exchange(name = MqConstants.ORDER_EXCHANGE_NAME),
             key = MqConstants.ORDER_SECKILL_ROUTING
     ))
-    public void handleSeckillVoucherOrder(VoucherOrder voucherOrder) {
+    public void handleSeckillOrder(Order order) {
         //判断当前订单是否重复创建
-        if(voucherOrderService.getById(voucherOrder.getId())!=null){
+        if(orderService.getById(order.getId())!=null){
             log.error("订单已存在");
             return;
         }
-        voucherOrderService.handleVoucherOrder(voucherOrder);
+        orderService.handleOrder(order);
     }
 
-    //普通优惠券监听
+    //普通订单监听
     @RabbitListener(bindings=@QueueBinding(
             value = @Queue(name = MqConstants.ORDER_BUY_QUEUE,
                     declare = "true",
@@ -61,15 +62,15 @@ public class OrderVoucherListener {
             exchange = @Exchange(name = MqConstants.ORDER_EXCHANGE_NAME),
             key = MqConstants.ORDER_BUY_ROUTING
     ))
-    public void handleBuyVoucherOrder(VoucherOrder voucherOrder){
-        log.info("开始处理订单信息: {}", voucherOrder);
+    public void handleBuyOrder(Order order){
+        log.info("开始处理订单信息: {}", order);
         //判断当前订单是否重复创建
-        if(voucherOrderService.getById(voucherOrder.getId())!=null){
+        if(orderService.getById(order.getId())!=null){
             log.error("订单已存在");
             return;
         }
         //创建订单
-        boolean save = voucherOrderService.save(voucherOrder);
+        boolean save = orderService.save(order);
         // 模拟业务逻辑...
 //        int i = 1 / 0; // 模拟异常
         if(!save){
@@ -77,7 +78,7 @@ public class OrderVoucherListener {
             log.error("创建订单失败");
         }else{
             //发送延迟消息，检测订单支付状态
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,voucherOrder.getId(),(MqConstants.DELAY_TIME));
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,order.getId(),(MqConstants.DELAY_TIME));
         }
     }
 
@@ -92,20 +93,21 @@ public class OrderVoucherListener {
             key = MqConstants.ORDER_DELAY_ROUTING
     ))
     public void handlePayOrder(Long id){
-        VoucherOrder voucherOrder = voucherOrderService.getById(id);
+        Order order = orderService.getById(id);
         //检测订单状态，判断订单是否支付
-        if(voucherOrder.getStatus()== OrderStatusConstants.PAID||voucherOrder==null){
+        if(order.getStatus()== OrderStatusConstants.PAID||order==null){
             log.info("订单不存在或者订单已经支付");
            //订单不存在或者订单已经支付
             return;
         }
         //订单未支付
-        if(voucherOrder.getStatus()== OrderStatusConstants.UNPAID){
+        if(order.getStatus()== OrderStatusConstants.UNPAID){
             log.info("订单未支付，取消订单");
             //取消订单,恢复库存
-            voucherOrderService.cancel(id);
+            orderService.cancel(id);
         }
     }
+    
     /**
      * 监听死信队列
      */
@@ -114,8 +116,8 @@ public class OrderVoucherListener {
             exchange = @Exchange(value = MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
             key = MqConstants.ORDER_DEAD_LETTER_ROUTING
     ))
-    public void handleDeadLetter(VoucherOrder voucherOrder, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
-        log.error("死信队列收到订单信息为: {}", voucherOrder);
+    public void handleDeadLetter(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        log.error("死信队列收到订单信息为: {}", order);
         // TODO: 保存到数据库异常表
         channel.basicAck(deliveryTag, false);
     }

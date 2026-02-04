@@ -1,6 +1,7 @@
 package com.smartLive.blog.controller;
 
 import com.smartLive.blog.domain.Blog;
+import com.smartLive.blog.domain.VO.BlogVO;
 import com.smartLive.blog.service.IBlogService;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
@@ -36,7 +37,7 @@ public class BlogInnerController extends BaseController
      * @return
      */
     @GetMapping("/getBlogById/{id}")
-    Blog getBlogById( @PathVariable("id") Long id){
+    BlogVO getBlogById(@PathVariable("id") Long id){
         return blogService.getBlogById(id);
     }
     /**
