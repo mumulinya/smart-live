@@ -1,5 +1,6 @@
 package com.smartLive.user.service.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.exception.BusinessException;
+import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
@@ -36,6 +38,8 @@ import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartLive.user.domain.Stats;
 import com.smartLive.user.domain.UserInfo;
+import com.smartLive.user.domain.VO.UserInfoVO;
+import com.smartLive.user.domain.VO.UserVO;
 import com.smartLive.user.service.IUserInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -68,12 +72,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private RemoteBlogService remoteBlogService;
 
     @Autowired
-    private RemoteCommentService remoteCommentService;
-
-    @Autowired
-    private RemoteOrderService remoteOrderService;
-
-    @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private ExecutorService executorService;
@@ -83,6 +81,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private RemoteLikeService remoteLikeService;
     @Autowired
     private RemoteStarService remoteStarService;
+
+    /**
+     * 将User实体转换为UserVO
+     * @param user User实体
+     * @return UserVO对象
+     */
+    private UserVO convertToUserVO(User user) {
+        if (user == null) {
+            return null;
+        }
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
+    }
+
+    /**
+     * 将User列表转换为UserVO列表
+     * @param userList User实体列表
+     * @return UserVO列表
+     */
+    private List<UserVO> convertToUserVOList(List<User> userList) {
+        if (userList == null || userList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return userList.stream()
+                .map(this::convertToUserVO)
+                .collect(Collectors.toList());
+    }
     /**
      * 查询用户
      *
@@ -231,7 +257,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 用户列表
      */
     @Override
-    public List<User> getUserList(List<Long> userIdList) {
+    public List<UserVO> getUserList(List<Long> userIdList) {
         //根据用户id查询用户  where id in (5,2) order by field (id,5,2)
         String idStr = StrUtil.join(",",userIdList);
         List<User> userList = query().in("id", userIdList).last("order by field(id," + idStr + ")").list();
@@ -239,14 +265,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             if(user != null){
                 //查询用户是否关注当前用户
                 isFollow(user);
-                UserInfo userInfo = userInfoService.getByUserId(user.getId());
+                UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
                 if(userInfo != null){
                     user.setIntroduce(userInfo.getIntroduce());
                 }
             }
             return user;
         }).collect(Collectors.toList());
-        return userList;
+        return convertToUserVOList(userList);
     }
 
     /**
@@ -256,13 +282,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 用户
      */
     @Override
-    public User queryUserById(Long id) {
+    public UserVO queryUserById(Long id) {
         User user = getById(id);
         if(user!= null){
             //查询用户是否关注当前用户
             isFollow(user);
         }
-        return (user);
+        return convertToUserVO(user);
     }
 
     /**
@@ -271,7 +297,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @param user 用户
      */
     private void  queryUserInfo(User user){
-        UserInfo userInfo = userInfoService.getByUserId(user.getId());
+        UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
         if (userInfo != null){
             user.setIntroduce(userInfo.getIntroduce());
             user.setCity(userInfo.getCity());
@@ -458,11 +484,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             executorService.submit(()->{
                 log.info("线程：{}开始处理第 {} 页数据",Thread.currentThread().getName(), finalPage);
                 List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
-                List<UserInfo> userInfos = userInfoService.listByUserIds(userIds);
-                Map<Long,UserInfo> userInfoMap= userInfos.stream().collect(Collectors.toMap(UserInfo::getUserId, userInfo -> userInfo));
+                List<UserInfoVO> userInfos = userInfoService.listByUserIds(userIds);
+                Map<Long,UserInfoVO> userInfoMap= userInfos.stream().collect(Collectors.toMap(UserInfoVO::getUserId, userInfo -> userInfo));
                 users.forEach(
                         user -> {
-                            UserInfo userInfo = userInfoMap.get(user.getId());
+                            UserInfoVO userInfo = userInfoMap.get(user.getId());
                             if(userInfo != null){
                                 user.setIntroduce(userInfo.getIntroduce());
                                 user.setCity(userInfo.getCity());

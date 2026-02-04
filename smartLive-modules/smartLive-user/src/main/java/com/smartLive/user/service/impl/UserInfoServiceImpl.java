@@ -7,16 +7,20 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.user.DTO.UserInfoDTO;
 import com.smartLive.user.domain.UserInfo;
+import com.smartLive.user.domain.VO.UserInfoVO;
 import com.smartLive.user.mapper.UserInfoMapper;
 import com.smartLive.user.service.IUserInfoService;
 import com.smartLive.user.service.IUserService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户信息Service实现类
@@ -31,11 +35,40 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         this.userService = userService;
     }
 
+    /**
+     * 将UserInfo实体转换为UserInfoVO
+     * @param userInfo UserInfo实体
+     * @return UserInfoVO对象
+     */
+    private UserInfoVO convertToUserInfoVO(UserInfo userInfo) {
+        if (userInfo == null) {
+            return null;
+        }
+        UserInfoVO userInfoVO = new UserInfoVO();
+        BeanUtils.copyProperties(userInfo, userInfoVO);
+        return userInfoVO;
+    }
+
+    /**
+     * 将UserInfo列表转换为UserInfoVO列表
+     * @param userInfoList UserInfo实体列表
+     * @return UserInfoVO列表
+     */
+    private List<UserInfoVO> convertToUserInfoVOList(List<UserInfo> userInfoList) {
+        if (userInfoList == null || userInfoList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return userInfoList.stream()
+                .map(this::convertToUserInfoVO)
+                .collect(Collectors.toList());
+    }
+
     @Override
-    public UserInfo getByUserId(Long userId) {
+    public UserInfoVO getByUserId(Long userId) {
         QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId);
-        return getOne(queryWrapper);
+        UserInfo userInfo = getOne(queryWrapper);
+        return convertToUserInfoVO(userInfo);
     }
 
     @Override
@@ -46,7 +79,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         if (userInfo.getUserId() == null) {
             throw new RuntimeException("用户ID不能为空");
         }
-        UserInfo user = getByUserId(userId);
+        UserInfoVO user = getByUserId(userId);
         //没有数据，创建数据
         if(user==null){
             return save(userInfo);
@@ -161,10 +194,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
      * @param userIds
      */
     @Override
-    public List<UserInfo> listByUserIds(List<Long> userIds) {
+    public List<UserInfoVO> listByUserIds(List<Long> userIds) {
         QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("user_id", userIds);
-        return list(queryWrapper);
+        List<UserInfo> userInfoList = list(queryWrapper);
+        return convertToUserInfoVOList(userInfoList);
     }
 
     /**

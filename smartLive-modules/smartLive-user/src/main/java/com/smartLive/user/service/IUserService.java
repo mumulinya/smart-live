@@ -7,6 +7,7 @@ import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.user.domain.Stats;
 import com.smartLive.user.domain.User;
+import com.smartLive.user.domain.VO.UserVO;
 
 /**
  * 用户Service接口
@@ -83,13 +84,13 @@ public interface IUserService extends IService<User>
      * @param userIdList 用户id列表
      * @return 用户列表
      */
-  List<User> getUserList(List<Long> userIdList);
+  List<UserVO> getUserList(List<Long> userIdList);
     /**
      * 根据用户id查询用户
      * @param id 用户id
      * @return 用户
      */
-    User queryUserById(Long id);
+    UserVO queryUserById(Long id);
 
     /**
      * 获取用户统计信息

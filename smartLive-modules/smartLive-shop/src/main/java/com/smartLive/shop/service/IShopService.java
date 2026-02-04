@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.shop.domain.Shop;
+import com.smartLive.shop.domain.VO.ShopVO;
 
 /**
  * 店铺Service接口
@@ -68,7 +69,7 @@ public interface IShopService extends IService<Shop> {
      * @param id 商铺id
      * @return 商铺详情数据
      */
-    Shop queryById(Long id);
+    ShopVO queryById(Long id);
 
     /**
      * 根据类型分页查询商铺信息
@@ -77,7 +78,7 @@ public interface IShopService extends IService<Shop> {
      * @param current 页码
      * @return 商铺列表
      */
-    List<Shop> queryShopByType(Integer typeId, Integer current, String sortBy,Double x, Double y);
+    List<ShopVO> queryShopByType(Integer typeId, Integer current, String sortBy,Double x, Double y);
 
     /**
      * 根据商铺名称查询商铺信息
@@ -85,7 +86,7 @@ public interface IShopService extends IService<Shop> {
      * @param shopName 商铺名称
      * @return 商铺详情
      */
-    Shop getShopByShopName(String shopName);
+    ShopVO getShopByShopName(String shopName);
 
     /**
      * 修改商铺评论数量
@@ -101,7 +102,7 @@ public interface IShopService extends IService<Shop> {
      * @param shop 搜索条件
      * @return 搜索结果
      */
-    List<Shop> getShopByCondition(Shop shop);
+    List<ShopVO> getShopByCondition(Shop shop);
 
     /**
      * 根据商铺id列表查询商铺信息列表
@@ -109,7 +110,7 @@ public interface IShopService extends IService<Shop> {
      * @param ids 商铺id列表
      * @return 商铺列表
      */
-    List<Shop> getShopList(List<Long> ids);
+    List<ShopVO> getShopList(List<Long> ids);
 
     /**
      * 刷新商铺缓存
@@ -143,7 +144,7 @@ public interface IShopService extends IService<Shop> {
      * @param limit 获取数量
      * @return 最近商铺
      */
-    List<Shop> getRecentShops(Integer limit);
+    List<ShopVO> getRecentShops(Integer limit);
     /**
      * 批量更新商铺收藏数
      *

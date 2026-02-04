@@ -2,6 +2,7 @@ package com.smartLive.user.controller;
 
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.user.domain.User;
+import com.smartLive.user.domain.VO.UserVO;
 import com.smartLive.user.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -37,14 +38,14 @@ public class UserInnerController extends BaseController
      * 根据id查询用户列表
      */
     @GetMapping("/userListByIds")
-    List<User> getUserList(@RequestParam("userIdList") List<Long> userIdList){
+    List<UserVO> getUserList(@RequestParam("userIdList") List<Long> userIdList){
         return userService.getUserList(userIdList);
     }
     /**
      * 根据id查询用户
      */
     @GetMapping("/{id}")
-    User queryUserById(@PathVariable("id") Long id){
+    UserVO queryUserById(@PathVariable("id") Long id){
         return userService.queryUserById(id);
     }
 }

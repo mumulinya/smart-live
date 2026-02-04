@@ -13,6 +13,7 @@ import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.shop.domain.Shop;
+import com.smartLive.shop.domain.VO.ShopVO;
 import com.smartLive.shop.service.IShopService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class ShopInnerController extends BaseController {
     private IShopService shopService;
 
     @GetMapping("/{shopName}")
-    public Shop getShopByShopName(@PathVariable("shopName") String shopName){
+    public ShopVO getShopByShopName(@PathVariable("shopName") String shopName){
         return shopService.getShopByShopName(shopName);
     }
     /**
@@ -49,21 +50,21 @@ public class ShopInnerController extends BaseController {
      * 根据条件查询商家信息
      */
     @PostMapping("/getShopList")
-    public List<Shop> getShopByCondition(@RequestBody Shop shop){
+    public List<ShopVO> getShopByCondition(@RequestBody Shop shop){
         return shopService.getShopByCondition(shop);
     }
     /**
      * 根据id查询商家信息
      */
     @GetMapping("/getShopById/{shopId}")
-    public Shop getShopById(@PathVariable("shopId") Long shopId ){
+    public ShopVO getShopById(@PathVariable("shopId") Long shopId ){
         return shopService.queryById(shopId);
     }
     /**
      * 根据id列表查询商家信息
      */
     @GetMapping("/shopListByIds")
-     public List<Shop> listShopByIds(@RequestParam("shopIdList") List<Long> shopIdList){
+     public List<ShopVO> listShopByIds(@RequestParam("shopIdList") List<Long> shopIdList){
         return shopService.getShopList(shopIdList);
     }
     /**
@@ -77,7 +78,7 @@ public class ShopInnerController extends BaseController {
      * 获取最近创建商家
      */
     @GetMapping("/getRecentShops")
-    public List<Shop> getRecentShops(@RequestParam("limit") Integer limit){
+    public List<ShopVO> getRecentShops(@RequestParam("limit") Integer limit){
         return shopService.getRecentShops(limit);
     }
     /**

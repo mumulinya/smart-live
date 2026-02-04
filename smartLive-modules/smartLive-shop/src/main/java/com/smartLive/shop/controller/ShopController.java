@@ -1,6 +1,8 @@
 package com.smartLive.shop.controller;
 
 import java.util.List;
+
+import com.smartLive.shop.domain.VO.ShopVO;
 import jakarta.servlet.http.HttpServletResponse;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -140,7 +142,7 @@ public class ShopController extends BaseController {
             @RequestParam(value = "y", required = false) Double y
     ) {
 
-        List<Shop> shopList = shopService.queryShopByType(typeId, current, sortBy, x, y);
+        List<ShopVO> shopList = shopService.queryShopByType(typeId, current, sortBy, x, y);
         return Result.ok(shopList);
     }
 
@@ -172,7 +174,7 @@ public class ShopController extends BaseController {
      */
     @GetMapping("/{id}")
     public Result queryShopById(@PathVariable("id") Long id) {
-        Shop shop = shopService.queryById(id);
+        ShopVO shop = shopService.queryById(id);
         if (shop == null) {
             return Result.fail("店铺不存在");
         }

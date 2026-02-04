@@ -4,6 +4,7 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.DTO.UserInfoDTO;
 import com.smartLive.user.domain.User;
 import com.smartLive.user.domain.UserInfo;
+import com.smartLive.user.domain.VO.UserInfoVO;
 import com.smartLive.user.service.IUserInfoService;
 import com.smartLive.user.service.IUserService;
 import org.springframework.beans.BeanUtils;
@@ -29,7 +30,7 @@ public class UserInfoController {
     @GetMapping("/getUserInfo/{userId}")
     public Result getUserInfo( @PathVariable("userId") Long userId) {
         try {
-            UserInfo userInfo = userInfoService.getByUserId(userId);
+            UserInfoVO userInfo = userInfoService.getByUserId(userId);
             if (userInfo == null) {
                 return Result.ok("");
             }

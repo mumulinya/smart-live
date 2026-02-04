@@ -31,8 +31,10 @@ import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.shop.domain.ShopType;
+import com.smartLive.shop.domain.VO.ShopVO;
 import com.smartLive.shop.service.IShopTypeService;
 import com.smartLive.shop.until.CacheClient;
+import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +71,34 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private RemoteStarService remoteStarService;
     @Autowired
     RemoteFollowService remoteFollowService;
+
+    /**
+     * 将Shop实体转换为ShopVO
+     * @param shop Shop实体
+     * @return ShopVO对象
+     */
+    private ShopVO convertToShopVO(Shop shop) {
+        if (shop == null) {
+            return null;
+        }
+        ShopVO shopVO = new ShopVO();
+        BeanUtils.copyProperties(shop, shopVO);
+        return shopVO;
+    }
+
+    /**
+     * 将Shop列表转换为ShopVO列表
+     * @param shopList Shop实体列表
+     * @return ShopVO列表
+     */
+    private List<ShopVO> convertToShopVOList(List<Shop> shopList) {
+        if (CollUtil.isEmpty(shopList)) {
+            return new ArrayList<>();
+        }
+        return shopList.stream()
+                .map(this::convertToShopVO)
+                .collect(Collectors.toList());
+    }
     /**
      * 查询店铺
      *
@@ -179,7 +209,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 商铺详情数据
      */
     @Override
-    public Shop  queryById(Long id) {
+    public ShopVO queryById(Long id) {
         //解决缓存穿透
 //        Shop shop = queryWithPassThrough(id);
         //互斥锁解决缓存击穿
@@ -197,7 +227,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         isShopStared(shop);
         //是否关注
         isShopFollowed(shop);
-        return shop;
+        return convertToShopVO(shop);
     }
 
     /**
@@ -247,7 +277,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @param id
      * @return
      */
-    public Shop queryWithPassThrough(Long id) {
+    public ShopVO queryWithPassThrough(Long id) {
 
         //从缓存里获取商铺数据
         String key = RedisConstants.CACHE_SHOP_KEY + id;
@@ -256,7 +286,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         if (StrUtil.isNotBlank(shopJson)) {
             //存在，直接返回
             Shop shop = JSONUtil.toBean(shopJson, Shop.class);
-            return shop;
+            return convertToShopVO(shop);
         }
         //判断命中的是否是空值
         if (shopJson != null) {
@@ -270,7 +300,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         //存入redis
         redisService.setCacheObject(key, JSONUtil.toJsonStr(shop), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
-        return shop;
+        return convertToShopVO(shop); // Convert Shop to ShopVO before returning
 
     }
 
@@ -426,14 +456,14 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 商铺列表
      */
     @Override
-    public  List<Shop> queryShopByType(Integer typeId, Integer current,String sortBy, Double x, Double y) {
+    public  List<ShopVO> queryShopByType(Integer typeId, Integer current,String sortBy, Double x, Double y) {
         //判断是否根据坐标查询
         if (x == null && y == null) {
             String key = RedisConstants.CACHE_SHOP_KEY + typeId + ":" + current+sortBy;
             String shopJson =redisService.leftPopCacheList(key);
             if(shopJson != null){
                 List<Shop> shops = JSONUtil.toList(shopJson, Shop.class);
-                return shops;
+                return convertToShopVOList(shops);
             }
             //不需要坐标查询，直接从数据库查询
             Page<Shop> page = query()
@@ -443,7 +473,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             redisService.setCacheList(key, JSONUtil.toJsonStr( page.getRecords()));
 
             //返回数据
-            return page.getRecords();
+            return convertToShopVOList(page.getRecords());
         }
         //计算分页参数
         int from = (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE;
@@ -482,7 +512,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         for (Shop shop : shops) {
             shop.setDistance(distanceMap.get(shop.getId().toString()).getValue());
         }
-        return shops;
+        return convertToShopVOList(shops);
     }
 
     /**
@@ -492,9 +522,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 商铺详情
      */
     @Override
-    public Shop getShopByShopName(String shopName) {
+    public ShopVO getShopByShopName(String shopName) {
         Shop shop = query().eq("name", shopName).one();
-        return shop;
+        return convertToShopVO(shop);
     }
 
     /**
@@ -518,7 +548,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 搜索结果
      */
     @Override
-    public List<Shop> getShopByCondition(Shop shop) {
+    public List<ShopVO> getShopByCondition(Shop shop) {
         QueryWrapper<Shop> wrapper = new QueryWrapper<>();
         String distanceSql = "ST_Distance_Sphere(point(x, y), point(" + shop.getX() + ", " + shop.getY() + ")) as distance";
         wrapper.select("*, " + distanceSql);
@@ -547,7 +577,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                     shop.getX(), shop.getY(), 200000);
         }
         wrapper .orderByAsc("distance");
-        return list(wrapper);
+        return convertToShopVOList(list(wrapper));
     }
 
     /**
@@ -557,7 +587,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 商铺列表
      */
     @Override
-    public List<Shop> getShopList(List<Long> ids) {
+    public List<ShopVO> getShopList(List<Long> ids) {
 
         //根据用户id查询用户  where id in (5,2) order by field (id,5,2)
         String idStr = StrUtil.join(",",ids);
@@ -569,7 +599,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 //            }
 //            return user;
 //        }).collect(Collectors.toList());
-        return orderList;
+        return convertToShopVOList(orderList);
     }
 
     /**
@@ -589,8 +619,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 最近商铺
      */
     @Override
-    public List<Shop> getRecentShops(Integer limit) {
-        return query().orderByDesc("create_time").last("limit " + limit).list();
+    public List<ShopVO> getRecentShops(Integer limit) {
+        return convertToShopVOList(query().orderByDesc("create_time").last("limit " + limit).list());
     }
 
     /**
