@@ -1,9 +1,12 @@
 package com.smartLive.ai.strategy.milvus;
 
+import com.smartLive.ai.entity.DOC.VoucherDoc;
+import org.springframework.ai.document.Document;
+
 import java.io.IOException;
 import java.util.List;
 
-public interface MilvusSyncStrategy {
+public interface MilvusSyncStrategy<T> {
 
     /**
      * 获取策略的类型
@@ -33,4 +36,11 @@ public interface MilvusSyncStrategy {
      * @return 是否成功
      */
     boolean delete(String id) throws IOException;
+
+    /**
+     *创建文档
+     * @param data
+     * @return
+     */
+    public Document createDocument(T data);
 }

@@ -1,6 +1,5 @@
 package com.smartLive.ai.config;
 
-import com.smartLive.ai.constants.SystemConstants;
 import com.smartLive.ai.model.AlibabaOpenAiChatModel;
 import com.smartLive.ai.tools.CommentTools;
 import com.smartLive.ai.tools.ShopTools;
