@@ -27,7 +27,7 @@ public enum ResourceTypeEnum {
 
     // 3. 代金券
     VOUCHER_RESOURCE(GlobalBizTypeEnum.VOUCHER.getCode(), "代金券资源", GlobalBizTypeEnum.VOUCHER.getBizDomain(),
-            RedisConstants.VOUCHER_COMMENT_KEY, RedisConstants.VOUCHER_STAR_KEY),
+            null, RedisConstants.VOUCHER_STAR_KEY),
 
     // 4. 评论 (支持楼中楼)
     COMMENT_RESOURCE(GlobalBizTypeEnum.COMMENT.getCode(), "评论资源", GlobalBizTypeEnum.COMMENT.getBizDomain(),

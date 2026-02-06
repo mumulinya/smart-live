@@ -43,17 +43,10 @@ public class ServiceNameConstants
      */
     public static final String BLOG_SERVICE = "smartLive-blog";
     /**
-     * 评论模块的serviceid
-     */
-    public static final String COMMENT_SERVICE = "smartLive-comment";
-    /**
      * 搜索模块的serviceid
      */
     public static final String SEARCH_SERVICE = "smartLive-search";
-    /**
-     * 关注模块的serviceid
-     */
-     public static final String FOLLOW_SERVICE = "smartLive-follow";
+
      /**
      * 互动模块的serviceid
      */

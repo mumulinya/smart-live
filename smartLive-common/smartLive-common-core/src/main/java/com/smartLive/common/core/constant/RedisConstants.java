@@ -1,39 +1,65 @@
 package com.smartLive.common.core.constant;
 
 public class RedisConstants {
+    /**
+     * 登录验证码
+     */
     public static final String LOGIN_CODE_KEY = "login:code:";
     public static final Long LOGIN_CODE_TTL = 2L;
+    /**
+     * 登录用户
+     */
     public static final String LOGIN_USER_KEY = "login:token:";
     public static final Long LOGIN_USER_TTL = 30L;
-
+    /**
+     * 缓存空值
+     */
     public static final Long CACHE_NULL_TTL = 2L;
-
-    public static final Long CACHE_SHOP_TTL = 30L;
+    /**
+     * 店铺缓存
+     */
     public static final String CACHE_SHOP_KEY = "cache:shop:";
     public static final String CACHE_SHOP_lIST_KEY = "cache:shopList:";
-
+    public static final Long CACHE_SHOP_TTL = 30L;
+    /**
+     * 店铺类型
+     */
     public static final String CACHE_SHOP_TYPE_KEY = "cache:shopType";
     public static final Long CACHE_SHOP_TYPE_TTL = 30L;
 
+    /**
+     * 店铺锁
+     */
     public static final String LOCK_SHOP_KEY = "lock:shop:";
-
     public static final Long LOCK_SHOP_TTL = 10L;
-
+    /**
+     * 秒杀商品库存
+     */
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";
-    //    public static final String BLOG_LIKED_KEY = "blog:liked:";
+    /**
+     * 博客缓存
+     */
     public static final String CACHE_BLOG_KEY = "cache:blog:";
     public static final String CACHE_HOT_BLOG_KEY = "cache:hotBlog:";
     public static final Long CACHE_HOT_BLOG_TTL = 1L;//1天
-
+    /**
+     * 博客类型
+     */
     public static final String CACHE_BLOG_TYPE_KEY = "cache:blogType:";
     /**
      * 关注
      */
+    //用户关注
     public static final String FOLLOW_USER_KEY = "follow:user:";
+    //用户粉丝
     public static final String FANS_USER_KEY = "fans:user:";
+    //店铺关注
     public static final String FOLLOW_SHOP_KEY = "follow:shop:";
+    //店铺粉丝
     public static final String FANS_SHOP_KEY = "fans:shop:";
+    //代金券关注
     public static final String FOLLOW_VOUCHER_KEY = "follow:voucher:";
+    //代金券粉丝
     public static final String FANS_VOUCHER_KEY = "fans:voucher:";
     /**
      * 推送数据
@@ -47,6 +73,8 @@ public class RedisConstants {
     //商品推送
     public static final String ITEM_FEED_KEY = "feed:item:";
 
+
+
     /**
      * 点赞数据
      */
@@ -57,18 +85,14 @@ public class RedisConstants {
     //博客点赞脏数据列表
     public static final String BLOG_LIKED_DIRTY_KEY = "blog:liked:dirty:";
 
-    /**
-     * 评论数据
-     */
     //评论点赞
     public static final String COMMENT_LIKED_KEY = "comment:liked:";
     //评论点赞总数
     public static final String COMMENT_LIKED_COUNT_KEY = "comment:liked:count:";
     //评论点赞脏数据列表
     public static final String COMMENT_LIKED_DIRTY_KEY = "comment:liked:dirty";
-    /**
-     * 评价数据
-     */
+
+    //评价点赞
     public static final String REVIEW_LIKED_KEY = "review:liked:";
     //评价点赞总数
     public static final String REVIEW_LIKED_COUNT_KEY = "review:liked:count:";
@@ -83,12 +107,14 @@ public class RedisConstants {
     public static final String BLOG_STAR_COUNT_KEY = "blog:star:count:";
     //博客收藏脏数据列表
     public static final String BLOG_STAR_DIRTY_KEY = "blog:star:dirty:";
+
     //店铺收藏
     public static final String SHOP_STAR_KEY = "shop:star:";
     //店铺收藏总数
     public static final String SHOP_STAR_COUNT_KEY = "shop:star:count:";
     //店铺收藏脏数据列表
     public static final String SHOP_STAR_DIRTY_KEY = "shop:star:dirty:";
+
     //代金券收藏
     public static final String VOUCHER_STAR_KEY = "voucher:star:";
     //代金券收藏总数
@@ -103,18 +129,15 @@ public class RedisConstants {
     //评价收藏脏数据列表
     public static final String REVIEW_STAR_DIRTY_KEY = "review:star:dirty:";
 
+    /**
+     * 评论数据
+     */
     //博客的评论
     public static final String BLOG_COMMENT_KEY = "blog:comment:";
     //博客评论总数
     public static final String BLOG_COMMENT_COUNT_KEY = "blog:comment:count:";
     //博客评论脏数据列表
     public static final String BLOG_COMMENT_DIRTY_KEY = "blog:comment:dirty:";
-    //代金券的评论
-    public static final String VOUCHER_COMMENT_KEY = "voucher:comment:";
-    //代金券的评论总数
-    public static final String VOUCHER_COMMENT_COUNT_KEY = "voucher:comment:count:";
-    //代金券评论脏数据列表
-    public static final String VOUCHER_COMMENT_DIRTY_KEY = "voucher:comment:dirty:";
 
     //店铺的评论
     public static final String REVIEW_COMMENT_KEY = "review:comment:";
@@ -122,19 +145,35 @@ public class RedisConstants {
     public static final String REVIEW_COMMENT_COUNT_KEY = "review:comment:count:";
     //店铺的评论脏数据列表
     public static final String REVIEW_COMMENT_DIRTY_KEY = "review:comment:dirty:";
+
     //评论的评论
     public static final String COMMENT_COMMENT_KEY = "comment:comment:";
     //评论的评论总数
     public static final String COMMENT_COMMENT_COUNT_KEY = "shop:comment:count:";
     //评论的评论脏数据列表
     public static final String COMMENT_COMMENT_DIRTY_KEY = "shop:comment:dirty:";
+
+    /**
+     * 评价数据
+     */
+    //店铺评价
+    public static final String SHOP_REVIEW_KEY = "shop:review:";
+    //店铺评价总数
+    public static final String SHOP_REVIEW_COUNT_KEY = "shop:review:count:";
+    //店铺评价脏数据列表
+    public static final String SHOP_REVIEW_DIRTY_KEY = "shop:review:dirty:";
+
+    //代金券评价
+    public static final String VOUCHER_REVIEW_KEY = "voucher:review:";
+    //代金券评价总数
+    public static final String VOUCHER_REVIEW_COUNT_KEY = "voucher:review:count:";
+    //代金券评价脏数据列表
+    public static final String VOUCHER_REVIEW_DIRTY_KEY = "voucher:review:dirty:";
     /**
      * 商店地理位置
      */
     public static final String SHOP_GEO_KEY = "shop:geo:";
-    public static final String USER_SIGN_KEY = "sign:";
 
-    public static final String CACHE_COMMENT_KEY = "cache:comment:";
     /**
      * 缓存AI评论
      */
@@ -155,16 +194,4 @@ public class RedisConstants {
      */
     public static final String SEARCH_HOT_KEYWORDS = "search:hot:keywords";
     public static final Integer SEARCH_HOT_TTL = 24;//24小时
-    /**
-     * 店铺评价
-     */
-    public static final String SHOP_REVIEW_KEY = "shop:review:";
-    public static final String SHOP_REVIEW_COUNT_KEY = "shop:review:count:";
-    public static final String SHOP_REVIEW_DIRTY_KEY = "shop:review:dirty:";
-    /**
-     * 代金券评价
-     */
-    public static final String VOUCHER_REVIEW_KEY = "voucher:review:";
-    public static final String VOUCHER_REVIEW_COUNT_KEY = "voucher:review:count:";
-    public static final String VOUCHER_REVIEW_DIRTY_KEY = "voucher:review:dirty:";
 }
