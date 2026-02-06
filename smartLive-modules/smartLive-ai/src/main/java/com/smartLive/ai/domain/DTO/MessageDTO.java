@@ -1,38 +1,48 @@
-package com.smartLive.ai.domain;
+package com.smartLive.ai.domain.DTO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Date;
 
 /**
- * AI Chat Session Entity
+ * AI Chat Message Entity
  *
  * @author smartLive
  */
 @Data
 @ToString(callSuper = true)
-@TableName("session")
-public class Session implements Serializable {
+public class MessageDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** Session ID */
+    /** Message ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** User ID */
-    private Long userId;
+    /** Session ID */
+    private Long sessionId;
 
-    /** Session Title */
-    private String title;
+    /** Role (user/assistant/system) */
+    private String role;
+
+    /** Message Content */
+    private String message;
+
+    private Long userId;
+    // 位置信息
+    private String district;
+    private Double x;
+    private Double y;
+    /** 是否使用上下文 */
+    private Boolean contextMode;
+    /** Message Type (text/image/tool) */
+    private String type;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

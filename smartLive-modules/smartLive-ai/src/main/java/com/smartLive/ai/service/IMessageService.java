@@ -17,7 +17,7 @@ public interface IMessageService extends IService<Message> {
      * @param sessionId Session ID
      * @return List of messages
      */
-    List<Message> selectMessageList(Long sessionId);
+    List<Message> selectMessageList(Integer current,Long sessionId);
 
     /**
      * Save a message

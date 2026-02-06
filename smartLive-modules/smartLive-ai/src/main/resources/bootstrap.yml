@@ -24,32 +24,30 @@ spring:
         port: 19530
         collection-name: "shops"
         database-name: "default"
-        embedding-dimension: 1536
+        embedding-dimension: 1024  # 修改为 1024 以匹配 BGE 模型
         metric-type: COSINE
         index-type: IVF_FLAT
-        initialize-schema: true  # 确保启用自动初始化
+        initialize-schema: false
         auto-create-collection: true
     ollama:
       base-url: http://localhost:11434
       chat:
         model: deepseek-r1:7b
     openai:
-      #阿里云大模型
-      base-url: https://dashscope.aliyuncs.com/compatible-mode
-      api-key: sk-f2ef71a7bc0d4eadae5f54547c5dad4a
-      #gemini大模型
-      #      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
-      #      api-key: https://generativelanguage.googleapis.com/v1beta/openai/
-      #      chat:
-      #        options:
-      #          # 指定模型名称
-      #          model: "gemini-1.5-flash"
+      # OpenAI API Key - 用于Spring AI自动配置
+      api-key: sk-bTsi4ARaytKeClsp00658008F82a4d8d87D4EcEeA003E748
       chat:
+        #阿里云大模型
+        base-url: http://127.0.0.1:8045
+        api-key: sk-e9538007ad194b69a612d8101b0ccae5
         options:
-          model: qwen3-max
+          model: gemini-3-flash
       embedding:
+        # 硅基流动 (SiliconFlow) 配置
+        base-url: https://api.siliconflow.cn
+        api-key: sk-kyrqakqjbcbdkjyfdnoovhnmmoyhdggaalcpgqpmagkkyqcb
         options:
-          model: text-embedding-v3
+          model: BAAI/bge-m3
           dimensions: 1024
   profiles:
     # 环境配置

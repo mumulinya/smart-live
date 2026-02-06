@@ -1,16 +1,16 @@
-package com.smartLive.ai.strategy.handlers.impl;
+package com.smartLive.ai.strategy.handlers;
 
 import com.smartLive.ai.entity.request.AIChatRequest;
 import com.smartLive.ai.entity.request.AIGenerateRequest;
 import com.smartLive.ai.service.ai.AIClient;
 import com.smartLive.ai.service.rag.impl.CommentRagService;
-import com.smartLive.ai.strategy.handlers.ChatHandler;
-import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.interaction.api.DTO.CommentDTO;
+import com.smartLive.interaction.api.RemoteCommentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

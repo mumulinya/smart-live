@@ -2,8 +2,10 @@ package com.smartLive.ai.controller;
 
 import com.smartLive.ai.domain.Session;
 import com.smartLive.ai.service.ISessionService;
+import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
+import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.core.web.page.TableDataInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,19 +31,28 @@ public class SessionController extends BaseController {
      * Create new session
      */
     @PostMapping("/create")
-    public AjaxResult createSession(@RequestBody Map<String, String> params) {
+    public Result createSession(@RequestBody Map<String, String> params) {
         String title = params.get("title");
         Long sessionId = sessionService.createSession(title);
-        return AjaxResult.success("Session created successfully", sessionId);
+        return Result.ok(sessionId);
     }
 
     /**
      * Get session list
      */
     @GetMapping("/list")
-    public TableDataInfo getSessionList(Session session) {
-        startPage();
-        List<Session> list = sessionService.selectSessionList(session);
-        return getDataTable(list);
+    public Result getSessionList(@RequestParam("current") Integer current) {
+        List<Session> list = sessionService.selectSessionList(current);
+        return Result.ok(list);
+    }
+    /**
+     * 搜索用户会话
+     */
+    @GetMapping("/search")
+    public Result searchSession(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("current") Integer current) {
+        List<Session> list = sessionService.searchByKeyword(keyword, current);
+        return Result.ok(list);
     }
 }

@@ -25,5 +25,15 @@ public interface ISessionService extends IService<Session> {
      * @param session Query parameters
      * @return List of sessions
      */
-    List<Session> selectSessionList(Session session);
+    List<Session> selectSessionList(Integer current);
+    /**
+     * Search sessions by keyword
+     *
+     * @param userId User ID
+     * @param keyword Keyword
+     * @param current Page number
+     * @param pageSize Page size
+     * @return List of sessions
+     */
+    List<Session> searchByKeyword(String keyword, Integer current);
 }

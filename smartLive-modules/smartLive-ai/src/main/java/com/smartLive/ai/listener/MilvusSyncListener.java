@@ -23,8 +23,9 @@ public class MilvusSyncListener {
     private ExecutorService executorService;
     @Autowired
     private Map<Integer, MilvusSyncStrategy> milvusStrategyMap;
-
-    // ==================== 单条插入 ====================
+    /**
+     * Milvus单条插入
+     */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.MILVUS_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),
@@ -51,6 +52,9 @@ public class MilvusSyncListener {
           }
       });
     }
+    /**
+     * Milvus批量插入
+     */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.MILVUS_BATCH_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),
@@ -75,7 +79,9 @@ public class MilvusSyncListener {
            }
           });
     }
-
+    /**
+     * Milvus删除
+     */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.MILVUS_DELETE_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),

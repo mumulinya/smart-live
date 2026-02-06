@@ -1,6 +1,7 @@
 package com.smartLive.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.ai.domain.Message;
 import com.smartLive.ai.domain.Session;
@@ -27,11 +28,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private ISessionService sessionService;
 
     @Override
-    public List<Message> selectMessageList(Long sessionId) {
-        LambdaQueryWrapper<Message> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Message::getSessionId, sessionId);
-        queryWrapper.orderByAsc(Message::getCreateTime);
-        return this.list(queryWrapper);
+    public List<Message> selectMessageList(Integer current,Long sessionId) {
+        return query().eq("session_id",sessionId)
+                        .orderByAsc("create_time")
+                        .page(new Page<>(current, 10))
+                        .getRecords();
     }
 
     @Override
@@ -43,7 +44,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         message.setContent(content);
         message.setType("text"); // Default type
         message.setCreateTime(new Date());
-        message.setCreateBy(SecurityUtils.getUsername());
         this.save(message);
 
         // Update session update_time

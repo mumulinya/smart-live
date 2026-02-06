@@ -1,4 +1,4 @@
-package com.smartLive.ai.strategy.milvus.factory;
+package com.smartLive.ai.strategy.factory;
 
 import com.smartLive.ai.strategy.milvus.MilvusSyncStrategy;
 import org.springframework.context.annotation.Bean;

@@ -3,10 +3,14 @@ package com.smartLive.ai.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * AI Chat Message Entity
@@ -14,10 +18,9 @@ import lombok.ToString;
  * @author smartLive
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-@TableName("ai_message")
-public class Message extends BaseEntity {
+@TableName("message")
+public class Message implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** Message ID */
@@ -35,4 +38,6 @@ public class Message extends BaseEntity {
 
     /** Message Type (text/image/tool) */
     private String type;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
 }
