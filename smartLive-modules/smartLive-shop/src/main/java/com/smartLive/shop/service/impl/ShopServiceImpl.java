@@ -176,11 +176,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
                 contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
                 //发起rabbitMq信息删除es数据
-//                   rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_SHOP_DELETE,esInsertRequest);
                 MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_DELETE, contentSyncMessage);
                 //发起rabbitmq信息删除milvus数据
-//                   rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE,MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_DELETE, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_DELETE, contentSyncMessage);
                 flashShopListRedisCache(shopMapper.selectShopById(id).getTypeId());
             });
         }
@@ -447,75 +445,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 根据类型分页查询商铺信息
-     *
-     * @param typeId  商铺类型
-     * @param current 页码
-     * @param x
-     * @param y
-     * @return 商铺列表
-     */
-    @Override
-    public  List<ShopVO> queryShopByType(Integer typeId, Integer current,String sortBy, Double x, Double y) {
-        //判断是否根据坐标查询
-        if (x == null && y == null) {
-            String key = RedisConstants.CACHE_SHOP_KEY + typeId + ":" + current+sortBy;
-            String shopJson =redisService.leftPopCacheList(key);
-            if(shopJson != null){
-                List<Shop> shops = JSONUtil.toList(shopJson, Shop.class);
-                return convertToShopVOList(shops);
-            }
-            //不需要坐标查询，直接从数据库查询
-            Page<Shop> page = query()
-                    .eq("type_id", typeId)
-                    .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
-            //存入redis
-            redisService.setCacheList(key, JSONUtil.toJsonStr( page.getRecords()));
-
-            //返回数据
-            return convertToShopVOList(page.getRecords());
-        }
-        //计算分页参数
-        int from = (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE;
-        int end = current * SystemConstants.DEFAULT_PAGE_SIZE;
-        //查询redis、按照距离排序、分页查询 结果：shopId、distance
-        String key = RedisConstants.SHOP_GEO_KEY + typeId;
-        GeoResults<RedisGeoCommands.GeoLocation<Object>> results = redisService.getCacheGeoLocation(key,x,y,200000,end);
-        // 解析出id
-        if (results == null) {
-            return Collections.emptyList();
-        }
-        List<GeoResult<RedisGeoCommands.GeoLocation<Object>>> list = results.getContent();
-        if (list.size() <= from) {
-            //没有下一页了，结束
-            return Collections.emptyList();
-        }
-        //截取从from 到 end的部分
-        List<Long> ids = new ArrayList<>(list.size());
-        Map<String, Distance> distanceMap = new HashMap<>(list.size());
-        list.stream().skip(from).forEach(result -> {
-            //获取店铺id
-            String shopIdStr = String.valueOf(result.getContent().getName());
-            ids.add(Long.valueOf(shopIdStr));
-            //获取距离
-            Distance distance = result.getDistance();
-            distanceMap.put(shopIdStr, distance);
-        });
-        //根据id查询shop
-        String idStr = StrUtil.join(",", ids);
-        List<Shop> shops;
-        if(!sortBy.equals("distance")){
-            shops = query().in("id", ids).last("ORDER BY " + sortBy).list();
-        }else {
-            shops = query().in("id", ids).last("ORDER BY FIELD(id," + idStr + ")").list();
-        }
-        for (Shop shop : shops) {
-            shop.setDistance(distanceMap.get(shop.getId().toString()).getValue());
-        }
-        return convertToShopVOList(shops);
-    }
-
-    /**
      * 根据商铺名称查询商铺信息
      *
      * @param shopName 商铺名称
@@ -526,21 +455,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         Shop shop = query().eq("name", shopName).one();
         return convertToShopVO(shop);
     }
-
-    /**
-     * 修改商铺评论数量
-     *
-     * @param shopId 商铺id
-     * @return 修改结果
-     */
-    @Override
-    public Boolean updateCommentById(Long shopId) {
-        //更新评论数量
-        boolean update = update().setSql("comments = comments + 1").eq("id", shopId).update();
-        flashShopRedisCache(shopId);
-        return update;
-    }
-
     /**
      * 根据条件查询商铺信息
      *

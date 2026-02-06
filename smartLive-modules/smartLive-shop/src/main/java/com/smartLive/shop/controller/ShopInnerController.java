@@ -38,13 +38,6 @@ public class ShopInnerController extends BaseController {
     public ShopVO getShopByShopName(@PathVariable("shopName") String shopName){
         return shopService.getShopByShopName(shopName);
     }
-    /**
-     * 更新商家评论数
-     */
-    @PostMapping("/updateCommentById/{id}")
-    public Boolean updateCommentById(@PathVariable("id") Long shopId){
-        return shopService.updateCommentById(shopId);
-    }
 
     /**
      * 根据条件查询商家信息

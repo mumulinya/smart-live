@@ -69,6 +69,12 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     BlogVO queryBlogById(Long id);
+    /**
+     * 保存博客
+     * @param blog
+     * @return
+     */
+    Long saveBlog(Blog blog);
 
     /**
      * 查询最热博客
@@ -78,14 +84,6 @@ public interface IBlogService extends IService<Blog>
     List<BlogVO> queryHotBlog(Integer current);
 
     /**
-     * 点赞博客
-     * @param id
-     * @return
-     */
-    Boolean likeBlog(Long id);
-
-
-    /**
      * 查询用户发布的博客
      * @param current
      * @param userId
@@ -93,27 +91,6 @@ public interface IBlogService extends IService<Blog>
      */
     List<BlogVO> queryBlogByUserId(Integer current, Long userId);
 
-    /**
-     * 保存博客
-     * @param blog
-     * @return
-     */
-    Long saveBlog(Blog blog);
-
-    /**
-     * 查询用户关注的用户发布的博客
-     * @param max
-     * @param offset
-     * @return
-     */
-    ScrollResult queryBlogByFollow(Long max, Integer offset);
-
-    /**
-     * 更新博客的评论数
-     * @param blogId
-     * @return
-     */
-    Boolean updateCommentById(Long blogId);
 
     /**
      * 查询我的博客
@@ -122,32 +99,14 @@ public interface IBlogService extends IService<Blog>
      */
     List<BlogVO> queryMyBlog(Blog blog,Integer current);
 
-/**
+    /**
      * 查询博客详情
      * @param id
      * @return
      */
     BlogVO getBlogById(Long id);
-    /**
-     * 查询用户博客数量
-     * @param userId
-     * @return
-     */
 
-    Integer getBlogCount(Long userId);
 
-    /**
-     * 查询用户博客点赞数量
-     * @param userId
-     * @return
-     */
-    Integer getLikeCount(Long userId);
-
-    /**
-     * 刷新缓存
-     * @return
-     */
-    String flashCache();
 
     /**
      * 查询分类下的博客
@@ -157,25 +116,6 @@ public interface IBlogService extends IService<Blog>
      */
     List<BlogVO> queryBlogByCategory(Long typeId, Integer current);
 
-    /**
-     * 全部发布博客
-     *
-     * @return 全部发布结果
-     */
-    String allPublish();
-
-    /**
-     * 发布博客
-     *
-     * @param
-     * @return 发布结果
-     */
-    String publish( String[] ids);
-    /**
-     * 获取博客总数
-     * @return
-     */
-    Integer getBlogTotal();
     /**
      * 获取博客列表
      * @param sourceIdList
@@ -207,6 +147,20 @@ public interface IBlogService extends IService<Blog>
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
     /**
+     * 全部发布博客
+     *
+     * @return 全部发布结果
+     */
+    String allPublish();
+
+    /**
+     * 发布博客
+     *
+     * @param
+     * @return 发布结果
+     */
+    String publish( String[] ids);
+    /**
      * 获取博客点赞数
      * @param sourceId
      * @return
@@ -218,4 +172,28 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     Integer getBlogStarCount(Long sourceId);
+    /**
+     * 获取博客总数
+     * @return
+     */
+    Integer getBlogTotal();
+    /**
+     * 查询用户博客数量
+     * @param userId
+     * @return
+     */
+
+    Integer getBlogCount(Long userId);
+
+    /**
+     * 查询用户博客点赞数量
+     * @param userId
+     * @return
+     */
+    Integer getLikeCount(Long userId);
+    /**
+     * 刷新缓存
+     * @return
+     */
+    String flashCache();
 }

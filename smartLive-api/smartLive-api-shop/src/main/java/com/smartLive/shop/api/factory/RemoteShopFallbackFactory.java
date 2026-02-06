@@ -23,17 +23,6 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
             }
 
             /**
-             * 更新商家评论数
-             *
-             * @param shopId
-             */
-            @Override
-            public Boolean updateCommentById(Long shopId) {
-                log.error("更新商家评论数失败:{}", cause.getMessage());
-                return false;
-            }
-
-            /**
              * 根据条件查询商家信息
              *
              * @param shopDTo

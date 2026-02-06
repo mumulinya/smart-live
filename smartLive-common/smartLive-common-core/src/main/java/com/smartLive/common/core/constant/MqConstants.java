@@ -119,4 +119,5 @@ public class MqConstants {
     public static final String MILVUS_ROUTING_USER_DELETE = "milvus.user.delete";
     public static final String MILVUS_ROUTING_SHOP_DELETE = "milvus.shop.delete";
     public static final String MILVUS_ROUTING_BLOG_DELETE = "milvus.blog.delete";
+    public static final String MILVUS_ROUTING_VOUCHER_DELETE = "milvus.voucher.delete";
 }

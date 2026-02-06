@@ -85,17 +85,6 @@ public class BlogController extends BaseController
         return success(blogService.selectBlogById(id));
     }
 
-//    /**
-//     * 新增博客
-//     */
-//    @RequiresPermissions("business:blog:add")
-//    @Log(title = "博客", businessType = BusinessType.INSERT)
-//    @PostMapping
-//    public AjaxResult add(@RequestBody Blog blog)
-//    {
-//        return toAjax(blogService.insertBlog(blog));
-//    }
-
     /**
      * 修改博客
      */
@@ -127,23 +116,6 @@ public class BlogController extends BaseController
     {
         return Result.ok(blogService.deleteBlogById(id));
     }
-
-    /**
-     * 全量发布博客
-     */
-    @PostMapping("/allPublish")
-    public AjaxResult allPublish() {
-        return success(blogService.allPublish());
-    }
-
-    /**
-     * 发布指定ID的博客
-     */
-    @PostMapping("/publish/{ids}")
-    public AjaxResult allPublish(@PathVariable String[] ids) {
-        return success(blogService.publish(ids));
-    }
-
 
     /**
      * 新增博文
@@ -188,17 +160,6 @@ public class BlogController extends BaseController
         return Result.ok(blogService.queryBlogByCategory(typeId,current));
     }
     /**
-     * 查询博文详情
-     * @param id 博客ID
-     * @return 博客详情
-     */
-    @GetMapping("/{id}")
-    public Result queryBlogById(@PathVariable("id") Long id) {
-
-        return Result.ok(blogService.queryBlogById(id));
-    }
-
-    /**
      * 查询用户发布的博文
      * @param current 当前页码
      * @param userId 用户ID
@@ -211,14 +172,14 @@ public class BlogController extends BaseController
         return Result.ok(blogService.queryBlogByUserId(current, userId));
     }
     /**
-     * 查询关注用户发布的博文
-     * @param max 最大ID
-     * @param offset 偏移量
-     * @return 关注用户的博客列表
+     * 查询博文详情
+     * @param id 博客ID
+     * @return 博客详情
      */
-    @GetMapping("/of/follow")
-    public Result queryBlogByFollow(@RequestParam(value = "lastId") Long max, @RequestParam(value = "offset", defaultValue = "0") Integer offset) {
-        return Result.ok(blogService.queryBlogByFollow(max, offset));
+    @GetMapping("/{id}")
+    public Result queryBlogById(@PathVariable("id") Long id) {
+
+        return Result.ok(blogService.queryBlogById(id));
     }
     /**
      * 设置博客是否置顶
@@ -232,5 +193,20 @@ public class BlogController extends BaseController
             return Result.ok("操作成功");
         }else
             return Result.fail("操作失败");
+    }
+    /**
+     * 全量发布博客
+     */
+    @PostMapping("/allPublish")
+    public AjaxResult allPublish() {
+        return success(blogService.allPublish());
+    }
+
+    /**
+     * 发布指定ID的博客
+     */
+    @PostMapping("/publish/{ids}")
+    public AjaxResult allPublish(@PathVariable String[] ids) {
+        return success(blogService.publish(ids));
     }
 }

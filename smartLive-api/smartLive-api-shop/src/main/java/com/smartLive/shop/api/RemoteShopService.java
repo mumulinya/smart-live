@@ -18,12 +18,6 @@ public interface RemoteShopService {
     ShopDTO getShopByShopName(@PathVariable("shopName") String shopName);
 
     /**
-     * 更新商家评论数
-     */
-    @PostMapping("/inner/shop/updateCommentById/{id}")
-    Boolean updateCommentById(@PathVariable("id") Long shopId);
-
-    /**
      * 根据条件查询商家信息
      */
     @PostMapping("/inner/shop/getShopList")

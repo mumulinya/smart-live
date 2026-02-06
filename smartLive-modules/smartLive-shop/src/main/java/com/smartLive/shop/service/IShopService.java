@@ -72,29 +72,12 @@ public interface IShopService extends IService<Shop> {
     ShopVO queryById(Long id);
 
     /**
-     * 根据类型分页查询商铺信息
-     *
-     * @param typeId  商铺类型
-     * @param current 页码
-     * @return 商铺列表
-     */
-    List<ShopVO> queryShopByType(Integer typeId, Integer current, String sortBy,Double x, Double y);
-
-    /**
      * 根据商铺名称查询商铺信息
      *
      * @param shopName 商铺名称
      * @return 商铺详情
      */
     ShopVO getShopByShopName(String shopName);
-
-    /**
-     * 修改商铺评论数量
-     *
-     * @param shopId 商铺id
-     * @return 修改结果
-     */
-    Boolean updateCommentById(Long shopId);
 
     /**
      * 根据条件查询商铺信息
