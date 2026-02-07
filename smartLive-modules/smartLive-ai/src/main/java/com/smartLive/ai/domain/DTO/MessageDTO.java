@@ -36,7 +36,7 @@ public class MessageDTO implements Serializable {
 
     private Long userId;
     // 位置信息
-    private String district;
+    private String region;
     private Double x;
     private Double y;
     /** 是否使用上下文 */

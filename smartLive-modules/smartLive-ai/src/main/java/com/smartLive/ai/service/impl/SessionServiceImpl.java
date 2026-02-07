@@ -8,9 +8,14 @@ import com.smartLive.ai.mapper.SessionMapper;
 import com.smartLive.ai.service.ISessionService;
 import com.smartLive.common.core.constant.Constants;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.security.utils.SecurityUtils;
-import org.springframework.stereotype.Service;
 import com.smartLive.common.core.utils.StringUtils;
+import com.smartLive.common.security.utils.SecurityUtils;
+import com.smartLive.ai.domain.Message;
+import com.smartLive.ai.service.IMessageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -22,6 +27,10 @@ import java.util.List;
  */
 @Service
 public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> implements ISessionService {
+
+    @Autowired
+    @Lazy
+    private IMessageService messageService;
 
     @Override
     public Long createSession(String title) {
@@ -54,5 +63,27 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
                 .like(Session::getTitle, keyword)
                 .orderByDesc(Session::getCreateTime);
         return this.page(page, wrapper).getRecords();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteSession(Long sessionId) {
+        Long userId = UserContextHolder.getUser().getId();
+        Session session = this.getById(sessionId);
+
+        if (session == null) {
+            return false;
+        }
+
+        // Ensure user owns the session
+        if (!session.getUserId().equals(userId)) {
+            return false;
+        }
+
+        // Delete associated messages
+        messageService.remove(new LambdaQueryWrapper<Message>().eq(Message::getSessionId, sessionId));
+
+        // Delete session
+        return this.removeById(sessionId);
     }
 }

@@ -1,7 +1,11 @@
 package com.smartLive.ai.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.smartLive.ai.domain.DTO.MessageDTO;
 import com.smartLive.ai.domain.Message;
+import org.springframework.http.codec.ServerSentEvent;
+import reactor.core.publisher.Flux;
+
 import java.util.List;
 
 /**
@@ -28,4 +32,11 @@ public interface IMessageService extends IService<Message> {
      * @return Saved message
      */
     Message saveMessage(Long sessionId, String role, String content);
+    /**
+     * AI Chat
+     *
+     * @param messageDTO Message DTO
+     * @return AI Chat Flux
+     */
+    Flux<ServerSentEvent<String>> chat(MessageDTO messageDTO);
 }

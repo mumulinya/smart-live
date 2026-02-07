@@ -38,7 +38,7 @@ public class ShopRagService implements IShopRagService {
         List<Document> results = this.shopVectorStore.similaritySearch(
                 SearchRequest.builder()
                         .query(ragQuery)  // 使用用户消息
-                        .topK(20)
+                        .topK(10)
                         .filterExpression(buildFilterExpression(shopVo))
                         .build());
         log.info("🔍 RAG搜索结果：{}", results);
@@ -184,6 +184,11 @@ public class ShopRagService implements IShopRagService {
         if (shopVo.getDistrict() != null && !shopVo.getDistrict().trim().isEmpty()) {
             // 使用 contains 进行模糊查询
             filters.add(String.format("address.contains('%s')", shopVo.getDistrict().trim()));
+        }
+        // 地址模糊查询
+        if (shopVo.getAddress() != null && !shopVo.getAddress().trim().isEmpty()) {
+            // 使用 contains 进行模糊查询
+            filters.add(String.format("address.contains('%s')", shopVo.getAddress().trim()));
         }
         return filters.isEmpty() ? "" : String.join(" && ", filters);
     }

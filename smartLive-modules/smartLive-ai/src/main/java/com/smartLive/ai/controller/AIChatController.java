@@ -42,8 +42,4 @@ public class AIChatController {
             return Flux.just("对不起，我无法理解你的问题。");
         }
     }
-    @PostMapping("/crateComment")
-    public void crateComment(@RequestBody Map<Integer, Set<Long>> map) {
-//        commentHandler.aiCreateComment(map);
-    }
 }

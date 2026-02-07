@@ -15,6 +15,7 @@ import com.smartLive.common.security.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -36,9 +37,6 @@ public class MessageController extends BaseController {
     @Autowired
     private AIChatOrchestrator aiChatOrchestrator;
 
-    @Autowired
-    private ShopRagService shopRagService;
-
     /**
      * Get message list (history)
      */
@@ -52,41 +50,9 @@ public class MessageController extends BaseController {
      * AI Chat (SSE)
      */
     @GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> chat(MessageDTO messageDTO) {
+    public
+    Flux<ServerSentEvent<String>> chat(MessageDTO messageDTO) {
 
-        // 1. Save User Message
-        Long sessionId = messageDTO.getSessionId();
-        Long userId = messageDTO.getUserId();
-        String message = messageDTO.getMessage();
-        messageService.saveMessage(sessionId, "user", message);
-
-        // 2. Build Request
-        AIChatRequest request = new AIChatRequest();
-        request.setMessage(message);
-        request.setSessionId(String.valueOf(sessionId));
-        request.setUserId(String.valueOf(userId));
-        request.setX(messageDTO.getX());
-        request.setY(messageDTO.getY());
-        // (Optional) Context logic can be added here
-        if (messageDTO.getContextMode()) {
-             // Retrieve context if needed
-        }
-        // 3. Call Orchestrator & Save Assistant Response
-        StringBuilder fullResponse = new StringBuilder();
-
-        return aiChatOrchestrator.processMessage(request)
-                .doOnNext(chunk -> fullResponse.append(chunk)) // Accumulate chunks
-                .doFinally(signalType -> {
-                    // Save complete assistant message when stream ends
-                    String responseText = fullResponse.toString();
-                    if (!responseText.isEmpty()) {
-                        try {
-                            messageService.saveMessage(sessionId, "assistant", responseText);
-                            log.info("✅ Saved assistant response for session {}", sessionId);
-                        } catch (Exception e) {
-                            log.error("❌ Failed to save assistant response", e);
-                        }
-                    }
-                });
+        return messageService.chat(messageDTO);
     }
 }

@@ -57,8 +57,7 @@ public class ShopTools {
         sort.setField(field);
         sort.setAsc(true);
         //调用rag
-        List<ShopVO> shopList = this.shopRagService.getShopList(shopQuery, userMessage);
-        return shopList;
+        return this.shopRagService.getShopList(shopQuery, userMessage);
     }
 
     @Tool(name = "getShopDetails", description = "获取某个店铺的详细信息（含地址、营业时间、评分、评论数量等）。示例：'海底捞几点关门？'")

@@ -55,4 +55,16 @@ public class SessionController extends BaseController {
         List<Session> list = sessionService.searchByKeyword(keyword, current);
         return Result.ok(list);
     }
+
+    /**
+     * Delete session
+     */
+    @DeleteMapping("/{sessionId}")
+    public Result deleteSession(@PathVariable("sessionId") Long sessionId) {
+        boolean success = sessionService.deleteSession(sessionId);
+        if (success) {
+            return Result.ok();
+        }
+        return Result.fail("Failed to delete session");
+    }
 }

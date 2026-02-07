@@ -693,8 +693,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                         voucher.setShopName(shopDTO.getName());
                         voucher.setTypeId(shopDTO.getTypeId());
                     }
-//                   querySeckill(voucher);
-//                   queryVoucherShopMessage(voucher);
+
                 });
                 // 创建请求并发送
                 ContentBatchSyncMessage request = new ContentBatchSyncMessage();
@@ -702,18 +701,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 request.setData(vouchers);
                 request.setType(GlobalBizTypeEnum.VOUCHER.getCode());
                 // 发送rabbitmq消息数据插入es
-//               rabbitTemplate.convertAndSend(
-//                       MqConstants.ES_EXCHANGE,
-//                       MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT,
-//                       request
-//               );
                 MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT, request);
                 //发送rabbitmq消息数据插入Milvus
-               rabbitTemplate.convertAndSend(
-                       MqConstants.MILVUS_EXCHANGE,
-                       MqConstants.MILVUS_ROUTING_VOUCHER_BATCH_INSERT,
-                       request
-               );
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_BATCH_INSERT, request);
                 log.info("发送第 {} 页，{} 条数据", finalPage, vouchers.size());
             });
             page++;

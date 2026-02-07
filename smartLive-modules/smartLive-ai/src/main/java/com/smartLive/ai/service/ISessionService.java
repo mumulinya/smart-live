@@ -36,4 +36,12 @@ public interface ISessionService extends IService<Session> {
      * @return List of sessions
      */
     List<Session> searchByKeyword(String keyword, Integer current);
+
+    /**
+     * Delete session and associated messages
+     *
+     * @param sessionId Session ID
+     * @return true if success
+     */
+    boolean deleteSession(Long sessionId);
 }

@@ -75,6 +75,6 @@ public class VoucherDoc  implements Serializable
     private String shopName;
     //店铺类型
     private Long typeId;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-
 }

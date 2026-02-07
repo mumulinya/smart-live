@@ -41,7 +41,9 @@ public class milvusConfig {
     @Bean
     public VectorStore commentVectorStore(MilvusServiceClient milvusClient, OpenAiEmbeddingModel embeddingModel) {
 
-        return   getMilvusVectorStoreBuilder(milvusClient, embeddingModel).collectionName("comment").build();
+        return   getMilvusVectorStoreBuilder(milvusClient, embeddingModel)
+                .collectionName("comment")
+                .build();
     }
     /**
      * 店铺向量库
@@ -49,7 +51,9 @@ public class milvusConfig {
     @Bean
     public VectorStore shopVectorStore(MilvusServiceClient milvusClient, OpenAiEmbeddingModel embeddingModel) {
 
-      return   getMilvusVectorStoreBuilder(milvusClient, embeddingModel).collectionName("shop").build();
+      return   getMilvusVectorStoreBuilder(milvusClient, embeddingModel)
+              .collectionName("shop")
+              .build();
     }
     /**
      * 优惠券向量库
@@ -57,7 +61,9 @@ public class milvusConfig {
     @Bean
     public VectorStore voucherVectorStore(MilvusServiceClient milvusClient, OpenAiEmbeddingModel embeddingModel) {
 
-        return   getMilvusVectorStoreBuilder(milvusClient, embeddingModel).collectionName("voucher").build();
+        return   getMilvusVectorStoreBuilder(milvusClient, embeddingModel)
+                .collectionName("voucher")
+                .build();
     }
     public MilvusVectorStore.Builder getMilvusVectorStoreBuilder(MilvusServiceClient milvusClient, OpenAiEmbeddingModel embeddingModel) {
 

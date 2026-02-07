@@ -275,7 +275,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Review> list = page.getRecords();
         list.stream().forEach(c -> {
-            ShopDTO shop = remoteShopService.getShopById(c.getSourceId());
+            ShopDTO shop = remoteShopService.getShopById(c.getShopId());
             if (shop != null) {
                 c.setSourceName(shop.getName());
             }

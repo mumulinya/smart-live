@@ -22,13 +22,11 @@ spring:
       milvus:
         host: ${MILVUS_HOST:192.168.182.20}
         port: 19530
-        collection-name: "shops"
         database-name: "default"
         embedding-dimension: 1024  # 修改为 1024 以匹配 BGE 模型
         metric-type: COSINE
-        index-type: IVF_FLAT
+        index-type: FLAT
         initialize-schema: false
-        auto-create-collection: true
     ollama:
       base-url: http://localhost:11434
       chat:
