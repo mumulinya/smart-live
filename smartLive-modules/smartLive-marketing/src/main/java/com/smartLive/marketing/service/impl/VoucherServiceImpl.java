@@ -380,11 +380,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         VoucherOrderDTO voucherOrder = new VoucherOrderDTO();
         voucherOrder.setId(orderId);
         voucherOrder.setUserId(userId);
-        voucherOrder.setVoucherId(voucherId);
+        voucherOrder.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+        voucherOrder.setSourceId(voucherId);
         //发送消息
-//        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_SECKILL_ROUTING, voucherOrder);
-//        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_SECKILL_ROUTING,voucherOrder);
-//        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_SECKILL_ROUTING,voucherOrder,MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME, MqConstants.ORDER_DEAD_LETTER_ROUTING,3);
         try {
             executorService.submit(()->{
                 log.info("线程{}创建秒杀订单id为：{}", Thread.currentThread().getName(), orderId);
@@ -395,12 +393,6 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             //恢复库存
             seckillVoucherService.recoverVoucherStock(voucherId);
         }
-        //发送延迟消息，检测订单支付状态
-//        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
-//            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
-//            return message;
-//        });
-//        MqMessageSendUtils.sendSessionMessage(rabbitTemplate,MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,voucherOrder.getId(),(MqConstants.DELAY_TIME));
         //获取事务代理对象
         proxy= (IVoucherService) AopContext.currentProxy();
         //3 返回订单id
@@ -420,22 +412,13 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         VoucherOrderDTO voucherOrder = new VoucherOrderDTO();
         voucherOrder.setId(orderId);
         voucherOrder.setUserId(userId);
-        voucherOrder.setVoucherId(voucherId);
+        voucherOrder.setSourceType(GlobalBizTypeEnum.VOUCHER.getCode());
+        voucherOrder.setSourceId(voucherId);
         //5.发送消息创建订单
-//        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE_NAME, MqConstants.ORDER_BUY_ROUTING, voucherOrder);
-//        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_BUY_ROUTING,voucherOrder);
-//        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_BUY_ROUTING,voucherOrder,MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME, MqConstants.ORDER_DEAD_LETTER_ROUTING,3);
         executorService.submit(()->{
             log.info("线程“{}创建普通订单id为：{}", Thread.currentThread().getName(), orderId);
             MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ORDER_EXCHANGE_NAME,MqConstants.ORDER_BUY_ROUTING,voucherOrder,MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME, MqConstants.ORDER_DEAD_LETTER_ROUTING,3);
         });
-//        //发送延迟消息，检测订单支付状态
-//        MqMessageSendUtils.sendSessionMessage(rabbitTemplate,MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,voucherOrder.getId(),(MqConstants.DELAY_TIME));
-//        rabbitTemplate.convertAndSend(MqConstants.ORDER_DELAY_EXCHANGE_NAME, MqConstants.ORDER_DELAY_ROUTING, voucherOrder.getId(), message -> {
-//            message.getMessageProperties().setDelay(MqConstants.DELAY_TIME);
-//            return message;
-//        });
-//        save(voucherOrder);
         //6.返回订单id
         return voucherOrder.getId();
     }

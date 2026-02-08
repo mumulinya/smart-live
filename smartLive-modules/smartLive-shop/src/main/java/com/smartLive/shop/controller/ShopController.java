@@ -102,6 +102,29 @@ public class ShopController extends BaseController {
     public AjaxResult remove(@PathVariable String[] ids) {
         return toAjax(shopService.deleteShopByIds(ids));
     }
+
+    /**
+     * 根据商铺名称关键字分页查询商铺信息
+     *
+     * @param name    商铺名称关键字
+     * @param current 页码
+     * @return 商铺列表
+     */
+    @GetMapping("/of/name")
+    public Result queryShopByName(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "area",required = false) String area,
+            @RequestParam(value = "current", defaultValue = "1") Integer current
+    ) {
+        // 根据类型分页查询
+        Page<Shop> page = shopService.query()
+                .like(StrUtil.isNotBlank(name), "name", name)
+                .like(StrUtil.isNotBlank(area), "address", area)
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+        // 返回数据
+        return Result.ok(page.getRecords());
+    }
+
     /**
      * 刷新缓存
      */

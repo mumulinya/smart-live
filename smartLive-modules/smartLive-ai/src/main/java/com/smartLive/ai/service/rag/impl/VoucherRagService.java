@@ -2,7 +2,6 @@ package com.smartLive.ai.service.rag.impl;
 
 import com.smartLive.ai.entity.vo.VoucherVO;
 import com.smartLive.ai.service.rag.IVoucherRagService;
-import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.marketing.api.RemoteVoucherService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -10,7 +9,6 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

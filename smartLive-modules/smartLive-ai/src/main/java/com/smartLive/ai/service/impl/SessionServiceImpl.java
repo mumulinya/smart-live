@@ -66,7 +66,6 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public boolean deleteSession(Long sessionId) {
         Long userId = UserContextHolder.getUser().getId();
         Session session = this.getById(sessionId);
