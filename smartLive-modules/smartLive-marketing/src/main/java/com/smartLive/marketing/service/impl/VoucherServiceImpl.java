@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -12,6 +13,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.core.enums.ItemActionType;
+import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
@@ -203,6 +205,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         if(i>0){
             //发送消息推送动态
             sendNewVoucherMessageToMQ(voucher);
+            //发送审核消息
+            sendAuditMessage(voucher);
         }
         return i;
     }
@@ -224,7 +228,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 .build();
         MqMessageSendUtils.sendMqMessage(rabbitTemplate,
                 MqConstants.INTERACT_FEED_EXCHANGE_NAME,
-                MqConstants.INTERACT_FEED_VOUCHER_ROUTING,
+                MqConstants.INTERACT_FEED_ROUTING,
                 feedEventMessage);
     }
     public void sendVoucherActionMessageToMQ(Long voucherId,ItemActionType itemActionType){
@@ -241,7 +245,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 .build();
         MqMessageSendUtils.sendMqMessage(rabbitTemplate,
                 MqConstants.INTERACT_FEED_EXCHANGE_NAME,
-                MqConstants.INTERACT_FEED_VOUCHER_ROUTING,
+                MqConstants.INTERACT_FEED_ROUTING,
                 feedEventMessage);
     }
     /**
@@ -256,6 +260,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         voucher.setUpdateTime(DateUtils.getNowDate());
         int i = voucherMapper.updateVoucher(voucher);
         if(i>0){
+            //发送审核消息
+            sendAuditMessage(voucher);
             SeckillVoucher seckillVoucher = seckillVoucherService.query().eq("voucher_id", voucher.getId()).one();
             if(voucher.getType()==1){
                 seckillVoucher.setStock(voucher.getStock());
@@ -324,10 +330,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 contentSyncMessage.setIndexName(EsIndexNameConstants.VOUCHER_INDEX_NAME);
                 contentSyncMessage.setType(GlobalBizTypeEnum.VOUCHER.getCode());
                 //发起rabbitMq信息删除es数据
-//               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_VOUCHER_DELETE,esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_DELETE, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
                 //发起rabbitmq信息删除milvus数据
-//               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE,MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,esInsertRequest);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_DELETE, contentSyncMessage);
             });
         }
         }
@@ -446,6 +451,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         // 保存优惠券
         boolean save = save(voucher);
         if(save){
+            //发送审核消息
+            sendAuditMessage(voucher);
             // 保存秒杀信息
             SeckillVoucher seckillVoucher = new SeckillVoucher();
             seckillVoucher.setVoucherId(voucher.getId());
@@ -463,7 +470,20 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         }
         return false;
     }
-
+    /**
+     * 发送审核消息
+     * @param voucher
+     */
+    private void sendAuditMessage(Voucher voucher) {
+        AuditMessage auditMessage = AuditMessage.builder()
+                .bizId(voucher.getId())
+                .bizType(GlobalBizTypeEnum.VOUCHER.getCode())
+                .submitterId(voucher.getShopId())
+                .auditContent(BeanUtil.beanToMap(voucher))
+                .createTime(voucher.getCreateTime())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
+    }
     /**
      * 查询店铺的优惠券列表
      *
@@ -684,9 +704,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 request.setData(vouchers);
                 request.setType(GlobalBizTypeEnum.VOUCHER.getCode());
                 // 发送rabbitmq消息数据插入es
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT, request);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
                 //发送rabbitmq消息数据插入Milvus
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_BATCH_INSERT, request);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
                 log.info("发送第 {} 页，{} 条数据", finalPage, vouchers.size());
             });
             page++;
@@ -721,9 +741,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 log.info("发送的优惠券信息为{}", voucher);
                 //发送rabbitmq消息数据插入es
 //               rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_VOUCHER_INSERT, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_INSERT, contentSyncMessage);
                 //发送rabbitmq消息数据插入Milvus
-               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_VOUCHER_INSERT, contentSyncMessage);
+               rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_INSERT, contentSyncMessage);
             });
         }
         return "发布成功";

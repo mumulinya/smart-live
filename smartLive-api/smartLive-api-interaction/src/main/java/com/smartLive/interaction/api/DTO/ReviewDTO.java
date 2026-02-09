@@ -1,4 +1,4 @@
-package com.smartLive.interaction.domain;
+package com.smartLive.interaction.api.DTO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -19,11 +19,10 @@ import java.util.Date;
  * @author mumulin
  * @date 2025-10-02
  */
-@TableName("review")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Review extends BaseEntity
+public class ReviewDTO extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
@@ -72,7 +71,7 @@ public class Review extends BaseEntity
 
     /** 状态，0：正常，1：草稿，2：禁止查看 */
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
-    private Integer status;
+    private String status;
 
     /** 评分 */
     @Excel(name = "评分")

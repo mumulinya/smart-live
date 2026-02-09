@@ -1,16 +1,21 @@
 package com.smartLive.interaction.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ReviewTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.rabbitmq.domain.AuditMessage;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.Review;
 import com.smartLive.interaction.domain.Star;
@@ -25,6 +30,7 @@ import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.DefaultTypedTuple;
@@ -61,6 +67,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private IStarService starService;
     @Autowired
     private RemoteOrderService remoteOrderService;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Autowired
     public ReviewServiceImpl(@Lazy ILikeService likeService, @Lazy IStarService starService) {
@@ -110,7 +118,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Override
     public int updateReview(Review review) {
         review.setUpdateTime(DateUtils.getNowDate());
-        return reviewMapper.updateReview(review);
+        int i = reviewMapper.updateReview(review);
+        if (i > 0&&review.getStatus() == 0) {
+            //发送审核信息
+            sendAuditMessage(review);
+        }
+        return  i;
     }
 
     /**
@@ -216,6 +229,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         review.setCreateTime(DateUtils.getNowDate());
         int i = reviewMapper.insertReview(review);
         if (i > 0) {
+            //发送审核信息
+            sendAuditMessage(review);
             Long orderId = review.getOrderId();
             //更新订单评价状态，设置为已评价
             if (orderId != null) {
@@ -225,14 +240,28 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             String reviewKeyPrefix = reviewType.getReviewKeyPrefix()+ review.getSourceId();
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
             String reviewDirtyKeyPrefix = reviewType.getReviewDirtyKeyPrefix();
-            //保存评论信息
+            //保存评价信息
             redisService.setCacheZSet(reviewKeyPrefix, review.getId().toString(), System.currentTimeMillis());
-            //记录评论数量
+            //记录评价数量
             redisService.incrementCacheValue(reviewCountKeyPrefix);
             //记录脏数据
             redisService.setCacheSet(reviewDirtyKeyPrefix, Collections.singleton(review.getSourceId().toString()));
         }
         return i;
+    }
+    /**
+     * 发送审核消息
+     * @param review
+     */
+    private void sendAuditMessage(Review review) {
+        AuditMessage auditMessage = AuditMessage.builder()
+                .bizId(review.getId())
+                .bizType(GlobalBizTypeEnum.REVIEW.getCode())
+                .submitterId(review.getUserId())
+                .auditContent(BeanUtil.beanToMap(review))
+                .createTime(review.getCreateTime())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
     /**
      * 删除评论

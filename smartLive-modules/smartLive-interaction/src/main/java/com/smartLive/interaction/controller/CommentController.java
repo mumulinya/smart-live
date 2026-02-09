@@ -1,5 +1,9 @@
 package com.smartLive.interaction.controller;
+import cn.hutool.core.bean.BeanUtil;
+import com.smartLive.common.core.constant.MqConstants;
+import com.smartLive.common.core.context.SecurityContextHolder;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.controller.BaseController;
@@ -8,9 +12,12 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.core.web.page.TableDataInfo;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
+import com.smartLive.common.rabbitmq.domain.AuditMessage;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.service.ICommentService;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +35,8 @@ public class CommentController extends BaseController
 {
     @Autowired
     private ICommentService commentService;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     /**
      * 查询评论列表（带权限控制）

@@ -20,6 +20,14 @@ public interface IAuditService extends IService<AuditTask> {
     List<AuditTaskVO> selectAuditList(AuditTask auditTask);
 
     /**
+     * 获取审核任务详情
+     *
+     * @param id 任务ID
+     * @return 审核任务VO
+     */
+    AuditTaskVO getAuditDetail(Long id);
+
+    /**
      * 审核操作
      *
      * @param id 任务ID
@@ -28,4 +36,10 @@ public interface IAuditService extends IService<AuditTask> {
      * @return 结果
      */
     boolean auditAction(Long id, Integer status, String reason);
+
+    /**
+     * 创建审核任务
+     * @param auditMessage 审核消息
+     */
+    void createAuditTask(com.smartLive.common.rabbitmq.domain.AuditMessage auditMessage);
 }

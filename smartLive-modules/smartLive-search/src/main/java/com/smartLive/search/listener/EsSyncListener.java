@@ -31,12 +31,7 @@ public class EsSyncListener {
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = {
-                            MqConstants.ES_ROUTING_VOUCHER_INSERT,
-                            MqConstants.ES_ROUTING_USER_INSERT,
-                            MqConstants.ES_ROUTING_SHOP_INSERT,
-                            MqConstants.ES_ROUTING_BLOG_INSERT
-                    })
+                    key = MqConstants.ES_ROUTING_INSERT)
     })
     public void handleSingleInsert(ContentSyncMessage request) {
        executorService.submit(()->{
@@ -65,12 +60,7 @@ public class EsSyncListener {
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = {
-                            MqConstants.ES_ROUTING_VOUCHER_BATCH_INSERT,
-                            MqConstants.ES_ROUTING_SHOP_BATCH_INSERT,
-                            MqConstants.ES_ROUTING_USER_BATCH_INSERT,
-                            MqConstants.ES_ROUTING_BLOG_BATCH_INSERT
-                    })
+                    key = MqConstants.ES_ROUTING_BATCH_INSERT)
     })
     public void handleBatchInsert(ContentBatchSyncMessage request) {
         executorService.submit(()->{
@@ -98,12 +88,7 @@ public class EsSyncListener {
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.ES_DELETE_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = {
-                            MqConstants.ES_ROUTING_VOUCHER_DELETE,
-                            MqConstants.ES_ROUTING_USER_DELETE,
-                            MqConstants.ES_ROUTING_BLOG_DELETE,
-                            MqConstants.ES_ROUTING_SHOP_DELETE
-                    })
+                    key = MqConstants.ES_ROUTING_DELETE)
     })
     public void handleDelete(ContentSyncMessage request) {
        executorService.submit(()->{

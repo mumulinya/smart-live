@@ -7,6 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @FeignClient(contextId = "remoteAppUserService", value = ServiceNameConstants.USER_SERVICE, fallbackFactory = RemoteAppUserFallbackFactory.class)
 public interface RemoteAppUserService {
@@ -39,4 +40,11 @@ public interface RemoteAppUserService {
      */
     @GetMapping("/inner/user/{id}")
     UserDTO queryUserById(@PathVariable("id") Long id);
+    /**
+     * 根据用户id查询用户名称
+     * @param userId
+     * @return
+     */
+    @GetMapping("/inner/user/userNameById")
+    String getUserNameById(@RequestParam("userId") Long userId);
 }

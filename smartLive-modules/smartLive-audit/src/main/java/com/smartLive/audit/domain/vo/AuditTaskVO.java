@@ -1,26 +1,57 @@
 package com.smartLive.audit.domain.vo;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.audit.domain.AuditTask;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
-import java.math.BigDecimal;
+import java.util.Date;
 import java.util.Map;
 
 /**
  * 审核任务VO
  */
 @Data
-public class AuditTaskVO extends AuditTask {
+public class AuditTaskVO{
 
     /**
      * 是否高风险
      */
     private Boolean isHighRisk;
+    /** 主键ID */
+    @TableId
+    private Long id;
+
+    /** 业务ID */
+    private Long bizId;
+
+    /** 业务类型(1-用户,2-店铺,3-博客,4-代金券,5-评论,6-团购) */
+    private Integer bizType;
+
+    /** 提交人ID */
+    private Long submitterId;
+    /** 提交人名称 */
+    private String submitterName;
+
+    /** 状态(0-待审, 1-通过, 2-驳回) */
+    private Integer status;
+
+    /** 驳回原因 */
+    private String reason;
+
+    /** 审核内容快照(JSON) */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private Map<String, Object> auditContent;
+
+    /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
 
     /**
-     * 从Entity转换为VO，并计算isHighRisk
+     * 从Entity转换为VO
      */
     public static AuditTaskVO fromEntity(AuditTask entity) {
         if (entity == null) {
@@ -28,44 +59,7 @@ public class AuditTaskVO extends AuditTask {
         }
         AuditTaskVO vo = new AuditTaskVO();
         BeanUtils.copyProperties(entity, vo);
-        vo.setIsHighRisk(calculateHighRisk(entity));
+        // Note: auditContent is copied as Map initially, will be overwritten by Strategy
         return vo;
-    }
-
-    private static Boolean calculateHighRisk(AuditTask entity) {
-        Integer bizType = entity.getBizType();
-        Map<String, Object> content = entity.getAuditContent();
-
-        if (content == null) {
-            return false;
-        }
-
-        // 检查是否为 VOUCHER(4) 或 GROUP_BUY(6)
-        boolean isTargetType = GlobalBizTypeEnum.VOUCHER.getCode().equals(bizType) ||
-                               GlobalBizTypeEnum.GROUP_BUY.getCode().equals(bizType);
-
-        if (isTargetType) {
-            try {
-                // 尝试获取价格信息 (支持 camelCase 和 snake_case)
-                Object priceObj = content.get("price");
-                if (priceObj == null) priceObj = content.get("salePrice");
-                if (priceObj == null) priceObj = content.get("sale_price");
-
-                Object originalPriceObj = content.get("originalPrice"); 
-                if (originalPriceObj == null) originalPriceObj = content.get("original_price");
-
-                if (priceObj != null && originalPriceObj != null) {
-                    double price = Double.parseDouble(priceObj.toString());
-                    double originalPrice = Double.parseDouble(originalPriceObj.toString());
-
-                    if (originalPrice > 0 && (price / originalPrice) < 0.1) {
-                        return true;
-                    }
-                }
-            } catch (Exception e) {
-                // 转换异常忽略，视为非高风险
-            }
-        }
-        return false;
     }
 }

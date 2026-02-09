@@ -120,4 +120,16 @@ public interface IUserService extends IService<User>
      * @return
      */
     Boolean updateUserPassWord(User user);
+    /**
+     * 根据用户id获取用户名称
+     * @param userId
+     * @return
+     */
+    String getUserNameById(Long userId);
+    /**
+     * 根据用户id查询用户信息
+     * @param id
+     * @return
+     */
+    UserVO queryUserInfoById(Long id);
 }

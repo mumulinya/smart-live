@@ -1,5 +1,6 @@
 package com.smartLive.blog.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
@@ -10,19 +11,15 @@ import com.smartLive.blog.domain.Blog;
 import com.smartLive.blog.domain.VO.BlogVO;
 import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
+import com.smartLive.common.rabbitmq.domain.*;
 import org.springframework.beans.BeanUtils;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
-import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
-import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
-import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
-import com.smartLive.common.core.domain.ScrollResult;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteLikeService;
@@ -35,7 +32,6 @@ import com.smartLive.user.api.RemoteAppUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -159,6 +155,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if(i > 0){
             //更新es数据
             publish(new String[]{blog.getId().toString()});
+            blog=getById(blog.getId());
+            queryBlogUser(blog);
+            //发送审核消息
+            sendAuditMessage(blog);
             flashRedisBlogCache(blog.getId());
         }
         return i;
@@ -185,7 +185,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
                contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
                 //发起rabbitMq信息删除
-               MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, contentSyncMessage);
+               MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
                //更新redis缓存
                flashRedisBlogCache(id);
                latch.countDown();
@@ -220,7 +220,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
             contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
             //发起rabbitMq信息删除
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_BLOG_DELETE, contentSyncMessage);
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
             //更新redis缓存
             flashRedisBlogCache(id);
         }
@@ -335,13 +335,16 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .bizId(blog.getId())
                 .publishTime(blog.getCreateTime())
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_FEED_EXCHANGE_NAME, MqConstants.INTERACT_FEED_BLOG_ROUTING, feedEventMessage);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.INTERACT_FEED_EXCHANGE_NAME, MqConstants.INTERACT_FEED_ROUTING, feedEventMessage);
         //添加es数据
         publish(new String[]{blog.getId().toString()});
         //添加用户es数据
         String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_PUBLISH;
         queryBlogUser(blog);
-        String  id = blog.getUserId()+"_"+actionType+"_"+GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+blog.getId().toString();        UserResourceMessage userResourceMessage = UserResourceMessage.builder()
+        //发送审核消息
+        sendAuditMessage(blog);
+        String  id = blog.getUserId()+"_"+actionType+"_"+GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+blog.getId().toString();
+        UserResourceMessage userResourceMessage = UserResourceMessage.builder()
                 .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
                 .id(id)
                 .userId(blog.getUserId())
@@ -358,6 +361,21 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
+     * 发送审核消息
+     * @param blog
+     */
+    private void sendAuditMessage(Blog blog) {
+        AuditMessage auditMessage = AuditMessage.builder()
+                .bizId(blog.getId())
+                .bizType(GlobalBizTypeEnum.BLOG.getCode())
+                .submitterId(blog.getUserId())
+                .auditContent(BeanUtil.beanToMap(blog))
+                .createTime(blog.getCreateTime())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
+    }
+
+    /**
      * 查询我的博客
      *
      * @param current
@@ -366,6 +384,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public List<BlogVO> queryMyBlog(Blog b,Integer current) {
         UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            throw new BusinessException("未登录");
+        }
         // 根据用户查询
         Page<Blog> page = query()
                 .eq("user_id", user.getId())
@@ -712,7 +733,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 //                );
                 MqMessageSendUtils.sendMqMessage(rabbitTemplate,
                         MqConstants.ES_EXCHANGE,
-                        MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
+                        MqConstants.ES_ROUTING_BATCH_INSERT,
                         request);
                 log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, blogs.size());
             });
@@ -756,10 +777,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
               contentSyncMessage.setData(blog);
               contentSyncMessage.setId(blog.getId());
               contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
-//              rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BLOG_INSERT, esInsertRequest);
               MqMessageSendUtils.sendMqMessage(rabbitTemplate,
                       MqConstants.ES_EXCHANGE,
-                      MqConstants.ES_ROUTING_BLOG_INSERT,
+                      MqConstants.ES_ROUTING_INSERT,
                       contentSyncMessage);
           });
         }

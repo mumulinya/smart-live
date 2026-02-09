@@ -26,11 +26,8 @@ public class MqConstants {
     public static final String  INTERACT_FEED_EXCHANGE_NAME = "interact.feed.topic";
     //普通数据推送队列
     public static final String  INTERACT_FEED_QUEUE = "interact.feed.queue";
-    //博客推送
-    public static final String  INTERACT_FEED_BLOG_ROUTING = "interact.feed.blog";
-    //代金券推送
-    public static final String  INTERACT_FEED_VOUCHER_ROUTING = "interact.feed.voucher";
-
+    //数据推送
+    public static final String  INTERACT_FEED_ROUTING = "interact.feed";
     //ai交换机
     public static final String AI_EXCHANGE_NAME = "ai.direct";
     public static final String AI_COMMENT_QUEUE = "ai.comment.queue";
@@ -67,25 +64,16 @@ public class MqConstants {
     /**
      * 插入路由键
      */
-    public static final String ES_ROUTING_VOUCHER_INSERT = "es.voucher.insert";
-    public static final String ES_ROUTING_USER_INSERT = "es.user.insert";
-    public static final String ES_ROUTING_SHOP_INSERT = "es.shop.insert";
-    public static final String ES_ROUTING_BLOG_INSERT = "es.blog.insert";
+    public static final String ES_ROUTING_INSERT = "es.insert";
     public static final String ES_ROUTING_USER_RESOURCE_INSERT="es.userResource.insert";
     /**
      * 批量插入路由键
      */
-    public static final String ES_ROUTING_VOUCHER_BATCH_INSERT = "es.voucher.batch.insert";
-    public static final String ES_ROUTING_USER_BATCH_INSERT = "es.user.batch.insert";
-    public static final String ES_ROUTING_SHOP_BATCH_INSERT = "es.shop.batch.insert";
-    public static final String ES_ROUTING_BLOG_BATCH_INSERT = "es.blog.batch.insert";
+    public static final String ES_ROUTING_BATCH_INSERT = "es.voucher.batch.insert";
     /**
      * 单个删除路由键
      */
-    public static final String ES_ROUTING_VOUCHER_DELETE = "es.voucher.delete";
-    public static final String ES_ROUTING_USER_DELETE = "es.user.delete";
-    public static final String ES_ROUTING_SHOP_DELETE = "es.shop.delete";
-    public static final String ES_ROUTING_BLOG_DELETE = "es.blog.delete";
+    public static final String ES_ROUTING_DELETE = "es.voucher.delete";
 
     /**
      * Milvus 交换机
@@ -97,27 +85,17 @@ public class MqConstants {
     public static final String MILVUS_INSERT_QUEUE = "milvus.sync.insert.queue";
     public static final String MILVUS_BATCH_INSERT_QUEUE = "milvus.sync.batch.insert.queue";
     public static final String MILVUS_DELETE_QUEUE = "milvus.sync.delete.queue";
-
     /**
      * Milvus 路由键
      */
-    public static final String MILVUS_ROUTING_VOUCHER_INSERT = "milvus.voucher.insert";
-    public static final String MILVUS_ROUTING_USER_INSERT = "milvus.user.insert";
-    public static final String MILVUS_ROUTING_SHOP_INSERT = "milvus.shop.insert";
-    public static final String MILVUS_ROUTING_BLOG_INSERT = "milvus.blog.insert";
-    /**
-     * 批量插入路由键
-     */
-    public static final String MILVUS_ROUTING_VOUCHER_BATCH_INSERT = "milvus.voucher.batch.insert";
-    public static final String MILVUS_ROUTING_USER_BATCH_INSERT = "milvus.user.batch.insert";
-    public static final String MILVUS_ROUTING_SHOP_BATCH_INSERT = "milvus.shop.batch.insert";
-    public static final String MILVUS_ROUTING_BLOG_BATCH_INSERT = "milvus.blog.batch.insert";
+    public static final String MILVUS_ROUTING_INSERT = "milvus.insert";
+    public static final String MILVUS_ROUTING_DELETE = "milvus.delete";
+    public static final String MILVUS_ROUTING_BATCH_INSERT = "milvus.batch.insert";
 
     /**
-     * 单个删除路由键
+     * 审核交换机
      */
-    public static final String MILVUS_ROUTING_USER_DELETE = "milvus.user.delete";
-    public static final String MILVUS_ROUTING_SHOP_DELETE = "milvus.shop.delete";
-    public static final String MILVUS_ROUTING_BLOG_DELETE = "milvus.blog.delete";
-    public static final String MILVUS_ROUTING_VOUCHER_DELETE = "milvus.voucher.delete";
+    public static final String AUDIT_EXCHANGE_NAME = "audit.topic";
+    public static final String AUDIT_QUEUE = "audit.queue";
+    public static final String AUDIT_ROUTING_KEY = "audit.create";
 }

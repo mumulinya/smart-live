@@ -37,6 +37,8 @@ public class UserVO implements Serializable
     
     /** 城市 */
     private String city;
+    /** 背景图片 */
+    private String backgroundImage;
     
     /** 是否有密码 */
     private Boolean hasPassword;

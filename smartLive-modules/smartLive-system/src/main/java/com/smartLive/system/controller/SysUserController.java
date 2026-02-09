@@ -239,7 +239,10 @@ public class SysUserController extends BaseController
         ajax.put("posts", postService.selectPostAll());
         return ajax;
     }
-
+    @GetMapping("/getUserById/{id}")
+    SysUser getUserById(@PathVariable("id") Long id){
+        return userService.selectUserById(id);
+    }
     /**
      * 新增用户
      */

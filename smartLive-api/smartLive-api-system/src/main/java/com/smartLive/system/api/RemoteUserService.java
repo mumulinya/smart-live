@@ -51,4 +51,6 @@ public interface RemoteUserService
      */
     @PutMapping("/user/recordlogin")
     public R<Boolean> recordUserLogin(@RequestBody SysUser sysUser, @RequestHeader(SecurityConstants.FROM_SOURCE) String source);
+    @GetMapping("/user/getUserById/{id}")
+    SysUser getUserById(@PathVariable("id") Long id);
 }

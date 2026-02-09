@@ -44,8 +44,24 @@ public class UserInnerController extends BaseController
     /**
      * 根据id查询用户
      */
+    @GetMapping("/getUserInfo/{id}")
+    UserVO queryUserInfoById(@PathVariable("id") Long id){
+        return userService.queryUserInfoById(id);
+    }
+    /**
+     * 根据id查询用户
+     */
     @GetMapping("/{id}")
     UserVO queryUserById(@PathVariable("id") Long id){
         return userService.queryUserById(id);
+    }
+    /**
+     * 根据用户id查询用户名称
+     * @param userId
+     * @return
+     */
+    @GetMapping("/userNameById")
+    String getUserNameById(@RequestParam("userId") Long userId){
+        return userService.getUserNameById(userId);
     }
 }

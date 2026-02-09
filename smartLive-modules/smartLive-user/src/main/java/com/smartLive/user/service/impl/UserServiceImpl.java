@@ -20,6 +20,7 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.bean.BeanUtils;
+import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
@@ -179,10 +180,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             }
             //更新es数据
             publish(new String[]{user.getId().toString()});
+            sendAuditMessage(user);
         }
         return i;
     }
+    /**
+     * 发送审核消息
+     * @param user
+     */
+    private void sendAuditMessage(User user) {
+        UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
+        UserVO userVO = convertToUserVO(user);
+        userVO.setIntroduce(userInfo.getIntroduce());
+        userVO.setBackgroundImage(userInfo.getBackgroundImage());
+        userVO.setCity(userInfo.getCity());
 
+        AuditMessage auditMessage = AuditMessage.builder()
+                .bizId(user.getId())
+                .bizType(GlobalBizTypeEnum.USER.getCode())
+                .submitterId(user.getId())
+                .auditContent(BeanUtil.beanToMap(userVO))
+                .createTime(user.getCreateTime())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
+    }
     /**
      * 批量删除用户
      *
@@ -204,7 +225,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
                 //发起rabbitMq信息删除
 //                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_DELETE, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
             });
         }
 //        }
@@ -463,6 +484,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     /**
+     * 根据用户id获取用户名称
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public String getUserNameById(Long userId) {
+        return query().select("nick_name")
+                .eq("id", userId)
+                .one()
+                .getNickName();
+    }
+
+    /**
+     * 根据用户id查询用户信息
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public UserVO queryUserInfoById(Long id) {
+        User user = query().eq("id", id).one();
+        UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
+        UserVO userVO = convertToUserVO(user);
+        userVO.setIntroduce(userInfo.getIntroduce());
+        userVO.setBackgroundImage(userInfo.getBackgroundImage());
+        userVO.setCity(userInfo.getCity());
+        return userVO;
+    }
+
+    /**
      * 全部发布
      *
      * @return 全部发布结果
@@ -506,7 +558,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 //                       MqConstants.ES_ROUTING_USER_BATCH_INSERT,
 //                       request
 //               );
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_BATCH_INSERT, request);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
                 log.info("发送第 {} 页，{} 条数据", finalPage, users.size());
             });
             page++;
@@ -537,7 +589,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 contentSyncMessage.setId(user.getId());
                 contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
 //                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_INSERT, contentSyncMessage);
             });
         }
         return "发布成功";

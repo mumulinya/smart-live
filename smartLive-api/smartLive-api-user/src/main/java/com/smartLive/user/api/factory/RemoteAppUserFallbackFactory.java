@@ -64,6 +64,17 @@ public class RemoteAppUserFallbackFactory implements FallbackFactory<RemoteAppUs
                 log.error("查询用户失败:{}", throwable.getMessage());
                 return null;
             }
+            /**
+             * 根据用户id查询用户名称
+             *
+             * @param userId
+             * @return
+             */
+            @Override
+            public String getUserNameById(Long userId) {
+                log.error("查询用户名称失败:{}", throwable.getMessage());
+                return "";
+            }
         };
     }
 }

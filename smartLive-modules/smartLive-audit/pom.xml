@@ -70,6 +70,11 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
+        <!--RabbitMQ-->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-rabbitmq</artifactId>
+        </dependency>
         <!--hutool-->
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -100,6 +105,10 @@
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-interaction</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-user</artifactId>
         </dependency>
     </dependencies>
 

@@ -23,6 +23,7 @@
         <module>smartLive-search</module>
         <module>smartLive-interaction</module>
         <module>smartLive-ai</module>
+        <module>smartLive-audit</module>
     </modules>
 
     <artifactId>smartLive-modules</artifactId>

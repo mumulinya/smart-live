@@ -1,16 +1,24 @@
 package com.smartLive.user.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.rabbitmq.domain.AuditMessage;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.user.DTO.UserInfoDTO;
+import com.smartLive.user.domain.User;
 import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.domain.VO.UserInfoVO;
+import com.smartLive.user.domain.VO.UserVO;
 import com.smartLive.user.mapper.UserInfoMapper;
 import com.smartLive.user.service.IUserInfoService;
 import com.smartLive.user.service.IUserService;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -29,6 +37,8 @@ import java.util.stream.Collectors;
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> implements IUserInfoService {
 
     private IUserService userService;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     //使用懒加载，避免循环引用
     public UserInfoServiceImpl(@Lazy IUserService userService) {
@@ -109,6 +119,21 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         if (update){
             //更新用户信息成功，更新es数据
            userService.publish(new String[]{userId.toString()});
+            User userById = userService.selectUserById(userId);
+            UserInfoVO userInfoVO = getByUserId(userId);
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(userById, userVO);
+            userVO.setIntroduce(userInfoVO.getIntroduce());
+            userVO.setCity(userInfoVO.getCity());
+            userVO.setBackgroundImage(userInfoVO.getBackgroundImage());
+            AuditMessage auditMessage = AuditMessage.builder()
+                    .bizId(userById.getId())
+                    .bizType(GlobalBizTypeEnum.USER.getCode())
+                    .submitterId(userById.getId())
+                    .auditContent(BeanUtil.beanToMap(userVO))
+                    .createTime(userById.getCreateTime())
+                    .build();
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
         }
         return update;
     }

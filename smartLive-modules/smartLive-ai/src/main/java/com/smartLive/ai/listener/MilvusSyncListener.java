@@ -29,10 +29,7 @@ public class MilvusSyncListener {
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.MILVUS_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),
-                    key = {MqConstants.MILVUS_ROUTING_VOUCHER_INSERT,
-                            MqConstants.MILVUS_ROUTING_USER_INSERT,
-                            MqConstants.MILVUS_ROUTING_SHOP_INSERT,
-                            MqConstants.MILVUS_ROUTING_BLOG_INSERT})
+                    key = MqConstants.MILVUS_ROUTING_INSERT)
     })
     public void handleSingleInsert(ContentSyncMessage request) {
       executorService.submit(()->{
@@ -58,10 +55,7 @@ public class MilvusSyncListener {
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.MILVUS_BATCH_INSERT_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),
-                    key = {MqConstants.MILVUS_ROUTING_VOUCHER_BATCH_INSERT,
-                            MqConstants.MILVUS_ROUTING_USER_BATCH_INSERT,
-                            MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT,
-                            MqConstants.MILVUS_ROUTING_BLOG_BATCH_INSERT})
+                    key = MqConstants.MILVUS_ROUTING_BATCH_INSERT)
     })
     public void handleBatchInsert(ContentBatchSyncMessage request) {
        executorService.submit(()->{
@@ -85,10 +79,7 @@ public class MilvusSyncListener {
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = MqConstants.MILVUS_DELETE_QUEUE, declare = "true"),
                     exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),
-                    key = {MqConstants.MILVUS_ROUTING_VOUCHER_DELETE,
-                            MqConstants.MILVUS_ROUTING_USER_DELETE,
-                            MqConstants.MILVUS_ROUTING_SHOP_DELETE,
-                            MqConstants.MILVUS_ROUTING_BLOG_DELETE})
+                    key = MqConstants.MILVUS_ROUTING_DELETE)
     })
     public void handleDelete(ContentSyncMessage request) {
         executorService.submit(()->{

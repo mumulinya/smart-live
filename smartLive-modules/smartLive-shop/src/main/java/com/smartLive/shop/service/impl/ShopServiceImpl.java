@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.BooleanUtil;
@@ -17,8 +18,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
+import com.smartLive.common.core.context.SecurityContextHolder;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
@@ -134,6 +137,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         if(i > 0){
             flashShopListRedisCache(shop.getTypeId());
             publish(new String[]{shop.getId().toString()});
+            //发送审核信息
+            sendAuditMessage(shop);
         }
         return i ;
     }
@@ -153,6 +158,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             flashShopRedisCache(shopId);
             //更新es数据
             publish(new String[]{shopId.toString()});
+            //发送审核信息
+            sendAuditMessage(shop);
         }
         return i;
     }
@@ -176,9 +183,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
                 contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
                 //发起rabbitMq信息删除es数据
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_DELETE, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
                 //发起rabbitmq信息删除milvus数据
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_DELETE, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_DELETE, contentSyncMessage);
                 flashShopListRedisCache(shopMapper.selectShopById(id).getTypeId());
             });
         }
@@ -577,7 +584,20 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         return "刷新成功";
     }
-
+    /**
+     * 发送审核消息
+     * @param shop
+     */
+    private void sendAuditMessage(Shop shop) {
+        AuditMessage auditMessage = AuditMessage.builder()
+                .bizId(shop.getId())
+                .bizType(GlobalBizTypeEnum.SHOP.getCode())
+                .submitterId(SecurityContextHolder.getUserId())
+                .auditContent(BeanUtil.beanToMap(shop))
+                .createTime(shop.getCreateTime())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
+    }
     /**
      * 清空店铺列表缓存
      *
@@ -633,14 +653,14 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 //                            MqConstants.ES_ROUTING_SHOP_BATCH_INSERT,
 //                            request
 //                    );
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_BATCH_INSERT, request);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
                 //发送rabbitmq消息数据插入Milvus
 //                    rabbitTemplate.convertAndSend(
 //                            MqConstants.MILVUS_EXCHANGE,
 //                            MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT,
 //                            request
 //                    );
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT, request);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
                 log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, shops.size());
             });
             page++;
@@ -668,11 +688,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 contentSyncMessage.setId(shop.getId());
                 contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
                 //发送rabbitmq消息数据插入es
-//                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_SHOP_INSERT, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_INSERT, contentSyncMessage);
                 //发送rabbitmq消息数据插入Milvus
-//                rabbitTemplate.convertAndSend(MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_SHOP_INSERT, contentSyncMessage);
+                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_INSERT, contentSyncMessage);
             });
         }
         return "发布成功";

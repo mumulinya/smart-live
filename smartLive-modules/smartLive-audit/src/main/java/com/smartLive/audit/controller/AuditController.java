@@ -33,6 +33,14 @@ public class AuditController extends BaseController {
     }
 
     /**
+     * 获取审核详情
+     */
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id) {
+        return AjaxResult.success(auditService.getAuditDetail(id));
+    }
+
+    /**
      * 提交审核结果
      * 参数：id, status (1-通过, 2-驳回), reason
      */

@@ -1,5 +1,6 @@
 package com.smartLive.interaction.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.alibaba.fastjson.JSON;
@@ -13,6 +14,8 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.rabbitmq.domain.AuditMessage;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.Comment;
@@ -252,8 +255,24 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             redisService.incrementCacheValue(commentCountKeyPrefix);
             //记录脏数据
             redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getSourceId().toString()));
+            //发送审核消息
+            sendAuditMessage(comment);
         }
         return i;
+    }
+    /**
+     * 发送审核消息
+     * @param comment
+     */
+    private void sendAuditMessage(Comment comment) {
+        AuditMessage auditMessage = AuditMessage.builder()
+                .bizId(comment.getId())
+                .bizType(GlobalBizTypeEnum.COMMENT.getCode())
+                .submitterId(comment.getUserId())
+                .auditContent(BeanUtil.beanToMap(comment))
+                .createTime(comment.getCreateTime())
+                .build();
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
     /**
      * 删除评论
