@@ -1,9 +1,10 @@
 package com.smartLive.interaction.strategy.resource;
 
-import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.Review;
 import com.smartLive.interaction.service.ICommentService;
+import com.smartLive.interaction.service.IReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,17 +12,17 @@ import java.util.HashMap;
 import java.util.List;
 
 @Component
-public class CommentResourceStrategy implements ResourceStrategy<Comment> {
+public class ReviewResourceStrategy implements ResourceStrategy<Review> {
 
     @Autowired
-    private ICommentService commentService;
+    private IReviewService reviewService;
 
     /**
      * 策略标识 (USER / SHOP)
      */
     @Override
     public Integer getType() {
-        return ResourceTypeEnum.COMMENT_RESOURCE.getCode();
+        return ResourceTypeEnum.REVIEW_RESOURCE.getCode();
     }
 
     /**
@@ -30,12 +31,12 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
      * @param sourceIdList
      */
     @Override
-    public List<Comment> getResourceList(List<Long> sourceIdList) {
-        List<Comment> commentList = commentService.getCommentListByIds(sourceIdList);
-        if (commentList.isEmpty()) {
+    public List<Review> getResourceList(List<Long> sourceIdList) {
+        List<Review> reviewList = reviewService.getReviewListByIds(sourceIdList);
+        if (reviewList.isEmpty()) {
             return null;
         }
-        return commentList;
+        return reviewList;
     }
 
     /**
@@ -44,11 +45,11 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
      * @param sourceId
      */
     @Override
-    public HashMap<String,String> getResourceContentById(Long sourceId) {
-        Comment comment = commentService.getCommentById(sourceId);
+    public HashMap<String, String> getResourceContentById(Long sourceId) {
+        Review review = reviewService.getReviewById(sourceId);
         HashMap<String, String> map = new HashMap<>();
-        map.put("title", comment.getContent());
-        map.put("images", comment.getImages());
-        return map;
+        map.put("title", review.getContent());
+        map.put("images", review.getImages());
+        return map; // Return the content of the comment
     }
 }

@@ -7,6 +7,8 @@ import com.smartLive.marketing.api.RemoteVoucherService;
 import com.smartLive.marketing.api.DTO.VoucherDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
 import java.util.List;
 
 @Component
@@ -38,5 +40,19 @@ public  class VoucherResourceStrategy implements ResourceStrategy<VoucherVO> {
             return voucherVO;
         }).toList();
         return voucherVOList;
+    }
+
+    /**
+     * 获取资源内容
+     *
+     * @param sourceId
+     */
+    @Override
+    public HashMap<String,String> getResourceContentById(Long sourceId) {
+        VoucherDTO voucherDTO = remoteVoucherService.getVoucherById(sourceId);
+        HashMap<String,String> map = new HashMap<>();
+        map.put("title",voucherDTO.getTitle());
+        map.put("images",voucherDTO.getShopImages());
+        return map;
     }
 }

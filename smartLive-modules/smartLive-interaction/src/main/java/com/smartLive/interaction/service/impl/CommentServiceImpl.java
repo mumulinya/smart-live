@@ -18,12 +18,13 @@ import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.AIGenerateRequest;
+import com.smartLive.interaction.domain.BO.AuditCommentBO;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.Like;
-import com.smartLive.interaction.domain.VO.CommentVO;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.service.ILikeService;
+import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
@@ -51,7 +52,6 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService {
     @Autowired
     private CommentMapper commentMapper;
-    private ILikeService iLikeService;
 
     @Autowired
     private RemoteAppUserService remoteAppUserService;
@@ -67,9 +67,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
     private RedisService redisService;
+    private Map<Integer, ResourceStrategy> resourceStrategyMap;
+    private ILikeService iLikeService;
+
+
     @Autowired
-    public CommentServiceImpl(@Lazy ILikeService iLikeService) {
+    public CommentServiceImpl(@Lazy ILikeService iLikeService,@Lazy Map<Integer, ResourceStrategy> resourceStrategyMap) {
         this.iLikeService = iLikeService;
+        this.resourceStrategyMap = resourceStrategyMap;
     }
     /**
      * 查询评论
@@ -265,11 +270,17 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @param comment
      */
     private void sendAuditMessage(Comment comment) {
+        ResourceStrategy resourceType = resourceStrategyMap.get(comment.getSourceType());
+        HashMap<String, String> content = resourceType.getResourceContentById(comment.getSourceId());
+        AuditCommentBO auditCommentBO=new AuditCommentBO();
+        BeanUtil.copyProperties(comment, auditCommentBO);
+        auditCommentBO.setTargetTitle(content.get("title"));
+        auditCommentBO.setTargetImages(content.get("images"));
         AuditMessage auditMessage = AuditMessage.builder()
                 .bizId(comment.getId())
                 .bizType(GlobalBizTypeEnum.COMMENT.getCode())
                 .submitterId(comment.getUserId())
-                .auditContent(BeanUtil.beanToMap(comment))
+                .auditContent(BeanUtil.beanToMap(auditCommentBO))
                 .createTime(comment.getCreateTime())
                 .build();
         MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);

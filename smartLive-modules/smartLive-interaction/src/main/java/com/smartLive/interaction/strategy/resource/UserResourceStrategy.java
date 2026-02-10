@@ -1,6 +1,7 @@
 package com.smartLive.interaction.strategy.resource;
 
 import com.smartLive.common.core.enums.FollowTypeEnum;
+import com.smartLive.interaction.domain.Comment;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;

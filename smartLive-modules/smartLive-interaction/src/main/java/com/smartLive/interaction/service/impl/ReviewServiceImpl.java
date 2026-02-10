@@ -15,6 +15,8 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.domain.BO.AuditCommentBO;
+import com.smartLive.interaction.domain.BO.AuditReviewBO;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.Review;
@@ -23,6 +25,7 @@ import com.smartLive.interaction.mapper.ReviewMapper;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.service.IReviewService;
 import com.smartLive.interaction.service.IStarService;
+import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.shop.api.DTO.ShopDTO;
@@ -69,11 +72,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private RemoteOrderService remoteOrderService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    private Map<Integer, ResourceStrategy> resourceStrategyMap;
 
     @Autowired
-    public ReviewServiceImpl(@Lazy ILikeService likeService, @Lazy IStarService starService) {
+    public ReviewServiceImpl(@Lazy ILikeService likeService, @Lazy IStarService starService,@Lazy Map<Integer, ResourceStrategy> resourceStrategyMap) {
         this.likeService = likeService;
         this.starService = starService;
+        this.resourceStrategyMap = resourceStrategyMap;
     }
     /**
      * 查询评论
@@ -254,11 +259,17 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @param review
      */
     private void sendAuditMessage(Review review) {
+        ResourceStrategy resourceType = resourceStrategyMap.get(review.getSourceType());
+        HashMap<String, String> content = resourceType.getResourceContentById(review.getSourceId());
+        AuditReviewBO auditReviewBO=new AuditReviewBO();
+        BeanUtil.copyProperties(review, auditReviewBO);
+        auditReviewBO.setTargetTitle(content.get("title"));
+        auditReviewBO.setTargetImages(content.get("images"));
         AuditMessage auditMessage = AuditMessage.builder()
                 .bizId(review.getId())
                 .bizType(GlobalBizTypeEnum.REVIEW.getCode())
                 .submitterId(review.getUserId())
-                .auditContent(BeanUtil.beanToMap(review))
+                .auditContent(BeanUtil.beanToMap(auditReviewBO))
                 .createTime(review.getCreateTime())
                 .build();
         MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);

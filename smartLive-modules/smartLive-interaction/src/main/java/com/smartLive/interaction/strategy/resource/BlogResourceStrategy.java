@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,5 +42,19 @@ public  class BlogResourceStrategy implements ResourceStrategy<BlogVO> {
             return blogVO;
         }).collect(Collectors.toList());
         return blogVOList;
+    }
+
+    /**
+     * 获取资源内容
+     *
+     * @param sourceId
+     */
+    @Override
+    public HashMap<String,String> getResourceContentById(Long sourceId) {
+        BlogDTO blogDTO = remoteBlogService.getBlogById(sourceId);
+        HashMap<String,String> map = new HashMap<>();
+        map.put("title",blogDTO.getTitle());
+        map.put("images",blogDTO.getImages());
+        return map;
     }
 }
