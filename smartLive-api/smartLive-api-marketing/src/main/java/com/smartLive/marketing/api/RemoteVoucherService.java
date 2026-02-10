@@ -65,4 +65,13 @@ public interface RemoteVoucherService {
      */
      @PostMapping("/inner/voucher/updateReviewCountBatch")
     Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap);
+
+    /**
+     * 更新优惠券状态
+     * @param id
+     * @param status
+     * @return
+     */
+    @PostMapping("/inner/voucher/updateVoucherStatus")
+    Boolean updateVoucherStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
 }

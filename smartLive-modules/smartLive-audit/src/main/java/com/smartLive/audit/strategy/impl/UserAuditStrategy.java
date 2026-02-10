@@ -30,7 +30,8 @@ public class UserAuditStrategy implements AuditStrategy {
 
     @Override
     public void handleAuditResult(Long targetId, Integer status, String reason) {
-        // TODO: Call remote user service
+        // Call remote user service
+        remoteAppUserService.updateUserStatus(targetId, status);
     }
 
     /**

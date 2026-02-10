@@ -79,4 +79,9 @@ public interface RemoteBlogService {
      */
     @GetMapping("/inner/blog/getBlogStarCount/{sourceId}")
     Integer getStarCount(@PathVariable("sourceId") Long sourceId);
+    /**
+     * 更新博客状态
+     */
+    @PostMapping("/inner/blog/updateBlogStatus")
+    Boolean updateBlogStatus(@RequestParam("targetId") Long targetId,@RequestParam("status") Integer status);
 }

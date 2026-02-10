@@ -34,8 +34,8 @@ public class ShopAuditStrategy implements AuditStrategy {
 
     @Override
     public void handleAuditResult(Long targetId, Integer status, String reason) {
-        // TODO: Call remote service to update status
-        // remoteShopService.updateShopStatus(targetId, status);
+        // Call remote service to update status
+        remoteShopService.updateShopStatus(targetId, status);
     }
 
     /**

@@ -47,4 +47,10 @@ public interface RemoteAppUserService {
      */
     @GetMapping("/inner/user/userNameById")
     String getUserNameById(@RequestParam("userId") Long userId);
+
+    /**
+     * 更新用户状态
+     */
+    @PostMapping("/inner/user/updateUserStatus")
+    Boolean updateUserStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
 }

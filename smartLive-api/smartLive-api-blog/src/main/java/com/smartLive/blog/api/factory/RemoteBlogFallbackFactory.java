@@ -116,6 +116,18 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
                 log.error("查询博客收藏数失败:{}", cause.getMessage());
                 return 0;
             }
+
+            /**
+             * 更新博客状态
+             *
+             * @param targetId
+             * @param status
+             */
+            @Override
+            public Boolean updateBlogStatus(Long targetId, Integer status) {
+                log.error("更新博客状态失败:{}", cause.getMessage());
+                return false;
+            }
         };
  }
 }

@@ -196,4 +196,11 @@ public interface IBlogService extends IService<Blog>
      * @return
      */
     String flashCache();
+    /**
+     * 更新博客状态
+     * @param targetId
+     * @param status
+     * @return
+     */
+    Boolean updateBlogStatus(Long targetId, Integer status);
 }

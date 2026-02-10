@@ -160,4 +160,12 @@ public interface IReviewService extends IService<Review> {
      * @return
      */
     Integer getReviewStarCount(Long sourceId);
+
+    /**
+     * 更新评价状态
+     * @param id 评价ID
+     * @param status 状态
+     * @return
+     */
+    Boolean updateReviewStatus(Long id, Integer status);
 }

@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
@@ -558,5 +559,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 })
                 .collect(Collectors.toSet());
         redisService.setCacheZSet(key, followIdListSet);
+    }
+
+    /**
+     * 更新评论状态
+     * @param id 评论ID
+     * @param status 状态
+     * @return
+     */
+    @Override
+    public Boolean updateCommentStatus(Long id, Integer status) {
+        return update(new UpdateWrapper<Comment>()
+                .set("status", status)
+                .eq("id", id));
     }
 }

@@ -110,6 +110,18 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
                 log.error("获取商家收藏数失败:{}", cause.getMessage());
                 return 0;
             }
+
+            /**
+             * 更新店铺状态
+             *
+             * @param id
+             * @param status
+             */
+            @Override
+            public Boolean updateShopStatus(Long id, Integer status) {
+                log.error("更新店铺状态失败:{}", cause.getMessage());
+                return false;
+            }
         };
     }
 }

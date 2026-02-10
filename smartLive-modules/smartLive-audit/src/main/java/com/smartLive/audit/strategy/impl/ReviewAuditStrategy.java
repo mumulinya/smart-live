@@ -3,6 +3,7 @@ package com.smartLive.audit.strategy.impl;
 import com.smartLive.audit.domain.AuditTask;
 import com.smartLive.audit.strategy.AuditStrategy;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.interaction.api.RemoteReviewService;
 import com.smartLive.user.api.RemoteAppUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,8 @@ import java.util.Map;
 public class ReviewAuditStrategy implements AuditStrategy {
     @Autowired
     private RemoteAppUserService remoteAppUserService;
+    @Autowired
+    private RemoteReviewService remoteReviewService;
 
     @Override
     public Integer getBizType() {
@@ -30,7 +33,8 @@ public class ReviewAuditStrategy implements AuditStrategy {
 
     @Override
     public void handleAuditResult(Long targetId, Integer status, String reason) {
-        // TODO: Call remote review service
+        // Call remote review service
+        remoteReviewService.updateReviewStatus(targetId, status);
     }
     /**
      * Get submitter name

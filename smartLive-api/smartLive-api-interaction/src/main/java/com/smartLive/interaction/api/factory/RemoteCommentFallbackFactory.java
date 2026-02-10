@@ -43,6 +43,18 @@ public class RemoteCommentFallbackFactory implements FallbackFactory<RemoteComme
             public void saveAiCreateComment(List<CommentDTO> comments) {
                 log.error("保存AI创建的评论失败", cause.getMessage());
             }
+
+            /**
+             * 更新评论状态
+             * @param id
+             * @param status
+             * @return
+             */
+            @Override
+            public Boolean updateCommentStatus(Long id, Integer status) {
+                log.error("更新评论状态失败:{}", cause.getMessage());
+                return false;
+            }
         };
     }
 }

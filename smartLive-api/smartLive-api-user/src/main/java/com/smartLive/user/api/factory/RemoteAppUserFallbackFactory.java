@@ -75,6 +75,18 @@ public class RemoteAppUserFallbackFactory implements FallbackFactory<RemoteAppUs
                 log.error("查询用户名称失败:{}", throwable.getMessage());
                 return "";
             }
+
+            /**
+             * 更新用户状态
+             *
+             * @param id
+             * @param status
+             */
+            @Override
+            public Boolean updateUserStatus(Long id, Integer status) {
+                log.error("更新用户状态失败:{}", throwable.getMessage());
+                return false;
+            }
         };
     }
 }

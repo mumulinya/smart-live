@@ -68,4 +68,10 @@ public interface RemoteShopService {
      */
     @GetMapping("/inner/shop/getStarCount/{sourceId}")
     Integer getStarCount(@PathVariable("sourceId") Long sourceId);
+
+    /**
+     * 更新店铺状态
+     */
+    @PostMapping("/inner/shop/updateShopStatus")
+    Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
 }

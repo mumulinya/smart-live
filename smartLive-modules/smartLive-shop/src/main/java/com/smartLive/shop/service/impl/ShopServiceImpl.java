@@ -15,6 +15,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
@@ -758,5 +759,17 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         flushCache();
         return true;
+    }
+
+    /**
+     * 更新店铺状态
+     *
+     * @param id     店铺ID
+     * @param status 状态
+     * @return 结果
+     */
+    @Override
+    public Boolean updateShopStatus(Long id, Integer status) {
+        return update(new UpdateWrapper<Shop>().set("status", status).eq("id", id));
     }
 }

@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.domain.Blog;
@@ -671,6 +672,19 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         return convertToBlogVOList(blogList);
     }
+
+    /**
+     * 更新博客状态
+     *
+     * @param targetId
+     * @param status
+     * @return
+     */
+    @Override
+    public Boolean updateBlogStatus(Long targetId, Integer status) {
+        return update(new UpdateWrapper<Blog>().set("status", status).eq("id", targetId));
+    }
+
     /**
      * 全部发布博客
      *

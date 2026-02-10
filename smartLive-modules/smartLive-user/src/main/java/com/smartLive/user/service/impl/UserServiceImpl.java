@@ -13,6 +13,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
@@ -606,4 +607,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Boolean isFollow = remoteFollowService.isFollowed(followDTO);
         user.setIsFollow(isFollow);
     }
+
 }

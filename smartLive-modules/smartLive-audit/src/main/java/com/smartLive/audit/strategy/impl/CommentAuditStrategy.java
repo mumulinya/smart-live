@@ -3,6 +3,7 @@ package com.smartLive.audit.strategy.impl;
 import com.smartLive.audit.domain.AuditTask;
 import com.smartLive.audit.strategy.AuditStrategy;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.user.api.RemoteAppUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,9 @@ public class CommentAuditStrategy implements AuditStrategy {
     @Autowired
     private RemoteAppUserService remoteAppUserService;
 
+    @Autowired
+    private RemoteCommentService remoteCommentService;
+
     @Override
     public Integer getBizType() {
         return GlobalBizTypeEnum.COMMENT.getCode();
@@ -30,7 +34,8 @@ public class CommentAuditStrategy implements AuditStrategy {
 
     @Override
     public void handleAuditResult(Long targetId, Integer status, String reason) {
-        // TODO: Call remote comment service
+        // Call remote comment service to update status
+        remoteCommentService.updateCommentStatus(targetId, status);
     }
     /**
      * Get submitter name

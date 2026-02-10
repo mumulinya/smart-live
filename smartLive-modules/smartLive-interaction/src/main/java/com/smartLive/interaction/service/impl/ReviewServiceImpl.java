@@ -529,4 +529,17 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             redisService.setCacheZSet(key, followIdListSet);
         }
     }
+
+    /**
+     * 更新评价状态
+     * @param id 评价ID
+     * @param status 状态
+     * @return
+     */
+    @Override
+    public Boolean updateReviewStatus(Long id, Integer status) {
+        return update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Review>()
+                .set("status", status)
+                .eq("id", id));
+    }
 }

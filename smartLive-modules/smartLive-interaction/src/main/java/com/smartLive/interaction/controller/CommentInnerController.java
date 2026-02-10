@@ -65,4 +65,14 @@ public class CommentInnerController extends BaseController
     Integer getCommentTotal(){
         return commentService.getCommentTotal();
     }
+    /**
+     * 更新评论状态
+     * @param targetId
+     * @param status
+     * @return
+     */
+    @PostMapping("/updateCommentStatus")
+    Boolean updateCommentStatus(@RequestParam("targetId") Long targetId, @RequestParam("status") Integer status){
+        return commentService.updateCommentStatus(targetId, status);
+    }
 }

@@ -177,4 +177,12 @@ public interface ICommentService extends IService<Comment> {
      * @return
      */
     List<Comment> listChildComment(Comment comment, Integer current);
+
+    /**
+     * 更新评论状态
+     * @param id 评论ID
+     * @param status 状态
+     * @return
+     */
+    Boolean updateCommentStatus(Long id, Integer status);
 }

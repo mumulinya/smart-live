@@ -117,4 +117,14 @@ public class VoucherInnerController extends BaseController {
     Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return voucherService.updateReviewCountBatch(updateMap);
     }
+    /**
+     * 更新优惠券状态
+     * @param id
+     * @param status
+     * @return
+     */
+    @PostMapping("/updateVoucherStatus")
+    Boolean updateVoucherStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status){
+        return voucherService.updateVoucherStatus(id, status);
+    }
 }

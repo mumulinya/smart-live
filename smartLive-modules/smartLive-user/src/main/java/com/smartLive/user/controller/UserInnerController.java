@@ -3,6 +3,7 @@ package com.smartLive.user.controller;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.user.domain.User;
 import com.smartLive.user.domain.VO.UserVO;
+import com.smartLive.user.service.IUserInfoService;
 import com.smartLive.user.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,8 @@ public class UserInnerController extends BaseController
 {
     @Autowired
     private IUserService userService;
+    @Autowired
+    private IUserInfoService userInfoService;
     /**
      * 根据手机号查询用户详情
      */
@@ -63,5 +66,13 @@ public class UserInnerController extends BaseController
     @GetMapping("/userNameById")
     String getUserNameById(@RequestParam("userId") Long userId){
         return userService.getUserNameById(userId);
+    }
+
+    /**
+     * 更新用户状态
+     */
+    @PostMapping("/updateUserStatus")
+    Boolean updateUserStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status){
+        return userInfoService.updateUserStatus(id, status);
     }
 }

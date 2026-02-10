@@ -142,6 +142,15 @@ public interface IShopService extends IService<Shop> {
      * @return 批量更新结果
      */
     Boolean updateReviewCountBatch(Map<Long, Integer> updateMap);
+
+    /**
+     * 更新店铺状态
+     *
+     * @param id 店铺ID
+     * @param status 状态
+     * @return 结果
+     */
+    Boolean updateShopStatus(Long id, Integer status);
 }
 
 

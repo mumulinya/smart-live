@@ -132,4 +132,5 @@ public interface IUserService extends IService<User>
      * @return
      */
     UserVO queryUserInfoById(Long id);
+
 }

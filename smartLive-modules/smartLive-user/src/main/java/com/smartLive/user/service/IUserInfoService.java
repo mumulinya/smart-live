@@ -60,4 +60,11 @@ public interface IUserInfoService extends IService<UserInfo> {
      * 更新用户背景图片
      */
     Boolean updateBackgroundImage(UserInfoDTO userInfoDTO);
+    /**
+     * 更新用户状态
+     * @param id 用户ID
+     * @param status 状态
+     * @return
+     */
+    Boolean updateUserStatus(Long id, Integer status);
 }

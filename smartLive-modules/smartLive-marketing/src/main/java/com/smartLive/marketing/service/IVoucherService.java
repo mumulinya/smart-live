@@ -197,4 +197,12 @@ public interface IVoucherService extends IService<Voucher>
      * @return 收藏数
      */
     Integer getVoucherStarCount(Long sourceId);
+
+    /**
+     * 更新代金券状态
+     * @param id
+     * @param status
+     * @return
+     */
+    Boolean updateVoucherStatus(Long id, Integer status);
 }

@@ -8,6 +8,7 @@ import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -32,4 +33,12 @@ public interface RemoteCommentService {
     List<CommentDTO> searchCommentList();
     @PostMapping("/inner/comment/saveAiCreateComment")
     void saveAiCreateComment(@RequestBody List<CommentDTO> comments);
+    /**
+     * 更新评论状态
+      * @param targetId
+     * @param status
+     * @return
+     */
+    @PostMapping("/inner/comment/updateCommentStatus")
+    Boolean updateCommentStatus(@RequestParam("targetId") Long targetId, @RequestParam("status") Integer status);
 }

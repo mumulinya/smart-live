@@ -238,4 +238,16 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
                 .update();
         return update;
     }
+    /**
+     * 更新用户状态
+     * @param id 用户ID
+     * @param status 状态
+     * @return
+     */
+    @Override
+    public Boolean updateUserStatus(Long id, Integer status) {
+        return update(new UpdateWrapper<UserInfo>()
+                .set("status", status)
+                .eq("user_id", id));
+    }
 }

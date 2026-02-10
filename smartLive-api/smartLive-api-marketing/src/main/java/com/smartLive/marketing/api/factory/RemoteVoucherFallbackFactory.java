@@ -114,6 +114,18 @@ public class RemoteVoucherFallbackFactory implements FallbackFactory<RemoteVouch
                 log.error("批量更新评价数失败:{}", throwable.getMessage());
                 return false;
             }
+
+            /**
+             * 更新优惠券状态
+             * @param id
+             * @param status
+             * @return
+             */
+            @Override
+            public Boolean updateVoucherStatus(Long id, Integer status) {
+                log.error("更新优惠券状态失败:{}", throwable.getMessage());
+                return false;
+            }
         };
     }
 }

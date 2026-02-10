@@ -32,6 +32,13 @@ public class BlogInnerController extends BaseController
     @Autowired
     private IBlogService blogService;
     /**
+     * 更新博客状态
+     */
+    @PostMapping("/updateBlogStatus")
+    Boolean updateBlogStatus(@RequestParam("targetId") Long targetId,@RequestParam("status") Integer status){
+        return blogService.updateBlogStatus(targetId,status);
+    }
+    /**
      * 获取博客详情
      * @param id
      * @return

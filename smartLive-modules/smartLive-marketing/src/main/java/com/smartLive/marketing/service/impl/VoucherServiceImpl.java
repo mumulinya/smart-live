@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
@@ -823,5 +825,18 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 .eq(Voucher::getId, sourceId)
                 .one();
         return voucher != null ? voucher.getStars() : 0;
+    }
+
+    /**
+     * 更新代金券状态
+     *
+     * @param id
+     * @param status
+     * @return
+     */
+    @Override
+    public Boolean updateVoucherStatus(Long id, Integer status) {
+        return update(new UpdateWrapper<Voucher>().set("status", status).eq("id", id));
+
     }
 }
