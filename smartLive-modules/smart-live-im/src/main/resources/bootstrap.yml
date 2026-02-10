@@ -1,17 +1,11 @@
 # Tomcat
 server:
-  port: 9214
-#arthas
-arthas:
-  tunnel-server: ws://127.0.0.1:7777/ws
-  app-name: ${spring.application.name}
-  http-port: 9314
-  telnet-port: 9414
+  port: 9215 # IM模块端口 (API端口, Netty是8888)
+
 # Spring
-spring: 
+spring:
   application:
-    # 应用名称
-    name: smartLive-blog
+    name: smartLive-im
   rabbitmq:
     username: smart-live
     password: 123167
@@ -25,33 +19,19 @@ spring:
       retry:
         enabled: true # 开启重试
         multiplier: 2 # 重试乘数
+
   profiles:
-    # 环境配置
     active: dev
+  main:
+    allow-bean-definition-overriding: true
   cloud:
-    sentinel:
-        enabled: true
-        transport:
-          dashboard: localhost:8718  #sentinel的控制台地址
-          port: 8720
-        http-method-specify: true #是否设置请求方式
-        eager: true
-        filter:
-          enabled: true
-          order: -100
     nacos:
       discovery:
-        # 服务注册地址
         server-addr: 127.0.0.1:8848
+        group: DEFAULT_GROUP
       config:
-        # 配置中心地址
         server-addr: 127.0.0.1:8848
-        # 配置文件格式
+        group: DEFAULT_GROUP
         file-extension: yml
-        # 共享配置
         shared-configs:
           - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
-#配置日志
-logging:
-  level:
-    com.smartLive.modules.smartlive.blog: debug

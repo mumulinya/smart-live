@@ -1,23 +1,21 @@
 package com.smartlive.chat.service.impl;
 
-import java.io.IOException;
-import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartlive.chat.domain.ChatSessions;
-import com.smartlive.chat.handle.NettyChatHandler;
 import com.smartlive.chat.service.IChatMessagesService;
 import com.smartlive.chat.service.IChatSessionsService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -26,30 +24,39 @@ import com.smartlive.chat.domain.ChatMessages;
 
 /**
  * 用户聊天消息Service业务层处理
- * 
+ *
  * @author 木木林
  * @date 2025-10-05
  */
 @Service
 @Slf4j
-@Lazy
 public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,ChatMessages> implements IChatMessagesService
 {
     @Autowired
     private ChatMessagesMapper chatMessagesMapper;
 
+    @Autowired
+    private RedisService redisService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private final IChatSessionsService chatSessionsService;
-    private final NettyChatHandler nettyChatHandler;
+
+    // Redis Keys (Keep consistent with IM module)
+    private static final String IM_ONLINE_KEY = "im:online:";
 
     // 使用懒加载防止循环依赖
-    public ChatMessagesServiceImpl(@Lazy IChatSessionsService chatSessionsService,@Lazy NettyChatHandler nettyChatHandler) {
+    public ChatMessagesServiceImpl(@Lazy IChatSessionsService chatSessionsService) {
         this.chatSessionsService = chatSessionsService;
-        this.nettyChatHandler = nettyChatHandler;
     }
 
     /**
      * 查询用户聊天消息
-     * 
+     *
      * @param id 用户聊天消息主键
      * @return 用户聊天消息
      */
@@ -61,7 +68,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
 
     /**
      * 查询用户聊天消息列表
-     * 
+     *
      * @param chatMessages 用户聊天消息
      * @return 用户聊天消息
      */
@@ -128,7 +135,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
      * @param fromUserId 发送方用户ID
      */
     private void batchNotifyMessagesRead(Long sessionId, Long currentUserId, Long fromUserId) {
-        if (nettyChatHandler.isUserOnline(fromUserId)) {
+        if (isUserOnline(fromUserId)) {
             Map<String, Object> batchReadNotification = Map.of(
                     "type", "BATCH_MESSAGES_READ",
                     "sessionId", sessionId,
@@ -137,11 +144,37 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
                     "timestamp", System.currentTimeMillis()
             );
 
-            nettyChatHandler.sendMessageToUser(fromUserId, "MESSAGE_STATUS_UPDATE", batchReadNotification);
+            sendPushToIm(fromUserId, "MESSAGE_STATUS_UPDATE", batchReadNotification);
             log.info("✅ 已批量通知发送方 {} 会话 {} 的所有消息已被用户 {} 阅读",
                     fromUserId, sessionId, currentUserId);
         }
     }
+
+    private boolean isUserOnline(Long userId) {
+        return redisService.hasKey(IM_ONLINE_KEY + userId);
+    }
+
+    private void sendPushToIm(Long userId, String type, Object data) {
+        try {
+            Map<String, Object> payload = Map.of(
+                    "type", type,
+                    "data", data,
+                    "timestamp", System.currentTimeMillis()
+            );
+            String jsonString = objectMapper.writeValueAsString(payload);
+
+            Map<String, Object> mqMsg = Map.of(
+                    "userId", userId,
+                    "json", jsonString
+            );
+
+            rabbitTemplate.convertAndSend(MqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMsg);
+
+        } catch (Exception e) {
+            log.error("发送MQ推送失败", e);
+        }
+    }
+
     /**
      * 从会话中获取对方用户ID
      */
@@ -155,7 +188,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
     }
     /**
      * 新增用户聊天消息
-     * 
+     *
      * @param chatMessages 用户聊天消息
      * @return 结果
      */
@@ -168,7 +201,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
 
     /**
      * 修改用户聊天消息
-     * 
+     *
      * @param chatMessages 用户聊天消息
      * @return 结果
      */
@@ -180,7 +213,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
 
     /**
      * 批量删除用户聊天消息
-     * 
+     *
      * @param ids 需要删除的用户聊天消息主键
      * @return 结果
      */
@@ -192,7 +225,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
 
     /**
      * 删除用户聊天消息信息
-     * 
+     *
      * @param id 用户聊天消息主键
      * @return 结果
      */

@@ -43,8 +43,8 @@ public class ChatListener {
             )
     )
     public void consumeAllSessionMessages(ChatMessageEvent messageEvent, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        Long sessionId = messageEvent.getSessionId();
         try {
-            Long sessionId = messageEvent.getSessionId();
             log.info("✅ 收到会话消息: sessionId={}", sessionId);
 
             // 执行你的业务逻辑
@@ -56,7 +56,7 @@ public class ChatListener {
             channel.basicAck(deliveryTag, false);
 
         } catch (Exception e) {
-            log.error(" 消息SessionId: {}消费失败，即将进入死信队列,报错消息为{} ", messageEvent.getSessionId(), e.getMessage());
+            log.error(" 消息SessionId: {}消费失败，即将进入死信队列,报错消息为{} ", sessionId, e.getMessage());
 
             // 失败：手动 NACK
             // 参数1：Tag
