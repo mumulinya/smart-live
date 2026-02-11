@@ -2,16 +2,16 @@ package com.smartlive.im.handler;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartLive.chat.api.RemoteChatService;
+import com.smartLive.chat.api.dto.ChatMessageDTO;
+import com.smartLive.chat.api.dto.ChatMessageEvent;
+import com.smartLive.chat.api.dto.UserSessionDTO;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
-import com.smartlive.im.dto.ChatMessageDTO;
-import com.smartlive.im.dto.ChatMessageEvent;
-import com.smartlive.im.dto.UserSessionDTO;
-import com.smartlive.im.feign.RemoteChatService;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -168,9 +168,10 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
         chatMessage.setCreateTime(new Date());
 
         boolean saveSuccess = false;
+        Long messageId = null;
         try {
-            R<Boolean> result = remoteChatService.saveMessage(chatMessage);
-            if (result != null && result.getCode() == 200) {
+            messageId = remoteChatService.saveMessage(chatMessage);
+            if (messageId != null && messageId > 0) {
                 saveSuccess = true;
             }
         } catch (Exception e) {
@@ -209,7 +210,7 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
             messageEvent.setContent(content);
             messageEvent.setTempId(tempId);
             messageEvent.setSessionId(sessionId);
-            messageEvent.setMessageId(0L);
+            messageEvent.setMessageId(messageId);
             messageEvent.setCreateTime(new Date());
 
             String routingKey = MqConstants.CHAT_MESSAGE_ROUTING + sessionId;

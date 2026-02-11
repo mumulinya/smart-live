@@ -25,13 +25,14 @@ public class InnerChatController {
     private IUserSessionsService userSessionsService;
 
     @PostMapping("/msg")
-    public R<Boolean> saveMessage(@RequestBody ChatMessages chatMessage) {
-        return R.ok(chatMessagesService.save(chatMessage));
+    public Long saveMessage(@RequestBody ChatMessages chatMessage) {
+        chatMessagesService.save(chatMessage);
+        return chatMessage.getId();
     }
 
     @PostMapping("/session")
-    public R<Boolean> syncSession(@RequestBody UserSessions userSession) {
+    public Boolean syncSession(@RequestBody UserSessions userSession) {
         userSessionsService.isCreateUserSessions(userSession);
-        return R.ok(true);
+        return true;
     }
 }

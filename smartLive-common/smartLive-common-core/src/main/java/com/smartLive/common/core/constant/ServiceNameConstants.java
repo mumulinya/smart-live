@@ -51,4 +51,8 @@ public class ServiceNameConstants
      * 互动模块的serviceid
      */
     public static final String INTERACTION_SERVICE = "smartLive-interaction";
+    /**
+     * 聊天模块的serviceid
+     */
+    public static final String CHAT_SERVICE = "smartLive-chat";
 }

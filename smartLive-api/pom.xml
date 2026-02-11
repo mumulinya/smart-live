@@ -16,6 +16,8 @@
         <module>smartLive-api-order</module>
         <module>smartLive-api-shop</module>
         <module>smartLive-api-interaction</module>
+        <module>smartLive-api-chat</module>
+
     </modules>
 
     <artifactId>smartLive-api</artifactId>

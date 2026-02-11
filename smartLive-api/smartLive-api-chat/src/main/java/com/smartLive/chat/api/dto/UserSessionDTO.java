@@ -1,4 +1,4 @@
-package com.smartlive.im.dto;
+package com.smartLive.chat.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

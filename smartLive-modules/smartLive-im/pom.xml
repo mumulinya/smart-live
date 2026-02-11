@@ -9,10 +9,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>smart-live-im</artifactId>
+    <artifactId>smartLive-modules-im</artifactId>
 
     <description>
-        smart-live-im 也就是netty服务
+        smartLive-modules-im
     </description>
 
     <dependencies>
@@ -77,12 +77,6 @@
             <version>4.1.86.Final</version>
         </dependency>
 
-        <!-- Feign -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
         <!-- Loadbalancer (needed for Feign in newer Spring Cloud) -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -95,6 +89,10 @@
             <artifactId>smartLive-api-user</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-chat</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

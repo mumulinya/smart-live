@@ -228,6 +228,11 @@
             </dependency>
             <dependency>
                 <groupId>com.smartLive</groupId>
+                <artifactId>smartLive-api-chat</artifactId>
+                <version>${smartLive.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.smartLive</groupId>
                 <artifactId>smartLive-api-marketing</artifactId>
                 <version>${smartLive.version}</version>
             </dependency>
