@@ -1,6 +1,6 @@
 # Tomcat
 server:
-  port: 9215 # IM模块端口 (API端口, Netty是8888)
+  port: 9217 # IM模块端口 (API端口, Netty是8888)
 
 # Spring
 spring:
