@@ -32,4 +32,18 @@ public class UserResourceStrategy implements ResourceStrategy<UserDTO> {
         }
         return userList;
     }
+
+    /**
+     * 获取资源
+     *
+     * @param sourceId
+     */
+    @Override
+    public UserDTO getResourceById(Long sourceId) {
+        UserDTO user = remoteAppUserService.queryUserById(sourceId);
+        if (user == null) {
+            return null;
+        }
+        return user;
+    }
 }

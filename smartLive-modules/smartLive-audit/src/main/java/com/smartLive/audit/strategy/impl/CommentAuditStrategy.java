@@ -33,9 +33,9 @@ public class CommentAuditStrategy implements AuditStrategy {
     }
 
     @Override
-    public void handleAuditResult(Long targetId, Integer status, String reason) {
+    public boolean handleAuditResult(Long targetId, Integer status, String reason) {
         // Call remote comment service to update status
-        remoteCommentService.updateCommentStatus(targetId, status);
+       return remoteCommentService.updateCommentStatus(targetId, status);
     }
     /**
      * Get submitter name

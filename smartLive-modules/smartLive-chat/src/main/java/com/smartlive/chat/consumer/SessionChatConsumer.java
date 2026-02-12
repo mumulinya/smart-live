@@ -2,6 +2,7 @@ package com.smartlive.chat.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.MqConstants;
+import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.dto.ChatMessageEvent;
@@ -31,9 +32,6 @@ public class SessionChatConsumer {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    private static final String IM_ONLINE_KEY = "im:online:";
-    private static final String IM_SESSION_KEY = "im:session:";
-
     /**
      * 处理聊天消息 - 推送给双方用户
      */
@@ -47,7 +45,7 @@ public class SessionChatConsumer {
 
         try {
             // Check Redis for receiver's active session
-            Long receiverActiveSession = redisService.getCacheObject(IM_SESSION_KEY + toUserId);
+            Long receiverActiveSession = redisService.getCacheObject(RedisConstants.IM_SESSION_KEY + toUserId);
             boolean isReceiverInChatSession = (receiverActiveSession != null && receiverActiveSession.equals(sessionId));
 
             Long messageStatus = isReceiverInChatSession ? 1L : 2L; // 1已读，2已送达
@@ -108,7 +106,7 @@ public class SessionChatConsumer {
     }
 
     private boolean isUserOnline(Long userId) {
-        return redisService.hasKey(IM_ONLINE_KEY + userId);
+        return redisService.hasKey(RedisConstants.IM_ONLINE_KEY + userId);
     }
 
     /**

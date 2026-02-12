@@ -47,9 +47,9 @@ public class VoucherAuditStrategy implements AuditStrategy {
     }
 
     @Override
-    public void handleAuditResult(Long targetId, Integer status, String reason) {
+    public boolean handleAuditResult(Long targetId, Integer status, String reason) {
         // Call remote service to update status
-        remoteVoucherService.updateVoucherStatus(targetId, status);
+        return remoteVoucherService.updateVoucherStatus(targetId, status);
     }
 
     private Double getDoubleValue(Map<String, Object> map, String... keys) {

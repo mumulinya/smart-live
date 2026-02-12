@@ -194,4 +194,12 @@ public class RedisConstants {
      */
     public static final String SEARCH_HOT_KEYWORDS = "search:hot:keywords";
     public static final Integer SEARCH_HOT_TTL = 24;//24小时
+    /**
+     * 用户在线状态
+     */
+    public static final String IM_ONLINE_KEY = "im:online:";
+    /**
+     * 用户会话
+     */
+    public static final String IM_SESSION_KEY = "im:session:";
 }

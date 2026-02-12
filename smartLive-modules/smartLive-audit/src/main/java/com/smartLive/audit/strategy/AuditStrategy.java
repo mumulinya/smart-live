@@ -34,7 +34,7 @@ public interface AuditStrategy {
      * @param status   The audit status (e.g., 1: Pass, 2: Reject)
      * @param reason   The rejection reason
      */
-    void handleAuditResult(Long targetId, Integer status, String reason);
+    boolean handleAuditResult(Long targetId, Integer status, String reason);
     /**
      * Get submitter name
      * @param submitterId

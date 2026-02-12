@@ -16,6 +16,10 @@ public interface ResourceStrategy<T> {
     */
    List<T> getResourceList(List<Long> sourceIdList);
    /**
+    * 获取资源
+    */
+   T getResourceById(Long sourceId);
+   /**
     * 获取资源内容
     */
    default HashMap<String,String> getResourceContentById(Long sourceId){

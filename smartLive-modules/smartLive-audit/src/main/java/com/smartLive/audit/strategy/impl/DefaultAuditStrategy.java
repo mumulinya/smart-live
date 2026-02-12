@@ -26,8 +26,9 @@ public class DefaultAuditStrategy implements AuditStrategy {
     }
 
     @Override
-    public void handleAuditResult(Long targetId, Integer status, String reason) {
+    public boolean handleAuditResult(Long targetId, Integer status, String reason) {
         // Do nothing for default
+        return true;
     }
     /**
      * Get submitter name

@@ -40,6 +40,17 @@ public class ReviewResourceStrategy implements ResourceStrategy<Review> {
     }
 
     /**
+     * 获取资源
+     *
+     * @param sourceId
+     */
+    @Override
+    public Review getResourceById(Long sourceId) {
+        Review review = reviewService.getReviewById(sourceId);
+        return review;
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId

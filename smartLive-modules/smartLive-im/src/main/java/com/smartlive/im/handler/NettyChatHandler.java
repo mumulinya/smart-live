@@ -52,10 +52,6 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
     public static final ChannelGroup allChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private static final Map<Long, Channel> userChannels = new ConcurrentHashMap<>();
 
-    // Redis Keys
-    private static final String IM_ONLINE_KEY = "im:online:";
-    private static final String IM_SESSION_KEY = "im:session:";
-
     private static final AttributeKey<Long> USER_ID_KEY = AttributeKey.valueOf("userId");
     private static final AttributeKey<Boolean> AUTH_KEY = AttributeKey.valueOf("authenticated");
 
@@ -73,8 +69,8 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
         if (userId != null) {
             userChannels.remove(userId);
             // Clear Redis State
-            redisService.deleteObject(IM_ONLINE_KEY + userId);
-            redisService.deleteObject(IM_SESSION_KEY + userId);
+            redisService.deleteObject(RedisConstants.IM_ONLINE_KEY + userId);
+            redisService.deleteObject(RedisConstants.IM_SESSION_KEY + userId);
         }
         super.channelInactive(ctx);
     }
@@ -120,11 +116,11 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
                 Long userId = userDTO.getId();
 
                 if (sessionId != null) {
-                    redisService.setCacheObject(IM_SESSION_KEY + userId, sessionId, 24L, TimeUnit.HOURS);
+                    redisService.setCacheObject(RedisConstants.IM_SESSION_KEY + userId, sessionId, 24L, TimeUnit.HOURS);
                 }
 
                 // Set Online Status in Redis
-                redisService.setCacheObject(IM_ONLINE_KEY + userId, true, 24L, TimeUnit.HOURS);
+                redisService.setCacheObject(RedisConstants.IM_ONLINE_KEY + userId, true, 24L, TimeUnit.HOURS);
 
                 userChannels.put(userId, channel);
                 channel.attr(USER_ID_KEY).set(userId);
@@ -235,9 +231,9 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
         Long sessionId = parseLong(data.get("sessionId"));
 
         if (sessionId != null) {
-            redisService.setCacheObject(IM_SESSION_KEY + userId, sessionId, 24L, TimeUnit.HOURS);
+            redisService.setCacheObject(RedisConstants.IM_SESSION_KEY + userId, sessionId, 24L, TimeUnit.HOURS);
         } else {
-            redisService.deleteObject(IM_SESSION_KEY + userId);
+            redisService.deleteObject(RedisConstants.IM_SESSION_KEY + userId);
         }
     }
 

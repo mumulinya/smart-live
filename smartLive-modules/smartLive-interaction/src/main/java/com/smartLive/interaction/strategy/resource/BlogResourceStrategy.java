@@ -45,6 +45,22 @@ public  class BlogResourceStrategy implements ResourceStrategy<BlogVO> {
     }
 
     /**
+     * 获取资源
+     *
+     * @param sourceId
+     */
+    @Override
+    public BlogVO getResourceById(Long sourceId) {
+        BlogDTO blogDTO = remoteBlogService.getBlogById(sourceId);
+        if (blogDTO != null) {
+            BlogVO blogVO = new BlogVO();
+            BeanUtils.copyProperties(blogDTO, blogVO);
+            return blogVO;
+        }
+        return null;
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId

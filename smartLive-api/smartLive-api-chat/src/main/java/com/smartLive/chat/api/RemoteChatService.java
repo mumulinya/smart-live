@@ -1,5 +1,6 @@
 package com.smartLive.chat.api;
 import com.smartLive.chat.api.dto.ChatMessageDTO;
+import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.chat.api.dto.UserSessionDTO;
 import com.smartLive.chat.api.factory.RemoteChatFallbackFactory;
 import com.smartLive.common.core.constant.ServiceNameConstants;
@@ -15,4 +16,7 @@ public interface RemoteChatService {
 
     @PostMapping("/inner/chat/session")
     Boolean syncSession(@RequestBody UserSessionDTO sessionDTO);
+
+    @PostMapping("/inner/chat/notice/system/create")
+    void createSystemNotice(@RequestBody SystemNoticeCreateDTO noticeDTO);
 }

@@ -2,16 +2,19 @@ package com.smartLive.interaction.strategy.resource;
 
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.VO.ShopVO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
-public  class ShopResourceStrategy implements ResourceStrategy<ShopDTO> {
+public  class ShopResourceStrategy implements ResourceStrategy<ShopVO> {
     @Autowired
     private RemoteShopService remoteShopService;
     /**
@@ -28,14 +31,36 @@ public  class ShopResourceStrategy implements ResourceStrategy<ShopDTO> {
      * @param sourceIdList
      */
     @Override
-    public List<ShopDTO> getResourceList(List<Long> sourceIdList) {
+    public List<ShopVO> getResourceList(List<Long> sourceIdList) {
 
         List<ShopDTO> shopDTOList= remoteShopService.getShopList(sourceIdList);
         if (shopDTOList == null) {
             return null;
         }
-        return shopDTOList;
+        List<ShopVO> shopVOList = shopDTOList.stream().map(shopDTO -> {
+            ShopVO shopVO = new ShopVO();
+            BeanUtils.copyProperties(shopDTO, shopVO);
+            return shopVO;
+        }).collect(Collectors.toList());
+        return shopVOList;
     }
+
+    /**
+     * 获取资源
+     *
+     * @param sourceId
+     */
+    @Override
+    public ShopVO getResourceById(Long sourceId) {
+        ShopDTO shop = remoteShopService.getShopById(sourceId);
+        if (shop == null) {
+            return null;
+        }
+        ShopVO shopVO = new ShopVO();
+        BeanUtils.copyProperties(shop, shopVO);
+        return shopVO;
+    }
+
     /**
      * 获取资源内容
      *

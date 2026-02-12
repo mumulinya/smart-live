@@ -29,9 +29,9 @@ public class UserAuditStrategy implements AuditStrategy {
     }
 
     @Override
-    public void handleAuditResult(Long targetId, Integer status, String reason) {
+    public boolean handleAuditResult(Long targetId, Integer status, String reason) {
         // Call remote user service
-        remoteAppUserService.updateUserStatus(targetId, status);
+        return remoteAppUserService.updateUserStatus(targetId, status);
     }
 
     /**

@@ -43,4 +43,16 @@ public enum ItemActionType {
         }
         return null;
     }
+
+    /**
+     * 根据code获取描述
+     */
+    public static String getDescByCode(String code) {
+        for (ItemActionType value : values()) {
+            if (value.getCode().equals(code)) {
+                return value.getDesc();
+            }
+        }
+        return null;
+    }
 }

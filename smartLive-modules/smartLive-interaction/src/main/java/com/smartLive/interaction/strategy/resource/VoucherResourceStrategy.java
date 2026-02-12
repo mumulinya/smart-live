@@ -43,6 +43,22 @@ public  class VoucherResourceStrategy implements ResourceStrategy<VoucherVO> {
     }
 
     /**
+     * 获取资源
+     *
+     * @param sourceId
+     */
+    @Override
+    public VoucherVO getResourceById(Long sourceId) {
+        VoucherDTO voucherDTO = remoteVoucherService.getVoucherById(sourceId);
+        if (voucherDTO != null) {
+            VoucherVO voucherVO = new VoucherVO();
+            BeanUtils.copyProperties(voucherDTO, voucherVO);
+            return voucherVO;
+        }
+        return null;
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId

@@ -2,6 +2,7 @@ package com.smartLive.chat.api.factory;
 
 import com.smartLive.chat.api.RemoteChatService;
 import com.smartLive.chat.api.dto.ChatMessageDTO;
+import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.chat.api.dto.UserSessionDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -15,14 +16,19 @@ public class RemoteChatFallbackFactory implements FallbackFactory<RemoteChatServ
         return new RemoteChatService() {
             @Override
             public Long saveMessage(ChatMessageDTO chatMessage) {
-                log.error("保存聊天消息失败:{}", cause.getMessage());
+                log.error("save chat message failed: {}", cause.getMessage());
                 return 0L;
             }
 
             @Override
             public Boolean syncSession(UserSessionDTO sessionDTO) {
-                log.error("同步会话失败:{}", cause.getMessage());
+                log.error("sync session failed: {}", cause.getMessage());
                 return false;
+            }
+
+            @Override
+            public void createSystemNotice(SystemNoticeCreateDTO noticeDTO) {
+                log.error("create system notice failed: {}", cause.getMessage());
             }
         };
     }

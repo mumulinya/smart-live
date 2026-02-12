@@ -107,6 +107,10 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-user</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-chat</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>

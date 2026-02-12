@@ -43,8 +43,9 @@ public class GroupBuyAuditStrategy implements AuditStrategy {
     }
 
     @Override
-    public void handleAuditResult(Long targetId, Integer status, String reason) {
+    public boolean handleAuditResult(Long targetId, Integer status, String reason) {
         // TODO: Call remote group buy service
+        return true;
     }
 
     private Double getDoubleValue(Map<String, Object> map, String... keys) {

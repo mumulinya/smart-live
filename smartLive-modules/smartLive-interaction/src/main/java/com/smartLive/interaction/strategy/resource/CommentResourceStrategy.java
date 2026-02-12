@@ -39,6 +39,17 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
     }
 
     /**
+     * 获取资源
+     *
+     * @param sourceId
+     */
+    @Override
+    public Comment getResourceById(Long sourceId) {
+        Comment comment = commentService.getCommentById(sourceId);
+        return comment;
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId

@@ -2,15 +2,21 @@ package com.smartLive.interaction.service.impl;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.smartLive.chat.api.RemoteChatService;
+import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.ItemActionType;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Follow;
@@ -52,6 +58,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private RemoteChatService remoteChatService;
     /**
      * 查询关注
      * 
@@ -312,6 +320,10 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         if(feedEventMessage.getAction()!=null){
             value=feedEventMessage.getAction()+":"+value;
         }
+        boolean isSendSystemNotice=false;
+        if(feedEventMessage.getBizType()==GlobalBizTypeEnum.VOUCHER.getCode()||feedEventMessage.getBizType()==GlobalBizTypeEnum.GROUP_BUY.getCode()){
+            isSendSystemNotice=true;
+        }
         for (Long userId : userIdList) {
             //推送
             String key = feedKeyPrefix + userId;
@@ -320,6 +332,41 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             String allFeedFeedKeyPrefix = FeedTypeEnum.ALL_FEED.getFeedKeyPrefix();
             String allFeedKey = allFeedFeedKeyPrefix + userId;
             redisService.setCacheZSet(allFeedKey, value, System.currentTimeMillis());
+            if(isSendSystemNotice){
+                //发送系统通知
+                createSystemNotice(userId, feedEventMessage);
+            }
+        }
+    }
+    /**
+     * 创建系统通知
+     *
+     * @param userId
+     * @param feedEventMessage
+     */
+    private void createSystemNotice(Long userId, FeedEventMessage feedEventMessage) {
+        Object resource = resourceStrategyMap.get(feedEventMessage.getSourceType()).getResourceById(feedEventMessage.getSourceId());
+        HashMap<String,String> hashMap = resourceStrategyMap.get(feedEventMessage.getSourceType()).getResourceContentById(feedEventMessage.getSourceId());
+        //使用方法转化为map
+        Map<String, Object> map = BeanUtil.beanToMap(resource);
+        if (userId == null) {
+            return;
+        }
+        try {
+            GlobalBizTypeEnum globalBizTypeEnum = GlobalBizTypeEnum.getByCode(feedEventMessage.getBizType());
+            String desc = ItemActionType.getDescByCode(feedEventMessage.getAction());
+            String content = "你关注的"+ globalBizTypeEnum.getDesc()+hashMap.get("title")+ desc;
+            SystemNoticeCreateDTO createDTO = new SystemNoticeCreateDTO();
+            createDTO.setUserId(userId);
+            createDTO.setSourceType(feedEventMessage.getSourceType());
+            createDTO.setSourceId(feedEventMessage.getSourceId());
+            createDTO.setAction(globalBizTypeEnum.getBizDomain()+"_"+feedEventMessage.getAction());
+            createDTO.setContent(content);
+            createDTO.setTitle(globalBizTypeEnum.getDesc()+desc);
+            createDTO.setExtraData(map);
+            remoteChatService.createSystemNotice(createDTO);
+        } catch (Exception e) {
+            log.error("create reject system notice failed, auditTaskId={}", feedEventMessage.getBizId(), e);
         }
     }
     /**

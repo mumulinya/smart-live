@@ -32,9 +32,9 @@ public class ReviewAuditStrategy implements AuditStrategy {
     }
 
     @Override
-    public void handleAuditResult(Long targetId, Integer status, String reason) {
+    public boolean handleAuditResult(Long targetId, Integer status, String reason) {
         // Call remote review service
-        remoteReviewService.updateReviewStatus(targetId, status);
+       return remoteReviewService.updateReviewStatus(targetId, status);
     }
     /**
      * Get submitter name
