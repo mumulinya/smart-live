@@ -35,7 +35,7 @@ public class AuditListener {
     public void handleAuditCreate(AuditMessage auditMessage, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         log.info("收到审核任务消息: {}", auditMessage);
         try {
-            auditService.createAuditTask(auditMessage);
+            auditService.handleAudit(auditMessage);
             // 手动确认
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {

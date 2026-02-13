@@ -8,6 +8,8 @@ import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.text.Convert;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.domain.BO.ActionRecordBO;
+import com.smartLive.interaction.domain.VO.FeedVO;
 import com.smartLive.interaction.service.IFeedService;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -41,61 +43,69 @@ public class feedServiceImpl implements IFeedService {
         }
         long minTime = 0L;
         int os = 1;
-        // 3. 解析数据
-        Map<String, Map<Long,String>> idMap= new HashMap<>();
-        // 时间戳
-        Map<String, Map<Long, Long>> timeMap = new HashMap<>();
+        Map<String, Map<Long, List<ActionRecordBO>>> groupedMap = new HashMap<>();
         for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
-            long time = tuple.getScore().longValue();
-            String val = tuple.getValue().toString();
-            // 解析: new:voucher:101 -> [new, voucher, 101]
+            long time = Objects.requireNonNull(tuple.getScore()).longValue();
+            String val = Objects.requireNonNull(tuple.getValue()).toString();
+
             String[] parts = val.split(":");
+            if (parts.length < 2) continue;
+
             String type = parts[parts.length - 2];
             String action = parts.length > 2 ? parts[0] : "";
             Long id = Long.valueOf(parts[parts.length - 1]);
-            if (idMap.containsKey(type)) {
-                // 获取该类型的 Action 集合，存储动态 ID 和对应的动态事件 (Action)
-                idMap.get(type).put(id, action);
-                // 获取该类型的 Time 集合，存储动态 ID 和对应的动态时间 (Redis Score)
-                timeMap.get(type).put(id, time);
-            } else {
-                idMap.put(type, new HashMap<>(Map.of(id, action)));
-                timeMap.put(type, new HashMap<>(Map.of(id, time)));
-            }
+
+            // 存入数据
+            groupedMap.computeIfAbsent(type, k -> new HashMap<>())
+                    .computeIfAbsent(id, k -> new ArrayList<>())
+                    .add(new ActionRecordBO(action, time));
 
             // 滚动分页逻辑
             if (time == minTime) os++;
             else { minTime = time; os = 1; }
         }
-        List<Object> voList = Lists.newArrayList();
-        idMap.forEach((k, v) -> {
-            Integer bizTypeEnumCode = GlobalBizTypeEnum.getByBizDomain(k).getCode();
+        List<FeedVO> voList = Lists.newArrayList();
+        groupedMap.forEach((bizType, idActionMap) -> {
+            // 1. 获取策略和 Resource 数据（这部分保持不变，依然是批量获取）
+            Integer bizTypeEnumCode = GlobalBizTypeEnum.getByBizDomain(bizType).getCode();
             ResourceStrategy resourceStrategy = resourceStrategyMap.get(bizTypeEnumCode);
 
-            // 获取动态列表
-            List<Object> list = resourceStrategy.getResourceList(new ArrayList<>(v.keySet()));
-            if(list != null){
-                list.forEach(item -> {
-                    // 设置数据类型
-                    BeanUtil.setFieldValue(item,"dataType",k);
-                    // 获取对象ID
-                    Long id = Convert.toLong(BeanUtil.getFieldValue(item, "id"));
+            // 注意：这里传给 getResourceList 的依然是去重后的 ID 集合 (keySet)
+            // 比如 ID=101 虽然有 3 个动作，但我们只需要查数据库一次
+            List<Object> resources = resourceStrategy.getResourceList(new ArrayList<>(idActionMap.keySet()));
 
-                    // 处理 Action
-                    String action = v.get(id);
-                    if(action != null && !action.isEmpty()){ // 建议加上 null 判断
-                        BeanUtil.setFieldValue(item, "action", action);
-                    }
+            if (resources != null) {
+                resources.forEach(item -> {
+                    // 获取对象 ID
+                    Long id = resourceStrategy.getResourceId(item);
 
-                    // 【修改点 3】从 timeMap 中取出时间并赋值
-                    if (timeMap.containsKey(k) && timeMap.get(k).containsKey(id)) {
-                        Long timeScore = timeMap.get(k).get(id);
-                        BeanUtil.setFieldValue(item, "publishTime", new Date(timeScore));
+                    //  获取该 ID 下的 "动作列表"
+                    List<ActionRecordBO> actions = idActionMap.get(id);
+
+                    //  遍历动作列表，一个动作生成一个 FeedVO
+                    if (actions != null && !actions.isEmpty()) {
+                        for (ActionRecordBO node : actions) {
+
+                            //创建返回数据
+                            FeedVO feedVO = new FeedVO();
+
+                            // 2.1 保存源数据
+                            feedVO.setData(item);
+
+                            // 2.2 设置通用数据
+                            feedVO.setDataType(bizType);
+
+                            // 2.3 从 Node 中取出 Action 和 Time
+                            feedVO.setAction(node.getAction());
+                            feedVO.setPublishTime(new Date(node.getTime())); // 直接使用 Node 里的时间
+
+                            voList.add(feedVO);
+                        }
                     }
                 });
-                voList.addAll(list);
             }
         });
+        voList.sort(Comparator.comparing(FeedVO::getPublishTime).reversed());
         // 6. 返回结果
         ScrollResult result = new ScrollResult();
         result.setList(voList);

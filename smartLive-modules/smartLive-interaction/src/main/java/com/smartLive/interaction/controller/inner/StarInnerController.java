@@ -1,7 +1,5 @@
-package com.smartLive.interaction.controller;
+package com.smartLive.interaction.controller.inner;
 
-import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.service.IStarService;
 import jakarta.annotation.Resource;

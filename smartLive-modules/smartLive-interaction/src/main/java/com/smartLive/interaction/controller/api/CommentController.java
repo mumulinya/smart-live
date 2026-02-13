@@ -1,9 +1,4 @@
-package com.smartLive.interaction.controller;
-import cn.hutool.core.bean.BeanUtil;
-import com.smartLive.common.core.constant.MqConstants;
-import com.smartLive.common.core.context.SecurityContextHolder;
-import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+package com.smartLive.interaction.controller.api;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.controller.BaseController;
@@ -12,8 +7,6 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.core.web.page.TableDataInfo;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
-import com.smartLive.common.rabbitmq.domain.AuditMessage;
-import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.service.ICommentService;
@@ -182,23 +175,5 @@ public class CommentController extends BaseController
     @PostMapping("/saveAiCreateComment")
     public Result saveAiCreateComment(@RequestBody List<Comment> comments){
         return Result.ok(commentService.saveAiCreateComment(comments));
-    }
-
-    /**
-     * 获取评论数量
-     * @param comment 评论查询条件
-     * @return 评论数量
-     */
-    @GetMapping("/getCommentCount")
-    R<Integer> getCommentCount( Comment comment){
-        return R.ok(commentService.getCommentCount(comment));
-    }
-    /**
-     * 获取评论总数
-     * @return 评论总数
-     */
-    @GetMapping("/getCommentTotal")
-    R<Integer> getCommentTotal(){
-        return R.ok(commentService.getCommentTotal());
     }
 }

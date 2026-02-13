@@ -3,6 +3,7 @@ package com.smartLive.audit.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.houbb.sensitive.word.core.SensitiveWordHelper;
 import com.smartLive.audit.domain.AuditTask;
 import com.smartLive.audit.domain.vo.AuditTaskVO;
 import com.smartLive.audit.mapper.AuditTaskMapper;
@@ -12,6 +13,7 @@ import com.smartLive.audit.strategy.AuditStrategyFactory;
 import com.smartLive.chat.api.RemoteChatService;
 import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.common.core.enums.AuditStatusEnum;
+import com.smartLive.common.core.utils.SensitiveWordUtil;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.user.api.RemoteAppUserService;
@@ -39,6 +41,8 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
     private RemoteAppUserService remoteAppUserService;
     @Autowired
     private RemoteChatService remoteChatService;
+    @Autowired
+    private SensitiveWordUtil sensitiveWordUtil;
 
     @Override
     public List<AuditTaskVO> selectAuditList(AuditTask auditTask) {
@@ -86,7 +90,23 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
 
         return vo;
     }
-
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long createAuditTask(AuditMessage auditMessage) {
+        AuditTask auditTask = new AuditTask();
+        auditTask.setBizId(auditMessage.getBizId());
+        auditTask.setBizType(auditMessage.getBizType());
+        auditTask.setSubmitterId(auditMessage.getSubmitterId());
+        auditTask.setAuditContent(auditMessage.getAuditContent());
+        auditTask.setStatus(0);
+        auditTask.setCreateTime(new Date());
+        auditTask.setUpdateTime(new Date());
+        boolean save = this.save(auditTask);
+        if (save) {
+            return auditTask.getId();
+        }
+        return null;
+    }
     @Override
     public boolean auditAction(Long id, Integer status, String reason) {
         AuditTask task = this.getById(id);
@@ -144,18 +164,68 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
         };
     }
 
+    /**
+     * 处理审核任务
+     *
+     * @param auditMessage 审核消息
+     */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void createAuditTask(AuditMessage auditMessage) {
-        AuditTask auditTask = new AuditTask();
-        auditTask.setBizId(auditMessage.getBizId());
-        auditTask.setBizType(auditMessage.getBizType());
-        auditTask.setSubmitterId(auditMessage.getSubmitterId());
-        auditTask.setAuditContent(auditMessage.getAuditContent());
-        auditTask.setStatus(0);
-        auditTask.setCreateTime(new Date());
-        auditTask.setUpdateTime(new Date());
+    public void handleAudit(AuditMessage auditMessage) {
+        Long auditTaskId = createAuditTask(auditMessage);
+       if (auditTaskId != null) {
+           String content = extractTextFromMap(auditMessage.getAuditContent());
+           boolean contains = sensitiveWordUtil.hasSensitiveWord(content);
+           // 如果包含敏感词，说明不安全
+           if (contains) {
+               //找出敏感词
+               List<String> all = sensitiveWordUtil.findAll(content);
+               log.info("contains sensitive words: {}", all);
+               auditAction(auditTaskId, AuditStatusEnum.REJECT.getCode(), "你的消息包含敏感词："+String.join(",", all));
+           }
+        }
+    }
+    /**
+     * 【辅助方法】智能提取 Map 中的文本
+     * 针对不同的业务，字段名可能不同，这里统一处理
+     */
+    private String extractTextFromMap(Map<String, Object> map) {
+        if (map == null || map.isEmpty()) {
+            return "";
+        }
 
-        this.save(auditTask);
+        StringBuilder sb = new StringBuilder();
+
+        // 1. 尝试提取标题 (针对博客/文章)
+        if (map.containsKey("title")) {
+            sb.append(map.get("title")).append("\n"); // 加换行符，防止标题和正文连在一起造成误判
+        }
+
+        // 2. 尝试提取内容 (针对博客/评论)
+        if (map.containsKey("content")) {
+            sb.append(map.get("content"));
+        }
+
+        // 3. 尝试提取昵称/签名 (针对用户修改信息)
+        if (map.containsKey("nickname")) {
+            sb.append(map.get("nickname"));
+        }
+        if (map.containsKey("introduce")) {
+            sb.append(map.get("introduce"));
+        }
+        // 4. 尝试提取副标题/规则 (针对店铺/团购)
+        if (map.containsKey("title")) {
+            sb.append(map.get("title"));
+        }
+        if (map.containsKey("subTitle")) {
+            sb.append(map.get("subTitle"));
+        }
+        if (map.containsKey("rules")) {
+            sb.append(map.get("rules"));
+        }
+        // 5. 尝试提取名称 (针对代店铺)
+        if (map.containsKey("name")) {
+            sb.append(map.get("name"));
+        }
+        return sb.toString();
     }
 }

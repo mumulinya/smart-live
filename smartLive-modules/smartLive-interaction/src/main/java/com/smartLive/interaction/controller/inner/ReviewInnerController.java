@@ -1,4 +1,4 @@
-package com.smartLive.interaction.controller;
+package com.smartLive.interaction.controller.inner;
 
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.interaction.service.IReviewService;

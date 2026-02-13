@@ -4,11 +4,13 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ReviewTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
@@ -171,15 +173,18 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         Page<Long> longPage = queryRedisSourceIdsTool.queryRedisIdPage(reviewKeyPrefix, review.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> reviewIdList = longPage.getRecords();
         List<Review> list=new ArrayList<>();
-        if(reviewIdList != null && reviewIdList.size() > 0){
-             list = lambdaQuery().in(Review::getId, reviewIdList).orderByDesc(Review::getLiked).list();
+        if(reviewIdList != null && !reviewIdList.isEmpty()){
+             list = lambdaQuery()
+                     .ne(Review::getStatus, "2")
+                     .in(Review::getId, reviewIdList)
+                     .orderByDesc(Review::getLiked).list();
         }
         //如果redis里面没有数据，则从数据库里面获取
-        if(list == null || list.size() == 0){
+        if(list == null || list.isEmpty()){
             log.info("从数据库里面获取");
              list = query()
                     .eq("source_id", review.getSourceId())
-                     .eq("status", 0)
+                    .ne("status", 2)
                     .eq("source_type", review.getSourceType())
                     .orderByDesc("liked")
                     .list();
@@ -190,10 +195,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 list = list.size() > SystemConstants.DEFAULT_PAGE_SIZE ? list.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : list;
             }
         }
-        if(list == null){
+        if(list.isEmpty()){
             return Collections.emptyList();
         }
-        list.stream().forEach(c -> {
+        list.forEach(c -> {
             //判断是否点赞
             Like like = new Like();
             like.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
@@ -538,8 +543,23 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public Boolean updateReviewStatus(Long id, Integer status) {
-        return update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Review>()
+        boolean update = update(new UpdateWrapper<Review>()
                 .set("status", status)
                 .eq("id", id));
+        if(update&&status== AuditStatusEnum.REJECT.getCode()){
+            Review review = getById(id);
+            ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
+            String reviewKeyPrefix = reviewType.getReviewKeyPrefix()+ review.getSourceId();
+            String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
+            String reviewDirtyKeyPrefix = reviewType.getReviewDirtyKeyPrefix();
+            //删除评论信息
+            redisService.removeCacheZSetObject(reviewKeyPrefix, review.getId().toString());
+            //记录评论数量
+            redisService.decrementCacheValue(reviewCountKeyPrefix);
+            //记录脏数据
+            redisService.setCacheSet(reviewDirtyKeyPrefix, Collections.singleton(review.getId().toString()));
+        }
+        return update;
+
     }
 }

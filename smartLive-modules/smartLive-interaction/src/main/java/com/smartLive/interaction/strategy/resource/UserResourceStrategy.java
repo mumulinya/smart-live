@@ -46,4 +46,15 @@ public class UserResourceStrategy implements ResourceStrategy<UserDTO> {
         }
         return user;
     }
+
+    /**
+     * 获取资源id
+     *
+     * @param data
+     * @return
+     */
+    @Override
+    public Long getResourceId(UserDTO data) {
+        return data.getId();
+    }
 }

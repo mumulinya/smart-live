@@ -3,6 +3,7 @@ package com.smartLive.audit.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.audit.domain.AuditTask;
 import com.smartLive.audit.domain.vo.AuditTaskVO;
+import com.smartLive.common.rabbitmq.domain.AuditMessage;
 
 import java.util.List;
 
@@ -41,5 +42,10 @@ public interface IAuditService extends IService<AuditTask> {
      * 创建审核任务
      * @param auditMessage 审核消息
      */
-    void createAuditTask(com.smartLive.common.rabbitmq.domain.AuditMessage auditMessage);
+    Long createAuditTask(com.smartLive.common.rabbitmq.domain.AuditMessage auditMessage);
+    /**
+     * 处理审核任务
+     * @param auditMessage 审核消息
+     */
+    void handleAudit(AuditMessage auditMessage);
 }

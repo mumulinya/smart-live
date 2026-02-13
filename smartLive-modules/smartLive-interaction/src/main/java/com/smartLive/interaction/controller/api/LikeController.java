@@ -1,6 +1,5 @@
-package com.smartLive.interaction.controller;
+package com.smartLive.interaction.controller.api;
 
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.service.ILikeService;

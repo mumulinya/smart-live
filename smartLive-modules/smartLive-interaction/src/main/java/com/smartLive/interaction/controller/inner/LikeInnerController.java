@@ -1,7 +1,5 @@
-package com.smartLive.interaction.controller;
+package com.smartLive.interaction.controller.inner;
 
-import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.service.ILikeService;
 import org.springframework.beans.factory.annotation.Autowired;

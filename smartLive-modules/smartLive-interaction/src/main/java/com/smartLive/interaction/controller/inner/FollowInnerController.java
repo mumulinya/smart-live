@@ -1,4 +1,4 @@
-package com.smartLive.interaction.controller;
+package com.smartLive.interaction.controller.inner;
 
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;

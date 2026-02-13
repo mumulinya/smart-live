@@ -12,6 +12,7 @@ import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
@@ -164,14 +165,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         List<Long> commentIdList = longPage.getRecords();
         List<Comment> list=new ArrayList<>();
         if(commentIdList != null && commentIdList.size() > 0){
-             list = lambdaQuery().in(Comment::getId, commentIdList).orderByDesc(Comment::getLiked).list();
+             list = lambdaQuery()
+                     .ne(Comment::getStatus, "2")
+                     .in(Comment::getId, commentIdList)
+                     .orderByDesc(Comment::getLiked).list();
         }
         //如果redis里面没有数据，则从数据库里面获取
         if(list == null || list.size() == 0){
             log.info("从数据库里面获取");
              list = query()
                     .eq("source_id", comment.getSourceId())
-                    .eq("source_type", comment.getSourceType())
+                     .ne("status", "2")
+                     .eq("source_type", comment.getSourceType())
                     .orderByDesc("liked")
                     .list();
             //截取
@@ -219,10 +224,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public List<Comment> listChildComment(Comment comment, Integer current) {
         List<Comment> commentList = query()
                 .eq("answer_id", comment.getId())
+                .ne("status", "2")
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
                 .getRecords();
-        if(commentList!=null&&commentList.size()>0){
+        if(commentList!=null&& !commentList.isEmpty()){
             commentList.stream().forEach(c -> {
                 Like like = new Like();
                 like.setSourceType(GlobalBizTypeEnum.COMMENT.getCode());
@@ -569,8 +575,23 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     @Override
     public Boolean updateCommentStatus(Long id, Integer status) {
-        return update(new UpdateWrapper<Comment>()
+        boolean update = update(new UpdateWrapper<Comment>()
                 .set("status", status)
                 .eq("id", id));
+        if (update&&status== AuditStatusEnum.REJECT.getCode()) {
+            //修改源数据的评论数量
+            Comment comment = getById(id);
+            CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+            String commentKeyPrefix = commentType.getCommentKeyPrefix()+ comment.getSourceId();
+            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
+            String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
+            //删除评论信息
+            redisService.removeCacheZSetObject(commentKeyPrefix, comment.getId().toString());
+            //记录评论数量
+            redisService.decrementCacheValue(commentCountKeyPrefix);
+            //记录脏数据
+            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getId().toString()));
+        }
+        return update;
     }
 }

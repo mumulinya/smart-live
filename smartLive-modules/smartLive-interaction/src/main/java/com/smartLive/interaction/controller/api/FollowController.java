@@ -1,6 +1,5 @@
-package com.smartLive.interaction.controller;
+package com.smartLive.interaction.controller.api;
 import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;
 import org.springframework.web.bind.annotation.*;

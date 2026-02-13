@@ -59,6 +59,17 @@ public  class VoucherResourceStrategy implements ResourceStrategy<VoucherVO> {
     }
 
     /**
+     * 获取资源id
+     *
+     * @param data
+     * @return
+     */
+    @Override
+    public Long getResourceId(VoucherVO data) {
+        return data.getId();
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId

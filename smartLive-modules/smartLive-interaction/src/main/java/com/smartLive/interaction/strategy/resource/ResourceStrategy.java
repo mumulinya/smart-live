@@ -19,6 +19,13 @@ public interface ResourceStrategy<T> {
     * 获取资源
     */
    T getResourceById(Long sourceId);
+
+   /**
+    * 获取资源id
+    * @param data
+    * @return
+    */
+   Long getResourceId(T data);
    /**
     * 获取资源内容
     */

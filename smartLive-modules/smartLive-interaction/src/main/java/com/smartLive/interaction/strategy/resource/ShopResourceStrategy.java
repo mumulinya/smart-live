@@ -62,6 +62,17 @@ public  class ShopResourceStrategy implements ResourceStrategy<ShopVO> {
     }
 
     /**
+     * 获取资源id
+     *
+     * @param data
+     * @return
+     */
+    @Override
+    public Long getResourceId(ShopVO data) {
+        return data.getId();
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId

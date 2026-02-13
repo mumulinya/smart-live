@@ -50,6 +50,17 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
     }
 
     /**
+     * 获取资源id
+     *
+     * @param data
+     * @return
+     */
+    @Override
+    public Long getResourceId(Comment data) {
+        return data.getId();
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId

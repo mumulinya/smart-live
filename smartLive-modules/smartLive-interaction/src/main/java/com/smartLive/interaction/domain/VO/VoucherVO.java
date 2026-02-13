@@ -99,17 +99,4 @@ public class VoucherVO {
     private String shopImages;
     //店铺类型
     private Long typeId;
-    /**
-     * 数据类型
-     */
-    private String dataType;
-    /**
-     * 动作
-     */
-    private String action;
-    /**
-     * 发布时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date publishTime;  // 发布时间
 }

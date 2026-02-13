@@ -61,6 +61,17 @@ public  class BlogResourceStrategy implements ResourceStrategy<BlogVO> {
     }
 
     /**
+     * 获取资源id
+     *
+     * @param data
+     * @return
+     */
+    @Override
+    public Long getResourceId(BlogVO data) {
+        return data.getId();
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId
