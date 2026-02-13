@@ -1,26 +1,33 @@
 package com.smartLive.search.strategy.factory;
 
+import com.smartLive.search.strategy.DefaultEsSyncStrategy;
 import com.smartLive.search.strategy.EsSyncStrategy;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
+
 /**
- * @Description: EsSyncStrategy工厂类
- * @Author: lizhong.li
- * @CreateDate: 2020/7/27 16:01
+ * Factory to retrieve the appropriate EsSyncStrategy.
  */
-@Configuration
+@Component
 public class EsSyncStrategyFactory {
-    @Bean
-    public Map<Integer, EsSyncStrategy> esStrategyMap(List<EsSyncStrategy> strategies) {
-        return strategies.stream()
-                .collect(Collectors.toMap(
-                        EsSyncStrategy::getType,  // 使用 dataType 作为键
-                        Function.identity()               // 策略对象作为值
-                ));
+
+    private final Map<Integer, EsSyncStrategy> strategyMap = new HashMap<>();
+    private final EsSyncStrategy defaultStrategy;
+
+    @Autowired
+    public EsSyncStrategyFactory(List<EsSyncStrategy> strategies, DefaultEsSyncStrategy defaultStrategy) {
+        this.defaultStrategy = defaultStrategy;
+        for (EsSyncStrategy strategy : strategies) {
+            strategyMap.put(strategy.getType(), strategy);
+        }
+    }
+
+    public EsSyncStrategy getStrategy(Integer type) {
+        return Optional.ofNullable(strategyMap.get(type)).orElse(defaultStrategy);
     }
 }

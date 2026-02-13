@@ -1,22 +1,33 @@
 package com.smartLive.ai.strategy.factory;
 
+import com.smartLive.ai.strategy.milvus.DefaultMilvusSyncStrategy;
 import com.smartLive.ai.strategy.milvus.MilvusSyncStrategy;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
-@Configuration
+/**
+ * Factory to retrieve the appropriate MilvusSyncStrategy.
+ */
+@Component
 public class MilvusSyncFactory {
-    @Bean
-    public Map<Integer, MilvusSyncStrategy> milvusStrategyMap(List<MilvusSyncStrategy> strategies) {
-        return strategies.stream()
-                .collect(Collectors.toMap(
-                        MilvusSyncStrategy::getType,  // 使用 dataType 作为键
-                        Function.identity()               // 策略对象作为值
-                ));
+
+    private final Map<Integer, MilvusSyncStrategy> strategyMap = new HashMap<>();
+    private final MilvusSyncStrategy defaultStrategy;
+
+    @Autowired
+    public MilvusSyncFactory(List<MilvusSyncStrategy> strategies, DefaultMilvusSyncStrategy defaultStrategy) {
+        this.defaultStrategy = defaultStrategy;
+        for (MilvusSyncStrategy strategy : strategies) {
+            strategyMap.put(strategy.getType(), strategy);
+        }
+    }
+
+    public MilvusSyncStrategy getStrategy(Integer type) {
+        return Optional.ofNullable(strategyMap.get(type)).orElse(defaultStrategy);
     }
 }

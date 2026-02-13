@@ -1,25 +1,42 @@
 package com.smartLive.ai.strategy.factory;
-import com.smartLive.ai.strategy.handlers.ChatHandler;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
+import com.smartLive.ai.strategy.handlers.ChatHandler;
+import com.smartLive.ai.strategy.handlers.DefaultHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
- * 基于 Spring 容器管理的策略分发模式
+ * Factory to retrieve the appropriate ChatHandler.
  */
-@Configuration
+@Component
 public class ChatHandlerFactory {
-    
-    @Bean
-    public Map<String, ChatHandler> chatHandlerMap(List<ChatHandler> handlers) {
-        return handlers.stream()
-                .collect(Collectors.toMap(
-                    handler -> handler.getHandlerType() + "Handler",
-                    Function.identity()
-                ));
+
+    private final Map<String, ChatHandler> strategyMap = new HashMap<>();
+    private final ChatHandler defaultStrategy;
+
+    @Autowired
+    public ChatHandlerFactory(List<ChatHandler> handlers, DefaultHandler defaultStrategy) {
+        this.defaultStrategy = defaultStrategy;
+        for (ChatHandler handler : handlers) {
+            strategyMap.put(handler.getHandlerType() + "Handler", handler);
+        }
+    }
+
+    public ChatHandler getStrategy(String handlerKey) {
+        return Optional.ofNullable(strategyMap.get(handlerKey)).orElse(defaultStrategy);
+    }
+
+    public ChatHandler getExactStrategy(String handlerKey) {
+        return strategyMap.get(handlerKey);
+    }
+
+    public Collection<ChatHandler> getStrategies() {
+        return strategyMap.values();
     }
 }
