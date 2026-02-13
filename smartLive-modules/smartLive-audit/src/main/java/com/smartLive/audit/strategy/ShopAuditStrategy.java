@@ -1,14 +1,11 @@
-package com.smartLive.audit.strategy.impl;
+package com.smartLive.audit.strategy;
 
 import com.smartLive.audit.domain.AuditTask;
-import com.smartLive.audit.strategy.AuditStrategy;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.system.api.RemoteUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 /**
  * Audit Strategy for Shops

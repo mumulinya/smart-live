@@ -18,7 +18,7 @@ public class AuditStrategyFactory {
     private final AuditStrategy defaultStrategy;
 
     @Autowired
-    public AuditStrategyFactory(List<AuditStrategy> strategies, com.smartLive.audit.strategy.impl.DefaultAuditStrategy defaultStrategy) {
+    public AuditStrategyFactory(List<AuditStrategy> strategies, DefaultAuditStrategy defaultStrategy) {
         this.defaultStrategy = defaultStrategy;
         for (AuditStrategy strategy : strategies) {
             strategyMap.put(strategy.getBizType(), strategy);

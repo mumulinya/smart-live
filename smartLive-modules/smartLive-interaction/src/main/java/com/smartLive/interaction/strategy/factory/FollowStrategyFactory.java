@@ -1,30 +1,33 @@
 package com.smartLive.interaction.strategy.factory;
 
 import com.smartLive.interaction.strategy.follow.FollowStrategy;
-import com.smartLive.interaction.strategy.star.StarStrategy;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import com.smartLive.interaction.strategy.impl.DefaultFollowStrategy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
- * @Description: 关注策略工厂
- * @Author: lizhong.li
- * @Date: 2022/9/5 17:01
+ * Factory to retrieve the appropriate FollowStrategy.
  */
-@Configuration
-@Slf4j
+@Component
 public class FollowStrategyFactory {
-    @Bean
-    public Map<Integer, FollowStrategy> FollowStrategyMap(List<FollowStrategy> strategies) {
-        return strategies.stream()
-                .collect(Collectors.toMap(
-                        FollowStrategy::getType,  // 使用 dataType 作为键
-                        Function.identity()               // 策略对象作为值
-                ));
+
+    private final Map<Integer, FollowStrategy> strategyMap = new HashMap<>();
+    private final FollowStrategy defaultStrategy;
+
+    @Autowired
+    public FollowStrategyFactory(List<FollowStrategy> strategies, DefaultFollowStrategy defaultStrategy) {
+        this.defaultStrategy = defaultStrategy;
+        for (FollowStrategy strategy : strategies) {
+            strategyMap.put(strategy.getType(), strategy);
+        }
+    }
+
+    public FollowStrategy getStrategy(Integer type) {
+        return Optional.ofNullable(strategyMap.get(type)).orElse(defaultStrategy);
     }
 }

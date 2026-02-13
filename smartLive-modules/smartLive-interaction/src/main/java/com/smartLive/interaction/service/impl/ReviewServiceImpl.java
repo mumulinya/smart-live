@@ -27,6 +27,7 @@ import com.smartLive.interaction.mapper.ReviewMapper;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.service.IReviewService;
 import com.smartLive.interaction.service.IStarService;
+import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.order.api.RemoteOrderService;
@@ -74,13 +75,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private RemoteOrderService remoteOrderService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
-    private Map<Integer, ResourceStrategy> resourceStrategyMap;
+    private ResourceStrategyFactory resourceStrategyFactory;
 
     @Autowired
-    public ReviewServiceImpl(@Lazy ILikeService likeService, @Lazy IStarService starService,@Lazy Map<Integer, ResourceStrategy> resourceStrategyMap) {
+    public ReviewServiceImpl(@Lazy ILikeService likeService, @Lazy IStarService starService, @Lazy ResourceStrategyFactory resourceStrategyFactory) {
         this.likeService = likeService;
         this.starService = starService;
-        this.resourceStrategyMap = resourceStrategyMap;
+        this.resourceStrategyFactory = resourceStrategyFactory;
     }
     /**
      * 查询评论
@@ -264,7 +265,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @param review
      */
     private void sendAuditMessage(Review review) {
-        ResourceStrategy resourceType = resourceStrategyMap.get(review.getSourceType());
+        ResourceStrategy resourceType = resourceStrategyFactory.getStrategy(review.getSourceType());
         HashMap<String, String> content = resourceType.getResourceContentById(review.getSourceId());
         AuditReviewBO auditReviewBO=new AuditReviewBO();
         BeanUtil.copyProperties(review, auditReviewBO);

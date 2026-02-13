@@ -22,6 +22,8 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.mapper.FollowMapper;
 import com.smartLive.interaction.service.IFollowService;
+import com.smartLive.interaction.strategy.factory.FollowStrategyFactory;
+import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.follow.FollowStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
@@ -48,12 +50,12 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * 策略模式
      */
     @Autowired
-    private Map<Integer, ResourceStrategy> resourceStrategyMap;
+    private ResourceStrategyFactory resourceStrategyFactory;
     /**
      * 策略模式
      */
     @Autowired
-    private Map<Integer, FollowStrategy> followStrategyMap  ;
+    private FollowStrategyFactory followStrategyFactory;
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
@@ -169,7 +171,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 redisService.setCacheZSet(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(targetFansKey, userId.toString(), System.currentTimeMillis());
                 //同步个人资源到es
-                followStrategyMap.get(follow.getSourceType()).syncUserResource(userId, follow.getSourceId());
+                followStrategyFactory.getStrategy(follow.getSourceType()).syncUserResource(userId, follow.getSourceId());
             }
             return save;
         }else{
@@ -283,7 +285,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
 //        IdentityStrategy identityStrategy = identityStrategyMap.get(followTypeEnum.getCode());
 //        List<?> socialInfoVOList = identityStrategy.getFollowList(idList);
-        ResourceStrategy resourceStrategy = resourceStrategyMap.get(followTypeEnum.getCode());
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(followTypeEnum.getCode());
         List<?> socialInfoVOList = resourceStrategy.getResourceList(idList);
         return socialInfoVOList;
     }
@@ -345,8 +347,9 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @param feedEventMessage
      */
     private void createSystemNotice(Long userId, FeedEventMessage feedEventMessage) {
-        Object resource = resourceStrategyMap.get(feedEventMessage.getSourceType()).getResourceById(feedEventMessage.getSourceId());
-        HashMap<String,String> hashMap = resourceStrategyMap.get(feedEventMessage.getSourceType()).getResourceContentById(feedEventMessage.getSourceId());
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(feedEventMessage.getSourceType());
+        Object resource = resourceStrategy.getResourceById(feedEventMessage.getSourceId());
+        HashMap<String,String> hashMap = resourceStrategy.getResourceContentById(feedEventMessage.getSourceId());
         //使用方法转化为map
         Map<String, Object> map = BeanUtil.beanToMap(resource);
         if (userId == null) {
@@ -409,7 +412,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
            return Collections.emptyList();
        }
         //根据关注类型从关注策略工程获取bean
-        ResourceStrategy resourceStrategy = resourceStrategyMap.get(identityType.getCode());
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(identityType.getCode());
         List<?> socialInfoVOList = resourceStrategy.getResourceList(sourceIdList);
         return socialInfoVOList;
     }
@@ -454,7 +457,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Collections.emptyList();
         }
         //根据关注类型从关注策略工程获取bean
-        ResourceStrategy resourceStrategy = resourceStrategyMap.get(followTypeEnum.getCode());
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(followTypeEnum.getCode());
         List<?> socialInfoVOList = resourceStrategy.getResourceList(sourceIdList);
         return socialInfoVOList;
     }

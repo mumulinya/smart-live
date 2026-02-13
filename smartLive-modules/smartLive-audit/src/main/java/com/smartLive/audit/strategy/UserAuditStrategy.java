@@ -1,35 +1,36 @@
-package com.smartLive.audit.strategy.impl;
+package com.smartLive.audit.strategy;
 
 import com.smartLive.audit.domain.AuditTask;
-import com.smartLive.audit.strategy.AuditStrategy;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.user.api.RemoteAppUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Default Audit Strategy
- * Used for types that don't have specific risk logic.
+ * Audit Strategy for Users
  */
 @Component
-public class DefaultAuditStrategy implements AuditStrategy {
+public class UserAuditStrategy implements AuditStrategy {
     @Autowired
     private RemoteAppUserService remoteAppUserService;
 
     @Override
     public Integer getBizType() {
-        return -1; // Represents default/fallback
+        return GlobalBizTypeEnum.USER.getCode();
     }
 
     @Override
     public boolean isHighRisk(AuditTask task) {
+        // TODO: Add specific risk logic for users
         return false;
     }
 
     @Override
     public boolean handleAuditResult(Long targetId, Integer status, String reason) {
-        // Do nothing for default
-        return true;
+        // Call remote user service
+        return remoteAppUserService.updateUserStatus(targetId, status);
     }
+
     /**
      * Get submitter name
      *

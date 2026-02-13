@@ -14,7 +14,8 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.mapper.LikeMapper;
 import com.smartLive.interaction.service.ILikeService;
-import com.smartLive.interaction.strategy.StrategyExecutor;
+import com.smartLive.interaction.strategy.factory.LikeStrategyFactory;
+import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
@@ -37,9 +38,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements ILikeService {
     @Autowired
-    private Map<Integer, ResourceStrategy> resourceStrategyMap;
+    private ResourceStrategyFactory resourceStrategyFactory;
     @Autowired
-    private Map<Integer, LikeStrategy> likeStrategyMap;
+    private LikeStrategyFactory likeStrategyFactory;
     @Autowired
     private  RedisService redisService;
     @Autowired
@@ -65,6 +66,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             log.error("点赞类型错误");
             return false;
         }
+        LikeStrategy likeStrategy = likeStrategyFactory.getStrategy(like.getSourceType());
         String likeKeyPrefix = likeTypeEnum.getLikeKeyPrefix();
         String likedCountKeyPrefix = likeTypeEnum.getLikedCountKeyPrefix();
         String likeDirtyKeyPrefix = likeTypeEnum.getLikeDirtyKeyPrefix();
@@ -97,8 +99,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         Integer likeCount = redisService.getCacheObject(likeCountKey);
         if (likeCount == null) {
             //从数据库获取点赞数量并且写入到redis
-            likeCount = StrategyExecutor.executeStrategy(likeStrategyMap, like.getSourceType(), 
-                strategy -> strategy.getLikeCount(like.getSourceId()), 0);
+            likeCount = likeStrategy.getLikeCount(like.getSourceId());
             redisService.setCacheObject(likeCountKey, likeCount);
         }
         if (isLiked) {
@@ -129,7 +130,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                 //记录脏数据
                 redisService.setCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
                 //保存用户点赞资源到es
-                StrategyExecutor.executeStrategyVoid(likeStrategyMap, like.getSourceType(), strategy -> strategy.syncUserResource(userId, like.getSourceId()));
+                likeStrategy.syncUserResource(userId, like.getSourceId());
             }
         }
         return true;
@@ -147,8 +148,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         Integer likeCount = redisService.getCacheObject(likeCountKey);
         if (likeCount == null) {
             //从数据库获取点赞数量并且写入到redis
-            likeCount = StrategyExecutor.executeStrategy(likeStrategyMap, like.getSourceType(), 
-                strategy -> strategy.getLikeCount(like.getSourceId()), 0);
+            likeCount = likeStrategyFactory.getStrategy(like.getSourceType()).getLikeCount(like.getSourceId());
             redisService.setCacheObject(likeCountKey, likeCount);
         }
         return likeCount;
@@ -178,7 +178,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             log.error("点赞类型错误");
             return null;
         }
-        ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceTypeEnum.getCode());
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(resourceTypeEnum.getCode());
         //获取资源id
         List<Long> sourceIdList = query()
                 .select("source_id")
@@ -234,7 +234,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
 //        IdentityStrategy identityStrategy = identityStrategyMap.get(FollowTypeEnum.USER_IDENTITY.getCode());
 //        List<?> socialInfoVOList = identityStrategy.getFollowList(userIdList);
         log.info("查询点赞用户列表: {}", userIdList);
-        ResourceStrategy resourceStrategy = resourceStrategyMap.get(FollowTypeEnum.USER_IDENTITY.getCode());
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(FollowTypeEnum.USER_IDENTITY.getCode());
         List<UserDTO> socialInfoVOList = resourceStrategy.getResourceList(userIdList);
         return socialInfoVOList;
     }

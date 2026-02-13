@@ -1,30 +1,33 @@
 package com.smartLive.interaction.strategy.factory;
 
 import com.smartLive.interaction.strategy.comment.CommentStrategy;
-import com.smartLive.interaction.strategy.like.LikeStrategy;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import com.smartLive.interaction.strategy.impl.DefaultCommentStrategy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
- * @Description: 评论策略工厂
- * @Author: lizhong.li
- * @Date: 2022/9/5 17:01
+ * Factory to retrieve the appropriate CommentStrategy.
  */
-@Configuration
-@Slf4j
+@Component
 public class CommentStrategyFactory {
-    @Bean
-    public Map<Integer, CommentStrategy> CommentStrategyMap(List<CommentStrategy> strategies) {
-        return strategies.stream()
-                .collect(Collectors.toMap(
-                        CommentStrategy::getType,  // 使用 dataType 作为键
-                        Function.identity()               // 策略对象作为值
-                ));
+
+    private final Map<Integer, CommentStrategy> strategyMap = new HashMap<>();
+    private final CommentStrategy defaultStrategy;
+
+    @Autowired
+    public CommentStrategyFactory(List<CommentStrategy> strategies, DefaultCommentStrategy defaultStrategy) {
+        this.defaultStrategy = defaultStrategy;
+        for (CommentStrategy strategy : strategies) {
+            strategyMap.put(strategy.getType(), strategy);
+        }
+    }
+
+    public CommentStrategy getStrategy(Integer type) {
+        return Optional.ofNullable(strategyMap.get(type)).orElse(defaultStrategy);
     }
 }

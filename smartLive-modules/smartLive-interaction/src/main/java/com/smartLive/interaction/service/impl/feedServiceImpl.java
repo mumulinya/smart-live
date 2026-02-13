@@ -11,6 +11,7 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.BO.ActionRecordBO;
 import com.smartLive.interaction.domain.VO.FeedVO;
 import com.smartLive.interaction.service.IFeedService;
+import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class feedServiceImpl implements IFeedService {
     @Autowired
     RedisService redisService;
     @Autowired
-    private Map<Integer, ResourceStrategy> resourceStrategyMap;
+    private ResourceStrategyFactory resourceStrategyFactory;
     @Override
     public ScrollResult queryFeedList(Integer feedType, Long max, Integer offset) {
         if(UserContextHolder.getUser() == null){
@@ -68,7 +69,7 @@ public class feedServiceImpl implements IFeedService {
         groupedMap.forEach((bizType, idActionMap) -> {
             // 1. 获取策略和 Resource 数据（这部分保持不变，依然是批量获取）
             Integer bizTypeEnumCode = GlobalBizTypeEnum.getByBizDomain(bizType).getCode();
-            ResourceStrategy resourceStrategy = resourceStrategyMap.get(bizTypeEnumCode);
+            ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(bizTypeEnumCode);
 
             // 注意：这里传给 getResourceList 的依然是去重后的 ID 集合 (keySet)
             // 比如 ID=101 虽然有 3 个动作，但我们只需要查数据库一次

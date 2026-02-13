@@ -1,7 +1,6 @@
-package com.smartLive.audit.strategy.impl;
+package com.smartLive.audit.strategy;
 
 import com.smartLive.audit.domain.AuditTask;
-import com.smartLive.audit.strategy.AuditStrategy;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.user.api.RemoteAppUserService;
 import org.springframework.beans.factory.annotation.Autowired;

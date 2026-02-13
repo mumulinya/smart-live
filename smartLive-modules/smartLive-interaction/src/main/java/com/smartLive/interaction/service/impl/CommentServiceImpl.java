@@ -26,6 +26,7 @@ import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.service.ILikeService;
+import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
@@ -69,14 +70,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
     private RedisService redisService;
-    private Map<Integer, ResourceStrategy> resourceStrategyMap;
+    private ResourceStrategyFactory resourceStrategyFactory;
     private ILikeService iLikeService;
 
 
     @Autowired
-    public CommentServiceImpl(@Lazy ILikeService iLikeService,@Lazy Map<Integer, ResourceStrategy> resourceStrategyMap) {
+    public CommentServiceImpl(@Lazy ILikeService iLikeService, @Lazy ResourceStrategyFactory resourceStrategyFactory) {
         this.iLikeService = iLikeService;
-        this.resourceStrategyMap = resourceStrategyMap;
+        this.resourceStrategyFactory = resourceStrategyFactory;
     }
     /**
      * 查询评论
@@ -277,7 +278,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @param comment
      */
     private void sendAuditMessage(Comment comment) {
-        ResourceStrategy resourceType = resourceStrategyMap.get(comment.getSourceType());
+        ResourceStrategy resourceType = resourceStrategyFactory.getStrategy(comment.getSourceType());
         HashMap<String, String> content = resourceType.getResourceContentById(comment.getSourceId());
         AuditCommentBO auditCommentBO=new AuditCommentBO();
         BeanUtil.copyProperties(comment, auditCommentBO);

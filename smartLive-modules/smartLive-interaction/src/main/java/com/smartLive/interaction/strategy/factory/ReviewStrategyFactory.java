@@ -1,30 +1,33 @@
 package com.smartLive.interaction.strategy.factory;
 
-import com.smartLive.interaction.strategy.comment.CommentStrategy;
+import com.smartLive.interaction.strategy.impl.DefaultReviewStrategy;
 import com.smartLive.interaction.strategy.review.ReviewStrategy;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
- * @Description: 评价策略工厂
- * @Author: lizhong.li
- * @Date: 2022/9/5 17:01
+ * Factory to retrieve the appropriate ReviewStrategy.
  */
-@Configuration
-@Slf4j
+@Component
 public class ReviewStrategyFactory {
-    @Bean
-    public Map<Integer, ReviewStrategy> ReviewStrategyMap(List<ReviewStrategy> strategies) {
-        return strategies.stream()
-                .collect(Collectors.toMap(
-                        ReviewStrategy::getType,  // 使用 dataType 作为键
-                        Function.identity()               // 策略对象作为值
-                ));
+
+    private final Map<Integer, ReviewStrategy> strategyMap = new HashMap<>();
+    private final ReviewStrategy defaultStrategy;
+
+    @Autowired
+    public ReviewStrategyFactory(List<ReviewStrategy> strategies, DefaultReviewStrategy defaultStrategy) {
+        this.defaultStrategy = defaultStrategy;
+        for (ReviewStrategy strategy : strategies) {
+            strategyMap.put(strategy.getType(), strategy);
+        }
+    }
+
+    public ReviewStrategy getStrategy(Integer type) {
+        return Optional.ofNullable(strategyMap.get(type)).orElse(defaultStrategy);
     }
 }

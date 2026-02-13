@@ -1,29 +1,33 @@
 package com.smartLive.interaction.strategy.factory;
 
+import com.smartLive.interaction.strategy.impl.DefaultLikeStrategy;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
- * @Description: 点赞策略工厂
- * @Author: lizhong.li
- * @Date: 2022/9/5 17:01
+ * Factory to retrieve the appropriate LikeStrategy.
  */
-@Configuration
-@Slf4j
+@Component
 public class LikeStrategyFactory {
-    @Bean
-    public Map<Integer, LikeStrategy> LikeStrategyMap(List<LikeStrategy> strategies) {
-        return strategies.stream()
-                .collect(Collectors.toMap(
-                        LikeStrategy::getType,  // 使用 dataType 作为键
-                        Function.identity()               // 策略对象作为值
-                ));
+
+    private final Map<Integer, LikeStrategy> strategyMap = new HashMap<>();
+    private final LikeStrategy defaultStrategy;
+
+    @Autowired
+    public LikeStrategyFactory(List<LikeStrategy> strategies, DefaultLikeStrategy defaultStrategy) {
+        this.defaultStrategy = defaultStrategy;
+        for (LikeStrategy strategy : strategies) {
+            strategyMap.put(strategy.getType(), strategy);
+        }
+    }
+
+    public LikeStrategy getStrategy(Integer type) {
+        return Optional.ofNullable(strategyMap.get(type)).orElse(defaultStrategy);
     }
 }

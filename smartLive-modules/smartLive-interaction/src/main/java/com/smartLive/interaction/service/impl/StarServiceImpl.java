@@ -14,6 +14,8 @@ import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.mapper.StarMapper;
 import com.smartLive.interaction.service.IStarService;
+import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
+import com.smartLive.interaction.strategy.factory.StarStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.strategy.star.StarStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
@@ -23,7 +25,6 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,9 +44,9 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
-    private Map<Integer, ResourceStrategy> resourceStrategyMap;
+    private ResourceStrategyFactory resourceStrategyFactory;
     @Autowired
-    private Map<Integer, StarStrategy> starStrategyMap;
+    private StarStrategyFactory starStrategyFactory;
     /**
      * 查询关注
      * 
@@ -140,6 +141,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             log.error("关注类型错误");
             return false;
         }
+        StarStrategy starStrategy = starStrategyFactory.getStrategy(star.getSourceType());
         String starKeyPrefix = resourceType.getStarKeyPrefix();
         String starCountKeyPrefix = resourceType.getStarCountKeyPrefix();
         String starDirtyKeyPrefix = resourceType.getStarDirtyKeyPrefix();
@@ -153,7 +155,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             boolean save = save(star);
             Integer starCount = redisService.getCacheObject(starCountKey);
             if (starCount == null) {
-                starCount=starStrategyMap.get(star.getSourceType()).getStarCount(star.getSourceId());
+                starCount = starStrategy.getStarCount(star.getSourceId());
                 redisService.setCacheObject(starCountKey,starCount);
             }
             if (save) {
@@ -164,7 +166,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                 //记录脏数据
                 redisService.setCacheSet(starDirtyKeyPrefix, star.getSourceId().toString());
                 //同步个人资源到es
-                starStrategyMap.get(star.getSourceType()).syncUserResource(userId, star.getSourceId());
+                starStrategy.syncUserResource(userId, star.getSourceId());
             }
         }else{
             //取消收藏
@@ -227,7 +229,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             return Collections.emptyList();
         }
         //根据关注类型从关注策略工程获取bean
-        ResourceStrategy resourceStrategy = resourceStrategyMap.get(resourceType.getCode());
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(resourceType.getCode());
         //从redis获取
         Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(starTypeEnum.getStarKeyPrefix(), star.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
@@ -271,7 +273,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         Integer starCount = redisService.getCacheObject(starCountKey);
         if (starCount == null) {
             //从数据库获取点赞数量并且写入到redis
-            starCount = starStrategyMap.get(star.getSourceType()).getStarCount(star.getSourceId());
+            starCount = starStrategyFactory.getStrategy(star.getSourceType()).getStarCount(star.getSourceId());
             redisService.setCacheObject(starCountKey, starCount);
         }
         return starCount;

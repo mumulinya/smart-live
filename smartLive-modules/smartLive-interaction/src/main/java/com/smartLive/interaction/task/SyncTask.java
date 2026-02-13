@@ -7,12 +7,15 @@ import com.smartLive.common.core.enums.ReviewTypeEnum;
 import com.smartLive.common.core.enums.StarTypeEnum;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.strategy.comment.CommentStrategy;
+import com.smartLive.interaction.strategy.factory.CommentStrategyFactory;
+import com.smartLive.interaction.strategy.factory.LikeStrategyFactory;
+import com.smartLive.interaction.strategy.factory.ReviewStrategyFactory;
+import com.smartLive.interaction.strategy.factory.StarStrategyFactory;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
 import com.smartLive.interaction.strategy.review.ReviewStrategy;
 import com.smartLive.interaction.strategy.star.StarStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
@@ -32,13 +34,13 @@ public class SyncTask {
 
     // 注入各个服务的 Client
     @Autowired
-    private Map<Integer, LikeStrategy> likeStrategyMap;
+    private LikeStrategyFactory likeStrategyFactory;
     @Autowired
-    private Map<Integer, CommentStrategy> commentStrategyMap;
+    private CommentStrategyFactory commentStrategyFactory;
     @Autowired
-    private Map<Integer, StarStrategy> starStrategyMap;
+    private StarStrategyFactory starStrategyFactory;
     @Autowired
-    private Map<Integer, ReviewStrategy> reviewStrategyMap;
+    private ReviewStrategyFactory reviewStrategyFactory;
     @Autowired
     private ExecutorService executorService;
 
@@ -58,7 +60,7 @@ public class SyncTask {
                     String DIRTY_KEY = type.getLikeDirtyKeyPrefix();
                     String TEMP_KEY = DIRTY_KEY + ":TEMP";
                     // ✅ 【核心变化】直接调用策略，没有 switch-case 了！
-                    LikeStrategy strategy = likeStrategyMap.get(type.getCode());
+                    LikeStrategy strategy = likeStrategyFactory.getStrategy(type.getCode());
                     if (strategy != null) {
                         sync(type.getDesc(),likedCountKeyPrefix, DIRTY_KEY, TEMP_KEY, map -> strategy.transLikeCountFromRedis2DB(map));
                     } else {
@@ -79,7 +81,7 @@ public class SyncTask {
                     String DIRTY_KEY = commentType.getCommentDirtyKeyPrefix();
                     String TEMP_KEY = DIRTY_KEY + ":TEMP";
                     // ✅ 【核心变化】直接调用策略，没有 switch-case 了！
-                    CommentStrategy strategy = commentStrategyMap.get(commentType.getCode());
+                    CommentStrategy strategy = commentStrategyFactory.getStrategy(commentType.getCode());
 
                     if (strategy != null) {
                         sync(commentType.getDesc(),commentCountKeyPrefix, DIRTY_KEY, TEMP_KEY, map -> strategy.transCommentCountFromRedis2DB(map));
@@ -101,7 +103,7 @@ public class SyncTask {
                 String DIRTY_KEY = starType.getStarDirtyKeyPrefix();
                 String TEMP_KEY = DIRTY_KEY + ":TEMP";
                 // ✅ 【核心变化】直接调用策略，没有 switch-case 了！
-                StarStrategy strategy = starStrategyMap.get(starType.getCode());
+                StarStrategy strategy = starStrategyFactory.getStrategy(starType.getCode());
 
                 if (strategy != null) {
                     sync(starType.getDesc(),starCountKeyPrefix, DIRTY_KEY, TEMP_KEY, map -> strategy.transStarCountFromRedis2DB(map));
@@ -123,7 +125,7 @@ public class SyncTask {
                 String DIRTY_KEY = reviewType.getReviewDirtyKeyPrefix();
                 String TEMP_KEY = DIRTY_KEY + ":TEMP";
                 //调用策略
-                ReviewStrategy strategy = reviewStrategyMap.get(reviewType.getCode());
+                ReviewStrategy strategy = reviewStrategyFactory.getStrategy(reviewType.getCode());
                 if (strategy != null) {
                     sync(reviewType.getDesc(),reviewCountKeyPrefix, DIRTY_KEY, TEMP_KEY, map -> strategy.transReviewCountFromRedis2DB(map));
                 } else {
