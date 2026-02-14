@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.smartLive.ai.domain.DTO.MessageDTO;
 import com.smartLive.ai.domain.Message;
 import com.smartLive.ai.domain.Session;
@@ -16,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
 import java.util.Collections;
@@ -25,8 +26,6 @@ import java.util.List;
 
 /**
  * AI Message Service Implementation
- *
- * @author smartLive
  */
 @Service
 @Slf4j
@@ -37,11 +36,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     @Autowired
     private AIChatOrchestrator aiChatOrchestrator;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     @Override
-    public List<Message> selectMessageList(Integer current,Long sessionId) {
+    public List<Message> selectMessageList(Integer current, Long sessionId) {
         List<Message> list = query().eq("session_id", sessionId)
                 .orderByDesc("create_time")
                 .page(new Page<>(current, 10))
@@ -56,11 +56,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         message.setSessionId(sessionId);
         message.setRole(role);
         message.setContent(content);
-        message.setType("text"); // Default type
+        message.setType("text");
         message.setCreateTime(new Date());
         this.save(message);
 
-        // Update session update_time
         Session session = new Session();
         session.setId(sessionId);
         session.setUpdateTime(new Date());
@@ -68,17 +67,15 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
         return message;
     }
+
     @Override
     public Flux<ServerSentEvent<String>> chat(MessageDTO messageDTO) {
-
         Long sessionId = messageDTO.getSessionId();
         Long userId = messageDTO.getUserId();
         String message = messageDTO.getMessage();
 
-        // 1. 保存用户消息
         saveMessage(sessionId, "user", message);
 
-        // 2. 构建请求
         AIChatRequest request = new AIChatRequest();
         request.setMessage(message);
         request.setSessionId(String.valueOf(sessionId));
@@ -86,62 +83,54 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         request.setX(messageDTO.getX());
         request.setY(messageDTO.getY());
         request.setDistrict(messageDTO.getRegion());
-        // 3. 累积完整响应用于保存
         StringBuilder fullResponse = new StringBuilder();
 
-        // 4. 处理AI响应流 - 流式发送文本，最后检测并发送card_render
         return aiChatOrchestrator.processMessage(request)
                 .map(chunk -> {
-                    fullResponse.append(chunk);
-                    // 流式发送普通文本消息
+                    String safeChunk = chunk == null ? "" : chunk;
+                    fullResponse.append(safeChunk);
                     return ServerSentEvent.<String>builder()
                             .event("message")
-                            .data(chunk)
+                            .data(safeChunk)
                             .build();
                 })
                 .concatWith(Flux.defer(() -> {
-                    // 流结束后，检查完整响应是否包含推荐JSON，如果有则发送card_render事件
                     String response = fullResponse.toString();
                     String json = extractRecommendationJson(response);
-                    if (json != null) {
-                        log.info("📦 Detected recommendation JSON, sending card_render event");
-                        return Flux.just(ServerSentEvent.<String>builder()
-                                .event("card_render")
-                                .data(json)
-                                .build());
+                    if (json == null) {
+                        return Flux.empty();
                     }
-                    return Flux.empty();
+                    String normalizedJson = normalizeRecommendationJson(json);
+                    log.info("Detected recommendation JSON, sending card_render event");
+                    return Flux.just(ServerSentEvent.<String>builder()
+                            .event("card_render")
+                            .data(normalizedJson)
+                            .build());
                 }))
                 .doFinally(signalType -> {
-                    // 保存完整的助手消息
                     String responseText = fullResponse.toString();
-                    if (!responseText.isEmpty()) {
-                        try {
-                            saveMessage(sessionId, "assistant", responseText);
-                            log.info("✅ Saved assistant response for session {}", sessionId);
-                        } catch (Exception e) {
-                            log.error("❌ Failed to save assistant response", e);
-                        }
+                    if (responseText.isEmpty()) {
+                        return;
+                    }
+                    try {
+                        saveMessage(sessionId, "assistant", responseText);
+                        log.info("Saved assistant response for session {}", sessionId);
+                    } catch (Exception e) {
+                        log.error("Failed to save assistant response", e);
                     }
                 });
     }
 
-    /**
-     * 从完整响应中提取推荐JSON
-     * AI返回格式通常是: 文本内容 + JSON对象
-     */
     private String extractRecommendationJson(String content) {
         if (content == null || content.isEmpty()) {
             return null;
         }
 
-        // 查找最后一个完整的JSON对象 (从最后的}往前找匹配的{)
         int end = content.lastIndexOf("}");
         if (end < 0) {
             return null;
         }
 
-        // 从end往前找匹配的{，需要处理嵌套
         int braceCount = 0;
         int start = -1;
         for (int i = end; i >= 0; i--) {
@@ -162,27 +151,124 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
 
         String json = content.substring(start, end + 1);
-        if (isShopRecommendationJson(json)) {
-            return json;
-        }
-        return null;
+        return isRecommendationJson(json) ? json : null;
     }
 
-    /**
-     * 判断是否为店铺推荐的JSON格式
-     */
-    private boolean isShopRecommendationJson(String content) {
+    private boolean isRecommendationJson(String content) {
         if (!content.startsWith("{") || !content.endsWith("}")) {
             return false;
         }
 
         try {
             JsonNode jsonNode = objectMapper.readTree(content);
-            // 检查是否包含recommendations字段
             return jsonNode.has("recommendations") && jsonNode.has("replyText");
         } catch (Exception e) {
             return false;
         }
     }
-}
 
+    private String normalizeRecommendationJson(String json) {
+        try {
+            JsonNode parsed = objectMapper.readTree(json);
+            if (!(parsed instanceof ObjectNode root)) {
+                return json;
+            }
+
+            String type = resolveRecommendationType(root);
+
+            if (!hasText(root.path("type").asText(null))) {
+                root.put("type", type);
+            }
+
+            JsonNode recommendationsNode = root.get("recommendations");
+            if (recommendationsNode instanceof ArrayNode recommendations) {
+                for (JsonNode node : recommendations) {
+                    if (!(node instanceof ObjectNode recommendation)) {
+                        continue;
+                    }
+                    if (!hasText(recommendation.path("type").asText(null))) {
+                        recommendation.put("type", type);
+                    }
+                }
+            }
+
+            return objectMapper.writeValueAsString(root);
+        } catch (Exception e) {
+            log.warn("Failed to normalize recommendation JSON, keep original", e);
+            return json;
+        }
+    }
+
+    private String resolveRecommendationType(ObjectNode root) {
+        String rootType = root.path("type").asText(null);
+        if (hasText(rootType)) {
+            return rootType;
+        }
+
+        JsonNode recommendationsNode = root.get("recommendations");
+        if (recommendationsNode instanceof ArrayNode recommendations) {
+            for (JsonNode node : recommendations) {
+                if (!(node instanceof ObjectNode recommendation)) {
+                    continue;
+                }
+
+                String itemType = recommendation.path("type").asText(null);
+                if (hasText(itemType)) {
+                    return itemType;
+                }
+
+                if (looksLikeVoucherRecommendation(recommendation)) {
+                    return "voucher";
+                }
+                if (looksLikeShopRecommendation(recommendation)) {
+                    return "shop";
+                }
+            }
+        }
+
+        return "shop";
+    }
+
+    private boolean looksLikeVoucherRecommendation(ObjectNode recommendation) {
+        return hasAnyField(recommendation,
+                "shopId",
+                "voucherType",
+                "title",
+                "rules",
+                "payValue",
+                "actualValue",
+                "stock");
+    }
+
+    private boolean looksLikeShopRecommendation(ObjectNode recommendation) {
+        return hasAnyField(recommendation,
+                "distanceText",
+                "avgPrice",
+                "openHours",
+                "address",
+                "x",
+                "y",
+                "sold");
+    }
+
+    private boolean hasAnyField(ObjectNode node, String... fieldNames) {
+        for (String fieldName : fieldNames) {
+            JsonNode value = node.get(fieldName);
+            if (value == null || value.isNull()) {
+                continue;
+            }
+            if (value.isTextual()) {
+                if (hasText(value.asText())) {
+                    return true;
+                }
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+}

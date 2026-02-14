@@ -5,6 +5,7 @@ import com.smartLive.ai.repository.ChatHistoryRepository;
 import com.smartLive.ai.service.orchestration.AIChatOrchestrator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -24,7 +25,7 @@ public class AIChatController {
     @Autowired
     private  ChatHistoryRepository chatHistoryRepository;
     
-    @GetMapping("/chat")
+    @GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat( AIChatRequest request) {
         long startTime = System.currentTimeMillis();
         log.info("📨 收到AI聊天请求: sessionId={}, message={}", 

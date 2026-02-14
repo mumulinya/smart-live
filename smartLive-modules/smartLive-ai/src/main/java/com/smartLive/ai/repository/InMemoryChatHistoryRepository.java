@@ -10,14 +10,12 @@ import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -115,17 +113,16 @@ public class InMemoryChatHistoryRepository implements ChatHistoryRepository {
     }
 
     private String getMemoryJsonString() {
-        Class<InMemoryChatMemory> clazz = InMemoryChatMemory.class;
-        try {
-            Field field = clazz.getDeclaredField("conversationHistory");
-            field.setAccessible(true);
-            Map<String, List<Message>> memory = (Map<String, List<Message>>) field.get(chatMemory);
-            Map<String, List<Msg>> memoryToSave = new HashMap<>();
-            memory.forEach((chatId, messages) -> memoryToSave.put(chatId, messages.stream().map(Msg::new).toList()));
-            return toJsonString(memoryToSave);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+        Map<String, List<Msg>> memoryToSave = new HashMap<>();
+        Set<String> chatIds = new HashSet<>();
+        this.chatHistory.values().forEach(chatIds::addAll);
+        for (String chatId : chatIds) {
+            List<Message> messages = this.chatMemory.get(chatId);
+            if (messages != null && !messages.isEmpty()) {
+                memoryToSave.put(chatId, messages.stream().map(Msg::new).toList());
+            }
         }
+        return toJsonString(memoryToSave);
     }
 
     private String toJsonString(Object object) {

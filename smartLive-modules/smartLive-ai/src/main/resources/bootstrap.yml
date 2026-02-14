@@ -4,12 +4,17 @@ server:
 
 # Spring
 spring:
+  jackson:
+    deserialization:
+      read-unknown-enum-values-as-null: true
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.vectorstore.milvus.autoconfigure.MilvusVectorStoreAutoConfiguration
   main:
     allow-bean-definition-overriding: true
   elasticsearch:
     url: http://localhost:9200
   application:
-    # 应用名称
     name: smartLive-ai
   rabbitmq:
     username: smart-live
@@ -20,45 +25,44 @@ spring:
   ai:
     vectorstore:
       milvus:
+        enabled: ${MILVUS_ENABLED:true}
         host: ${MILVUS_HOST:192.168.182.20}
         port: 19530
         database-name: "default"
-        embedding-dimension: 1024  # 修改为 1024 以匹配 BGE 模型
+        embedding-dimension: 1024
         metric-type: COSINE
         index-type: FLAT
         initialize-schema: false
-    ollama:
-      base-url: http://localhost:11434
+    # Keep zhipu starter disabled for chat to avoid enum parse incompatibility.
+    zhipuai:
+      api-key: 09efff4822ea42d2aaf63b60e127dfd9.kBLXYVD4YGfJUJES
       chat:
-        model: deepseek-r1:7b
+        enabled: false
+        options:
+          model: GLM-4.7-flash
     openai:
-      # OpenAI API Key - 用于Spring AI自动配置
       api-key: sk-bTsi4ARaytKeClsp00658008F82a4d8d87D4EcEeA003E748
       chat:
-        #阿里云大模型
-        base-url: http://127.0.0.1:8045
-        api-key: sk-e9538007ad194b69a612d8101b0ccae5
+        # Use Zhipu OpenAI-compatible endpoint
+        base-url: https://open.bigmodel.cn
+        completions-path: /api/paas/v4/chat/completions
+        api-key: 09efff4822ea42d2aaf63b60e127dfd9.kBLXYVD4YGfJUJES
         options:
-          model: gemini-3-flash
+          model: GLM-4.7-flash
       embedding:
-        # 硅基流动 (SiliconFlow) 配置
         base-url: https://api.siliconflow.cn
         api-key: sk-kyrqakqjbcbdkjyfdnoovhnmmoyhdggaalcpgqpmagkkyqcb
         options:
           model: BAAI/bge-m3
           dimensions: 1024
   profiles:
-    # 环境配置
     active: dev
   cloud:
     nacos:
       discovery:
-        # 如果系统环境变量里有 NACOS_HOST 就用它，没有就默认用 127.0.0.1
         server-addr: ${NACOS_HOST:127.0.0.1}:8848
       config:
         server-addr: ${NACOS_HOST:127.0.0.1}:8848
-        # 配置文件格式
         file-extension: yml
-        # 共享配置
         shared-configs:
           - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}

@@ -68,6 +68,6 @@ public class VoucherTools {
         query.setTitle(voucherName);
         query.setType(type);
         query.setUserId(userId);
-        return   voucherRagService.orderVoucher( query);
+        return   voucherRagService.orderVoucher(query);
     }
 }

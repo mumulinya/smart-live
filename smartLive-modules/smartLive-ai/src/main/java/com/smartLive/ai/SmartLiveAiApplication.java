@@ -12,7 +12,10 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
         DataSourceAutoConfiguration.class,
         DataSourceTransactionManagerAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class
-})@EnableCustomConfig
+}, excludeName = {
+        "org.springframework.ai.vectorstore.milvus.autoconfigure.MilvusVectorStoreAutoConfiguration"
+})
+@EnableCustomConfig
 @EnableRyFeignClients
 public class SmartLiveAiApplication {
 

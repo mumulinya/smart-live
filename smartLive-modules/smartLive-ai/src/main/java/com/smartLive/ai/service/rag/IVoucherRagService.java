@@ -5,24 +5,17 @@ import com.smartLive.ai.entity.vo.VoucherVO;
 import java.util.List;
 
 /**
- * 优惠券rag服务
+ * Voucher RAG service.
  */
 public interface IVoucherRagService {
+
     /**
-     * 获取优惠券列表
-     *
-     * @param voucherVo
-     * @param userMessage
-     * @return
+     * Query vouchers.
      */
     List<VoucherVO> getVoucherList(VoucherVO voucherVo, String userMessage);
 
-
     /**
-     * 订单优惠券
-     *
-     * @param voucherVO
-     * @return
+     * Place voucher order.
      */
-     String orderVoucher(VoucherVO voucherVO);
+    String orderVoucher(VoucherVO voucherVO);
 }
