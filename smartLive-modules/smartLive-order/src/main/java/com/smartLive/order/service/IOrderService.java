@@ -133,4 +133,12 @@ public interface IOrderService  extends IService<Order>
      * @return
      */
     Integer updateOrderReviewStatus(Long orderId);
+
+    /**
+     * 支付成功更新订单状态
+     * @param orderId 订单ID
+     * @param payType 支付方式
+     * @return 影响行数
+     */
+    Integer paySuccess(Long orderId, Integer payType);
 }

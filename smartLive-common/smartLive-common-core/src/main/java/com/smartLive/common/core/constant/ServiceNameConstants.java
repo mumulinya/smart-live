@@ -55,4 +55,12 @@ public class ServiceNameConstants
      * 聊天模块的serviceid
      */
     public static final String CHAT_SERVICE = "smartLive-chat";
+    /**
+     * 积分模块的serviceid
+     */
+    public static final String POINTS_SERVICE = "smartLive-points";
+    /**
+     * wallet module service id
+     */
+    public static final String WALLET_SERVICE = "smartLive-wallet";
 }

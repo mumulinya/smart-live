@@ -84,5 +84,7 @@ copy_jar "../smartLive-modules/smartLive-marketing/target/smartLive-modules-mark
 copy_jar "../smartLive-modules/smartLive-order/target/smartLive-modules-order.jar" "./smartLive/modules/order/jar"
 copy_jar "../smartLive-modules/smartLive-search/target/smartLive-modules-search.jar" "./smartLive/modules/search/jar"
 copy_jar "../smartLive-modules/smartLive-shop/target/smartLive-modules-shop.jar" "./smartLive/modules/shop/jar"
+copy_jar "../smartLive-modules/smartLive-audit/target/smartLive-modules-audit.jar" "./smartLive/modules/audit/jar"
+copy_jar "../smartLive-modules/smartLive-im/target/smartLive-modules-im.jar" "./smartLive/modules/im/jar"
 
 echo "🎉 所有复制任务执行完毕！"

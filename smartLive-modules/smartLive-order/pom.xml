@@ -89,8 +89,11 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-marketing</artifactId>
         </dependency>
-
-        <!-- smartLive Marketing API -->
+        <!-- smartLive Points API -->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-points</artifactId>
+        </dependency>
 
 
     </dependencies>

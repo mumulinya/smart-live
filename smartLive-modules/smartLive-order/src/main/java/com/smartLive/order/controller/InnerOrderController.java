@@ -60,4 +60,15 @@ public class InnerOrderController extends BaseController
     Integer updateOrderReviewStatus(@PathVariable("orderId") Long orderId) {
         return orderService.updateOrderReviewStatus(orderId);
     }
+
+    /**
+     * 支付成功更新订单状态
+     * @param orderId 订单ID
+     * @param payType 支付方式: 1=余额 2=支付宝 3=微信
+     * @return 影响行数
+     */
+    @PutMapping("/paySuccess/{orderId}/{payType}")
+    Integer paySuccess(@PathVariable("orderId") Long orderId, @PathVariable("payType") Integer payType) {
+        return orderService.paySuccess(orderId, payType);
+    }
 }

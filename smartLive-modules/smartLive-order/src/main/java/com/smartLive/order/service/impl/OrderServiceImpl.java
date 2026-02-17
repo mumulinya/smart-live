@@ -11,6 +11,7 @@ import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.marketing.api.RemoteVoucherService;
+import com.smartLive.points.api.RemotePointsService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.marketing.api.DTO.VoucherDTO;
@@ -47,6 +48,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private RemoteVoucherService remoteVoucherService;
+
+    @Autowired
+    private RemotePointsService remotePointsService;
 
     @Resource
     private RedissonClient redissonClient;
@@ -273,6 +277,29 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
+     * 支付成功更新订单状态（内部调用，支持多种支付方式）
+     *
+     * @param orderId 订单ID
+     * @param payType 支付方式: 1=余额 2=支付宝 3=微信
+     * @return 影响行数
+     */
+    @Override
+    public Integer paySuccess(Long orderId, Integer payType) {
+        Order order = getById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        // 幂等校验：已支付则跳过
+        if (order.getStatus() == OrderStatusConstants.PAID) {
+            return 1;
+        }
+        order.setPayTime(DateUtils.getNowDate());
+        order.setStatus(OrderStatusConstants.PAID);
+        order.setPayType(payType);
+        return updateOrder(order);
+    }
+
+    /**
      * 取消订单
      *
      * @param id
@@ -334,6 +361,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setUseTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.VERIFIED);
         int i = updateOrder(order);
+        if (i > 0) {
+            // 订单使用成功，奖励积分
+            try {
+                remotePointsService.addPoints(order.getUserId(), 100, String.valueOf(order.getId()), "订单完成奖励");
+            } catch (Exception e) {
+                log.error("订单{}积分奖励失败:{}", order.getId(), e.getMessage());
+            }
+        }
         return i;
     }
 

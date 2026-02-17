@@ -25,6 +25,8 @@
         <module>smartLive-interaction</module>
         <module>smartLive-ai</module>
         <module>smartLive-audit</module>
+        <module>smartLive-points</module>
+        <module>smartLive-wallet</module>
     </modules>
 
     <artifactId>smartLive-modules</artifactId>

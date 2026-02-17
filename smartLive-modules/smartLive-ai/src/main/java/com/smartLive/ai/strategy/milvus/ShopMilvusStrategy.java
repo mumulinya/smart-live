@@ -31,8 +31,11 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
         // 1. 策略自己知道要把 Map 转成什么实体类，Listener 不需要知道
         ShopDoc doc = EsTool.convertToObject((Map) rawData, ShopDoc.class);
-        // 删除
-        delete(id);
+        List<Document> existing = shopVectorStore.similaritySearch(id);
+        if (!existing.isEmpty()) {
+            // 删除
+            delete(id);
+        }
         Document document = null;
         if (doc != null) {
             document = createDocument(doc);

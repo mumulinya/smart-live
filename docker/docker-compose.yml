@@ -485,7 +485,24 @@ services:
     ports:
       - "9214:9214"
 
-  # AI 模块 [9215]
+  # 审核模块 [9215]
+  smartLive-modules-audit:
+    container_name: smartLive-modules-audit
+    image: smartlive-modules-audit
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
+    build:
+      context: ./smartLive/modules/audit
+      dockerfile: dockerfile
+    ports:
+      - "9215:9215"
+
+  # AI 模块 [9216]
   smartLive-modules-ai:
     container_name: smartLive-modules-ai
     image: smartlive-modules-ai
@@ -502,9 +519,27 @@ services:
       context: ./smartLive/modules/ai
       dockerfile: dockerfile
     ports:
-      - "9215:9215"
+      - "9216:9216"
     depends_on:
       - smartLive-milvus
+
+  # IM 消息模块 [9217 + Netty 8888]
+  smartLive-modules-im:
+    container_name: smartLive-modules-im
+    image: smartlive-modules-im
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
+      - SPRING_RABBITMQ_HOST=smartLive-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=smart-live
+      - SPRING_RABBITMQ_PASSWORD=123167
+    build:
+      context: ./smartLive/modules/im
+      dockerfile: dockerfile
+    ports:
+      - "9217:9217"
+      - "8888:8888"
 
   # =========================================
   # 7. 监控与运维 (Monitoring & Ops)

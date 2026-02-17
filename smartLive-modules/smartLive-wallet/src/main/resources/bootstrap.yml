@@ -1,0 +1,48 @@
+# Tomcat
+server:
+  port: 9222
+# arthas
+arthas:
+  tunnel-server: ws://127.0.0.1:7777/ws
+  app-name: ${spring.application.name}
+  http-port: 9322
+  telnet-port: 9422
+# Spring
+spring:
+  application:
+    name: smartLive-wallet
+  rabbitmq:
+    #监听者模式
+    listener:
+      simple:
+        prefetch: 1
+        # 消息确认模式
+        acknowledge-mode: auto   #none：关闭ack  manual：手动ack  auto：自动ack
+        retry:
+          enabled: true # 是否开启重试
+          initial-interval: 1000ms # 第一次重试时间间隔
+          multiplier: 1 # 重试时间间隔倍数
+          max-attempts: 3 # 最大重试次数
+          stateless: true # 是否无状态
+    connection-timeout: 10000 # 连接超时时间（毫秒）
+    template:
+      retry:
+        enabled: true #开启重试
+    publisher-confirm-type: correlated # 开启发生着确认模式，可选值：correlated、none、manual
+    publisher-returns: true # 开启返回确认
+    username: smart-live
+    password: 123167
+    host: 192.168.182.20
+    virtual-host: smart-live
+    port: 5672
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yml
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}

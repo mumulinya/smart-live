@@ -1,0 +1,17 @@
+# 基础镜像
+FROM  openjdk:17-jdk
+# author
+MAINTAINER smartLive
+
+# 挂载目录
+VOLUME /home/smartLive
+# 创建目录
+RUN mkdir -p /home/smartLive
+# 指定路径
+WORKDIR /home/smartLive
+# 复制jar文件到路径
+COPY ./jar/smartLive-modules-im.jar /home/smartLive/smartLive-modules-im.jar
+# 暴露 API 端口和 Netty 端口
+EXPOSE 9217 8888
+# 启动系统服务
+ENTRYPOINT ["java","-jar","smartLive-modules-im.jar"]

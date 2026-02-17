@@ -41,7 +41,7 @@ port(){
  firewall-cmd --add-port=9100/tcp --permanent
  firewall-cmd --add-port=8718/tcp --permanent # Sentinel
 
- # === 业务模块端口 (已补全) ===
+ # === 业务模块端口 ===
  firewall-cmd --add-port=9900/tcp --permanent # Auth
  firewall-cmd --add-port=9201/tcp --permanent # User
  firewall-cmd --add-port=9202/tcp --permanent # System
@@ -51,14 +51,16 @@ port(){
  firewall-cmd --add-port=9206/tcp --permanent # Marketing
  firewall-cmd --add-port=9207/tcp --permanent # Map
  firewall-cmd --add-port=9208/tcp --permanent # Job
- firewall-cmd --add-port=9209/tcp --permanent # Gen
- firewall-cmd --add-port=9210/tcp --permanent # Follow
- firewall-cmd --add-port=9211/tcp --permanent # File
- firewall-cmd --add-port=9212/tcp --permanent # Comment
+ firewall-cmd --add-port=9209/tcp --permanent # Interaction
+ firewall-cmd --add-port=9210/tcp --permanent # Index
+ firewall-cmd --add-port=9211/tcp --permanent # Gen
+ firewall-cmd --add-port=9212/tcp --permanent # File
  firewall-cmd --add-port=9213/tcp --permanent # Chat
  firewall-cmd --add-port=9214/tcp --permanent # Blog
- firewall-cmd --add-port=9215/tcp --permanent # Index
- firewall-cmd --add-port=9216/tcp --permanent # AI (之前改成这个了)
+ firewall-cmd --add-port=9215/tcp --permanent # Audit
+ firewall-cmd --add-port=9216/tcp --permanent # AI
+ firewall-cmd --add-port=9217/tcp --permanent # IM
+ firewall-cmd --add-port=8888/tcp --permanent # IM Netty
 
  service firewalld reload
  echo "端口开放完成！"
@@ -92,7 +94,8 @@ modules(){
  docker-compose up -d smartLive-modules-user smartLive-modules-shop smartLive-modules-search smartLive-modules-order \
                       smartLive-modules-marketing smartLive-modules-map smartLive-modules-job smartLive-modules-gen \
                       smartLive-modules-interaction smartLive-modules-file  smartLive-modules-chat \
-                      smartLive-modules-blog smartLive-modules-index smartLive-modules-ai
+                      smartLive-modules-blog smartLive-modules-index smartLive-modules-ai \
+                      smartLive-modules-audit smartLive-modules-im
 
  # 最后启动前端和监控
  docker-compose up -d smartLive-nginx smartLive-sentinel smartLive-visual-monitor
@@ -108,7 +111,8 @@ baseModules(){
 
   docker-compose up -d  smartLive-modules-user smartLive-modules-shop smartLive-modules-search \
                         smartLive-modules-marketing smartLive-modules-map  \
-                         smartLive-modules-chat  smartLive-modules-blog
+                        smartLive-modules-chat smartLive-modules-blog \
+                        smartLive-modules-audit smartLive-modules-im
   docker-compose up -d smartLive-nginx
 }
 

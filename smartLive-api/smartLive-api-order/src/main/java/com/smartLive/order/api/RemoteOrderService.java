@@ -31,4 +31,13 @@ public interface RemoteOrderService {
      */
     @PutMapping("/inner/voucher-order/updateOrderReviewStatus/{orderId}")
     Integer updateOrderReviewStatus(@PathVariable("orderId") Long orderId);
+
+    /**
+     * 支付成功更新订单状态
+     * @param orderId 订单ID
+     * @param payType 支付方式: 1=余额 2=支付宝 3=微信
+     * @return 影响行数
+     */
+    @PutMapping("/inner/order/paySuccess/{orderId}/{payType}")
+    Integer paySuccess(@PathVariable("orderId") Long orderId, @PathVariable("payType") Integer payType);
 }

@@ -42,6 +42,12 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
                 log.error("修改订单评论状态失败:{}", cause.getMessage());
                 return 0;
             }
+
+            @Override
+            public Integer paySuccess(Long orderId, Integer payType) {
+                log.error("更新订单支付状态失败:{}", cause.getMessage());
+                return 0;
+            }
         };
 
     }

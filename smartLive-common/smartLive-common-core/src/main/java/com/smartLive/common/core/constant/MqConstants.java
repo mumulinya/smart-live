@@ -19,6 +19,12 @@ public class MqConstants {
     public static final String  ORDER_DELAY_ROUTING = "order.delay.routing";
     public static final Integer DELAY_TIME = 15 * 60000; // 15分钟 = 900000 毫秒
 
+    //支付记录延迟交换机 (充值超时自动取消)
+    public static final String  PAY_DELAY_EXCHANGE_NAME = "pay.delay.direct";
+    public static final String  PAY_DELAY_QUEUE = "pay.delay.queue";
+    public static final String  PAY_DELAY_ROUTING = "pay.delay.routing";
+    public static final Integer PAY_DELAY_TIME = 15 * 60000; // 15分钟
+
     /**
      * 互动交换机
      */

@@ -31,8 +31,11 @@ public class VoucherMilvusStrategy implements MilvusSyncStrategy<VoucherDoc>{
         // 1. 策略自己知道要把 Map 转成什么实体类，Listener 不需要知道
         VoucherDoc doc = EsTool.convertToObject((Map) rawData, VoucherDoc.class);
         // 2. 调用业务 Service
-        // 删除
-        delete(id);
+        List<Document> existing = voucherVectorStore.similaritySearch(id);
+        if (!existing.isEmpty()) {
+            // 删除
+            delete(id);
+        }
         Document document = createDocument(doc);
         List<Document> list=new ArrayList<>();
         list.add(document);
