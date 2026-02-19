@@ -57,10 +57,10 @@ public class RedisConstants {
     public static final String FOLLOW_SHOP_KEY = "follow:shop:";
     //店铺粉丝
     public static final String FANS_SHOP_KEY = "fans:shop:";
-    //代金券关注
-    public static final String FOLLOW_VOUCHER_KEY = "follow:voucher:";
-    //代金券粉丝
-    public static final String FANS_VOUCHER_KEY = "fans:voucher:";
+    //商品关注
+    public static final String FOLLOW_PRODUCT_KEY = "follow:product:";
+    //商品粉丝
+    public static final String FANS_PRODUCT_KEY = "fans:product:";
     /**
      * 推送数据
      */
@@ -115,12 +115,12 @@ public class RedisConstants {
     //店铺收藏脏数据列表
     public static final String SHOP_STAR_DIRTY_KEY = "shop:star:dirty:";
 
-    //代金券收藏
-    public static final String VOUCHER_STAR_KEY = "voucher:star:";
-    //代金券收藏总数
-    public static final String VOUCHER_STAR_COUNT_KEY = "voucher:star:count:";
-    //代金券收藏脏数据列表
-    public static final String VOUCHER_STAR_DIRTY_KEY = "voucher:star:dirty:";
+    //商品收藏
+    public static final String PRODUCT_STAR_KEY = "product:star:";
+    //商品收藏总数
+    public static final String PRODUCT_STAR_COUNT_KEY = "product:star:count:";
+    //商品收藏脏数据列表
+    public static final String PRODUCT_STAR_DIRTY_KEY = "product:star:dirty:";
 
     //评价收藏
     public static final String REVIEW_STAR_KEY = "review:star:";
@@ -163,12 +163,12 @@ public class RedisConstants {
     //店铺评价脏数据列表
     public static final String SHOP_REVIEW_DIRTY_KEY = "shop:review:dirty:";
 
-    //代金券评价
-    public static final String VOUCHER_REVIEW_KEY = "voucher:review:";
-    //代金券评价总数
-    public static final String VOUCHER_REVIEW_COUNT_KEY = "voucher:review:count:";
-    //代金券评价脏数据列表
-    public static final String VOUCHER_REVIEW_DIRTY_KEY = "voucher:review:dirty:";
+    //商品评价
+    public static final String PRODUCT_REVIEW_KEY = "product:review:";
+    //商品评价总数
+    public static final String PRODUCT_REVIEW_COUNT_KEY = "product:review:count:";
+    //商品评价脏数据列表
+    public static final String PRODUCT_REVIEW_DIRTY_KEY = "product:review:dirty:";
     /**
      * 商店地理位置
      */

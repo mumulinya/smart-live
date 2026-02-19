@@ -1,8 +1,8 @@
 package com.smartLive.ai.config;
 
 import com.smartLive.ai.tools.CommentTools;
+import com.smartLive.ai.tools.ProductTools;
 import com.smartLive.ai.tools.ShopTools;
-import com.smartLive.ai.tools.VoucherTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -13,6 +13,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Description;
 
 @Configuration
 public class CommonConfiguration {
@@ -26,7 +27,8 @@ public class CommonConfiguration {
     }
 
     @Bean
-    public ChatClient restaurantChatClient(@Qualifier("openAiChatModel") ChatModel model, ChatMemory chatMemory, ShopTools shopTools, VoucherTools voucherTools, CommentTools commentTools) {
+    @Description("餐厅聊天机器人")
+    public ChatClient restaurantChatClient(@Qualifier("openAiChatModel") ChatModel model, ChatMemory chatMemory, ShopTools shopTools, ProductTools productTools, CommentTools commentTools) {
         return ChatClient
                 .builder(model)
 //                .defaultSystem(SystemConstants.RESTAURANT_SYSTEM_PROMPT)
@@ -34,7 +36,7 @@ public class CommonConfiguration {
                         new SimpleLoggerAdvisor(),
                         MessageChatMemoryAdvisor.builder(chatMemory).build()
                 )
-                .defaultTools(shopTools, voucherTools, commentTools)
+                .defaultTools(shopTools, productTools, commentTools)
                 .build();
     }
 }

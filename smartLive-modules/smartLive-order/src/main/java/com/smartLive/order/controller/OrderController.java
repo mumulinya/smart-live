@@ -170,23 +170,15 @@ public class OrderController extends BaseController
         }
         return Result.fail("退款失败");
     }
-    
+
+
     /**
-     * 获取订单数量
-     * @param userId
-     * @return
+     * 查询订单创建状态 (用于前端轮询)
+     * @param id 订单ID
+     * @return PENDING / SUCCESS / FAILED
      */
-    @GetMapping("/getOrderCount/{userId}")
-    R<Integer> getCommentCount(@PathVariable("userId")Long userId){
-        return R.ok(orderService.getOrderCount(userId));
-    }
-    
-    /**
-     * 获取订单总数
-     * @return
-     */
-    @GetMapping("/getOrderTotal")
-    R<Integer> getOrderTotal(){
-        return R.ok(orderService.getOrderTotal());
+    @GetMapping("/status/{id}")
+    public Result getOrderStatus(@PathVariable("id") Long id) {
+        return Result.ok(orderService.getOrderStatus(id));
     }
 }

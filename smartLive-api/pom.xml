@@ -10,7 +10,7 @@
 
     <modules>
         <module>smartLive-api-system</module>
-        <module>smartLive-api-marketing</module>
+        <module>smartLive-api-product</module>
         <module>smartLive-api-user</module>
         <module>smartLive-api-blog</module>
         <module>smartLive-api-order</module>

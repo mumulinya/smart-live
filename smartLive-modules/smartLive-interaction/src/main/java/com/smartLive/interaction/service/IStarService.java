@@ -1,7 +1,7 @@
 package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.interaction.api.DTO.StarDTO;
+import com.smartLive.interaction.domain.DTO.StarDTO;
 import com.smartLive.interaction.domain.Star;
 import java.util.List;
 
@@ -80,7 +80,7 @@ public interface IStarService extends IService<Star>
      * 获取收藏列表
      * @return
      */
-    List<?> getStarList(Star star, Integer current);
+    List<?> getStarList(StarDTO starDTO, Integer current);
 
     /**
      * 获取收藏数量

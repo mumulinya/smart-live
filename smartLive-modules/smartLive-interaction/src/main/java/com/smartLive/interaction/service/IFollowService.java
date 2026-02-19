@@ -2,6 +2,7 @@ package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
+import com.smartLive.interaction.domain.DTO.FollowDTO;
 import com.smartLive.interaction.domain.Follow;
 import java.util.List;
 
@@ -97,7 +98,7 @@ public interface IFollowService extends IService<Follow>
      * 获取关注列表
      * @return
      */
-    List<?> getFollows(Follow follow,Integer current);
+    List<?> getFollows(FollowDTO followDTO, Integer current);
     /**
      * 获取关注数
      * @return

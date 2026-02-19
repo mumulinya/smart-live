@@ -19,6 +19,7 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.domain.DTO.FollowDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.mapper.FollowMapper;
 import com.smartLive.interaction.service.IFollowService;
@@ -323,7 +324,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             value=feedEventMessage.getAction()+":"+value;
         }
         boolean isSendSystemNotice=false;
-        if(feedEventMessage.getBizType()==GlobalBizTypeEnum.VOUCHER.getCode()||feedEventMessage.getBizType()==GlobalBizTypeEnum.GROUP_BUY.getCode()){
+        if(feedEventMessage.getBizType()==GlobalBizTypeEnum.PRODUCT.getCode()||feedEventMessage.getBizType()==GlobalBizTypeEnum.GROUP_BUY.getCode()){
             isSendSystemNotice=true;
         }
         for (Long userId : userIdList) {
@@ -420,26 +421,26 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     /**
      * 获取关注列表
      *
-     * @param follow
+     * @param followDTO
      * @return
      */
     @Override
-    public List<?> getFollows(Follow follow,Integer current) {
+    public List<?> getFollows(FollowDTO followDTO, Integer current) {
 //        // 1. 获取对应的枚举策略
-        FollowTypeEnum followTypeEnum = FollowTypeEnum.getByCode(follow.getSourceType());
+        FollowTypeEnum followTypeEnum = FollowTypeEnum.getByCode(followDTO.getSourceType());
         if (followTypeEnum == null) {
             log.error("关注类型错误");
             return Collections.emptyList();
         }
         //从redis获取
-        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(followTypeEnum.getFollowKeyPrefix(), follow.getUserId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
+        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(followTypeEnum.getFollowKeyPrefix(), followDTO.getUserId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
         //redis获取失败，从数据库获取
         if (sourceIdList.isEmpty()) {
             //获取粉丝id
             List<Follow> sourceList = query()
-                    .eq("source_type",follow.getSourceType())
-                    .eq("user_id", follow.getUserId())
+                    .eq("source_type",followDTO.getSourceType())
+                    .eq("user_id", followDTO.getUserId())
                     .orderByDesc("create_time") // 添加排序
                     .list();
             if(!sourceList.isEmpty()){
@@ -450,7 +451,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                     sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
                 }
                 //存入redis
-                saveFollowIdListToRedis(followTypeEnum.getFollowKeyPrefix()+follow.getUserId(),sourceList);
+                saveFollowIdListToRedis(followTypeEnum.getFollowKeyPrefix()+followDTO.getUserId(),sourceList);
             }
            }
         if(sourceIdList.isEmpty()){

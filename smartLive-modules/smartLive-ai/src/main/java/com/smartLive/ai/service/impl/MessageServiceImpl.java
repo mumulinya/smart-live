@@ -217,7 +217,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     return itemType;
                 }
 
-                if (looksLikeVoucherRecommendation(recommendation)) {
+                if (looksLikeProductRecommendation(recommendation)) {
                     return "voucher";
                 }
                 if (looksLikeShopRecommendation(recommendation)) {
@@ -229,7 +229,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return "shop";
     }
 
-    private boolean looksLikeVoucherRecommendation(ObjectNode recommendation) {
+    private boolean looksLikeProductRecommendation(ObjectNode recommendation) {
         return hasAnyField(recommendation,
                 "shopId",
                 "voucherType",

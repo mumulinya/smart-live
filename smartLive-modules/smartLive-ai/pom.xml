@@ -155,7 +155,7 @@
         </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>
-            <artifactId>smartLive-api-marketing</artifactId>
+            <artifactId>smartLive-api-product</artifactId>
         </dependency>
         <!--        openai的接口-->
 <!--        <dependency>-->

@@ -1,8 +1,8 @@
 package com.smartLive.ai.config;
 
 import com.smartLive.ai.tools.CommentTools;
+import com.smartLive.ai.tools.ProductTools;
 import com.smartLive.ai.tools.ShopTools;
-import com.smartLive.ai.tools.VoucherTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+//@Configuration
 public class AgentConfig {
 
     @Bean("shopAgent")
@@ -19,7 +19,7 @@ public class AgentConfig {
             @Qualifier("openAiChatModel") ChatModel chatModel,
             ChatMemory chatMemory,
             ShopTools shopTools,
-            VoucherTools voucherTools,
+            ProductTools productTools,
             CommentTools commentTools
     ) {
         return ChatClient.builder(chatModel)
@@ -32,7 +32,7 @@ public class AgentConfig {
                         4. searchTantanNotes - 搜索探店笔记
                         """)
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(shopTools, voucherTools, commentTools)
+                .defaultTools(shopTools, productTools, commentTools)
                 .build();
     }
 }

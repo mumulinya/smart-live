@@ -7,7 +7,6 @@ import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
-import com.smartLive.marketing.api.DTO.VoucherDTO;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import lombok.RequiredArgsConstructor;

@@ -9,7 +9,6 @@ import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
-import com.smartLive.marketing.api.DTO.VoucherDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

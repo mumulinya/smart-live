@@ -14,7 +14,7 @@ public enum FollowTypeEnum {
     //店铺信息
     SHOP_IDENTITY(GlobalBizTypeEnum.SHOP.getCode(), "shop","店铺信息",RedisConstants.FOLLOW_SHOP_KEY, RedisConstants.FANS_SHOP_KEY),
     //代金券信息
-    VOUCHER_IDENTITY(GlobalBizTypeEnum.VOUCHER.getCode(), "voucher","代金券信息",RedisConstants.FOLLOW_VOUCHER_KEY, RedisConstants.FANS_VOUCHER_KEY);
+    PRODUCT_IDENTITY(GlobalBizTypeEnum.PRODUCT.getCode(), "product","商品信息",RedisConstants.FOLLOW_PRODUCT_KEY, RedisConstants.FANS_PRODUCT_KEY);
 
     private final Integer code;
     /**

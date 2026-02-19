@@ -4,7 +4,7 @@ import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.index.domain.*;
 import com.smartLive.index.service.IIndexService;
 import com.smartLive.interaction.api.RemoteCommentService;
-import com.smartLive.marketing.api.RemoteVoucherService;
+import com.smartLive.product.api.RemoteProductService;
 import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
@@ -40,7 +40,7 @@ public class IIndexServiceImpl implements IIndexService {
     private RemoteOrderService remoteOrderService;
 
     @Autowired
-    private RemoteVoucherService remoteMarketService;
+    private RemoteProductService remoteProductService;
 
     @Autowired
     private RemoteCommentService remoteCommentService;
@@ -70,12 +70,12 @@ public class IIndexServiceImpl implements IIndexService {
             latch.countDown();
             return shopCount;
         });
-        //使用线程池查询代金券总数
+        //使用线程池查询商品总数
         Future<Integer> couponCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询代金券总数",Thread.currentThread().getName());
-                    Integer couponCount = remoteMarketService.getCouponTotal();
+            log.info("线程：{}开始查询商品总数",Thread.currentThread().getName());
+                    Integer productTotal = remoteProductService.getProductTotal();
                     latch.countDown();
-                    return couponCount;
+                    return productTotal;
                 });
         //使用线程池查询订单总数
         Future<Integer> orderCountFuture = executorService.submit(() -> {
@@ -194,28 +194,6 @@ public class IIndexServiceImpl implements IIndexService {
     @Override
     public List<RecentOrderVO> getRecentOrders(Integer limit) {
         return null;
-//        List<VoucherOrderDTO> orderDTOList = remoteOrderService.getRecentOrders(limit).getData();
-//        List<RecentOrderVO> recentOrders = new ArrayList<>();
-//        for (VoucherOrderDTO orderDTO : orderDTOList) {
-//            RecentOrderVO order = new RecentOrderVO();
-//            order.setId(orderDTO.getId());
-//            order.setOrderNo(orderDTO.getId());
-//            order.setShopName(orderDTO.getShopId());
-//            order.setAmount(orderDTO.getVoucherId());
-//            order.setStatus(orderDTO.getStatus());
-//            order.setCreateTime(orderDTO.getCreateTime());
-//            recentOrders.add(order);
-//        }
-//
-//        RecentOrderVO order3 = new RecentOrderVO();
-//        order3.setId(3L);
-//        order3.setOrderNo("DD202401150003");
-//        order3.setShopName("西贝莜面村");
-//        order3.setAmount(189);
-//        order3.setStatus(1);
-//        order3.setCreateTime("2024-01-15 12:15:35");
-//
-//        return ;
     }
 
     /**

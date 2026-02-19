@@ -99,9 +99,9 @@ public class SearchController {
     /**
      * 搜索优惠券
      */
-    @PostMapping("/vouchers")
+    @PostMapping("/products")
     public ResponseEntity<Object> searchVouchers(@RequestBody FilterSearchRequest request) {
-            return searchWithFilter(EsIndexNameConstants.VOUCHER_INDEX_NAME, request);
+            return searchWithFilter(EsIndexNameConstants.PRODUCT_INDEX_NAME, request);
     }
 
     /**

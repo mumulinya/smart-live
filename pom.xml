@@ -233,7 +233,7 @@
             </dependency>
             <dependency>
                 <groupId>com.smartLive</groupId>
-                <artifactId>smartLive-api-marketing</artifactId>
+                <artifactId>smartLive-api-product</artifactId>
                 <version>${smartLive.version}</version>
             </dependency>
             <dependency>

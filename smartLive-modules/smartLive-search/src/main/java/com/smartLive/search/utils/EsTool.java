@@ -8,7 +8,7 @@ import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.search.domain.BlogDoc;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
-import com.smartLive.search.domain.VoucherDoc;
+import com.smartLive.search.domain.ProductDoc;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 
@@ -81,28 +81,28 @@ public class EsTool {
                 jsonMap.put("createTime", user.getCreateTime().getTime());
             }
 
-        } else if (data instanceof VoucherDoc) {
-            VoucherDoc voucher = (VoucherDoc) data;
-            jsonMap.put("id", voucher.getId());
-            jsonMap.put("shopId", voucher.getShopId());
-            jsonMap.put("title", voucher.getTitle());
-            jsonMap.put("subTitle", voucher.getSubTitle());
-            jsonMap.put("rules", voucher.getRules());
-            jsonMap.put("payValue", voucher.getPayValue());
-            jsonMap.put("actualValue", voucher.getActualValue());
-            jsonMap.put("type", voucher.getType());
-            jsonMap.put("status", voucher.getStatus());
-            jsonMap.put("stock", voucher.getStock());
-            if (voucher.getBeginTime() != null) {
-                jsonMap.put("beginTime", voucher.getBeginTime().getTime());
+        } else if (data instanceof ProductDoc) {
+            ProductDoc product = (ProductDoc) data;
+            jsonMap.put("id", product.getId());
+            jsonMap.put("shopId", product.getShopId());
+            jsonMap.put("name", product.getName());
+            jsonMap.put("subTitle", product.getSubTitle());
+            jsonMap.put("rulesJson", product.getRulesJson());
+            jsonMap.put("price", product.getPrice());
+            jsonMap.put("originalPrice", product.getOriginalPrice());
+            jsonMap.put("activityType", product.getActivityType());
+            jsonMap.put("status", product.getStatus());
+            jsonMap.put("stock", product.getStock());
+            if (product.getBeginTime() != null) {
+                jsonMap.put("beginTime", product.getBeginTime().getTime());
             }
-            if (voucher.getEndTime() != null) {
-                jsonMap.put("endTime", voucher.getEndTime().getTime());
+            if (product.getEndTime() != null) {
+                jsonMap.put("endTime", product.getEndTime().getTime());
             }
-            jsonMap.put("shopName", voucher.getShopName());
-            jsonMap.put("typeId", voucher.getTypeId());
-            if (voucher.getCreateTime() != null) {
-                jsonMap.put("createTime", voucher.getCreateTime().getTime());
+            jsonMap.put("shopName", product.getShopName());
+            jsonMap.put("typeId", product.getTypeId());
+            if (product.getCreateTime() != null) {
+                jsonMap.put("createTime", product.getCreateTime().getTime());
             }
         }
 
@@ -117,7 +117,7 @@ public class EsTool {
             case ResourceTypeConstants.BLOG_CODE: return new String[]{"title", "content", "name"};
             case ResourceTypeConstants.SHOP_CODE: return new String[]{"name", "area", "address"};
             case ResourceTypeConstants.USER_CODE: return new String[]{"nickName", "introduce", "city","id"};
-            case ResourceTypeConstants.VOUCHER_CODE: return new String[]{"title", "subTitle", "shopName"};
+            case ResourceTypeConstants.PRODUCT_CODE: return new String[]{"name", "subTitle", "shopName"};
             default: return new String[]{};
         }
     }
@@ -132,8 +132,8 @@ public class EsTool {
                 return ResponseConverter.convertToShopList(response);
             case ResourceTypeConstants.USER_CODE:
                 return ResponseConverter.convertToUserList(response);
-            case ResourceTypeConstants.VOUCHER_CODE:
-                return ResponseConverter.convertToVoucherList(response);
+            case ResourceTypeConstants.PRODUCT_CODE:
+                return ResponseConverter.convertToProductList(response);
             default:
                 // 返回原始命中数据
                 List<Map<String, Object>> result = new ArrayList<>();
@@ -152,7 +152,7 @@ public class EsTool {
             case EsIndexNameConstants.BLOG_INDEX_NAME: return new String[]{"title", "content", "name"};
             case EsIndexNameConstants.SHOP_INDEX_NAME: return new String[]{"name", "area", "address"};
             case EsIndexNameConstants.USER_INDEX_NAME: return new String[]{"nickName", "introduce","id"};
-            case EsIndexNameConstants.VOUCHER_INDEX_NAME: return new String[]{"title", "subTitle", "shopName"};
+            case EsIndexNameConstants.PRODUCT_INDEX_NAME: return new String[]{"name", "subTitle", "shopName"};
             default: return new String[]{};
         }
     }
@@ -167,8 +167,8 @@ public class EsTool {
                 return ResponseConverter.convertToUserList(response);
             case EsIndexNameConstants.SHOP_INDEX_NAME:
                 return ResponseConverter.convertToShopList(response);
-            case EsIndexNameConstants.VOUCHER_INDEX_NAME:
-                return ResponseConverter.convertToVoucherList(response);
+            case EsIndexNameConstants.PRODUCT_INDEX_NAME:
+                return ResponseConverter.convertToProductList(response);
             default:
                 // 返回原始命中数据
                 List<Map<String, Object>> result = new ArrayList<>();

@@ -10,11 +10,12 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
-import com.smartLive.marketing.api.RemoteVoucherService;
+import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.product.api.RemoteProductService;
 import com.smartLive.points.api.RemotePointsService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.marketing.api.DTO.VoucherDTO;
+import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.order.domain.VO.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -47,13 +48,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
-    private RemoteVoucherService remoteVoucherService;
+    private RemoteProductService remoteProductService;
 
     @Autowired
     private RemotePointsService remotePointsService;
 
     @Resource
     private RedissonClient redissonClient;
+
+    @Autowired
+    private RedisService redisService;
 
 
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
@@ -79,9 +83,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         Order order = orderMapper.selectOrderById(id);
         if (order!=null) {
-            VoucherDTO voucherDTO = remoteVoucherService.getVoucherById(order.getSourceId());
-            if(voucherDTO!=null) {
-                order.setShopId(voucherDTO.getShopId());
+            ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
+            if(productDTO!=null) {
+                order.setShopId(productDTO.getShopId());
             }
         }
         return order;
@@ -98,9 +102,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     {
         List<Order> orderList = orderMapper.selectOrderList(order);
         orderList.forEach(v -> {
-            VoucherDTO voucher  = remoteVoucherService.getVoucherById(v.getSourceId());
-            if(voucher!=null) {
-                v.setShopId(voucher.getShopId());
+            ProductDTO product  = remoteProductService.getProductById(v.getSourceId());
+            if(product!=null) {
+                v.setShopId(product.getShopId());
             }
         });
         return orderList;
@@ -203,7 +207,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return;
         }
         //5.扣减库存
-        Boolean success = remoteVoucherService.updateVoucherById(order.getSourceId());
+        Boolean success = remoteProductService.deductStock(order.getSourceId());
         if(!success){
             //扣减失败
             log.error("库存不足");
@@ -216,6 +220,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("创建订单失败");
             return;
         }else{
+            // 创建成功，删除 Redis 占位符
+            redisService.deleteObject("order:status:" + order.getId());
             //发送延迟消息，检测订单支付状态
             MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,order.getId(),(MqConstants.DELAY_TIME));
         }
@@ -240,15 +246,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         list.forEach(v -> {
             OrderVO orderVO = new OrderVO();
             BeanUtils.copyProperties(v, orderVO);;
-            VoucherDTO voucher  = remoteVoucherService.getVoucherById(v.getSourceId());
-            if(voucher!=null) {
-                orderVO.setShopId(voucher.getShopId());
-                orderVO.setShopName(voucher.getShopName());
-                orderVO.setRules(voucher.getRules());
-                orderVO.setPayValue(voucher.getPayValue());
-                orderVO.setActualValue(voucher.getActualValue());
-                orderVO.setTitle(voucher.getTitle());
-                orderVO.setSubTitle(voucher.getSubTitle());
+            ProductDTO product  = remoteProductService.getProductById(v.getSourceId());
+            if(product!=null) {
+                orderVO.setShopId(product.getShopId());
+                orderVO.setShopName(product.getShopName());
+                orderVO.setRules(product.getRulesJson()); // Mapped rulesJson to rules
+                orderVO.setPayValue(product.getPrice());      // Mapped price to payValue
+                orderVO.setActualValue(product.getOriginalPrice()); // Mapped originalPrice to actualValue
+                orderVO.setTitle(product.getName());          // Mapped name to title
+                orderVO.setSubTitle(product.getSubTitle());
             }
             orderVOList.add(orderVO);
         });
@@ -315,12 +321,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setStatus(OrderStatusConstants.CANCELLED);
         int i = updateOrder(order);
         if(i>0){
-            VoucherDTO vo = remoteVoucherService.getVoucherById(order.getSourceId());
-            if (vo.getType()==1){
-                log.info("秒杀券,准备恢复库存");
-                    //秒杀券
+            ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
+            if (vo.getActivityType()==1){ // Mapped activityType (0/1) for logic
+                log.info("秒杀商品,准备恢复库存");
                     //恢复库存
-                    remoteVoucherService.recoverVoucherStock(order.getSourceId());
+                    remoteProductService.recoverStock(order.getSourceId());
             }
         }
         return i;
@@ -406,15 +411,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (order != null) {
             OrderVO orderVO = new OrderVO();
             BeanUtils.copyProperties(order, orderVO);;
-            VoucherDTO voucher  = remoteVoucherService.getVoucherById(order.getSourceId());
-            if(voucher!=null) {
-                orderVO.setShopId(voucher.getShopId());
-                orderVO.setShopName(voucher.getShopName());
-                orderVO.setRules(voucher.getRules());
-                orderVO.setPayValue(voucher.getPayValue());
-                orderVO.setActualValue(voucher.getActualValue());
-                orderVO.setTitle(voucher.getTitle());
-                orderVO.setSubTitle(voucher.getSubTitle());
+            ProductDTO product  = remoteProductService.getProductById(order.getSourceId());
+            if(product!=null) {
+                orderVO.setShopId(product.getShopId());
+                orderVO.setShopName(product.getShopName());
+                orderVO.setRules(product.getRulesJson());
+                orderVO.setPayValue(product.getPrice());
+                orderVO.setActualValue(product.getOriginalPrice());
+                orderVO.setTitle(product.getName());
+                orderVO.setSubTitle(product.getSubTitle());
             }
             return orderVO;
         }
@@ -431,5 +436,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer updateOrderReviewStatus(Long orderId) {
         boolean update = update().eq("id", orderId).set("review_status", 1).update();
         return update==true?1:0;
+    }
+
+    @Autowired
+    private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
+
+    @Override
+    public String getOrderStatus(Long id) {
+        // 1. 先查 Redis 里的标识 key (e.g. "order:status:" + id)
+        //    假设前端传过来的 id 其实是 snowflake id 或者某种业务 id,
+        //    在创建订单前，已经由前端或网关生成并存入 Redis marked as "CREATING"
+        String key = "order:status:" + id;
+        if (redisService.hasKey(key)) {
+            return "PENDING";
+        }
+
+        // 2. Redis 没 key 了，说明要么失败要么成功，查数据库
+        Order order = getById(id);
+        if (order != null) {
+            return "SUCCESS";
+        }
+
+        // 3. 既没 key 也没库记录 -> 失败
+        return "FAILED";
     }
 }

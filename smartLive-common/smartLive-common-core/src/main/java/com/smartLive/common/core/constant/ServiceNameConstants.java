@@ -32,7 +32,7 @@ public class ServiceNameConstants
     /**
      * 营销模块的serviceid
      */
-    public static final String MARKETING_SERVICE = "smartLive-marketing";
+    public static final String PRODUCT_SERVICE = "smartLive-product";
 
     /**
      * 商铺模块的serviceid

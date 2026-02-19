@@ -25,9 +25,9 @@ public enum ResourceTypeEnum {
     SHOP_RESOURCE(GlobalBizTypeEnum.SHOP.getCode(), "店铺资源", GlobalBizTypeEnum.SHOP.getBizDomain(),
             null, null),
 
-    // 3. 代金券
-    VOUCHER_RESOURCE(GlobalBizTypeEnum.VOUCHER.getCode(), "代金券资源", GlobalBizTypeEnum.VOUCHER.getBizDomain(),
-            null, RedisConstants.VOUCHER_STAR_KEY),
+    // 3. 商品
+    PRODUCT_RESOURCE(GlobalBizTypeEnum.PRODUCT.getCode(), "商品资源", GlobalBizTypeEnum.PRODUCT.getBizDomain(),
+            null, RedisConstants.PRODUCT_STAR_KEY),
 
     // 4. 评论 (支持楼中楼)
     COMMENT_RESOURCE(GlobalBizTypeEnum.COMMENT.getCode(), "评论资源", GlobalBizTypeEnum.COMMENT.getBizDomain(),

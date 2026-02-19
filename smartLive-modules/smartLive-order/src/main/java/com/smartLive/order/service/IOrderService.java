@@ -141,4 +141,10 @@ public interface IOrderService  extends IService<Order>
      * @return 影响行数
      */
     Integer paySuccess(Long orderId, Integer payType);
+    /**
+     * 获取订单状态
+     * @param id 订单ID
+     * @return 订单状态
+     */
+    String getOrderStatus(Long id);
 }

@@ -1,6 +1,6 @@
 package com.smartLive.ai.strategy.milvus;
 
-import com.smartLive.ai.entity.DOC.VoucherDoc;
+import com.smartLive.ai.entity.DOC.ProductDoc;
 import org.springframework.ai.document.Document;
 
 import java.io.IOException;

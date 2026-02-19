@@ -5,7 +5,7 @@ import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.search.domain.BlogDoc;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
-import com.smartLive.search.domain.VoucherDoc;
+import com.smartLive.search.domain.ProductDoc;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
@@ -112,31 +112,31 @@ public class ResponseConverter {
     }
     
     /**
-     * 将ES搜索结果转换为优惠券列表
+     * 将ES搜索结果转换为商品列表
      */
-    public static List<VoucherDoc> convertToVoucherList(SearchResponse response) {
-        List<VoucherDoc> vouchers = new ArrayList<>();
+    public static List<ProductDoc> convertToProductList(SearchResponse response) {
+        List<ProductDoc> products = new ArrayList<>();
         for (SearchHit hit : response.getHits().getHits()) {
             String source = hit.getSourceAsString();
-            VoucherDoc voucher = JSON.parseObject(source, VoucherDoc.class);
+            ProductDoc product = JSON.parseObject(source, ProductDoc.class);
             //处理高亮结果
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
             System.out.println("高亮结果为"+highlightFields);
             if (highlightFields != null&&highlightFields.size()>0) {
-                String[] fields = EsTool.getDefaultSearchFields(EsIndexNameConstants.VOUCHER_INDEX_NAME);
+                String[] fields = EsTool.getDefaultSearchFields(EsIndexNameConstants.PRODUCT_INDEX_NAME);
                 for (String field : fields) {
-                    if (field.equals("title")&&highlightFields.get(field) != null) {
-                        voucher.setTitle(highlightFields.get(field).getFragments()[0].toString());
+                    if (field.equals("name")&&highlightFields.get(field) != null) {
+                        product.setName(highlightFields.get(field).getFragments()[0].toString());
                     } else if (field.equals("subTitle")&&highlightFields.get(field) != null) {
-                        voucher.setSubTitle(highlightFields.get(field).getFragments()[0].toString());
+                        product.setSubTitle(highlightFields.get(field).getFragments()[0].toString());
                     } else if (field.equals("shopName")&&highlightFields.get(field) != null) {
-                        voucher.setShopName(highlightFields.get(field).getFragments()[0].toString());
+                        product.setShopName(highlightFields.get(field).getFragments()[0].toString());
                     }
                 }
             }
-            vouchers.add(voucher);
+            products.add(product);
         }
-        return vouchers;
+        return products;
     }
     
     /**
@@ -162,8 +162,8 @@ public class ResponseConverter {
                 return convertToShopList(response);
             case EsIndexNameConstants.USER_INDEX_NAME:
                 return convertToUserList(response);
-            case EsIndexNameConstants.VOUCHER_INDEX_NAME:
-                return convertToVoucherList(response);
+            case EsIndexNameConstants.PRODUCT_INDEX_NAME:
+                return convertToProductList(response);
             default:
                 // 返回原始命中数据 
                 List<Map<String, Object>> result = new ArrayList<>();

@@ -16,7 +16,7 @@ public enum GlobalBizTypeEnum {
     USER(ResourceTypeConstants.USER_CODE, "用户", "user"),
     SHOP(ResourceTypeConstants.SHOP_CODE, "店铺", "shop"),
     BLOG(ResourceTypeConstants.BLOG_CODE, "博客", "blog"),      // 注意：原来是1，现在改成了3
-    VOUCHER(ResourceTypeConstants.VOUCHER_CODE, "代金券", "voucher"), // 注意：原来是3，现在改成了4
+    PRODUCT(ResourceTypeConstants.PRODUCT_CODE, "商品", "product"), // 注意：原来是3，现在改成了4
     COMMENT(ResourceTypeConstants.COMMENT_CODE, "评论", "comment"),   // 注意：原来是4，现在改成了5
     GROUP_BUY(ResourceTypeConstants.GROUP_BUY_CODE, "团购", "group_buy"),
     REVIEW(ResourceTypeConstants.REVIEW_CODE,"评价","review");

@@ -10,6 +10,7 @@ import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.enums.StarTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.interaction.domain.DTO.StarDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.mapper.StarMapper;
@@ -220,10 +221,10 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      * @return
      */
     @Override
-    public List<?> getStarList(Star star, Integer current) {
+    public List<?> getStarList(StarDTO starDTO, Integer current) {
         // 1. 获取对应的枚举策略
-        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(star.getSourceType());
-        StarTypeEnum starTypeEnum = StarTypeEnum.getByCode(star.getSourceType());
+        ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(starDTO.getSourceType());
+        StarTypeEnum starTypeEnum = StarTypeEnum.getByCode(starDTO.getSourceType());
         if (resourceType == null) {
 
             return Collections.emptyList();
@@ -231,14 +232,14 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         //根据关注类型从关注策略工程获取bean
         ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(resourceType.getCode());
         //从redis获取
-        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(starTypeEnum.getStarKeyPrefix(), star.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
+        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(starTypeEnum.getStarKeyPrefix(), starDTO.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
         //redis获取失败，从数据库获取
         if (sourceIdList.isEmpty()) {
             //获取粉丝id
             List<Star> sourceList = query()
-                    .eq("source_type",star.getSourceType())
-                    .eq("user_id", star.getUserId())
+                    .eq("source_type",starDTO.getSourceType())
+                    .eq("user_id", starDTO.getUserId())
                     .orderByDesc("create_time") // 添加排序
                     .list();
             if(!sourceList.isEmpty()){
@@ -249,7 +250,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                     sourceIdList = sourceIdList.size() > SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
                 }
                 //存入redis
-                saveStarIdListToRedis(starTypeEnum.getStarKeyPrefix()+star.getUserId(),sourceList);
+                saveStarIdListToRedis(starTypeEnum.getStarKeyPrefix()+starDTO.getUserId(),sourceList);
             }
         }
         //根据id查询数据

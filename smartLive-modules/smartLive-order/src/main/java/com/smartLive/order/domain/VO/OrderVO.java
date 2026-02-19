@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -47,17 +48,17 @@ public class OrderVO extends BaseEntity implements Serializable
     /** * 代金券单价/原价
      * (注意：这是券的面额或单价，不是订单总实付)
      */
-    private String payValue;
+    private BigDecimal payValue;
 
     /** 抵扣金额，单位是分 */
-    private Long actualValue;
+    private BigDecimal actualValue;
 
     // ========== 新增核心展示字段 ==========
 
     /** * 订单实付总金额 (单位: 分)
      * (新增：展示用户实际支付了多少钱)
      */
-    private Long payAmount;
+    private BigDecimal payAmount;
 
     /** * 购买数量
      * (新增：展示用户买了多少张)
@@ -80,7 +81,7 @@ public class OrderVO extends BaseEntity implements Serializable
      * 退款金额 (单位: 分)
      * (新增：如果有退款，展示退了多少)
      */
-    private Long refundAmount;
+    private BigDecimal refundAmount;
 
     // ====================================
 

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.ai.entity.DOC.BlogDoc;
 import com.smartLive.ai.entity.DOC.ShopDoc;
 import com.smartLive.ai.entity.DOC.UserDoc;
-import com.smartLive.ai.entity.DOC.VoucherDoc;
+import com.smartLive.ai.entity.DOC.ProductDoc;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -78,29 +78,39 @@ public class EsTool {
                 jsonMap.put("createTime", user.getCreateTime().getTime());
             }
 
-        } else if (data instanceof VoucherDoc) {
-            VoucherDoc voucher = (VoucherDoc) data;
-            jsonMap.put("id", voucher.getId());
-            jsonMap.put("shopId", voucher.getShopId());
-            jsonMap.put("title", voucher.getTitle());
-            jsonMap.put("subTitle", voucher.getSubTitle());
-            jsonMap.put("rules", voucher.getRules());
-            jsonMap.put("payValue", voucher.getPayValue());
-            jsonMap.put("actualValue", voucher.getActualValue());
-            jsonMap.put("type", voucher.getType());
-            jsonMap.put("status", voucher.getStatus());
-            jsonMap.put("stock", voucher.getStock());
-            if (voucher.getBeginTime() != null) {
-                jsonMap.put("beginTime", voucher.getBeginTime().getTime());
+        } else if (data instanceof ProductDoc) {
+            ProductDoc product = (ProductDoc) data;
+            jsonMap.put("id", product.getId());
+            jsonMap.put("shopId", product.getShopId());
+            jsonMap.put("name", product.getName());
+            jsonMap.put("subTitle", product.getSubTitle());
+            jsonMap.put("rulesJson", product.getRulesJson());
+            jsonMap.put("price", product.getPrice());
+            jsonMap.put("originalPrice", product.getOriginalPrice());
+            jsonMap.put("activityType", product.getActivityType());
+            jsonMap.put("status", product.getStatus());
+            jsonMap.put("stock", product.getStock());
+            
+            // Time fields
+            if (product.getBeginTime() != null) {
+                jsonMap.put("beginTime", product.getBeginTime());
             }
-            if (voucher.getEndTime() != null) {
-                jsonMap.put("endTime", voucher.getEndTime().getTime());
+            if (product.getEndTime() != null) {
+                jsonMap.put("endTime", product.getEndTime());
             }
-            jsonMap.put("shopName", voucher.getShopName());
-            jsonMap.put("typeId", voucher.getTypeId());
-            if (voucher.getCreateTime() != null) {
-                jsonMap.put("createTime", voucher.getCreateTime().getTime());
+
+            // New fields
+            jsonMap.put("validityType", product.getValidityType());
+            jsonMap.put("validDays", product.getValidDays());
+            if (product.getUseStartTime() != null) {
+                jsonMap.put("useStartTime", product.getUseStartTime());
             }
+            if (product.getUseEndTime() != null) {
+                jsonMap.put("useEndTime", product.getUseEndTime());
+            }
+
+            jsonMap.put("shopName", product.getShopName());
+            jsonMap.put("typeId", product.getTypeId());
         }
 
         return jsonMap;

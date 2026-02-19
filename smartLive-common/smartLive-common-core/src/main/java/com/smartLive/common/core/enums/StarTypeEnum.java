@@ -25,11 +25,11 @@ public enum StarTypeEnum {
             RedisConstants.SHOP_STAR_KEY,
             RedisConstants.SHOP_STAR_COUNT_KEY,
             RedisConstants.SHOP_STAR_DIRTY_KEY),
-    // 2. 代金券收藏配置
-    Voucher_STAR(GlobalBizTypeEnum.VOUCHER.getCode(), "代金券的收藏",GlobalBizTypeEnum.VOUCHER.getBizDomain(),
-            RedisConstants.VOUCHER_STAR_KEY,
-            RedisConstants.VOUCHER_STAR_COUNT_KEY,
-            RedisConstants.VOUCHER_STAR_DIRTY_KEY),
+    // 2. 商品收藏配置
+    Voucher_STAR(GlobalBizTypeEnum.PRODUCT.getCode(), "代金券的收藏",GlobalBizTypeEnum.PRODUCT.getBizDomain(),
+            RedisConstants.PRODUCT_STAR_KEY,
+            RedisConstants.PRODUCT_STAR_COUNT_KEY,
+            RedisConstants.PRODUCT_STAR_DIRTY_KEY),
     // 3. 评价收藏配置
     REVIEW_STAR(GlobalBizTypeEnum.REVIEW.getCode(), "评价的收藏",GlobalBizTypeEnum.REVIEW.getBizDomain(),
             RedisConstants.REVIEW_STAR_KEY,

@@ -1,6 +1,7 @@
 package com.smartLive.interaction.controller.api;
 
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.interaction.domain.DTO.StarDTO;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.service.IStarService;
 import org.springframework.web.bind.annotation.*;
@@ -47,8 +48,8 @@ public class StarController {
      * @return 收藏列表
      */
     @GetMapping("/starList")
-    public Result getStars(Star star, @RequestParam("current") Integer current){
-        return Result.ok(starService.getStarList(star, current));
+    public Result getStars(StarDTO starDTO, @RequestParam("current") Integer current){
+        return Result.ok(starService.getStarList(starDTO, current));
     }
     /**
      * 获取用户收藏的数量

@@ -1,5 +1,6 @@
 package com.smartLive.interaction.controller.api;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.interaction.domain.DTO.FollowDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.service.IFollowService;
 import org.springframework.web.bind.annotation.*;
@@ -60,13 +61,13 @@ public class FollowController {
     }
     /**
      * 获取关注列表
-     * @param follow 关注查询条件
+      * @param followDTO 关注查询条件
      * @param current 当前页码
      * @return 关注列表
      */
     @GetMapping("/follows")
-    public Result getFollows(Follow follow,@RequestParam("current") Integer current){
-        return Result.ok(followServiceImpl.getFollows(follow,current));
+    public Result getFollows(FollowDTO followDTO,@RequestParam("current") Integer current){
+        return Result.ok(followServiceImpl.getFollows(followDTO,current));
     }
     /**
      * 获取关注数

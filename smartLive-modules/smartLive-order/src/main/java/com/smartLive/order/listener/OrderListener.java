@@ -4,6 +4,7 @@ import com.rabbitmq.client.Channel;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.order.domain.Order;
 import com.smartLive.order.service.impl.OrderServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,9 @@ public class OrderListener {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private RedisService redisService;
     
     //秒杀订单监听
     @RabbitListener(bindings=@QueueBinding(
@@ -77,6 +81,9 @@ public class OrderListener {
             //创建失败
             log.error("创建订单失败");
         }else{
+            // 创建成功，删除 Redis 占位符
+            redisService.deleteObject("order:status:" + order.getId());
+            
             //发送延迟消息，检测订单支付状态
             MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,order.getId(),(MqConstants.DELAY_TIME));
         }

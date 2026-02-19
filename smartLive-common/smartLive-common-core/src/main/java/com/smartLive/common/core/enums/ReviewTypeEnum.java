@@ -19,8 +19,8 @@ public enum ReviewTypeEnum {
         RedisConstants.SHOP_REVIEW_KEY,
         RedisConstants.SHOP_REVIEW_COUNT_KEY,
         RedisConstants.SHOP_REVIEW_DIRTY_KEY),
-    // 代金券评价配置
-    VOUCHER_REVIEW(GlobalBizTypeEnum.VOUCHER.getCode(), "代金券的评价",GlobalBizTypeEnum.VOUCHER.getBizDomain(), RedisConstants.VOUCHER_REVIEW_KEY, RedisConstants.VOUCHER_REVIEW_COUNT_KEY, RedisConstants.VOUCHER_REVIEW_DIRTY_KEY);
+    // 商品评价配置
+    VOUCHER_REVIEW(GlobalBizTypeEnum.PRODUCT.getCode(), "代金券的评价",GlobalBizTypeEnum.PRODUCT.getBizDomain(), RedisConstants.PRODUCT_REVIEW_KEY, RedisConstants.PRODUCT_REVIEW_COUNT_KEY, RedisConstants.PRODUCT_REVIEW_DIRTY_KEY);
 
     /**
      * 业务类型编码 (与 ResourceTypeEnum 保持一致)

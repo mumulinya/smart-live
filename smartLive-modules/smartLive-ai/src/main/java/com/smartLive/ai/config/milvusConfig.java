@@ -50,8 +50,9 @@ public class milvusConfig {
     }
 
     @Bean
-    public VectorStore voucherVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
-        return buildVectorStore("voucher", embeddingModel);
+    public VectorStore productVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
+        // Changed collection name to 'product'
+        return buildVectorStore("product", embeddingModel);
     }
 
     private VectorStore buildVectorStore(String collectionName, EmbeddingModel embeddingModel) {
