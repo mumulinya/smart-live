@@ -142,38 +142,52 @@ public class CacheClient {
             }
         }
         //判断命中的是否是空值
-        if (json != null){
+        if (json != null&& json.isEmpty()){
             //空值，直接返回
             return null;
         }
-        //TODO 过期，缓存重建
-        //获取互斥锁
-        String lockKey = RedisConstants.LOCK_SHOP_KEY + id;
-        boolean isLock = tryLock(lockKey);
-        if (isLock){
-            //取锁成功，开启独立线程,进行缓存重建
-            CACHE_REBUILD_EXECUTOR.submit(() -> {
-                try {
-                    //查询数据库
-                    R r1 = dbFallback.apply(id);
-                    if(r1 == null){
-                        //防止缓存穿透,将空值存入redis
-                        redisService.setCacheObject(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
-                    }else{
-                        //写入redis
-                        this.setWithLogicalExpire(key, r1,time, unit);
-                        r.set(r1);
-                    }
-                }catch (Exception e){
-                    log.error(e.getMessage());
-                }finally {
-                    //释放锁
-                    unLock(lockKey);                    }
-            });
+        if (r.get() != null){
+            //TODO 过期，缓存重建
+            //获取互斥锁
+            String lockKey = RedisConstants.LOCK_SHOP_KEY + id;
+            boolean isLock = tryLock(lockKey);
+            if (isLock){
+                //取锁成功，开启独立线程,进行缓存重建
+                CACHE_REBUILD_EXECUTOR.submit(() -> {
+                    try {
+                        //查询数据库
+                        R r1 = dbFallback.apply(id);
+                        if(r1 == null){
+                            //防止缓存穿透,将空值存入redis
+                            redisService.setCacheObject(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+                        }else{
+                            //写入redis
+                            this.setWithLogicalExpire(key, r1,time, unit);
+                            log.info("写入缓存:{}",r1);
+                            r.set(r1);
+                        }
+                    }catch (Exception e){
+                        log.error(e.getMessage());
+                    }finally {
+                        //释放锁
+                        unLock(lockKey);                    }
+                });
+            }
+            //返回过期的数据
+            return r.get();
+        }else{
+            //查询数据库
+            R r1 = dbFallback.apply(id);
+            if(r1 == null){
+                //防止缓存穿透,将空值存入redis
+                redisService.setCacheObject(key, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+            }else{
+                //写入redis
+                this.setWithLogicalExpire(key, r1,time, unit);
+                r.set(r1);
+            }
         }
-        //返回过期的数据
-        return r.get();
-
+           return r.get();
     }
 
     /**
