@@ -342,7 +342,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public UserVO queryUserById(Long id) {
-        UserVO userVO = cacheClient.queryWithLogicalExpire(
+        UserVO userVO = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_USER_KEY,
                 id,
                 UserVO.class,
@@ -554,7 +554,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public UserVO queryUserInfoById(Long id) {
-        return cacheClient.queryWithLogicalExpire(
+        return cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_USER_KEY,
                 id,
                 UserVO.class,

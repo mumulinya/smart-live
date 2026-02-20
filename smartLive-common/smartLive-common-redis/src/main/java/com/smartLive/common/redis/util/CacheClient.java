@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 @Slf4j
@@ -128,16 +129,16 @@ public class CacheClient {
         String key = keyPrefix + id;
         //从缓存里获取商铺缓存
         String json =redisService.getCacheObject(key);
-        R r=null;
+        AtomicReference<R> r= new AtomicReference<>();
         //判断是否存在
         if(StrUtil.isNotBlank(json)){
             //把json转换成对象
             RedisData redisData = JSONUtil.toBean(json, RedisData.class);
-            r = JSONUtil.toBean((JSONObject) redisData.getData(), type);
+            r.set(JSONUtil.toBean((JSONObject) redisData.getData(), type));
             //判断是否过期
             if(redisData.getExpireTime().isAfter(LocalDateTime.now())){
                 //未过期，直接返回数据
-                return r;
+                return r.get();
             }
         }
         //判断命中的是否是空值
@@ -161,6 +162,7 @@ public class CacheClient {
                     }else{
                         //写入redis
                         this.setWithLogicalExpire(key, r1,time, unit);
+                        r.set(r1);
                     }
                 }catch (Exception e){
                     log.error(e.getMessage());
@@ -170,7 +172,7 @@ public class CacheClient {
             });
         }
         //返回过期的数据
-        return r;
+        return r.get();
 
     }
 

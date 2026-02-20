@@ -1,10 +1,16 @@
 package com.smartLive.common.redis.util;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson2.JSON;
+import com.smartLive.common.core.constant.RedisData;
 import com.smartLive.common.redis.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -14,25 +20,19 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RedisBatchCacheUtil {
 
+    private static final String REDIS_DATA_FIELD = "data";
+    private static final String REDIS_EXPIRE_TIME_FIELD = "expireTime";
+
     @Autowired
     private RedisService redisService;
 
     /**
-     * 通用的批量缓存查询方法
-     *
-     * @param keyPrefix     Redis Key 的前缀 (例如: "shop:detail:")
-     * @param ids           要查询的 ID 列表
-     * @param dbQueryFn     查数据库的函数 (当缓存未命中时，靠它去查库)
-     * @param idExtractor   ID 提取函数 (用来把查到的对象重新映射回 Redis Key)
-     * @param expireTime    过期时间
-     * @param timeUnit      时间单位
-     * @param <>          ID 的类型 (比如 Long)
-     * @param <T>           返回对象的类型 (比如 ShopDTO)
+     * Generic batch cache query utility.
      */
     public <T> List<T> queryBatchWithCache(
             String keyPrefix,
             List<Long> ids,
-            Class<T> clazz, // 👈 新增：必须传入目标类型，例如 ShopVO.class，用来做 JSON 反序列化
+            Class<T> clazz,
             Function<List<Long>, List<T>> dbQueryFn,
             Function<T, Long> idExtractor,
             long expireTime,
@@ -43,57 +43,135 @@ public class RedisBatchCacheUtil {
             return Collections.emptyList();
         }
 
-        // 1. 去重并构造 Redis Keys
-        List<Long> distinctIds = ids.stream().distinct().toList();
+        List<Long> distinctIds = ids.stream().distinct().collect(Collectors.toList());
         List<String> keys = distinctIds.stream().map(id -> keyPrefix + id).collect(Collectors.toList());
 
-        // 2. 批量查 Redis
         List<Object> redisResults = redisService.getMultiCacheObject(keys);
         List<T> finalResult = new ArrayList<>();
         List<Long> missingIds = new ArrayList<>();
 
-        // 3. 分拣命中与未命中的数据
         for (int i = 0; i < distinctIds.size(); i++) {
-            Object obj = redisResults != null ? redisResults.get(i) : null;
-            if (obj != null) {
-                // ✅ 核心改动 1：从 Redis 拿出来的是 Object (通常是 String)，统一转成 String
-                String jsonStr = obj.toString();
-                // ✅ 核心改动 2：将 JSON 字符串安全地反序列化为目标对象 T
-                T item = JSON.parseObject(jsonStr, clazz);
-                finalResult.add(item);
-            } else {
+            Object cacheObj = redisResults != null ? redisResults.get(i) : null;
+            CacheReadResult<T> readResult = readCacheValue(cacheObj, clazz);
+
+            if (readResult.getState() == CacheState.HIT) {
+                finalResult.add(readResult.getData());
+            } else if (readResult.getState() == CacheState.MISS) {
                 missingIds.add(distinctIds.get(i));
             }
+            // NULL_PLACEHOLDER: skip and do not query DB
         }
 
-        // 4. 处理未命中的数据（回调查库逻辑）
         if (!missingIds.isEmpty()) {
-            // 调用外部传入的查库方法
             List<T> dbResults = dbQueryFn.apply(missingIds);
 
             if (dbResults != null && !dbResults.isEmpty()) {
                 finalResult.addAll(dbResults);
 
-                // 5. 组装数据，准备写回 Redis
                 Map<String, Object> cacheMap = new HashMap<>();
+                LocalDateTime logicalExpireTime = LocalDateTime.now().plusSeconds(timeUnit.toSeconds(expireTime));
                 for (T item : dbResults) {
                     Long itemId = idExtractor.apply(item);
-                    // ✅ 核心改动 3：将 Java 对象序列化为 JSON 字符串后，再存入 Redis
-                    String jsonString = JSON.toJSONString(item);
-                    cacheMap.put(keyPrefix + itemId, jsonString);
+                    RedisData redisData = new RedisData();
+                    redisData.setData(item);
+                    redisData.setExpireTime(logicalExpireTime);
+                    cacheMap.put(keyPrefix + itemId, JSONUtil.toJsonStr(redisData));
                 }
 
-                // 批量写入 Redis
                 redisService.setMultiCacheObject(cacheMap);
 
-                // 设置带有随机抖动的过期时间 (防雪崩)
                 int randomJitter = new Random().nextInt(60);
                 for (String key : cacheMap.keySet()) {
                     redisService.expire(key, expireTime + randomJitter, timeUnit);
                 }
             }
         }
+
         log.debug("[queryBatchWithCache] finalResult.size: {}", finalResult.size());
         return finalResult;
+    }
+
+    private <T> CacheReadResult<T> readCacheValue(Object cacheObj, Class<T> clazz) {
+        if (cacheObj == null) {
+            return CacheReadResult.miss();
+        }
+
+        String jsonStr = cacheObj.toString();
+        if (StrUtil.isBlank(jsonStr)) {
+            return CacheReadResult.nullPlaceholder();
+        }
+
+        try {
+            JSONObject jsonObject = JSONUtil.parseObj(jsonStr);
+            if (jsonObject.containsKey(REDIS_DATA_FIELD) && jsonObject.containsKey(REDIS_EXPIRE_TIME_FIELD)) {
+                RedisData redisData = JSONUtil.toBean(jsonObject, RedisData.class);
+                LocalDateTime expireTime = redisData.getExpireTime();
+                if (expireTime != null && expireTime.isBefore(LocalDateTime.now())) {
+                    return CacheReadResult.miss();
+                }
+
+                Object dataObj = redisData.getData();
+                if (dataObj == null) {
+                    return CacheReadResult.nullPlaceholder();
+                }
+
+                T data;
+                if (dataObj instanceof JSONObject) {
+                    data = JSONUtil.toBean((JSONObject) dataObj, clazz);
+                } else {
+                    data = JSONUtil.toBean(JSONUtil.toJsonStr(dataObj), clazz);
+                }
+                return CacheReadResult.hit(data);
+            }
+        } catch (Exception e) {
+            // Fall back to old plain-JSON parsing.
+        }
+
+        try {
+            T oldFormatData = JSON.parseObject(jsonStr, clazz);
+            if (oldFormatData == null) {
+                return CacheReadResult.nullPlaceholder();
+            }
+            return CacheReadResult.hit(oldFormatData);
+        } catch (Exception e) {
+            log.warn("Failed to parse batch cache json: {}", jsonStr, e);
+            return CacheReadResult.miss();
+        }
+    }
+
+    private enum CacheState {
+        HIT,
+        MISS,
+        NULL_PLACEHOLDER
+    }
+
+    private static class CacheReadResult<T> {
+        private final CacheState state;
+        private final T data;
+
+        private CacheReadResult(CacheState state, T data) {
+            this.state = state;
+            this.data = data;
+        }
+
+        private static <T> CacheReadResult<T> hit(T data) {
+            return new CacheReadResult<>(CacheState.HIT, data);
+        }
+
+        private static <T> CacheReadResult<T> miss() {
+            return new CacheReadResult<>(CacheState.MISS, null);
+        }
+
+        private static <T> CacheReadResult<T> nullPlaceholder() {
+            return new CacheReadResult<>(CacheState.NULL_PLACEHOLDER, null);
+        }
+
+        private CacheState getState() {
+            return state;
+        }
+
+        private T getData() {
+            return data;
+        }
     }
 }

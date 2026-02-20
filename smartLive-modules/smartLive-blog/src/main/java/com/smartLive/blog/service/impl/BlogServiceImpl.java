@@ -244,7 +244,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public BlogVO queryBlogById(Long id) {
-        Blog blog = cacheClient.queryWithLogicalExpire(
+        Blog blog = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_BLOG_KEY,
                 id,
                 Blog.class,

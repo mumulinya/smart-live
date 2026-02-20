@@ -483,7 +483,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public ProductVO getProductById(Long id) {
-        Product product = cacheClient.queryWithLogicalExpire(
+        Product product = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_PRODUCT_KEY,
                 id,
                 Product.class,

@@ -571,7 +571,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public Review getReviewById(Long id) {
-        Review review = cacheClient.queryWithLogicalExpire(
+        Review review = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_REVIEW_KEY,
                 id,
                 Review.class,
