@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.Like;
 import java.util.List;
+import java.util.Map;
+import java.util.List;
 
 
 /**
@@ -57,4 +59,11 @@ public interface ILikeService extends IService<Like> {
      * @return 点赞数
      */
     Integer getUserLikeCount(Like like);
+    /**
+     * 批量判断是否点赞
+     *
+     * @param
+     * @return 是否点赞
+     */
+    Map<Long, Boolean> isLikeBatch(LikeDTO likeDTO, List<Long> sourceIds);
 }

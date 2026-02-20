@@ -40,6 +40,12 @@ public  class ShopResourceStrategy implements ResourceStrategy<ShopVO> {
         List<ShopVO> shopVOList = shopDTOList.stream().map(shopDTO -> {
             ShopVO shopVO = new ShopVO();
             BeanUtils.copyProperties(shopDTO, shopVO);
+            if(shopDTO.getAvgPrice() != null) {
+                shopVO.setAvgPrice(String.valueOf(shopDTO.getAvgPrice()));
+            }
+            if(shopDTO.getReviews() != null) {
+                shopVO.setComments(shopDTO.getReviews());
+            }
             return shopVO;
         }).collect(Collectors.toList());
         return shopVOList;
@@ -58,6 +64,12 @@ public  class ShopResourceStrategy implements ResourceStrategy<ShopVO> {
         }
         ShopVO shopVO = new ShopVO();
         BeanUtils.copyProperties(shop, shopVO);
+        if(shop.getAvgPrice() != null) {
+            shopVO.setAvgPrice(String.valueOf(shop.getAvgPrice()));
+        }
+        if(shop.getReviews() != null) {
+            shopVO.setComments(shop.getReviews());
+        }
         return shopVO;
     }
 

@@ -1,14 +1,15 @@
 package com.smartLive.user.service.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import cn.hutool.core.collection.CollUtil;
+import com.smartLive.common.redis.util.RedisBatchCacheUtil;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
@@ -69,6 +70,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private RedisService redisService;
     @Autowired
     private IUserInfoService userInfoService;
+    @Autowired
+    private RedisBatchCacheUtil redisBatchCacheUtil;
 
     @Autowired
     private RemoteBlogService remoteBlogService;
@@ -280,21 +283,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public List<UserVO> getUserList(List<Long> userIdList) {
-        //根据用户id查询用户  where id in (5,2) order by field (id,5,2)
-        String idStr = StrUtil.join(",",userIdList);
-        List<User> userList = query().in("id", userIdList).last("order by field(id," + idStr + ")").list();
-        userList = userList.stream().map(user -> {
-            if(user != null){
-                //查询用户是否关注当前用户
-                isFollow(user);
-                UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
-                if(userInfo != null){
-                    user.setIntroduce(userInfo.getIntroduce());
-                }
+        // 1. Utilize RedisBatchCacheUtil for cached batch retrieval (UserVO with static info)
+        List<UserVO> userVOList = redisBatchCacheUtil.queryBatchWithCache(
+                RedisConstants.CACHE_USER_KEY,
+                userIdList,
+                UserVO.class,
+                missingIds -> {
+                    // DB Fallback
+                    String idStr = StrUtil.join(",", missingIds);
+                    List<User> users = query().in("id", missingIds)
+                            .last("order by field(id," + idStr + ")")
+                            .list();
+
+                    return users.stream().map(user -> {
+                        UserVO userVO = convertToUserVO(user);
+                        if (userVO != null) {
+                            UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
+                            if (userInfo != null) {
+                                userVO.setIntroduce(userInfo.getIntroduce());
+                                userVO.setCity(userInfo.getCity());
+                                userVO.setBackgroundImage(userInfo.getBackgroundImage());
+                            }
+                        }
+                        return userVO;
+                    }).collect(Collectors.toList());
+                },
+                UserVO::getId,
+                RedisConstants.CACHE_USER_TTL,
+                TimeUnit.MINUTES
+        );
+
+        // 2. Populate dynamic info (isFollow) which depends on current user context
+        if (CollUtil.isNotEmpty(userVOList)) {
+            for (UserVO userVO : userVOList) {
+               if (userVO != null) {
+                   isFollow(userVO);
+               }
             }
-            return user;
-        }).collect(Collectors.toList());
-        return convertToUserVOList(userList);
+        }
+        return userVOList;
     }
 
     /**
@@ -546,20 +573,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                                 user.setIntroduce(userInfo.getIntroduce());
                                 user.setCity(userInfo.getCity());
                             }
-//                           queryUserInfo(user);
                         }
                 );
-                // 创建请求并发送
-                ContentBatchSyncMessage request = new ContentBatchSyncMessage();
-                request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-                request.setData(users);
-                request.setType(GlobalBizTypeEnum.USER.getCode());
-//               rabbitTemplate.convertAndSend(
-//                       MqConstants.ES_EXCHANGE,
-//                       MqConstants.ES_ROUTING_USER_BATCH_INSERT,
-//                       request
-//               );
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
+                // 发送批量消息
+                sendUserBatchMessage(users);
                 log.info("发送第 {} 页，{} 条数据", finalPage, users.size());
             });
             page++;
@@ -576,24 +593,52 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public String publish(String[] ids) {
-        for (String id : ids) {
-            executorService.submit(()->{
-                log.info("线程：{}发布用户id：{}",Thread.currentThread().getName(), id);
-                User user = query().eq("id", id).one();
-                if (user== null){
-                    return;
-                }
-                queryUserInfo(user);
-                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
-                contentSyncMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-                contentSyncMessage.setData(user);
-                contentSyncMessage.setId(user.getId());
-                contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
-//                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_USER_INSERT, esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_INSERT, contentSyncMessage);
-            });
+        if (ids == null || ids.length == 0) {
+            return "参数为空";
         }
+        // Convert to Long list
+        List<Long> idList = Arrays.stream(ids)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        executorService.submit(() -> {
+            log.info("线程{}，开始批量发布用户：{}", Thread.currentThread().getName(), idList);
+            // Batch query
+            List<User> users = query().in("id", idList).list();
+            if (CollUtil.isNotEmpty(users)) {
+                // Batch populate user info
+                List<UserInfoVO> userInfos = userInfoService.listByUserIds(idList);
+                Map<Long,UserInfoVO> userInfoMap= userInfos.stream().collect(Collectors.toMap(UserInfoVO::getUserId, userInfo -> userInfo));
+                users.forEach(user -> {
+                    UserInfoVO userInfo = userInfoMap.get(user.getId());
+                    if(userInfo != null){
+                        user.setIntroduce(userInfo.getIntroduce());
+                        user.setCity(userInfo.getCity());
+                    }
+                });
+                
+                // Batch send message
+                sendUserBatchMessage(users);
+            }
+        });
         return "发布成功";
+    }
+
+    /**
+     * 批量发送ES同步消息
+     * @param users
+     */
+    private void sendUserBatchMessage(List<User> users) {
+        if (CollUtil.isEmpty(users)) {
+            return;
+        }
+        ContentBatchSyncMessage request = new ContentBatchSyncMessage();
+        request.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+        request.setData(users);
+        request.setType(GlobalBizTypeEnum.USER.getCode());
+        
+        // 发送rabbitmq消息数据插入es
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
     }
 
     /**
@@ -606,6 +651,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         followDTO.setSourceId(user.getId());
         Boolean isFollow = remoteFollowService.isFollowed(followDTO);
         user.setIsFollow(isFollow);
+    }
+
+    /**
+     * 判断用户是否被当前用户关注 (UserVO version)
+     * @param userVO
+     */
+    private void isFollow(UserVO userVO){
+        if (userVO == null) {
+            return;
+        }
+        FollowDTO followDTO=new FollowDTO();
+        followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
+        followDTO.setSourceId(userVO.getId());
+        Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+        userVO.setIsFollow(isFollow);
     }
 
 }

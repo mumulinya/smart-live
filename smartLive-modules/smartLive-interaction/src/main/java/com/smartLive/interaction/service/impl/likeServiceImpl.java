@@ -26,7 +26,12 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.*;
 import java.util.stream.Collectors;
+import com.smartLive.interaction.api.DTO.LikeDTO;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.serializer.RedisSerializer;
+
 
 /**
  * 点赞记录Service业务层处理
@@ -185,7 +190,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                 .eq("source_type",like.getSourceType())
                 .eq("user_id", like.getUserId())
                 .orderByDesc("create_time") //
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE))
                 .getRecords()
                 .stream()
                 .map(Like::getSourceId)
@@ -283,10 +288,66 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
     private void saveLikeIdListToRedis(String key,List<Like> likeList) {
         Set<ZSetOperations.TypedTuple<String>> followIdListSet = likeList.stream()
                 .map(t -> {
-                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getSourceId().toString(), (double) t.getCreateTime().getTime());
+                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getUserId().toString(), (double) t.getCreateTime().getTime());
                     return tuple;
                 })
                 .collect(Collectors.toSet());
         redisService.setCacheZSet(key, followIdListSet);
+    }
+
+    /**
+     * 批量查询是否点赞
+     *
+     * @param likeDTO
+     * @param sourceIds
+     * @return
+     */
+    @Override
+    public Map<Long, Boolean> isLikeBatch(LikeDTO likeDTO, List<Long> sourceIds) {
+        if (sourceIds == null || sourceIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Long userId = null;
+        UserDTO user = UserContextHolder.getUser();
+        if (user != null) {
+            userId = user.getId();
+        } else if (likeDTO.getUserId() != null) {
+            userId = likeDTO.getUserId();
+        }
+
+        if (userId == null) {
+            return sourceIds.stream().collect(Collectors.toMap(id -> id, id -> false));
+        }
+
+        LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(likeDTO.getSourceType());
+        if (likeTypeEnum == null) {
+            return sourceIds.stream().collect(Collectors.toMap(id -> id, id -> false));
+        }
+        String likeKeyPrefix = likeTypeEnum.getLikeKeyPrefix();
+
+        // Pipeline execution for batch check
+        Long finalUserId = userId;
+        List<Object> results = redisService.redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            RedisSerializer keySerializer = redisService.redisTemplate.getKeySerializer();
+            RedisSerializer valueSerializer = redisService.redisTemplate.getValueSerializer();
+            for (Long sourceId : sourceIds) {
+                String key = likeKeyPrefix + sourceId;
+                // ZSCORE key member
+                connection.zSetCommands().zScore(
+                        keySerializer.serialize(key),
+                        valueSerializer.serialize(finalUserId.toString())
+                );
+            }
+            return null;
+        });
+
+        Map<Long, Boolean> resultMap = new HashMap<>();
+        for (int i = 0; i < sourceIds.size(); i++) {
+            Long sourceId = sourceIds.get(i);
+            Object result = results.get(i);
+            // If result is not null (Double score), it means verify true
+            resultMap.put(sourceId, result != null);
+        }
+        return resultMap;
     }
 }

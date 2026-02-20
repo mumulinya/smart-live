@@ -5,6 +5,9 @@ import com.smartLive.interaction.service.ILikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
+import com.smartLive.interaction.api.DTO.LikeDTO;
+import java.util.List;
+import java.util.Map;
 /**
  * 点赞服务内部接口
  * 用于微服务间内部调用
@@ -40,5 +43,16 @@ public class LikeInnerController {
     @GetMapping("/getUserLikeCount")
     Integer getUserLikeCount(@SpringQueryMap Like like){
         return likeRecordService.getUserLikeCount(like);
+    }
+
+    /**
+     * 批量查询是否点赞
+     * @param likeDTO
+     * @param sourceIds
+     * @return
+     */
+    @GetMapping("/getIsLikeBatch")
+    public Map<Long, Boolean> getIsLikeBatch(LikeDTO likeDTO, @RequestParam("sourceIds") List<Long> sourceIds) {
+        return likeRecordService.isLikeBatch(likeDTO, sourceIds);
     }
 }

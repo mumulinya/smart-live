@@ -40,6 +40,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.smartLive.common.redis.util.RedisBatchCacheUtil;
 
 /**
  * 博客Service业务层处理
@@ -69,6 +70,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private RemoteLikeService remoteLikeService;
     @Autowired
     private RemoteStarService remoteStarService;
+    @Autowired
+    private RedisBatchCacheUtil redisBatchCacheUtil;
 
     /**
      * 将Blog实体转换为BlogVO
@@ -275,9 +278,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
         List<Blog> blogList = getBlogListFromRedis(key);
         if (blogList != null) {
-            blogList.forEach(blog ->{
-                isBlogLiked(blog);
-            });
+            queryBlogListIsLike(blogList);
             return convertToBlogVOList(blogList);
         }
         // 根据用户查询
@@ -287,11 +288,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         // 获取当前页数据
          blogList = page.getRecords();
-        if(blogList!= null&&blogList.size()>0){
+        if(blogList!= null&& !blogList.isEmpty()){
             // 查询blog有关的用户信息
-            blogList.forEach(blog ->{
-                queryBlogUser(blog);
-            });
+            queryBlogListUserMessage(blogList);
+            queryBlogListIsLike(blogList);
             //把查询结果写入redis
             redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
@@ -397,12 +397,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
         List<Blog> blogList = page.getRecords();
-        blogList.forEach(blog ->{
-            //查询blog有关的用户信息
-            queryBlogUser(blog);
-            //查询blog是否被点赞
-            isBlogLiked(blog);
-        });
+        queryBlogListUserMessage(blogList);
+        queryBlogListIsLike(blogList);
         return convertToBlogVOList(blogList);
     }
     /**
@@ -421,9 +417,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .orderByAsc("create_time")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         List<Blog> records = page.getRecords();
-        records.forEach(blog ->{
-            isBlogLiked(blog);
-        });
+        queryBlogListIsLike(records);
         return convertToBlogVOList(records);
     }
     /**
@@ -447,15 +441,145 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public List<Blog> getBlogListByIds(List<Long> sourceIdList) {
-        String idStr = StrUtil.join(",", sourceIdList);
-        List<Blog> blogList = query().in("id", sourceIdList).last("order by field(id," + idStr + ")").list();
-        blogList.forEach(blog ->{
-            //查询blog有关的用户信息
-            queryBlogUser(blog);
-            //查询blog是否被点赞
-            isBlogLiked(blog);
-        });
+        // 1. Utilize RedisBatchCacheUtil for cached batch retrieval
+        List<Blog> blogList = redisBatchCacheUtil.queryBatchWithCache(
+                RedisConstants.CACHE_BLOG_KEY,
+                sourceIdList,
+                Blog.class,
+                missingIds -> {
+                    // DB Fallback
+                    String idStr = StrUtil.join(",", missingIds);
+                    return query().in("id", missingIds)
+                            .last("order by field(id," + idStr + ")")
+                            .list();
+                },
+                Blog::getId,
+                // Using general blog TTL or similar? Reusing PRODUCT/SHOP TTL logic or existing RedisConstants.CACHE_HOT_BLOG_TTL (which is 1 day). 
+                // Let's use 30 minutes like others or defined constant. 
+                // RedisConstants.CACHE_BLOG_TTL is not defined, but RedisConstants.CACHE_HOT_BLOG_TTL is. 
+                // Let's use 30 minutes (generic TTL) or create one. 
+                // For now, I'll use 30L and TimeUnit.MINUTES directly as per other services.
+                30L,
+                TimeUnit.MINUTES
+        );
+
+        // 2. Populate dynamic info (isLiked, isStared) in Batch
+        if (CollUtil.isNotEmpty(blogList)) {
+            queryBlogListUserMessage(blogList);
+            queryBlogListIsLike(blogList);
+        }
         return blogList;
+    }
+
+    /**
+     * 批量查询博客是否被点赞
+     * @param blogList
+     */
+    private void queryBlogListIsLike(List<Blog> blogList) {
+        if (CollUtil.isEmpty(blogList)) {
+            return;
+        }
+        UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            blogList.forEach(blog -> {
+                if (blog != null) {
+                    blog.setIsLike(false);
+                }
+            });
+            return;
+        }
+        // Extract IDs
+        List<Long> blogIds = blogList.stream()
+                .map(Blog::getId)
+                .collect(Collectors.toList());
+
+        // Batch check Likes
+        LikeDTO likeDTO = new LikeDTO();
+        likeDTO.setUserId(user.getId());
+        likeDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
+        Map<Long, Boolean> likeMap = remoteLikeService.getIsLikeBatch(likeDTO, blogIds);
+        log.info("likeMap: {}", likeMap);
+        blogList.forEach(blog -> {
+            if (blog != null) {
+                blog.setIsLike(likeMap.getOrDefault(blog.getId(), false));
+            }
+        });
+    }
+
+    /**
+     * 批量查询博客是否被收藏
+     * @param blogList
+     */
+    private void queryBlogListIsStar(List<Blog> blogList) {
+        if (CollUtil.isEmpty(blogList)) {
+            return;
+        }
+        UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            blogList.forEach(blog -> {
+                if (blog != null) {
+                    blog.setIsStared(false);
+                }
+            });
+            return;
+        }
+        // Extract IDs
+        List<Long> blogIds = blogList.stream()
+                .map(Blog::getId)
+                .collect(Collectors.toList());
+
+        // Batch check Stars
+        StarDTO starDTO = new StarDTO();
+        starDTO.setUserId(user.getId());
+        starDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
+        Map<Long, Boolean> starMap = remoteStarService.getIsStarBatch(starDTO, blogIds);
+
+        blogList.forEach(blog -> {
+            if (blog != null) {
+                blog.setIsStared(starMap.getOrDefault(blog.getId(), false));
+            }
+        });
+    }
+
+    /**
+     * 批量查询博客有关的用户信息
+     * @param blogList
+     */
+    private void queryBlogListUserMessage(List<Blog> blogList) {
+        if (CollUtil.isEmpty(blogList)) {
+            return;
+        }
+        // Query userId list
+        List<Long> userIds = blogList.stream()
+                .map(Blog::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (CollUtil.isEmpty(userIds)) {
+            return;
+        }
+
+        // Batch query user info
+        List<com.smartLive.user.api.domain.UserDTO> userList = remoteAppUserService.getUserList(userIds);
+        
+        if (CollUtil.isEmpty(userList)) {
+            return;
+        }
+
+        Map<Long, com.smartLive.user.api.domain.UserDTO> userMap = userList.stream().collect(Collectors.toMap(
+                com.smartLive.user.api.domain.UserDTO::getId,
+                Function.identity(),
+                (v1, v2) -> v1
+        ));
+
+        blogList.forEach(blog -> {
+            com.smartLive.user.api.domain.UserDTO user = userMap.get(blog.getUserId());
+            if (user != null) {
+                blog.setName(user.getNickName());
+                blog.setIcon(user.getIcon());
+            }
+        });
     }
 
     /**
@@ -651,7 +775,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         String key= RedisConstants.CACHE_BLOG_TYPE_KEY + typeId+":"+ current;
         List<Blog> blogList = getBlogListFromRedis(key);
         if (blogList != null) {
-                blogList.forEach(blog -> isBlogLiked(blog));
+            queryBlogListIsLike(blogList);
             return convertToBlogVOList(blogList);
         }
         Page<Blog> page = query()
@@ -663,10 +787,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         blogList = page.getRecords();
         if(blogList!= null&&blogList.size()>0){
             // 查询blog有关的用户信息
-            blogList.forEach(blog ->{
-                queryBlogUser(blog);
-                isBlogLiked(blog);
-            });
+            // 查询blog有关的用户信息
+            queryBlogListUserMessage(blogList);
+            queryBlogListIsLike(blogList);
             //把查询结果写入redis
             redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
@@ -705,66 +828,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //使用多线程批量插入
             int finalPage = page;
             executorService.execute(() -> {
-                //查询userId列表
-                List<Long> userIds = blogs.stream()
-                        .map(Blog::getUserId)
-                        .filter(Objects::nonNull) // 防止有 null 的 userId 导致报错
-                        .distinct()               // 去重，避免重复查询同一个 ID
-                        .collect(Collectors.toList());
-
-                // 定义结果 Map，默认为空
-                Map<Long, com.smartLive.user.api.domain.UserDTO> userMap = Collections.emptyMap();
-
-                // 2. 只有当 ID 列表不为空时才发起远程调用，节省资源
-                if (!userIds.isEmpty()) {
-                    // 批量查询用户信息
-                    List<com.smartLive.user.api.domain.UserDTO> userList = remoteAppUserService.getUserList(userIds);
-                    // 4. 将 List<User> 转换为 Map<Long, User>
-                    if (userList != null) {
-                        userMap = userList.stream().collect(Collectors.toMap(
-                                com.smartLive.user.api.domain.UserDTO::getId,               // Key: 用户 ID
-                                Function.identity(),       // Value: User 对象本身
-                                (v1, v2) -> v1             // MergeFunction: 如果远程服务返回了重复 ID 的数据，取第一个，防止报错
-                        ));
-                    }
-                }
-                Map<Long, com.smartLive.user.api.domain.UserDTO> finalUserMap = userMap;
-                blogs.forEach(blog ->{
-                    //查询blog有关的用户信息
-                    com.smartLive.user.api.domain.UserDTO user = finalUserMap.get(blog.getUserId());
-                    blog.setName(user.getNickName());
-                    blog.setIcon(user.getIcon());
-                });
+                queryBlogListUserMessage(blogs);
                 // 创建请求并发送
-                ContentBatchSyncMessage request = new ContentBatchSyncMessage();
-                request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-                request.setData(blogs);
-                request.setType(GlobalBizTypeEnum.BLOG.getCode());
-//                rabbitTemplate.convertAndSend(
-//                        MqConstants.ES_EXCHANGE,
-//                        MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
-//                        request
-//                );
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate,
-                        MqConstants.ES_EXCHANGE,
-                        MqConstants.ES_ROUTING_BATCH_INSERT,
-                        request);
+                sendEsBatchMessage(blogs);
                 log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, blogs.size());
             });
-//            blogs.forEach(blog ->{
-//                //查询blog有关的用户信息
-//                queryBlogUser(blog);
-//            });
-//            // 创建请求并发送
-//            EsBatchInsertRequest request = new EsBatchInsertRequest();
-//            request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-//            request.setData(blogs);
-//            request.setDataType(EsDataTypeConstants.BLOG);
-//            rabbitTemplate.convertAndSend(
-//                    MqConstants.ES_EXCHANGE,
-//                    MqConstants.ES_ROUTING_BLOG_BATCH_INSERT,
-//                    request
-//            );
             page++;
         }
         return "数据发布完成";
@@ -778,26 +846,44 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public String publish(String[] ids) {
-        for (String id : ids) {
-          executorService.submit(() -> {
-              log.info("线程{}，开始发布博客{}",Thread.currentThread().getName(),id);
-              Blog blog = query().eq("id", id).one();
-              if(blog == null){
-                  return;
-              }
-              queryBlogUser(blog);
-              ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
-              contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
-              contentSyncMessage.setData(blog);
-              contentSyncMessage.setId(blog.getId());
-              contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
-              MqMessageSendUtils.sendMqMessage(rabbitTemplate,
-                      MqConstants.ES_EXCHANGE,
-                      MqConstants.ES_ROUTING_INSERT,
-                      contentSyncMessage);
-          });
+        if (ids == null || ids.length == 0) {
+            return "参数为空";
         }
+        // Convert to Long list
+        List<Long> idList = Arrays.stream(ids)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        executorService.submit(() -> {
+            log.info("线程{}，开始批量发布博客：{}", Thread.currentThread().getName(), idList);
+            // Batch query
+            List<Blog> blogs = query().in("id", idList).list();
+            if (CollUtil.isNotEmpty(blogs)) {
+                // Batch populate user info
+                queryBlogListUserMessage(blogs);
+                // Batch send message
+                sendEsBatchMessage(blogs);
+            }
+        });
         return "发布成功";
+    }
+
+    /**
+     * 批量发送ES同步消息
+     * @param blogs
+     */
+    private void sendEsBatchMessage(List<Blog> blogs) {
+        if (CollUtil.isEmpty(blogs)) {
+            return;
+        }
+        ContentBatchSyncMessage request = new ContentBatchSyncMessage();
+        request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+        request.setData(blogs);
+        request.setType(GlobalBizTypeEnum.BLOG.getCode());
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+                MqConstants.ES_EXCHANGE,
+                MqConstants.ES_ROUTING_BATCH_INSERT,
+                request);
     }
     /**
      * 刷新缓存

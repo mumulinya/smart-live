@@ -30,6 +30,7 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.RedisBatchCacheUtil;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
@@ -75,7 +76,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private RemoteStarService remoteStarService;
     @Autowired
     RemoteFollowService remoteFollowService;
-
+    @Autowired
+    private RedisBatchCacheUtil redisBatchCacheUtil;
     /**
      * 将Shop实体转换为ShopVO
      * @param shop Shop实体
@@ -510,18 +512,20 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public List<ShopVO> getShopList(List<Long> ids) {
-
-        //根据用户id查询用户  where id in (5,2) order by field (id,5,2)
-        String idStr = StrUtil.join(",",ids);
-        List<Shop> orderList = query().in("id", ids).last("order by field(id," + idStr + ")").list();
-//        userList = userList.stream().map(user -> {
-//            UserInfo userInfo = userInfoService.getByUserId(user.getId());
-//            if(userInfo != null){
-//                user.setIntroduce(userInfo.getIntroduce());
-//            }
-//            return user;
-//        }).collect(Collectors.toList());
-        return convertToShopVOList(orderList);
+       return redisBatchCacheUtil.queryBatchWithCache(
+                RedisConstants.CACHE_SHOP_KEY,
+                ids,
+                ShopVO.class,
+                missingIds -> {
+                    // 3. 填查库逻辑 (Lambda表达式)
+                    List<Shop> shops = shopMapper.selectBatchIds(missingIds);
+                    return convertToShopVOList(shops);
+                },
+                ShopVO::getId,
+                RedisConstants.CACHE_SHOP_TTL,
+                TimeUnit.MINUTES
+        );
+//        return convertToShopVOList(orderList);
     }
 
     /**
@@ -643,25 +647,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                             shop.setLocation(shop.getY() + "," + shop.getX());
                         }
                 );
-                // 创建请求并发送
-                ContentBatchSyncMessage request = new ContentBatchSyncMessage();
-                request.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
-                request.setData(shops);
-                request.setType(GlobalBizTypeEnum.SHOP.getCode());
-                //发送rabbitmq消息数据插入es
-//                    rabbitTemplate.convertAndSend(
-//                            MqConstants.ES_EXCHANGE,
-//                            MqConstants.ES_ROUTING_SHOP_BATCH_INSERT,
-//                            request
-//                    );
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
-                //发送rabbitmq消息数据插入Milvus
-//                    rabbitTemplate.convertAndSend(
-//                            MqConstants.MILVUS_EXCHANGE,
-//                            MqConstants.MILVUS_ROUTING_SHOP_BATCH_INSERT,
-//                            request
-//                    );
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
+                // 发送批量消息
+                sendShopBatchMessage(shops);
                 log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, shops.size());
             });
             page++;
@@ -678,23 +665,45 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public String publish(String[] ids) {
-        for (String id : ids) {
-            executorService.submit(() -> {
-                log.info("线程{}，开始发布店铺{}", Thread.currentThread().getName(), id);
-                Shop shop = query().eq("id", id).one();
-                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
-                contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
-                shop.setLocation(shop.getY() + "," + shop.getX());
-                contentSyncMessage.setData(shop);
-                contentSyncMessage.setId(shop.getId());
-                contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
-                //发送rabbitmq消息数据插入es
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_INSERT, contentSyncMessage);
-                //发送rabbitmq消息数据插入Milvus
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_INSERT, contentSyncMessage);
-            });
+        if (ids == null || ids.length == 0) {
+            return "参数为空";
         }
+        // Convert to Long list
+        List<Long> idList = Arrays.stream(ids)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        executorService.submit(() -> {
+            log.info("线程{}，开始批量发布店铺：{}", Thread.currentThread().getName(), idList);
+            // Batch query
+            List<Shop> shops = query().in("id", idList).list();
+            if (CollUtil.isNotEmpty(shops)) {
+                // Set location
+                shops.forEach(shop -> shop.setLocation(shop.getY() + "," + shop.getX()));
+                // Batch send message
+                sendShopBatchMessage(shops);
+            }
+        });
         return "发布成功";
+    }
+
+    /**
+     * 批量发送ES和Milvus同步消息
+     * @param shops
+     */
+    private void sendShopBatchMessage(List<Shop> shops) {
+        if (CollUtil.isEmpty(shops)) {
+            return;
+        }
+        ContentBatchSyncMessage request = new ContentBatchSyncMessage();
+        request.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
+        request.setData(shops);
+        request.setType(GlobalBizTypeEnum.SHOP.getCode());
+        
+        // 发送rabbitmq消息数据插入es
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
+        // 发送rabbitmq消息数据插入Milvus
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
     }
 
     /**

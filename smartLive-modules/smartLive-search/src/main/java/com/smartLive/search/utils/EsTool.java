@@ -50,7 +50,7 @@ public class EsTool {
             jsonMap.put("id", shop.getId());
             jsonMap.put("name", shop.getName());
             jsonMap.put("typeId", shop.getTypeId());
-            jsonMap.put("images", shop.getImages());
+            jsonMap.put("shopLogo", shop.getShopLogo());
             jsonMap.put("area", shop.getArea());
             jsonMap.put("address", shop.getAddress());
             // 处理地理位置

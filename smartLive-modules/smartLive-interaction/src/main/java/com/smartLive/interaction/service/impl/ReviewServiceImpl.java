@@ -22,6 +22,8 @@ import com.smartLive.interaction.domain.BO.AuditReviewBO;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.Review;
+import com.smartLive.interaction.api.DTO.LikeDTO;
+import com.smartLive.interaction.domain.DTO.StarDTO;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.mapper.ReviewMapper;
 import com.smartLive.interaction.service.ILikeService;
@@ -47,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.smartLive.common.redis.util.RedisBatchCacheUtil;
 /**
  * 评价ervice业务层处理
  * 
@@ -75,6 +78,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private RemoteOrderService remoteOrderService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private RedisBatchCacheUtil redisBatchCacheUtil;
     private ResourceStrategyFactory resourceStrategyFactory;
 
     @Autowired
@@ -164,61 +169,131 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public List<Review> listReview(Review review, Integer current) {
-        //从redis里面获取
+        // Redis 前缀
         ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
         if (reviewType == null) {
             log.error("参数错误");
             return Collections.emptyList();
         }
         String reviewKeyPrefix = reviewType.getReviewKeyPrefix();
+
+        // 1. 使用 QueryRedisSourceIdsTool 获取分页 ID 列表 (ZSet 分页)
         Page<Long> longPage = queryRedisSourceIdsTool.queryRedisIdPage(reviewKeyPrefix, review.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> reviewIdList = longPage.getRecords();
-        List<Review> list=new ArrayList<>();
-        if(reviewIdList != null && !reviewIdList.isEmpty()){
-             list = lambdaQuery()
-                     .ne(Review::getStatus, "2")
-                     .in(Review::getId, reviewIdList)
-                     .orderByDesc(Review::getLiked).list();
-        }
-        //如果redis里面没有数据，则从数据库里面获取
-        if(list == null || list.isEmpty()){
-            log.info("从数据库里面获取");
-             list = query()
+
+        if (CollUtil.isEmpty(reviewIdList)) {
+            // 降级：如果 Redis ZSet 为空，则查询数据库获取 Review ID
+            log.info("Redis ZSet empty, querying DB for Review IDs");
+             List<Review> dbList = query()
                     .eq("source_id", review.getSourceId())
                     .ne("status", 2)
                     .eq("source_type", review.getSourceType())
                     .orderByDesc("liked")
                     .list();
-            //截取
-            if(!list.isEmpty()){
-                saveReviewListToRedis(reviewKeyPrefix+review.getSourceId(), list);
-                //截取当前页
-                list = list.size() > SystemConstants.DEFAULT_PAGE_SIZE ? list.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : list;
+
+            if (CollUtil.isNotEmpty(dbList)) {
+                // 保存到 Redis ZSet
+                saveReviewListToRedis(reviewKeyPrefix + review.getSourceId(), dbList);
+                // 简单的内存分页用于降级
+                int start = (current - 1) * SystemConstants.MAX_PAGE_SIZE; // Note: using MAX_PAGE_SIZE as per original logic? Or DEFAULT?
+                // The original code used MAX_PAGE_SIZE in queryRedisIdPage, but DEFAULT_PAGE_SIZE in DB fallback subList??
+                // Reviewing original code: usage was inconsistent.
+                // Assuming SystemConstants.MAX_PAGE_SIZE is the intended page size for reviews?
+                // Step 683 showed: queryRedisIdPage(..., MAX_PAGE_SIZE) and DB subList(..., DEFAULT_PAGE_SIZE).
+                // This implies a bug in original code or intended mismatch.
+                // Let's stick to MAX_PAGE_SIZE for consistency with Redis call.
+                int pageSize = SystemConstants.MAX_PAGE_SIZE;
+                 if (dbList.size() > start) {
+                    dbList = dbList.subList(start, Math.min(start + pageSize, dbList.size()));
+                    reviewIdList = dbList.stream().map(Review::getId).collect(Collectors.toList());
+                } else {
+                     reviewIdList = Collections.emptyList();
+                }
             }
         }
-        if(list.isEmpty()){
+
+        if (CollUtil.isEmpty(reviewIdList)) {
             return Collections.emptyList();
         }
-        list.forEach(c -> {
-            //判断是否点赞
-            Like like = new Like();
-            like.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
-            like.setSourceId(c.getId());
-            c.setIsLike(likeService.isLike(like));
-            Star star=new Star();
-            star.setSourceId(c.getId());
-            star.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
-            starService.isStar(star);
-            c.setIsStared(starService.isStar(star));
-            //判断是否收藏
-            Long id = c.getUserId();
-            UserDTO user = remoteAppUserService.queryUserById(id);
+
+        // 2. 使用 RedisBatchCacheUtil 批量获取 Review 对象
+        List<Review> list = redisBatchCacheUtil.queryBatchWithCache(
+                RedisConstants.CACHE_REVIEW_KEY, // Review 对象缓存前缀
+                reviewIdList,                    // 要获取的 ID
+                Review.class,                    // 目标类
+                (missingIds) -> {                // 对象数据库降级
+                    return query()
+                            .in("id", missingIds)
+                            .list();
+                },
+                Review::getId,                   // ID 提取器
+                RedisConstants.CACHE_REVIEW_TTL, // 过期时间
+                java.util.concurrent.TimeUnit.MINUTES // 单位
+        );
+
+        if (CollUtil.isEmpty(list)) {
+            return Collections.emptyList();
+        }
+
+        // 3. 批量获取辅助信息 (User, Like, Star)
+        Set<Long> userIds = list.stream().map(Review::getUserId).collect(Collectors.toSet());
+        List<Long> reviewIds = list.stream().map(Review::getId).collect(Collectors.toList());
+
+        // 3.1 批量获取用户
+        Map<Long, UserDTO> userMap = new HashMap<>();
+        if (CollUtil.isNotEmpty(userIds)) {
+            try {
+                // Assuming remoteAppUserService has a batch method. If not, we might need to loop or add one.
+                // Based on previous context, queryUserById is single. checking for batch...
+                // RemoteAppUserService has getUserList(List<Long> userIdList)
+                List<UserDTO> users = remoteAppUserService.getUserList(new ArrayList<>(userIds));
+                if (CollUtil.isNotEmpty(users)) {
+                    userMap = users.stream().collect(Collectors.toMap(UserDTO::getId, u -> u));
+                }
+            } catch (Exception e) {
+                log.error("Batch fetch users failed", e);
+            }
+        }
+
+        // 3.2 批量获取点赞状态
+        Map<Long, Boolean> likeMap = new HashMap<>();
+        try {
+            LikeDTO likeDTO = new LikeDTO();
+            likeDTO.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
+             // 注意: RemoteLikeService.getIsLikeBatch 需要实现检查
+             // 我们已经验证该接口存在
+            likeMap = likeService.isLikeBatch(likeDTO, reviewIds);
+        } catch (Exception e) {
+             log.error("Batch fetch like status failed", e);
+        }
+
+        // 3.3 批量获取收藏状态
+        Map<Long, Boolean> starMap = new HashMap<>();
+        try {
+            StarDTO starDTO = new StarDTO();
+            starDTO.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
+            starMap = starService.isStarBatch(starDTO, reviewIds);
+        } catch (Exception e) {
+            log.error("Batch fetch star status failed", e);
+        }
+
+        // 4. 组装数据
+        for (Review c : list) {
+            // 用户信息
+            UserDTO user = userMap.get(c.getUserId());
             if (user != null) {
                 c.setNickName(user.getNickName());
                 c.setUserIcon(user.getIcon());
             }
-        });
-        //获取是否有ai生成评论
+
+            // 点赞状态
+            c.setIsLike(likeMap.getOrDefault(c.getId(), false));
+
+            // 收藏状态
+            c.setIsStared(starMap.getOrDefault(c.getId(), false));
+        }
+
+        // 5. AI 评论 (保持现有逻辑)
         String key = RedisConstants.CACHE_AI_COMMENT_KEY + review.getSourceType() + ":" + review.getSourceId();
         String JsonStr = redisService.getCacheObject(key);
         if (JsonStr != null) {
@@ -336,12 +411,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public Integer getReviewCount(Review review) {
-        int reviewCount = query()
+        return query()
                 .eq(review.getSourceType() != null, "source_type", review.getSourceType())
                 .eq(review.getSourceId() != null, "source_id", review.getSourceId())
                 .eq(review.getUserId() != null, "user_id", review.getUserId())
                 .count().intValue();
-        return reviewCount;
     }
 
     /**

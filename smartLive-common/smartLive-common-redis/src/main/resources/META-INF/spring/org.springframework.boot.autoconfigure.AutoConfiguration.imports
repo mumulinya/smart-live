@@ -1,2 +1,3 @@
 com.smartLive.common.redis.configure.RedisConfig
 com.smartLive.common.redis.service.RedisService
+com.smartLive.common.redis.util.RedisBatchCacheUtil

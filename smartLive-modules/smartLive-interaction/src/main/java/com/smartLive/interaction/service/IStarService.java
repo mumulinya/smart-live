@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.interaction.domain.DTO.StarDTO;
 import com.smartLive.interaction.domain.Star;
 import java.util.List;
+import java.util.Map;
+import java.util.List;
 
 
 /**
@@ -94,4 +96,11 @@ public interface IStarService extends IService<Star>
      * @return
      */
     Integer getUserStarCount(Star star);
+    /**
+     * 批量判断是否收藏
+     * @param star
+     * @return
+     */
+    Map<Long, Boolean> isStarBatch(StarDTO starDTO, List<Long> sourceIds);
+
 }

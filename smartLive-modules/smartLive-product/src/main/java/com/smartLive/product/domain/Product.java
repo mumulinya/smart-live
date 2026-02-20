@@ -123,9 +123,6 @@ public class Product extends BaseEntity implements Serializable {
     //店铺logo
     @TableField(exist = false)
     private String shopLogo;
-    //店铺图片
-    @TableField(exist = false)
-    private String shopImages;
     //是否收藏
     @TableField(exist = false)
     private Boolean isStar;

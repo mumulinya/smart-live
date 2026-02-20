@@ -1,6 +1,7 @@
 package com.smartLive.shop.domain.VO;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
@@ -15,6 +16,7 @@ import java.util.Date;
  * @date 2025-09-21
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
 public class ShopVO implements Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -31,6 +33,9 @@ public class ShopVO implements Serializable
 
     /** 商铺图片，多个图片以','隔开 */
     private String images;
+
+    /** 店铺头像 */
+    private String shopLogo;
 
     /** 商圈，例如陆家嘴 */
     private String area;

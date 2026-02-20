@@ -602,4 +602,26 @@ public class RedisService
     public void rename(String oldKey, String newKey) {
         redisTemplate.rename(oldKey, newKey);
     }
+    /**
+    * 批量获取基本对象
+     * 对应 Redis 命令: MGET key1 key2 ...
+        *
+        * @param keys 键值集合
+     * @return 指定键对应的对象列表
+     */
+    public <T> List<T> getMultiCacheObject(final Collection<String> keys)
+    {
+        return redisTemplate.opsForValue().multiGet(keys);
+    }
+
+    /**
+     * 批量设置基本对象
+     * 对应 Redis 命令: MSET key1 value1 key2 value2 ...
+     *
+     * @param cacheMap 包含键值的 Map
+     */
+    public <T> void setMultiCacheObject(final Map<String, T> cacheMap)
+    {
+        redisTemplate.opsForValue().multiSet(cacheMap);
+    }
 }

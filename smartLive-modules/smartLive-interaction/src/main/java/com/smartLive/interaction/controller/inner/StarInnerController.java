@@ -6,6 +6,10 @@ import jakarta.annotation.Resource;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
 
+import com.smartLive.interaction.domain.DTO.StarDTO;
+import java.util.List;
+import java.util.Map;
+
 /**
  * 收藏服务内部接口
  *
@@ -34,8 +38,7 @@ public class StarInnerController {
      */
     @GetMapping("/getStarCount")
     Integer getStarCount(Star star){
-        Integer followShopCount=starService.getStarCount(star);
-        return followShopCount;
+        return starService.getStarCount(star);
     }
     /**
      * 获取用户收藏数量
@@ -45,5 +48,16 @@ public class StarInnerController {
     @GetMapping("/getUserStarCount")
     Integer getUserStarCount(@SpringQueryMap Star star){
         return starService.getUserStarCount(star);
+    }
+
+    /**
+     * 批量查询是否收藏
+     * @param starDTO
+     * @param sourceIds
+     * @return
+     */
+    @GetMapping("/getIsStarBatch")
+    public Map<Long, Boolean> getIsStarBatch(StarDTO starDTO, @RequestParam("sourceIds") List<Long> sourceIds) {
+        return starService.isStarBatch(starDTO, sourceIds);
     }
 }

@@ -3,6 +3,9 @@ package com.smartLive.shop.api.DTO;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,12 +23,13 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class ShopDTO extends BaseEntity implements Serializable
+@JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
+public class ShopDTO implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
-    @TableId(value = "id", type = IdType.AUTO)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     /** 商铺名称 */
@@ -36,6 +40,9 @@ public class ShopDTO extends BaseEntity implements Serializable
 
     /** 商铺图片，多个图片以','隔开 */
     private String images;
+
+    /** 店铺头像 */
+    private String shopLogo;
 
     /** 商圈，例如陆家嘴 */
     private String area;
@@ -50,7 +57,7 @@ public class ShopDTO extends BaseEntity implements Serializable
     private Double y;
 
     /** 均价，取整数 */
-    private String avgPrice;
+    private Integer avgPrice;
 
     /** 销量 */
     private Integer sold;
@@ -68,8 +75,5 @@ public class ShopDTO extends BaseEntity implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
     private Double distance;
-    //查找关键字
-    private String keyword;
-
-    private Boolean isFollow;
+    private String location;
 }

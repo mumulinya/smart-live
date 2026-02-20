@@ -6,6 +6,8 @@ import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.service.IStarService;
 import org.springframework.web.bind.annotation.*;
 import jakarta.annotation.Resource;
+import java.util.List;
+
 
 /**
  * 收藏管理外部接口
@@ -56,9 +58,20 @@ public class StarController {
      * @param star 收藏查询条件
      * @return 收藏数量
      */
-    @GetMapping("/getStarCount")
-    Result getStarCount(Star star){
-        Integer followShopCount=starService.getStarCount(star);
+    @GetMapping("/count")
+    public Result getStarCount(Star star) {
+        Integer followShopCount = starService.getStarCount(star);
         return Result.ok(followShopCount);
+    }
+
+    /**
+     * 批量查询是否收藏
+     * @param starDTO
+     * @param sourceIds
+     * @return
+     */
+    @GetMapping("/getIsStarBatch")
+    public Result getIsStarBatch(StarDTO starDTO, @RequestParam("sourceIds") List<Long> sourceIds){
+        return Result.ok(starService.isStarBatch(starDTO, sourceIds));
     }
 }

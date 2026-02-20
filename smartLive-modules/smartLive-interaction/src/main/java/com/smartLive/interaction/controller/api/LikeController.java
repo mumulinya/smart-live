@@ -5,6 +5,9 @@ import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.service.ILikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import com.smartLive.interaction.api.DTO.LikeDTO;
+
 
 /**
  * 点赞服务外部接口
@@ -22,7 +25,7 @@ public class LikeController {
      * @return 操作结果
      */
     @PutMapping()
-    public Result likeBlog(@RequestBody Like like) {
+    public Result likeOrCancelLike(@RequestBody Like like) {
         return Result.ok(likeRecordService.likeOrCancelLike(like));
     }
     /**
@@ -52,5 +55,16 @@ public class LikeController {
     @GetMapping("/likeUserList")
     public Result queryLikeUserList(Like like) {
         return Result.ok(likeRecordService.queryLikeUserList(like));
+    }
+
+    /**
+     * 批量查询是否点赞
+     * @param likeDTO
+     * @param sourceIds
+     * @return
+     */
+    @GetMapping("/getIsLikeBatch")
+    public Result getIsLikeBatch(LikeDTO likeDTO, @RequestParam("sourceIds") List<Long> sourceIds) {
+        return Result.ok(likeRecordService.isLikeBatch(likeDTO, sourceIds));
     }
 }

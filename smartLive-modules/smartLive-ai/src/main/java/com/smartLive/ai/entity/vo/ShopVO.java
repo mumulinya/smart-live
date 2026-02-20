@@ -21,6 +21,9 @@ public class ShopVO {
     /** 商铺图片，多个图片以','隔开 */
     private String images;
 
+    /** 店铺头像 */
+    private String shopLogo;
+
     /** 商圈，例如陆家嘴 */
     private String area;
 

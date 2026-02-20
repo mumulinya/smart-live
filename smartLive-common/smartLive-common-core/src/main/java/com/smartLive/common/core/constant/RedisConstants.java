@@ -62,6 +62,22 @@ public class RedisConstants {
     //商品粉丝
     public static final String FANS_PRODUCT_KEY = "fans:product:";
     /**
+     * 商品缓存
+     */
+    public static final String CACHE_PRODUCT_KEY = "cache:product:";
+    public static final Long CACHE_PRODUCT_TTL = 30L;
+
+    /**
+     * 用户缓存
+     */
+    public static final String CACHE_USER_KEY = "cache:user:";
+    public static final Long CACHE_USER_TTL = 30L;
+    /**
+     * 评价缓存
+     */
+    public static final String CACHE_REVIEW_KEY = "cache:review:";
+    public static final Long CACHE_REVIEW_TTL = 30L;
+    /**
      * 推送数据
      */
     //全部推送

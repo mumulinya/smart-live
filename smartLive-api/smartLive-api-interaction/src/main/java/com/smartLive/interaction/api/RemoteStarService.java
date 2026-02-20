@@ -5,6 +5,9 @@ import com.smartLive.interaction.api.factory.RemoteStarFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import java.util.List;
+import java.util.Map;
 
 
 @FeignClient(contextId = "remoteStarService", value = ServiceNameConstants.INTERACTION_SERVICE, fallbackFactory = RemoteStarFallbackFactory.class)
@@ -42,5 +45,14 @@ public interface RemoteStarService {
      */
     @GetMapping("/inner/star/getUserStarCount")
      Integer getUserStarCount(@SpringQueryMap StarDTO starDTO);
+
+    /**
+     * 批量查询是否收藏
+     * @param starDTO
+     * @param sourceIds
+     * @return
+     */
+    @GetMapping("/inner/star/getIsStarBatch")
+    Map<Long, Boolean> getIsStarBatch(@SpringQueryMap StarDTO starDTO, @RequestParam("sourceIds") List<Long> sourceIds);
 
 }

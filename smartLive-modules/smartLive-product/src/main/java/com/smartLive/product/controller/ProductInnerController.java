@@ -78,8 +78,7 @@ public class ProductInnerController extends BaseController {
      */
     @GetMapping("/getProductListByIds")
     public List<Product> getProductListByIds(@RequestParam("sourceIdList") List<Long> sourceIdList){
-        List<Product> list = productService.getProductListByIds(sourceIdList);
-        return list;
+        return productService.getProductListByIds(sourceIdList);
     }
 
     /**

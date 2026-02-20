@@ -5,6 +5,9 @@ import com.smartLive.interaction.api.factory.RemoteLikeFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import java.util.List;
+import java.util.Map;
 
 
 
@@ -36,4 +39,13 @@ public interface RemoteLikeService {
      */
     @GetMapping("/inner/like/getUserLikeCount")
      Integer getUserLikeCount(@SpringQueryMap LikeDTO likeDTO);
+
+    /**
+     * 批量查询是否点赞
+     * @param likeDTO
+     * @param sourceIds
+     * @return
+     */
+    @GetMapping("/inner/like/getIsLikeBatch")
+    Map<Long, Boolean> getIsLikeBatch(@SpringQueryMap LikeDTO likeDTO, @RequestParam("sourceIds") List<Long> sourceIds);
 }

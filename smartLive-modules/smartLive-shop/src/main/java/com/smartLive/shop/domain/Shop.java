@@ -43,6 +43,10 @@ public class Shop extends BaseEntity implements Serializable
     @Excel(name = "商铺图片，多个图片以','隔开")
     private String images;
 
+    /** 店铺头像 */
+    @Excel(name = "店铺头像")
+    private String shopLogo;
+
     /** 商圈，例如陆家嘴 */
     @Excel(name = "商圈，例如陆家嘴")
     private String area;

@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Map;
+
 @Component
 @Slf4j
 public class RemoteLikeFallbackFactory implements FallbackFactory<RemoteLikeService> {
@@ -51,6 +54,19 @@ public class RemoteLikeFallbackFactory implements FallbackFactory<RemoteLikeServ
             public Integer getUserLikeCount(LikeDTO likeDTO) {
                 log.error("查询用户点赞数失败:{}", cause.getMessage());
                 return 0;
+            }
+
+            /**
+             * 批量查询是否点赞
+             *
+             * @param likeDTO
+             * @param sourceIds
+             * @return
+             */
+            @Override
+            public Map<Long, Boolean> getIsLikeBatch(LikeDTO likeDTO, List<Long> sourceIds) {
+               log.error("批量查询是否点赞失败:{}", cause.getMessage());
+                return Map.of();
             }
         };
     }

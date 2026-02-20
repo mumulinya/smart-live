@@ -87,6 +87,5 @@ public class ProductVO {
     // Join Fields
     private String shopName;
     private String shopLogo; // ProductDTO has shopImages, ProductVO had shopLogo/shopImages.
-    private String shopImages;
     private Long typeId;
 }

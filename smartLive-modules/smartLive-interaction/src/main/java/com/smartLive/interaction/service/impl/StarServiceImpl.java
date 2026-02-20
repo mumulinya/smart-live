@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.domain.UserDTO;
 import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.enums.StarTypeEnum;
@@ -20,6 +21,7 @@ import com.smartLive.interaction.strategy.factory.StarStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.strategy.star.StarStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -27,7 +29,13 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.serializer.RedisSerializer;
+
 
 /**
  * 关注Service业务层处理
@@ -36,6 +44,7 @@ import java.util.stream.Collectors;
  * @date 2025-09-21
  */
 @Service
+@Slf4j
 public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IStarService
 {
     @Autowired
@@ -298,6 +307,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      * @param sourceList
      */
     private void saveStarIdListToRedis(String key, List<Star> sourceList) {
+        log.info("保存关注列表到Redis{}",sourceList);
         Set<ZSetOperations.TypedTuple<String>> followIdListSet = sourceList.stream()
                 .map(t -> {
                     ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getSourceId().toString(), (double) t.getCreateTime().getTime());
@@ -305,5 +315,60 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                 })
                 .collect(Collectors.toSet());
         redisService.setCacheZSet(key, followIdListSet);
+    }
+
+    /**
+     * 批量查询是否收藏
+     *
+     * @param starDTO
+     * @param sourceIds
+     * @return
+     */
+    @Override
+    public Map<Long, Boolean> isStarBatch(StarDTO starDTO, List<Long> sourceIds) {
+        if (sourceIds == null || sourceIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Long userId = null;
+        UserDTO user = UserContextHolder.getUser();
+        if (user != null) {
+            userId = user.getId();
+        } else if (starDTO.getUserId() != null) {
+            userId = starDTO.getUserId();
+        }
+
+        if (userId == null) {
+            return sourceIds.stream().collect(Collectors.toMap(id -> id, id -> false));
+        }
+
+        StarTypeEnum resourceType = StarTypeEnum.getByCode(starDTO.getSourceType());
+        if (resourceType == null) {
+            return sourceIds.stream().collect(Collectors.toMap(id -> id, id -> false));
+        }
+        
+        // Key is user specific: star:{type}:user:{userId}
+        String key = resourceType.getStarKeyPrefix() + userId;
+
+        // Pipeline execution for batch check (checking multiple members in one key)
+        List<Object> results = redisService.redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            RedisSerializer keySerializer = redisService.redisTemplate.getKeySerializer();
+            RedisSerializer valueSerializer = redisService.redisTemplate.getValueSerializer();
+            byte[] keyBytes = keySerializer.serialize(key);
+
+            for (Long sourceId : sourceIds) {
+                // ZSCORE key member
+                connection.zSetCommands().zScore(keyBytes, valueSerializer.serialize(sourceId.toString()));
+            }
+            return null;
+        });
+
+        Map<Long, Boolean> resultMap = new HashMap<>();
+        for (int i = 0; i < sourceIds.size(); i++) {
+            Long sourceId = sourceIds.get(i);
+            Object result = results.get(i);
+            // If result is not null (Double score), it means verify true
+            resultMap.put(sourceId, result != null);
+        }
+        return resultMap;
     }
 }

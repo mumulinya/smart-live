@@ -2,6 +2,7 @@ package com.smartLive.interaction.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.nacos.shaded.com.google.common.collect.Lists;
+import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.ScrollResult;
 import com.smartLive.common.core.enums.FeedTypeEnum;
@@ -38,7 +39,7 @@ public class feedServiceImpl implements IFeedService {
         String key = feedTypeEnum.getFullKey(userId);
 
         // 2. 查 Redis (保持原有滚动分页逻辑)
-        Set<ZSetOperations.TypedTuple<Object>> tuples = redisService.getCacheZSetReverseRangeByScore(key, 0, max, offset, 5);
+        Set<ZSetOperations.TypedTuple<Object>> tuples = redisService.getCacheZSetReverseRangeByScore(key, 0, max, offset, SystemConstants.MAX_PAGE_SIZE);
         if (tuples == null || tuples.isEmpty()) {
             return new ScrollResult();
         }

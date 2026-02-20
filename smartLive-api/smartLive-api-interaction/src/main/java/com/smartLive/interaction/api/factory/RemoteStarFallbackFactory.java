@@ -6,6 +6,9 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
+import java.util.Map;
+
 @Component
 @Slf4j
 public class RemoteStarFallbackFactory implements FallbackFactory<RemoteStarService> {
@@ -51,6 +54,19 @@ public class RemoteStarFallbackFactory implements FallbackFactory<RemoteStarServ
             public Integer getUserStarCount(StarDTO starDTO) {
                 log.error("获取用户收藏数量失败:{}",cause.getMessage());
                 return 0;
+            }
+
+            /**
+             * 批量查询是否收藏
+             *
+             * @param starDTO
+             * @param sourceIds
+             * @return
+             */
+            @Override
+            public Map<Long, Boolean> getIsStarBatch(StarDTO starDTO, List<Long> sourceIds) {
+                log.error("批量查询是否收藏失败:{}",cause.getMessage());
+                return Map.of();
             }
         };
 

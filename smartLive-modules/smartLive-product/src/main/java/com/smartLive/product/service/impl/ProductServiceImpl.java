@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import com.alibaba.nacos.client.naming.utils.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
@@ -28,6 +29,9 @@ import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.service.strategy.PurchaseStrategy;
 import com.smartLive.product.utils.RedisIdWorker;
+import com.smartLive.common.redis.util.RedisBatchCacheUtil;
+import java.util.concurrent.TimeUnit;
+
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -68,6 +72,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private ExecutorService executorService;
     @Autowired
     private Map<String, PurchaseStrategy> purchaseStrategyMap;
+    @Autowired
+    private RedisBatchCacheUtil redisBatchCacheUtil;
 
     /**
      * 查询商品
@@ -166,7 +172,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 MqConstants.INTERACT_FEED_ROUTING,
                 feedEventMessage);
     }
-
+    /**
+     * 商品动态操作
+     * @param productId
+     * @param itemActionType
+     */
     public void sendProductActionMessageToMQ(Long productId, ItemActionType itemActionType){
         FeedEventMessage feedEventMessage= FeedEventMessage
                 .builder()
@@ -322,6 +332,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .eq("category", product.getCategory())
                 .orderByAsc("create_time")
                 .list();
+        if (products.isEmpty()) {
+            return null;
+        }
+        queryProductListShopMessage(products);
         return convertToProductVOList(products);
     }
 
@@ -362,7 +376,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if(shopDTO != null){
             product.setShopName(shopDTO.getName());
             product.setTypeId(shopDTO.getTypeId());
-            product.setShopImages(shopDTO.getImages());
+            product.setShopLogo(shopDTO.getShopLogo());
         }
     }
 
@@ -404,12 +418,55 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public List<Product> getProductListByIds(List<Long> sourceIdList) {
-        List<Product> productList = lambdaQuery()
-                .in(Product::getId, sourceIdList)
-                .list();
-        productList.forEach(this::queryProductShopMessage);
-        log.info("查询商品列表：{}", productList);
+        List<Product> productList = redisBatchCacheUtil.queryBatchWithCache(
+                RedisConstants.CACHE_PRODUCT_KEY,
+                sourceIdList,
+                Product.class,
+                missingIds -> {
+                    return lambdaQuery()
+                            .in(Product::getId, missingIds)
+                            .list();
+                },
+                Product::getId,
+                RedisConstants.CACHE_PRODUCT_TTL,
+                TimeUnit.MINUTES
+        );
+        queryProductListShopMessage(productList);
         return productList;
+    }
+    /**
+     * 获取商品列表的店铺信息
+     *
+     * @param productList
+     * @return 商品信息
+     */
+    private void queryProductListShopMessage(List<Product> productList) {
+        // 获取所有店铺的 ID
+        List<Long> distinctShopIds = productList.stream()
+                .map(Product::getShopId)
+                .distinct() // 核心：过滤掉重复的 shopId
+                .toList();
+        List<ShopDTO> shopList = remoteShopService.getShopList(distinctShopIds);
+        if (CollectionUtils.isEmpty(shopList)) {
+            log.error("店铺列表为空");
+            return;
+        }
+        // 将 shopList 转换成 Map，Key: shopId，Value: ShopDTO
+        Map<Long, ShopDTO> shopMap = shopList.stream()
+                .collect(Collectors.toMap(
+                        ShopDTO::getId,   // Key: 取店铺的 ID
+                        shop -> shop,     // Value: 取店铺对象本身 (也可以写成 Function.identity())
+                        (oldVal, newVal) -> oldVal // 兜底策略：如果万一有重复的 ID，保留第一个 (防止报错)
+                ));
+        if (!shopMap.isEmpty()) {
+            productList.forEach(product -> {
+                ShopDTO shopDTO = shopMap.get(product.getShopId());
+                if (shopDTO != null) {
+                    product.setShopName(shopDTO.getName());
+                    product.setShopLogo(shopDTO.getShopLogo());
+                }
+            });
+        }
     }
 
     /**
@@ -469,45 +526,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             if (products.isEmpty()) {
                 break;
             }
-            // 定义结果 Map
-            Map<Long, ShopDTO> ShopDTOMap = Collections.emptyMap();
-            // 获取店铺id列表
-            List<Long> shopIds = products.stream()
-                    .map(Product::getShopId)
-                    .filter(Objects::nonNull) 
-                    .distinct()               
-                    .collect(Collectors.toList());
-            if (!shopIds.isEmpty()) {
-                List<ShopDTO> shopDTOList = remoteShopService.getShopList(shopIds);
-                if(shopDTOList != null && shopDTOList.size() > 0){
-                   ShopDTOMap = shopDTOList.stream().collect(Collectors.toMap(
-                           ShopDTO::getId,             
-                           Function.identity(),     
-                           (v1, v2) -> v1             
-                   ));              
-                }
-            }
-            Map<Long, ShopDTO> finalShopDTOMap = ShopDTOMap;
 
             int finalPage = page;
             executorService.submit(()->{
                 log.info("线程：{}开始发布的商品{}页", Thread.currentThread().getName(), finalPage);
-                products.forEach(product -> {
-                    ShopDTO shopDTO = finalShopDTOMap.get(product.getShopId());
-                    if(shopDTO != null){
-                        product.setShopName(shopDTO.getName());
-                        product.setTypeId(shopDTO.getTypeId());
-                    }
-                });
-                // 创建请求并发送
-                ContentBatchSyncMessage request = new ContentBatchSyncMessage();
-                request.setIndexName(EsIndexNameConstants.PRODUCT_INDEX_NAME); // KEEP
-                request.setData(products);
-                request.setType(GlobalBizTypeEnum.PRODUCT.getCode()); // KEEP
-                // 发送rabbitmq消息数据插入es
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
-                // 发送rabbitmq消息数据插入Milvus
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
+                queryProductListShopMessage(products);
+                // 发送批量消息
+                sendProductBatchMessage(products);
                 log.info("发送第 {} 页，{} 条数据", finalPage, products.size());
             });
             page++;
@@ -524,28 +549,45 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public String publish(String[] ids) {
-        for (String id : ids) {
-            executorService.submit(()->{
-                log.info("线程：{}开始发布id为{}的商品", Thread.currentThread().getName(), id);
-                Product product = getById(Long.parseLong(id));
-                if (product == null){
-                    log.info("商品不存在");
-                    return;
-                }
-                queryProductShopMessage(product);
-                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
-                contentSyncMessage.setIndexName(EsIndexNameConstants.PRODUCT_INDEX_NAME); // KEEP
-                contentSyncMessage.setData(product);
-                contentSyncMessage.setId(product.getId());
-                contentSyncMessage.setType(GlobalBizTypeEnum.PRODUCT.getCode()); // KEEP
-                log.info("发送的商品信息为{}", product);
-                // 发送rabbitmq消息数据插入es
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_INSERT, contentSyncMessage);
-                // 发送rabbitmq消息数据插入Milvus
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_INSERT, contentSyncMessage);
-            });
+        if (ids == null || ids.length == 0) {
+            return "参数为空";
         }
+        // Convert to Long list
+        List<Long> idList = Arrays.stream(ids)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        executorService.submit(() -> {
+            log.info("线程{}，开始批量发布商品：{}", Thread.currentThread().getName(), idList);
+            // Batch query
+            List<Product> products = query().in("id", idList).list();
+            if (CollUtil.isNotEmpty(products)) {
+                // Batch populate shop info
+                queryProductListShopMessage(products);
+                // Batch send message
+                sendProductBatchMessage(products);
+            }
+        });
         return "发布成功";
+    }
+
+    /**
+     * 批量发送ES和Milvus同步消息
+     * @param products
+     */
+    private void sendProductBatchMessage(List<Product> products) {
+        if (CollUtil.isEmpty(products)) {
+            return;
+        }
+        ContentBatchSyncMessage request = new ContentBatchSyncMessage();
+        request.setIndexName(EsIndexNameConstants.PRODUCT_INDEX_NAME);
+        request.setData(products);
+        request.setType(GlobalBizTypeEnum.PRODUCT.getCode());
+        
+        // 发送rabbitmq消息数据插入es
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
+        // 发送rabbitmq消息数据插入Milvus
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
     }
     /**
      * 批量更新商品收藏数量
@@ -575,7 +617,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     /**
      * 获取商品收藏数量
      *
-     * @param sourceId
+     * @param
      * @return
      */
     @Override

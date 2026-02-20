@@ -8,7 +8,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="id"    column="id"    />
         <result property="name"    column="name"    />
         <result property="typeId"    column="type_id"    />
-        <result property="images"    column="images"    />
+        <result property="shopLogo"  column="shop_logo"  />
+        <result property="images"    column="images"     />
         <result property="area"    column="area"    />
         <result property="address"    column="address"    />
         <result property="x"    column="x"    />
@@ -23,7 +24,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectShopVo">
-        select id, name, type_id, images, area, address, x, y, avg_price, sold, reviews, score, open_hours, create_time, update_time from shop
+        select id, name, type_id, shop_logo, images, area, address, x, y, avg_price, sold, reviews, score, open_hours, create_time, update_time from shop
     </sql>
 
     <select id="selectShopList" parameterType="com.smartLive.shop.domain.Shop" resultMap="ShopResult">
@@ -31,6 +32,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>  
             <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
             <if test="typeId != null  and typeId != ''"> and type_id = #{typeId}</if>
+            <if test="shopLogo != null  and shopLogo != ''"> and shop_logo = #{shopLogo}</if>
             <if test="images != null  and images != ''"> and images = #{images}</if>
             <if test="area != null  and area != ''"> and area = #{area}</if>
             <if test="address != null  and address != ''"> and address like concat('%', #{address}, '%')</if>
@@ -54,6 +56,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="name != null and name != ''">name,</if>
             <if test="typeId != null and typeId != ''">type_id,</if>
+            <if test="shopLogo != null and shopLogo != ''">shop_logo,</if>
             <if test="images != null and images != ''">images,</if>
             <if test="area != null">area,</if>
             <if test="address != null and address != ''">address,</if>
@@ -70,6 +73,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="name != null and name != ''">#{name},</if>
             <if test="typeId != null and typeId != ''">#{typeId},</if>
+            <if test="shopLogo != null and shopLogo != ''">#{shopLogo},</if>
             <if test="images != null and images != ''">#{images},</if>
             <if test="area != null">#{area},</if>
             <if test="address != null and address != ''">#{address},</if>
@@ -90,6 +94,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="name != null and name != ''">name = #{name},</if>
             <if test="typeId != null and typeId != ''">type_id = #{typeId},</if>
+            <if test="shopLogo != null and shopLogo != ''">shop_logo = #{shopLogo},</if>
             <if test="images != null and images != ''">images = #{images},</if>
             <if test="area != null">area = #{area},</if>
             <if test="address != null and address != ''">address = #{address},</if>
