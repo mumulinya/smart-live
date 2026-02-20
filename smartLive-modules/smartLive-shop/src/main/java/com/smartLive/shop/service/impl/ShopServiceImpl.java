@@ -38,7 +38,7 @@ import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.domain.VO.ShopVO;
 import com.smartLive.shop.service.IShopTypeService;
-import com.smartLive.shop.until.CacheClient;
+import com.smartLive.common.redis.util.CacheClient;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -154,11 +154,18 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public int updateShop(Shop shop) {
+        Shop oldShop = shop.getId() == null ? null : shopMapper.selectById(shop.getId());
         shop.setUpdateTime(DateUtils.getNowDate());
         int i = shopMapper.updateShop(shop);
         if(i > 0){
             Long shopId = shop.getId();
             flashShopRedisCache(shopId);
+            if (oldShop != null && oldShop.getTypeId() != null) {
+                flashShopListRedisCache(oldShop.getTypeId());
+            }
+            if (shop.getTypeId() != null && (oldShop == null || !Objects.equals(oldShop.getTypeId(), shop.getTypeId()))) {
+                flashShopListRedisCache(shop.getTypeId());
+            }
             //更新es数据
             publish(new String[]{shopId.toString()});
             //发送审核信息
@@ -175,25 +182,49 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public int deleteShopByIds(String[] ids) {
-//        int i = shopMapper.deleteShopByIds(ids);
-//        //删除es数据
-//        if (i > 0) {
-        for (String id : ids) {
-            executorService.submit(()->{
-                log.info("线程{}，开始删除店铺{}", Thread.currentThread().getName(), id);
-                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
-                contentSyncMessage.setId(Long.valueOf(id));
-                contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
-                contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
-                //发起rabbitMq信息删除es数据
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
-                //发起rabbitmq信息删除milvus数据
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_DELETE, contentSyncMessage);
-                flashShopListRedisCache(shopMapper.selectShopById(id).getTypeId());
-            });
+        if (ids == null || ids.length == 0) {
+            return 0;
         }
-//        }
-        return 1;
+        List<Shop> shops = Arrays.stream(ids)
+                .map(shopMapper::selectShopById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        int i = shopMapper.deleteShopByIds(ids);
+        if (i > 0) {
+            for (String id : ids) {
+                executorService.submit(()->{
+                    log.info("线程{}，开始删除店铺{}", Thread.currentThread().getName(), id);
+                    Long shopId;
+                    try {
+                        shopId = Long.valueOf(id);
+                    } catch (NumberFormatException e) {
+                        log.warn("删除店铺同步消息时店铺ID格式非法: {}", id);
+                        return;
+                    }
+                    ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                    contentSyncMessage.setId(shopId);
+                    contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
+                    contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
+                    //发起rabbitMq信息删除es数据
+                    MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
+                    //发起rabbitmq信息删除milvus数据
+                    MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_DELETE, contentSyncMessage);
+                });
+            }
+            Arrays.stream(ids).forEach(shopId -> {
+                try {
+                    flashShopRedisCache(Long.valueOf(shopId));
+                } catch (NumberFormatException e) {
+                    log.warn("删除店铺缓存时店铺ID格式非法: {}", shopId);
+                }
+            });
+            shops.stream()
+                    .map(Shop::getTypeId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet())
+                    .forEach(this::flashShopListRedisCache);
+        }
+        return i;
     }
 
     /**
@@ -204,7 +235,23 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public int deleteShopById(String id) {
-        return shopMapper.deleteShopById(id);
+        Shop shop = shopMapper.selectShopById(id);
+        int i = shopMapper.deleteShopById(id);
+        if (i > 0) {
+            if (shop != null && shop.getId() != null) {
+                flashShopRedisCache(shop.getId());
+            } else {
+                try {
+                    flashShopRedisCache(Long.valueOf(id));
+                } catch (NumberFormatException e) {
+                    log.warn("删除店铺缓存时店铺ID格式非法: {}", id);
+                }
+            }
+            if (shop != null && shop.getTypeId() != null) {
+                flashShopListRedisCache(shop.getTypeId());
+            }
+        }
+        return i;
     }
 
     @Resource
@@ -225,7 +272,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //逻辑过期来解决缓存击穿
 //        Shop shop = queryWithLogicalExpire(id);
         //缓存穿透,使用工具类CacheClient
-        Shop shop = cacheClient.queryWithPassThrough(RedisConstants.CACHE_SHOP_KEY, id, Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+        Shop shop = cacheClient.queryWithLogicalExpire(RedisConstants.CACHE_SHOP_KEY, id, Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         //逻辑过期解决缓存击穿 使用工具类CacheClient
 //        Shop shop = cacheClient.queryWithLogicalExpire(RedisConstants.CACHE_SHOP_KEY, id, Shop.class,this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         if (shop == null) {
@@ -734,6 +781,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             // 数量少直接执行
             baseMapper.updateStarCountBatch(updateMap);
         }
+        updateMap.keySet().forEach(this::flashShopRedisCache);
         flushCache();
         return true;
     }
@@ -766,6 +814,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             // 数量少直接执行
             baseMapper.updateReviewCountBatch(updateMap);
         }
+        updateMap.keySet().forEach(this::flashShopRedisCache);
         flushCache();
         return true;
     }
@@ -779,6 +828,14 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public Boolean updateShopStatus(Long id, Integer status) {
-        return update(new UpdateWrapper<Shop>().set("status", status).eq("id", id));
+        Shop shop = getById(id);
+        boolean updated = update(new UpdateWrapper<Shop>().set("status", status).eq("id", id));
+        if (updated) {
+            flashShopRedisCache(id);
+            if (shop != null && shop.getTypeId() != null) {
+                flashShopListRedisCache(shop.getTypeId());
+            }
+        }
+        return updated;
     }
 }

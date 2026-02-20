@@ -23,6 +23,7 @@ import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.interaction.api.RemoteLikeService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.LikeDTO;
@@ -72,6 +73,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private RemoteStarService remoteStarService;
     @Autowired
     private RedisBatchCacheUtil redisBatchCacheUtil;
+    @Autowired
+    private CacheClient cacheClient;
 
     /**
      * 将Blog实体转换为BlogVO
@@ -164,6 +167,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //发送审核消息
             sendAuditMessage(blog);
             flashRedisBlogCache(blog.getId());
+            flashRedisBlogListCache();
         }
         return i;
     }
@@ -227,6 +231,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             MqMessageSendUtils.sendMqMessage(rabbitTemplate,MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
             //更新redis缓存
             flashRedisBlogCache(id);
+            flashRedisBlogListCache();
         }
         return i;
     }
@@ -239,32 +244,22 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public BlogVO queryBlogById(Long id) {
-        //从redis查询博客缓存
-        String key= RedisConstants.CACHE_BLOG_KEY+id;
-        String blogJson =redisService.getCacheObject(key);
-        if (blogJson != null) {
-            //存在
-            Blog blog = JSONUtil.toBean(blogJson, Blog.class);
-            isBlogLiked(blog);
-            //判断当前用户是否已经收藏
-            isBlogStared(blog);
-            return convertToBlogVO(blog);
-        }
-        //根据博客id查询博客信息
-        Blog blog = getById(id);
+        Blog blog = cacheClient.queryWithLogicalExpire(
+                RedisConstants.CACHE_BLOG_KEY,
+                id,
+                Blog.class,
+                this::getById,
+                RedisConstants.CACHE_BLOG_TTL,
+                TimeUnit.MINUTES
+        );
         if (blog == null) {
             throw new BusinessException("数据不存在");
         }
-        // 查询blog有关的用户信息
         queryBlogUser(blog);
-        //把博客信息存入redis
-        redisService.setCacheObject(key, JSONUtil.toJsonStr(blog));
-        //查询blog是否被点赞
         isBlogLiked(blog);
-        //返回结果
-        return convertToBlogVO(blog); // Changed from return blog;
+        isBlogStared(blog);
+        return convertToBlogVO(blog);
     }
-
     /**
      * 查询最热博客
      *
@@ -805,7 +800,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Boolean updateBlogStatus(Long targetId, Integer status) {
-        return update(new UpdateWrapper<Blog>().set("status", status).eq("id", targetId));
+        boolean updated = update(new UpdateWrapper<Blog>().set("status", status).eq("id", targetId));
+        if (updated) {
+            flashRedisBlogCache(targetId);
+            flashRedisBlogListCache();
+        }
+        return updated;
     }
 
     /**

@@ -17,6 +17,7 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.interaction.domain.BO.AuditCommentBO;
 import com.smartLive.interaction.domain.BO.AuditReviewBO;
 import com.smartLive.interaction.domain.Comment;
@@ -80,6 +81,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private RedisBatchCacheUtil redisBatchCacheUtil;
+    @Autowired
+    private CacheClient cacheClient;
     private ResourceStrategyFactory resourceStrategyFactory;
 
     @Autowired
@@ -136,6 +139,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             //发送审核信息
             sendAuditMessage(review);
         }
+        if (i > 0) {
+            clearReviewCache(review.getId());
+        }
         return  i;
     }
 
@@ -147,7 +153,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public int deleteReviewByIds(Long[] ids) {
-        return reviewMapper.deleteReviewByIds(ids);
+        int rows = reviewMapper.deleteReviewByIds(ids);
+        if (rows > 0 && ids != null && ids.length > 0) {
+            clearReviewCacheBatch(Arrays.asList(ids));
+        }
+        return rows;
     }
 
     /**
@@ -158,7 +168,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public int deleteReviewById(Long id) {
-        return reviewMapper.deleteReviewById(id);
+        int rows = reviewMapper.deleteReviewById(id);
+        if (rows > 0) {
+            clearReviewCache(id);
+        }
+        return rows;
     }
 
     /**
@@ -366,6 +380,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     public Boolean deleteReview(Review review) {
         boolean i = removeById(review.getId());
         if (i) {
+            clearReviewCache(review.getId());
             ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
             String reviewKeyPrefix = reviewType.getReviewKeyPrefix()+ review.getSourceId();
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
@@ -468,6 +483,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             // 数量少直接执行
             baseMapper.updateLikeCountBatch(updateMap);
         }
+        clearReviewCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -499,6 +515,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             // 数量少直接执行
             baseMapper.updateCommentCountBatch(updateMap);
         }
+        clearReviewCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -530,6 +547,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             // 数量少直接执行
             baseMapper.updateStarCountBatch(updateMap);
         }
+        clearReviewCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -553,7 +571,14 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public Review getReviewById(Long id) {
-        Review review = getById(id);
+        Review review = cacheClient.queryWithLogicalExpire(
+                RedisConstants.CACHE_REVIEW_KEY,
+                id,
+                Review.class,
+                this::getById,
+                RedisConstants.CACHE_REVIEW_TTL,
+                java.util.concurrent.TimeUnit.MINUTES
+        );
         if (review != null) {
             //判断是否点赞
             Like like = new Like();
@@ -591,6 +616,26 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         return review.getStared();
     }
 
+    private void clearReviewCache(Long reviewId) {
+        if (reviewId == null) {
+            return;
+        }
+        redisService.deleteObject(RedisConstants.CACHE_REVIEW_KEY + reviewId);
+    }
+
+    private void clearReviewCacheBatch(Collection<Long> reviewIds) {
+        if (CollUtil.isEmpty(reviewIds)) {
+            return;
+        }
+        List<String> keys = reviewIds.stream()
+                .filter(Objects::nonNull)
+                .map(id -> RedisConstants.CACHE_REVIEW_KEY + id)
+                .toList();
+        if (CollUtil.isNotEmpty(keys)) {
+            redisService.deleteObject(keys);
+        }
+    }
+
     /**
      * 保存点赞用户列表到Redis
      *
@@ -621,6 +666,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         boolean update = update(new UpdateWrapper<Review>()
                 .set("status", status)
                 .eq("id", id));
+        if (update) {
+            clearReviewCache(id);
+        }
         if(update&&status== AuditStatusEnum.REJECT.getCode()){
             Review review = getById(id);
             ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());

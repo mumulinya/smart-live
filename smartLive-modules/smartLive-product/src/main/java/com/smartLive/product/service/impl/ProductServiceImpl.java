@@ -22,16 +22,15 @@ import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.service.strategy.PurchaseStrategy;
-import com.smartLive.product.utils.RedisIdWorker;
 import com.smartLive.common.redis.util.RedisBatchCacheUtil;
 import java.util.concurrent.TimeUnit;
-
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -65,8 +64,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Autowired
     private RemoteFollowService remoteFollowService;
     @Autowired
-    private RedisIdWorker redisIdWorker;
-    @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private ExecutorService executorService;
@@ -74,6 +71,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private Map<String, PurchaseStrategy> purchaseStrategyMap;
     @Autowired
     private RedisBatchCacheUtil redisBatchCacheUtil;
+    @Autowired
+    private CacheClient cacheClient;
 
     /**
      * 查询商品
@@ -216,6 +215,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
             // 更新ES数据
             publish(new String[]{product.getId().toString()});
+            clearProductCache(product.getId());
         }
         return i;
     }
@@ -232,6 +232,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (b){
             // 更新ES数据
             publish(new String[]{product.getId().toString()});
+            clearProductCache(product.getId());
             if (product.getStatus() == 1){
                 // 上架，发送mq消息更新用户动态
                 sendProductActionMessageToMQ(product.getId(), ItemActionType.RESHELF);
@@ -264,6 +265,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         int i = productMapper.deleteProductByIds(ids);
         // 删除es数据
         if (i > 0) {
+            clearProductCacheBatch(Arrays.asList(ids));
             for (Long id : ids) {
                 executorService.submit(()->{
                     log.info("线程{}删除es数据id为：{}", Thread.currentThread().getName(), id);
@@ -290,7 +292,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public int deleteProductById(Long id)
     {
-        return productMapper.deleteProductById(id);
+        int rows = productMapper.deleteProductById(id);
+        if (rows > 0) {
+            clearProductCache(id);
+        }
+        return rows;
     }
 
 
@@ -477,7 +483,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public ProductVO getProductById(Long id) {
-        Product product = productMapper.selectProductById(id);
+        Product product = cacheClient.queryWithLogicalExpire(
+                RedisConstants.CACHE_PRODUCT_KEY,
+                id,
+                Product.class,
+                productMapper::selectProductById,
+                RedisConstants.CACHE_PRODUCT_TTL,
+                TimeUnit.MINUTES
+        );
         if (product != null){
             // 判断是否收藏
             StarDTO starDTO=new StarDTO();
@@ -589,6 +602,34 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         // 发送rabbitmq消息数据插入Milvus
         MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
     }
+
+    private void clearProductCache(Long productId) {
+        if (productId == null) {
+            return;
+        }
+        redisService.deleteObject(RedisConstants.CACHE_PRODUCT_KEY + productId);
+        redisService.deleteObject(RedisConstants.SECKILL_STOCK_KEY + productId);
+    }
+
+    private void clearProductCacheBatch(Collection<Long> productIds) {
+        if (CollUtil.isEmpty(productIds)) {
+            return;
+        }
+        List<String> productKeys = productIds.stream()
+                .filter(Objects::nonNull)
+                .map(id -> RedisConstants.CACHE_PRODUCT_KEY + id)
+                .toList();
+        if (CollUtil.isNotEmpty(productKeys)) {
+            redisService.deleteObject(productKeys);
+        }
+        List<String> seckillKeys = productIds.stream()
+                .filter(Objects::nonNull)
+                .map(id -> RedisConstants.SECKILL_STOCK_KEY + id)
+                .toList();
+        if (CollUtil.isNotEmpty(seckillKeys)) {
+            redisService.deleteObject(seckillKeys);
+        }
+    }
     /**
      * 批量更新商品收藏数量
      *
@@ -612,6 +653,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         } else {
             productMapper.updateReviewCountBatch(updateMap);
         }
+        clearProductCacheBatch(updateMap.keySet());
         return true;
     }
     /**
@@ -637,6 +679,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         } else {
             productMapper.updateStarCountBatch(updateMap);
         }
+        clearProductCacheBatch(updateMap.keySet());
         return true;
     }
     /**
@@ -665,6 +708,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         boolean b = update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Product>().set("status", status).eq("id", id));
         if(b){
             publish(new String[]{id.toString()});
+            clearProductCache(id);
         }
         return b;
     }

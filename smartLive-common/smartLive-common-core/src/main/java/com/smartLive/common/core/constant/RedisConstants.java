@@ -40,6 +40,7 @@ public class RedisConstants {
      * 博客缓存
      */
     public static final String CACHE_BLOG_KEY = "cache:blog:";
+    public static final Long CACHE_BLOG_TTL = 30L;
     public static final String CACHE_HOT_BLOG_KEY = "cache:hotBlog:";
     public static final Long CACHE_HOT_BLOG_TTL = 1L;//1天
     /**

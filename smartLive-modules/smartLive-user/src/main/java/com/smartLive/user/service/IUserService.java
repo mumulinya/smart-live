@@ -133,4 +133,10 @@ public interface IUserService extends IService<User>
      */
     UserVO queryUserInfoById(Long id);
 
+    /**
+     * 清理用户详情缓存
+     * @param userId 用户id
+     */
+    void clearUserCache(Long userId);
+
 }

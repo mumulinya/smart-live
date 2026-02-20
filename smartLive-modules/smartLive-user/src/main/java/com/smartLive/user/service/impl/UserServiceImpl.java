@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
+import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.common.redis.util.RedisBatchCacheUtil;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -68,6 +69,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private CacheClient cacheClient;
     @Autowired
     private IUserInfoService userInfoService;
     @Autowired
@@ -163,6 +166,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setUpdateTime(DateUtils.getNowDate());
         int i = userMapper.updateUser(user);
         if(i>0){
+            clearUserCache(user.getId());
             com.smartLive.common.core.domain.UserDTO dto = UserContextHolder.getUser();
             //更新用户缓存信息
             if(dto!=null){
@@ -217,23 +221,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public int deleteUserByIds(Long[] ids)
     {
-//        int i = userMapper.deleteShopByIds(ids);
-//        //删除es数据
-//        if (i > 0) {
-        for (Long id : ids) {
-            executorService.submit(()->{
-                log.info("线程：{}开始删除es数据id：{}",Thread.currentThread().getName(),id);
-                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
-                contentSyncMessage.setId(id);
-                contentSyncMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
-                    contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
-                //发起rabbitMq信息删除
-//                rabbitTemplate.convertAndSend(MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_DELETE,esInsertRequest);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
-            });
+        if (ids == null || ids.length == 0) {
+            return 0;
         }
-//        }
-        return 1;
+        int i = userMapper.deleteUserByIds(ids);
+        if (i > 0) {
+            clearUserCacheBatch(Arrays.asList(ids));
+            for (Long id : ids) {
+                executorService.submit(()->{
+                    log.info("线程：{}开始删除es数据id：{}",Thread.currentThread().getName(),id);
+                    ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                    contentSyncMessage.setId(id);
+                    contentSyncMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
+                    contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
+                    //发起rabbitMq信息删除
+                    MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
+                });
+            }
+        }
+        return i;
     }
 
     /**
@@ -245,7 +251,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public int deleteUserById(Long id)
     {
-        return userMapper.deleteUserById(id);
+        int i = userMapper.deleteUserById(id);
+        if (i > 0) {
+            clearUserCache(id);
+        }
+        return i;
     }
 
     /**
@@ -332,12 +342,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public UserVO queryUserById(Long id) {
-        User user = getById(id);
-        if(user!= null){
+        UserVO userVO = cacheClient.queryWithLogicalExpire(
+                RedisConstants.CACHE_USER_KEY,
+                id,
+                UserVO.class,
+                this::loadUserDetailForCache,
+                RedisConstants.CACHE_USER_TTL,
+                TimeUnit.MINUTES
+        );
+        if(userVO != null){
             //查询用户是否关注当前用户
-            isFollow(user);
+            isFollow(userVO);
         }
-        return convertToUserVO(user);
+        return userVO;
     }
 
     /**
@@ -378,7 +395,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 throw new BusinessException("旧密码输入错误");
             }
             byId.setPassword(SecurityUtils.encryptPassword(user.getNewPassword()));
-            return updateById(byId);
+            boolean updated = updateById(byId);
+            if (updated) {
+                clearUserCache(byId.getId());
+            }
+            return updated;
         }
         return false;
     }
@@ -533,13 +554,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public UserVO queryUserInfoById(Long id) {
-        User user = query().eq("id", id).one();
-        UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
-        UserVO userVO = convertToUserVO(user);
-        userVO.setIntroduce(userInfo.getIntroduce());
-        userVO.setBackgroundImage(userInfo.getBackgroundImage());
-        userVO.setCity(userInfo.getCity());
-        return userVO;
+        return cacheClient.queryWithLogicalExpire(
+                RedisConstants.CACHE_USER_KEY,
+                id,
+                UserVO.class,
+                this::loadUserDetailForCache,
+                RedisConstants.CACHE_USER_TTL,
+                TimeUnit.MINUTES
+        );
     }
 
     /**
@@ -666,6 +688,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         followDTO.setSourceId(userVO.getId());
         Boolean isFollow = remoteFollowService.isFollowed(followDTO);
         userVO.setIsFollow(isFollow);
+    }
+
+    private UserVO loadUserDetailForCache(Long id) {
+        User user = getById(id);
+        if (user == null) {
+            return null;
+        }
+        UserVO userVO = convertToUserVO(user);
+        UserInfoVO userInfo = userInfoService.getByUserId(id);
+        if (userInfo != null) {
+            userVO.setIntroduce(userInfo.getIntroduce());
+            userVO.setBackgroundImage(userInfo.getBackgroundImage());
+            userVO.setCity(userInfo.getCity());
+        }
+        return userVO;
+    }
+
+    @Override
+    public void clearUserCache(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        redisService.deleteObject(RedisConstants.CACHE_USER_KEY + userId);
+    }
+
+    private void clearUserCacheBatch(Collection<Long> userIds) {
+        if (CollUtil.isEmpty(userIds)) {
+            return;
+        }
+        userIds.stream().filter(Objects::nonNull).forEach(this::clearUserCache);
     }
 
 }

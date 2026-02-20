@@ -92,7 +92,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         UserInfoVO user = getByUserId(userId);
         //没有数据，创建数据
         if(user==null){
-            return save(userInfo);
+            boolean saved = save(userInfo);
+            if (saved) {
+                userService.clearUserCache(userId);
+            }
+            return saved;
         }
         UpdateWrapper<UserInfo> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("user_id", userId);
@@ -117,6 +121,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         updateWrapper.set("update_time", new Date());
         boolean update = update(updateWrapper);
         if (update){
+            userService.clearUserCache(userId);
             //更新用户信息成功，更新es数据
            userService.publish(new String[]{userId.toString()});
             User userById = userService.selectUserById(userId);
@@ -145,7 +150,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         userInfo.setUserId(userId);
         userInfo.setCity(city);
         userInfo.setUpdateTime(new Date());
-        return updateById(userInfo);
+        boolean updated = updateById(userInfo);
+        if (updated) {
+            userService.clearUserCache(userId);
+        }
+        return updated;
     }
 
     @Override
@@ -160,7 +169,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         userInfo.setUserId(userId);
         userInfo.setIntroduce(introduce);
         userInfo.setUpdateTime(new Date());
-        return updateById(userInfo);
+        boolean updated = updateById(userInfo);
+        if (updated) {
+            userService.clearUserCache(userId);
+        }
+        return updated;
     }
 
     @Override
@@ -175,7 +188,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         userInfo.setUserId(userId);
         userInfo.setGender(gender);
         userInfo.setUpdateTime(new Date());
-        return updateById(userInfo);
+        boolean updated = updateById(userInfo);
+        if (updated) {
+            userService.clearUserCache(userId);
+        }
+        return updated;
     }
 
     @Override
@@ -190,7 +207,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         userInfo.setUserId(userId);
         userInfo.setBirthday(birthday);
         userInfo.setUpdateTime(new Date());
-        return updateById(userInfo);
+        boolean updated = updateById(userInfo);
+        if (updated) {
+            userService.clearUserCache(userId);
+        }
+        return updated;
     }
 
     @Override
@@ -200,7 +221,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         userInfo.setUserId(userId);
         userInfo.setCredits(credits);
         userInfo.setUpdateTime(new Date());
-        return updateById(userInfo);
+        boolean updated = updateById(userInfo);
+        if (updated) {
+            userService.clearUserCache(userId);
+        }
+        return updated;
     }
 
     @Override
@@ -210,7 +235,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         userInfo.setUserId(userId);
         userInfo.setLevel(level);
         userInfo.setUpdateTime(new Date());
-        return updateById(userInfo);
+        boolean updated = updateById(userInfo);
+        if (updated) {
+            userService.clearUserCache(userId);
+        }
+        return updated;
     }
 
     /**
@@ -236,6 +265,9 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         boolean update = update().set("background_image", userInfoDTO.getBackgroundImage())
                 .eq("user_id", userInfoDTO.getUserId())
                 .update();
+        if (update && userInfoDTO.getUserId() != null) {
+            userService.clearUserCache(userInfoDTO.getUserId());
+        }
         return update;
     }
     /**
@@ -246,8 +278,12 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
      */
     @Override
     public Boolean updateUserStatus(Long id, Integer status) {
-        return update(new UpdateWrapper<UserInfo>()
+        boolean updated = update(new UpdateWrapper<UserInfo>()
                 .set("status", status)
                 .eq("user_id", id));
+        if (updated) {
+            userService.clearUserCache(id);
+        }
+        return updated;
     }
 }

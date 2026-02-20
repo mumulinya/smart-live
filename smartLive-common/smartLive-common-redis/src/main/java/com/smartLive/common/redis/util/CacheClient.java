@@ -1,4 +1,4 @@
-package com.smartLive.shop.until;
+package com.smartLive.common.redis.util;
 
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
@@ -133,7 +133,7 @@ public class CacheClient {
         if(StrUtil.isNotBlank(json)){
             //把json转换成对象
             RedisData redisData = JSONUtil.toBean(json, RedisData.class);
-             r = JSONUtil.toBean((JSONObject) redisData.getData(), type);
+            r = JSONUtil.toBean((JSONObject) redisData.getData(), type);
             //判断是否过期
             if(redisData.getExpireTime().isAfter(LocalDateTime.now())){
                 //未过期，直接返回数据
