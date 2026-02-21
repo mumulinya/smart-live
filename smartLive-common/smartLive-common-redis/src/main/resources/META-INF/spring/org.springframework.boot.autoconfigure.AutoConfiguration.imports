@@ -1,4 +1,6 @@
 com.smartLive.common.redis.configure.RedisConfig
 com.smartLive.common.redis.service.RedisService
-com.smartLive.common.redis.util.RedisBatchCacheUtil
+com.smartLive.common.redis.util.RedisMultiCacheManager
 com.smartLive.common.redis.util.CacheClient
+com.smartLive.common.redis.util.ZSetIdManager
+

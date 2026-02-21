@@ -2,7 +2,6 @@ package com.smartLive.product.service.impl;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -23,13 +22,14 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
+import com.smartLive.common.redis.util.RedisMultiCacheManager;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.service.strategy.PurchaseStrategy;
-import com.smartLive.common.redis.util.RedisBatchCacheUtil;
+
 import java.util.concurrent.TimeUnit;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
@@ -70,7 +70,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Autowired
     private Map<String, PurchaseStrategy> purchaseStrategyMap;
     @Autowired
-    private RedisBatchCacheUtil redisBatchCacheUtil;
+    private RedisMultiCacheManager redisMultiCacheManager;
     @Autowired
     private CacheClient cacheClient;
 
@@ -424,7 +424,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public List<Product> getProductListByIds(List<Long> sourceIdList) {
-        List<Product> productList = redisBatchCacheUtil.queryBatchWithCache(
+        List<Product> productList = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_PRODUCT_KEY,
                 sourceIdList,
                 Product.class,

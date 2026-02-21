@@ -23,7 +23,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Follow extends BaseEntity implements Serializable {
+public class Follow  implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**

@@ -16,16 +16,15 @@ import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ItemActionType;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.domain.DTO.FollowDTO;
 import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.mapper.FollowMapper;
 import com.smartLive.interaction.service.IFollowService;
 import com.smartLive.interaction.strategy.factory.FollowStrategyFactory;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
-import com.smartLive.interaction.strategy.follow.FollowStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +58,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     private FollowStrategyFactory followStrategyFactory;
     @Autowired
     private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
+    @Autowired
+    private ZSetIdManager zSetIdManager;
     @Autowired
     private RedisService redisService;
     @Autowired
@@ -241,7 +242,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         //获取当前用户id
         Long currentUserId = UserContextHolder.getUser().getId();
         //从redis读取列表
-        Page<Long> commonFollowPage =  queryRedisSourceIdsTool.queryRedisCommonFollowIdPage(followTypeEnum.getFollowKeyPrefix(), currentUserId, follow.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
+        Page<Long> commonFollowPage =  zSetIdManager.pageCommonFollowIds(followTypeEnum.getFollowKeyPrefix(), currentUserId, follow.getUserId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> idList = commonFollowPage.getRecords();
         //如果redis里面没有数据，则从数据库里面获取
         if (commonFollowPage.getTotal()==0) {
@@ -255,7 +256,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             if (!currentUserFollowList.isEmpty()) {
                 currentUserFollowIdList = currentUserFollowList.stream().map(Follow::getSourceId).collect(Collectors.toList()); // This line is incorrect
                 //把当前用户关注列表id写入redis当中
-                saveFollowIdListToRedis(followTypeEnum.getFollowKeyPrefix()+currentUserId, currentUserFollowList);
+                zSetIdManager.saveToZSet(followTypeEnum.getFollowKeyPrefix()+currentUserId, currentUserFollowList, Follow::getSourceId, Follow::getCreateTime);
             }
             //获取目标用户的关注列表
             List<Follow> targetUserFollowList = query()
@@ -267,7 +268,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             if (!targetUserFollowList.isEmpty()) {
                 targetUserFollowIdList = targetUserFollowList.stream().map(Follow::getSourceId).collect(Collectors.toList());
                 //把目标用户关注列表id写入redis当中
-                saveFollowIdListToRedis(followTypeEnum.getFollowKeyPrefix()+follow.getUserId(), targetUserFollowList);
+                zSetIdManager.saveToZSet(followTypeEnum.getFollowKeyPrefix()+currentUserId, currentUserFollowList, Follow::getSourceId, Follow::getCreateTime);
+
             }
             //获取两个列表的交集
           List<Long> commonFollowList = currentUserFollowIdList.stream()
@@ -387,7 +389,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Collections.emptyList();
         }
         //从redis获取
-        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(identityType.getFansKeyPrefix(), follow.getSourceId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
+        Page<Long> fanIdPage = zSetIdManager.pageIds(identityType.getFansKeyPrefix(), follow.getSourceId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
         //redis获取失败，从数据库获取
         if (sourceIdList.isEmpty()) {
@@ -405,7 +407,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                     sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
                 }
                 //存入redis
-                saveFollowIdListToRedis(identityType.getFollowKeyPrefix()+follow.getUserId(),sourceList);
+                zSetIdManager.saveToZSet(identityType.getFollowKeyPrefix()+follow.getUserId(), sourceList, Follow::getSourceId, Follow::getCreateTime);
+
             }
         }
         //根据id查询用户
@@ -433,7 +436,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             return Collections.emptyList();
         }
         //从redis获取
-        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(followTypeEnum.getFollowKeyPrefix(), followDTO.getUserId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
+        Page<Long> fanIdPage = zSetIdManager.pageIds(followTypeEnum.getFollowKeyPrefix(), followDTO.getUserId(),current, SystemConstants.DEFAULT_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
         //redis获取失败，从数据库获取
         if (sourceIdList.isEmpty()) {
@@ -451,7 +454,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                     sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
                 }
                 //存入redis
-                saveFollowIdListToRedis(followTypeEnum.getFollowKeyPrefix()+followDTO.getUserId(),sourceList);
+                zSetIdManager.saveToZSet(followTypeEnum.getFollowKeyPrefix()+followDTO.getUserId(), sourceList, Follow::getSourceId, Follow::getCreateTime);
             }
            }
         if(sourceIdList.isEmpty()){
@@ -472,7 +475,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     @Override
     public Integer getFollowCount(Follow follow) {
         //从redis里面获取
-        int followCount = (int) queryRedisSourceIdsTool.queryRedisIdPage(FollowTypeEnum.getByCode(follow.getSourceType()).getFollowKeyPrefix(), follow.getUserId(),1, 0).getTotal();
+        int followCount = (int) zSetIdManager.pageIds(FollowTypeEnum.getByCode(follow.getSourceType()).getFollowKeyPrefix(), follow.getUserId(),1, 0).getTotal();
         if(followCount==0){
             //从数据库获取
             followCount = query().eq("source_type", follow.getSourceType()).eq("user_id", follow.getUserId()).count().intValue();
@@ -489,7 +492,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     @Override
     public Integer getFanCount(Follow follow) {
         //从redis里面获取
-        int fansCount = (int) queryRedisSourceIdsTool.queryRedisIdPage(FollowTypeEnum.getByCode(follow.getSourceType()).getFansKeyPrefix(), follow.getSourceId(),1, 0).getTotal();
+        int fansCount = (int) zSetIdManager.pageIds(FollowTypeEnum.getByCode(follow.getSourceType()).getFansKeyPrefix(), follow.getSourceId(),1, 0).getTotal();
         if(fansCount==0){
              fansCount = query().eq("source_type", follow.getSourceType()).eq("source_id", follow.getSourceId()).count().intValue();
         }
@@ -512,7 +515,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
         Long currentUserId=follow.getUserId();
         //从redis读取
-        Page<Long> commonFollowIdPage = queryRedisSourceIdsTool.queryRedisCommonFollowIdPage(followTypeEnum.getFollowKeyPrefix(), follow.getSourceId(), currentUserId,1, 0);
+        Page<Long> commonFollowIdPage = zSetIdManager.pageCommonFollowIds(followTypeEnum.getFollowKeyPrefix(), follow.getSourceId(), currentUserId,1, 0);
         int commonFollowCount = (int) commonFollowIdPage.getTotal();
         log.info("从redis获取共同关注数：{}",commonFollowCount);
         //redis获取失败，从数据库获取
@@ -541,20 +544,5 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             }
         }
         return commonFollowCount;
-    }
-    /**
-     * 保存关注列表到Redis
-     *
-     * @param key
-     * @param followList
-     */
-    private void saveFollowIdListToRedis(String key,List<Follow> followList) {
-        Set<ZSetOperations.TypedTuple<String>> followIdListSet = followList.stream()
-                .map(t -> {
-                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getSourceId().toString(), (double) t.getCreateTime().getTime());
-                    return tuple;
-                })
-                .collect(Collectors.toSet());
-        redisService.setCacheZSet(key, followIdListSet);
     }
 }

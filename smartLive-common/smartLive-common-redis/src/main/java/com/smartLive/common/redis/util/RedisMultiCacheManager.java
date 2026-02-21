@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class RedisBatchCacheUtil {
+public class RedisMultiCacheManager {
 
     private static final String REDIS_DATA_FIELD = "data";
     private static final String REDIS_EXPIRE_TIME_FIELD = "expireTime";

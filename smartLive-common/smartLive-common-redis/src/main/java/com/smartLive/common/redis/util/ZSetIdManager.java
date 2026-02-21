@@ -1,9 +1,10 @@
-package com.smartLive.interaction.tool;
+package com.smartLive.common.redis.util;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.redis.service.RedisService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -15,7 +16,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 /**
  * 获取redis中存储的源工具类
  * @author mumulin
@@ -23,16 +23,14 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
-public class QueryRedisSourceIdsTool {
+@Slf4j
+public class ZSetIdManager {
     private final RedisService redisService;
 
     /**
-     * 保存关注列表到Redis
-     *
-     * @param key
-     * @param list
+     * 将任意业务实体集合，提取 ID 和时间后，存入 Redis ZSet
      */
-    private void saveFollowIdListToRedis(String key, List<T> list, Function<T,Long> idExtractor, Function<T, Date> dateExtractor) {
+    public <T> void saveToZSet(String key, List<T> list, Function<T,Long> idExtractor, Function<T, Date> dateExtractor) {
         Set<ZSetOperations.TypedTuple<String>> idListSet = list.stream()
                 .map(t -> {
                     // 获取id
@@ -42,22 +40,18 @@ public class QueryRedisSourceIdsTool {
                     return (ZSetOperations.TypedTuple<String>) new DefaultTypedTuple<String>(id, (double) createTime.getTime());
                 })
                 .collect(Collectors.toSet());
+        log.info("saveToZSet:{}",idListSet);
         redisService.setCacheZSet(key, idListSet);
     }
     /**
-     * 通用方法：从 Redis ZSet 中分页查询 ID 列表
-     * @param keyPrefix Redis Key 前缀 (如 "follow:user:")
-     * @param userId    用户 ID
-     * @param page      当前页
-     * @param size      每页条数
-     * @return Page<Long> 包含 total 和 ID列表
+     * 从 ZSet 中分页获取 ID 列表 (按时间/分数倒序)
      */
-   public  Page<Long> queryRedisIdPage(String keyPrefix, Long userId, long page, long size) {
+    public Page<Long> pageIds(String keyPrefix, Long userId, long page, long size) {
         String key = keyPrefix + userId;
 
         // 1. 查总数 (ZCARD)
-          Long total = redisService.getCacheZSetSize(key);
-       if (total == null || total == 0) {
+        Long total = redisService.getCacheZSetSize(key);
+        if (total == null || total == 0) {
             return new Page<>(page, size, 0); // 返回空页
         }
 
@@ -66,7 +60,7 @@ public class QueryRedisSourceIdsTool {
         long end = start + size - 1;
 
         // 3. 查 ID 集合 (按分数倒序，即时间倒序)
-       Set<Object> idStrSet = redisService.getCacheZSetReverseRange(key, start, end);
+        Set<Object> idStrSet = redisService.getCacheZSetReverseRange(key, start, end);
         if (CollUtil.isEmpty(idStrSet)) {
             return new Page<>(page, size, total);
         }
@@ -80,18 +74,13 @@ public class QueryRedisSourceIdsTool {
         Page<Long> idPage = new Page<>(page, size);
         idPage.setTotal(total);
         idPage.setRecords(idList);
-
+         log.info("pageIds:{}",idPage.getRecords());
         return idPage;
     }
     /**
-     * 获取共同关注列表
-     *
-     * @param userId1
-     * @param userId2
-     * @param
-     * @return
+     * 分页获取两个 ZSet 的交集 ID (常用于共同关注等场景)
      */
-    public  Page<Long> queryRedisCommonFollowIdPage(String FollowKeyPrefix, Long userId1, Long userId2, long page, long size) {
+    public  Page<Long> pageCommonFollowIds(String FollowKeyPrefix, Long userId1, Long userId2, long page, long size) {
         String key1 = FollowKeyPrefix+ userId1;
         String key2 = FollowKeyPrefix + userId2;
 
@@ -127,7 +116,7 @@ public class QueryRedisSourceIdsTool {
         Page<Long> idPage = new Page<>(page, size);
         idPage.setTotal(total);
         idPage.setRecords(ids);
-
+        log.info("pageCommonFollowIds:{}",idPage.getRecords());
         return idPage;
     }
 }

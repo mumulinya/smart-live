@@ -9,13 +9,12 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
 import com.smartLive.common.redis.util.CacheClient;
-import com.smartLive.common.redis.util.RedisBatchCacheUtil;
+import com.smartLive.common.redis.util.RedisMultiCacheManager;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
@@ -31,17 +30,14 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.security.utils.SecurityUtils;
-import com.smartLive.interaction.api.RemoteCommentService;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteLikeService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
-import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartLive.user.domain.Stats;
-import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.domain.VO.UserInfoVO;
 import com.smartLive.user.domain.VO.UserVO;
 import com.smartLive.user.service.IUserInfoService;
@@ -74,7 +70,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private IUserInfoService userInfoService;
     @Autowired
-    private RedisBatchCacheUtil redisBatchCacheUtil;
+    private RedisMultiCacheManager redisMultiCacheManager;
 
     @Autowired
     private RemoteBlogService remoteBlogService;
@@ -294,7 +290,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public List<UserVO> getUserList(List<Long> userIdList) {
         // 1. Utilize RedisBatchCacheUtil for cached batch retrieval (UserVO with static info)
-        List<UserVO> userVOList = redisBatchCacheUtil.queryBatchWithCache(
+        List<UserVO> userVOList = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_USER_KEY,
                 userIdList,
                 UserVO.class,

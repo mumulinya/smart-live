@@ -41,7 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.smartLive.common.redis.util.RedisBatchCacheUtil;
+import com.smartLive.common.redis.util.RedisMultiCacheManager;
 
 /**
  * 博客Service业务层处理
@@ -72,7 +72,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Autowired
     private RemoteStarService remoteStarService;
     @Autowired
-    private RedisBatchCacheUtil redisBatchCacheUtil;
+    private RedisMultiCacheManager redisMultiCacheManager;
     @Autowired
     private CacheClient cacheClient;
 
@@ -437,7 +437,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public List<Blog> getBlogListByIds(List<Long> sourceIdList) {
         // 1. Utilize RedisBatchCacheUtil for cached batch retrieval
-        List<Blog> blogList = redisBatchCacheUtil.queryBatchWithCache(
+        List<Blog> blogList = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_BLOG_KEY,
                 sourceIdList,
                 Blog.class,

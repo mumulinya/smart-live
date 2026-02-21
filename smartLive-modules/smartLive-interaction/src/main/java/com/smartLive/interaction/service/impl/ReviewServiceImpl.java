@@ -18,9 +18,8 @@ import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
-import com.smartLive.interaction.domain.BO.AuditCommentBO;
+import com.smartLive.common.redis.util.RedisMultiCacheManager;
 import com.smartLive.interaction.domain.BO.AuditReviewBO;
-import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.Review;
 import com.smartLive.interaction.api.DTO.LikeDTO;
@@ -50,7 +49,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.smartLive.common.redis.util.RedisBatchCacheUtil;
 /**
  * 评价ervice业务层处理
  * 
@@ -80,7 +78,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
-    private RedisBatchCacheUtil redisBatchCacheUtil;
+    private RedisMultiCacheManager redisMultiCacheManager;
     @Autowired
     private CacheClient cacheClient;
     private ResourceStrategyFactory resourceStrategyFactory;
@@ -231,7 +229,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
 
         // 2. 使用 RedisBatchCacheUtil 批量获取 Review 对象
-        List<Review> list = redisBatchCacheUtil.queryBatchWithCache(
+        List<Review> list = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_REVIEW_KEY, // Review 对象缓存前缀
                 reviewIdList,                    // 要获取的 ID
                 Review.class,                    // 目标类

@@ -30,7 +30,7 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
-import com.smartLive.common.redis.util.RedisBatchCacheUtil;
+import com.smartLive.common.redis.util.RedisMultiCacheManager;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
@@ -43,10 +43,6 @@ import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.GeoResult;
-import org.springframework.data.geo.GeoResults;
-import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.stereotype.Service;
 import com.smartLive.shop.mapper.ShopMapper;
 import com.smartLive.shop.domain.Shop;
@@ -77,7 +73,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Autowired
     RemoteFollowService remoteFollowService;
     @Autowired
-    private RedisBatchCacheUtil redisBatchCacheUtil;
+    private RedisMultiCacheManager redisMultiCacheManager;
     /**
      * 将Shop实体转换为ShopVO
      * @param shop Shop实体
@@ -559,7 +555,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public List<ShopVO> getShopList(List<Long> ids) {
-       return redisBatchCacheUtil.queryBatchWithCache(
+       return redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_SHOP_KEY,
                 ids,
                 ShopVO.class,
