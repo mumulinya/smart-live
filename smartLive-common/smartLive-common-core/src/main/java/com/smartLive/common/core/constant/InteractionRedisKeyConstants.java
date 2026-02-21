@@ -1,4 +1,4 @@
-package com.smartLive.interaction.constant;
+package com.smartLive.common.core.constant;
 
 /**
  * 互动模块 Redis Key 常量池

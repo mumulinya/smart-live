@@ -23,6 +23,12 @@ public class RemoteCommentFallbackFactory implements FallbackFactory<RemoteComme
                 log.error("查询评论数失败", cause.getMessage());
                 return 0;
             }
+
+            @Override
+            public Boolean isComment(CommentDTO commentDTO) {
+                log.error("查询是否评论失败:{}", cause.getMessage());
+                return false;
+            }
             /**
              * 获取评论总数
              * @return

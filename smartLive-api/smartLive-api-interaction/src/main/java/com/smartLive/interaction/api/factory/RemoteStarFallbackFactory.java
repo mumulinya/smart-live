@@ -1,10 +1,10 @@
 package com.smartLive.interaction.api.factory;
-import com.smartLive.interaction.api.RemoteStarService;
+
 import com.smartLive.interaction.api.DTO.StarDTO;
+import com.smartLive.interaction.api.RemoteStarService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
@@ -16,59 +16,46 @@ public class RemoteStarFallbackFactory implements FallbackFactory<RemoteStarServ
     public RemoteStarService create(Throwable cause) {
         return new RemoteStarService() {
             @Override
-            public Boolean isStar(@RequestBody StarDTO starDTO){
-                log.error("查询是否收藏失败:{}",cause.getMessage());
+            public Boolean isStar(StarDTO starDTO) {
+                log.error("isStar failed: {}", cause.getMessage());
                 return false;
             }
 
             @Override
             public Integer getStarCount(StarDTO starDTO) {
-                log.error("获取收藏数失败:{}",cause.getMessage());
+                log.error("getStarCount failed: {}", cause.getMessage());
                 return 0;
             }
 
             @Override
             public Integer getFanCount(StarDTO starDTO) {
-                log.error("获取粉丝数失败:{}",cause.getMessage());
+                log.error("getFanCount failed: {}", cause.getMessage());
                 return 0;
             }
 
-            /**
-             * 获取共同关注数
-             *
-             * @return
-             */
             @Override
             public Integer getCommonStarCount(StarDTO starDTO) {
-                log.error("获取共同关注数失败:{}",cause.getMessage());
+                log.error("getCommonStarCount failed: {}", cause.getMessage());
                 return 0;
             }
 
-            /**
-             * 获取用户关注店铺数量
-             *
-             * @param
-             * @return
-             */
             @Override
             public Integer getUserStarCount(StarDTO starDTO) {
-                log.error("获取用户收藏数量失败:{}",cause.getMessage());
+                log.error("getUserStarCount failed: {}", cause.getMessage());
                 return 0;
             }
 
-            /**
-             * 批量查询是否收藏
-             *
-             * @param starDTO
-             * @param sourceIds
-             * @return
-             */
+            @Override
+            public List<?> queryStarUserList(StarDTO starDTO) {
+                log.error("queryStarUserList failed: {}", cause.getMessage());
+                return List.of();
+            }
+
             @Override
             public Map<Long, Boolean> getIsStarBatch(StarDTO starDTO, List<Long> sourceIds) {
-                log.error("批量查询是否收藏失败:{}",cause.getMessage());
+                log.error("getIsStarBatch failed: {}", cause.getMessage());
                 return Map.of();
             }
         };
-
     }
 }

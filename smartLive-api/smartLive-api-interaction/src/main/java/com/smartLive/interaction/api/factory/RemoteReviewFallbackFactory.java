@@ -1,5 +1,6 @@
 package com.smartLive.interaction.api.factory;
 
+import com.smartLive.interaction.api.DTO.ReviewDTO;
 import com.smartLive.interaction.api.RemoteReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -11,6 +12,12 @@ public class RemoteReviewFallbackFactory implements FallbackFactory<RemoteReview
     @Override
     public RemoteReviewService create(Throwable throwable) {
         return new RemoteReviewService() {
+            @Override
+            public Boolean isReview(ReviewDTO reviewDTO) {
+                log.error("查询是否评价失败:{}", throwable.getMessage());
+                return false;
+            }
+
             @Override
             public Boolean updateReviewStatus(Long id, Integer status) {
                 log.error("评价服务调用失败:{}", throwable.getMessage());

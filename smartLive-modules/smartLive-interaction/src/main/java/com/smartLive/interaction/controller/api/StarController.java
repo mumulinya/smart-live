@@ -53,6 +53,16 @@ public class StarController {
     public Result getStars(StarDTO starDTO, @RequestParam("current") Integer current){
         return Result.ok(starService.getStarList(starDTO, current));
     }
+
+    /**
+     * 查询收藏用户列表
+     * @param star 收藏查询条件
+     * @return 收藏用户列表
+     */
+    @GetMapping("/starUserList")
+    public Result queryStarUserList(Star star){
+        return Result.ok(starService.queryStarUserList(star));
+    }
     /**
      * 获取用户收藏的数量
      * @param star 收藏查询条件

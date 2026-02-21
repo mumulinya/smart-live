@@ -12,30 +12,34 @@ import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.ZSetIdManager;
+import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.Like;
+import com.smartLive.interaction.domain.VO.LikeVO;
 import com.smartLive.interaction.mapper.LikeMapper;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.strategy.factory.LikeStrategyFactory;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
-import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import com.smartLive.interaction.api.DTO.LikeDTO;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * 点赞记录Service业务层处理
- * 
- * @author mumulin
- * @date 2025-09-21
+ * Like service.
  */
 @Service
 @Slf4j
@@ -45,250 +49,405 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
     @Autowired
     private LikeStrategyFactory likeStrategyFactory;
     @Autowired
-    private  RedisService redisService;
+    private RedisService redisService;
     @Autowired
     private ZSetIdManager zSetIdManager;
 
-    /**
-     * 点赞或取消点赞
-     *
-     * @param like
-     * @return 点赞记录
-     */
     @Override
     public Boolean likeOrCancelLike(Like like) {
-        //获取当前登录用户
         UserDTO user = UserContextHolder.getUser();
         if (user == null) {
-            //未登录
             return false;
         }
         Long userId = user.getId();
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         if (likeTypeEnum == null) {
-            log.error("点赞类型错误");
+            log.error("like type invalid");
             return false;
         }
-        LikeStrategy likeStrategy = likeStrategyFactory.getStrategy(like.getSourceType());
-        String likeKeyPrefix = likeTypeEnum.getLikeKeyPrefix();
-        String likedCountKeyPrefix = likeTypeEnum.getLikedCountKeyPrefix();
-        String likeDirtyKeyPrefix = likeTypeEnum.getLikeDirtyKeyPrefix();
 
-        //判断当前用户是否已经点赞
-        String key = likeKeyPrefix+ like.getSourceId();
-        String likeCountKey = likedCountKeyPrefix + like.getSourceId();
-        Double score = redisService.getCacheZSetScore(key, userId.toString());
-        boolean isLiked = false;
-        if (score != null) {
-            // Redis 里有，肯定是点赞了
-            isLiked = true;
-        } else {
-            // 3. 【第二层判断】Redis 里没有，必须查数据库确认！(防止缓存过期导致的误判)
+        LikeStrategy likeStrategy = likeStrategyFactory.getStrategy(like.getSourceType());
+        String sourceLikeKey = sourceLikeKey(likeTypeEnum, like.getSourceId());
+        String userLikeKey = userLikeKey(likeTypeEnum, userId);
+        String likeCountKey = likeTypeEnum.getLikedCountKeyPrefix() + like.getSourceId();
+        String likeDirtyKey = likeTypeEnum.getLikeDirtyKeyPrefix();
+
+        boolean isLiked = redisService.getCacheZSetScore(userLikeKey, like.getSourceId().toString()) != null;
+        if (!isLiked) {
             long count = this.count(new LambdaQueryWrapper<Like>()
                     .eq(Like::getUserId, userId)
                     .eq(Like::getSourceType, like.getSourceType())
                     .eq(Like::getSourceId, like.getSourceId()));
             if (count > 0) {
                 isLiked = true;
-                //把点赞用户列表添加到redis
+                redisService.setCacheZSet(userLikeKey, like.getSourceId().toString(), System.currentTimeMillis());
                 List<Like> likeList = query()
                         .eq("source_type", like.getSourceType())
                         .eq("source_id", like.getSourceId())
                         .list();
-                saveLikeIdListToRedis(key, likeList);
+                if (!likeList.isEmpty()) {
+                    zSetIdManager.saveToZSet(sourceLikeKey, likeList, Like::getUserId, Like::getCreateTime);
+                }
             }
         }
-        //获取点赞数量
+
         Integer likeCount = redisService.getCacheObject(likeCountKey);
         if (likeCount == null) {
-            //从数据库获取点赞数量并且写入到redis
             likeCount = likeStrategy.getLikeCount(like.getSourceId());
             redisService.setCacheObject(likeCountKey, likeCount);
         }
+
         if (isLiked) {
-            //删除点赞记录
-            boolean isDelete = this.remove(new LambdaQueryWrapper<Like>()
+            boolean deleted = this.remove(new LambdaQueryWrapper<Like>()
                     .eq(Like::getUserId, userId)
                     .eq(Like::getSourceType, like.getSourceType())
                     .eq(Like::getSourceId, like.getSourceId()));
-            if (isDelete) {
-                //删除用户点赞信息
-                redisService.removeCacheZSetObject(key, userId.toString());
-                //记录点赞数量
+            if (deleted) {
+                redisService.removeCacheZSetObject(sourceLikeKey, userId.toString());
+                redisService.removeCacheZSetObject(userLikeKey, like.getSourceId().toString());
                 redisService.decrementCacheValue(likeCountKey);
-                //记录脏数据
-                redisService.setCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
+                redisService.setCacheSet(likeDirtyKey, like.getSourceId().toString());
             }
-        }else{
+        } else {
             like.setUserId(userId);
             like.setCreateTime(DateUtils.getNowDate());
-            //未点赞
-            boolean isSuccess = save(like);
-            //保存用户点赞信息到redis的set集合 zadd key value score
-            if (isSuccess) {
-                //保存用户点赞信息
-                redisService.setCacheZSet(key, userId.toString(), System.currentTimeMillis());
-                //记录点赞数量
+            boolean saved = save(like);
+            if (saved) {
+                redisService.setCacheZSet(sourceLikeKey, userId.toString(), System.currentTimeMillis());
+                redisService.setCacheZSet(userLikeKey, like.getSourceId().toString(), System.currentTimeMillis());
                 redisService.incrementCacheValue(likeCountKey);
-                //记录脏数据
-                redisService.setCacheSet(likeDirtyKeyPrefix, like.getSourceId().toString());
-                //保存用户点赞资源到es
+                redisService.setCacheSet(likeDirtyKey, like.getSourceId().toString());
                 likeStrategy.syncUserResource(userId, like.getSourceId());
             }
         }
         return true;
     }
 
-    /**
-     * 查询点赞数
-     *
-     * @param like@return 点赞数
-     */
     @Override
     public Integer queryLikeCount(Like like) {
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         String likeCountKey = likeTypeEnum.getLikedCountKeyPrefix() + like.getSourceId();
         Integer likeCount = redisService.getCacheObject(likeCountKey);
         if (likeCount == null) {
-            //从数据库获取点赞数量并且写入到redis
             likeCount = likeStrategyFactory.getStrategy(like.getSourceType()).getLikeCount(like.getSourceId());
             redisService.setCacheObject(likeCountKey, likeCount);
         }
         return likeCount;
     }
-    /**
-     * 获取用户点赞数
-     *
-     * @param
-     * @return 点赞数
-     */
+
     @Override
     public Integer getUserLikeCount(Like like) {
-        Integer count = query().eq("source_type", like.getSourceType())
+        return query().eq("source_type", like.getSourceType())
                 .eq("user_id", like.getUserId())
                 .count().intValue();
-        return count;
-    }
-    /**
-     * 查询点赞列表
-     *
-     * @param like@return 点赞记录
-     */
-    @Override
-    public List<?> queryLikeRecord(Like like, Integer current) {
-        ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(like.getSourceType());
-        if (resourceTypeEnum == null) {
-            log.error("点赞类型错误");
-            return null;
-        }
-        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(resourceTypeEnum.getCode());
-        //获取资源id
-        List<Long> sourceIdList = query()
-                .select("source_id")
-                .eq("source_type",like.getSourceType())
-                .eq("user_id", like.getUserId())
-                .orderByDesc("create_time") //
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE))
-                .getRecords()
-                .stream()
-                .map(Like::getSourceId)
-                .collect(Collectors.toList());
-        List<?> resourceVOList = resourceStrategy.getResourceList(sourceIdList);
-        return resourceVOList;
     }
 
-    /**
-     * 查询点赞用户列表
-     *
-     * @param like@return 点赞用户列表
-     */
+    @Override
+    public List<LikeVO> queryLikeRecord(Like like, Integer current) {
+        if (like == null) {
+            return Collections.emptyList();
+        }
+
+        Long userId = like.getUserId();
+        if (userId == null) {
+            UserDTO user = UserContextHolder.getUser();
+            if (user != null) {
+                userId = user.getId();
+                like.setUserId(userId);
+            }
+        }
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        int pageNo = current == null || current < 1 ? 1 : current;
+        if (like.getSourceType() == null) {
+            return queryAllLikeRecordOfUser(userId, pageNo);
+        }
+
+        ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(like.getSourceType());
+        LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
+        if (resourceTypeEnum == null || likeTypeEnum == null) {
+            log.error("queryLikeRecord params invalid");
+            return Collections.emptyList();
+        }
+        return queryLikeRecordByType(userId, like.getSourceType(), pageNo, resourceTypeEnum, likeTypeEnum);
+    }
+
+    private List<LikeVO> queryAllLikeRecordOfUser(Long userId, Integer pageNo) {
+        List<Like> dbList = query()
+                .eq("user_id", userId)
+                .orderByDesc("create_time")
+                .list();
+        if (dbList == null || dbList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        int start = (pageNo - 1) * SystemConstants.MAX_PAGE_SIZE;
+        if (start >= dbList.size()) {
+            return Collections.emptyList();
+        }
+        int end = Math.min(start + SystemConstants.MAX_PAGE_SIZE, dbList.size());
+        List<Like> pageList = dbList.subList(start, end);
+        return buildLikeVOByLikeList(pageList);
+    }
+
+    private List<LikeVO> queryLikeRecordByType(Long userId,
+                                               Integer sourceType,
+                                               Integer pageNo,
+                                               ResourceTypeEnum resourceTypeEnum,
+                                               LikeTypeEnum likeTypeEnum) {
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(resourceTypeEnum.getCode());
+        String userLikeKey = userLikeKey(likeTypeEnum, userId);
+        Page<Long> sourcePage = zSetIdManager.pageIds(likeTypeEnum.getUserLikedKeyPrefix(), userId, pageNo, SystemConstants.MAX_PAGE_SIZE);
+        List<Long> sourceIdList = sourcePage.getRecords();
+        Map<Long, Date> likeTimeMap;
+
+        if (sourceIdList == null || sourceIdList.isEmpty()) {
+            List<Like> sourceList = query()
+                    .eq("source_type", sourceType)
+                    .eq("user_id", userId)
+                    .orderByDesc("create_time")
+                    .list();
+            if (sourceList != null && !sourceList.isEmpty()) {
+                zSetIdManager.saveToZSet(userLikeKey, sourceList, Like::getSourceId, Like::getCreateTime);
+
+                int start = Math.max(0, (pageNo - 1) * SystemConstants.MAX_PAGE_SIZE);
+                int end = Math.min(sourceList.size(), start + SystemConstants.MAX_PAGE_SIZE);
+                if (start < end) {
+                    List<Like> pageLikeList = sourceList.subList(start, end);
+                    sourceIdList = pageLikeList.stream().map(Like::getSourceId).collect(Collectors.toList());
+                    likeTimeMap = pageLikeList.stream().collect(Collectors.toMap(
+                            Like::getSourceId,
+                            Like::getCreateTime,
+                            (v1, v2) -> v1,
+                            LinkedHashMap::new
+                    ));
+                } else {
+                    likeTimeMap = new HashMap<>();
+                }
+            } else {
+                likeTimeMap = new HashMap<>();
+            }
+        } else {
+            likeTimeMap = queryLikeTimeFromRedis(userLikeKey, sourceIdList);
+        }
+
+        if (sourceIdList == null || sourceIdList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (likeTimeMap.size() < sourceIdList.size()) {
+            List<Like> likeList = query()
+                    .eq("source_type", sourceType)
+                    .eq("user_id", userId)
+                    .in("source_id", sourceIdList)
+                    .list();
+            if (likeList != null) {
+                likeList.forEach(item -> likeTimeMap.putIfAbsent(item.getSourceId(), item.getCreateTime()));
+            }
+        }
+
+        List<Object> resourceList = resourceStrategy.getResourceList(sourceIdList);
+        if (resourceList == null || resourceList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Object> resourceMap = new HashMap<>(resourceList.size());
+        for (Object item : resourceList) {
+            Long sourceId = resourceStrategy.getResourceId(item);
+            if (sourceId != null) {
+                resourceMap.put(sourceId, item);
+            }
+        }
+
+        List<LikeVO> result = new ArrayList<>(sourceIdList.size());
+        for (Long sourceId : sourceIdList) {
+            Object data = resourceMap.get(sourceId);
+            if (data == null) {
+                continue;
+            }
+
+            Date likeTime = likeTimeMap.get(sourceId);
+            if (likeTime == null) {
+                Double score = redisService.getCacheZSetScore(userLikeKey, sourceId.toString());
+                if (score != null) {
+                    likeTime = new Date(score.longValue());
+                }
+            }
+
+            result.add(new LikeVO(likeTime, data));
+        }
+        return result;
+    }
+
+    private List<LikeVO> buildLikeVOByLikeList(List<Like> likeList) {
+        if (likeList == null || likeList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Integer, List<Like>> grouped = likeList.stream()
+                .filter(item -> item.getSourceType() != null && item.getSourceId() != null)
+                .collect(Collectors.groupingBy(Like::getSourceType));
+        if (grouped.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Integer, Map<Long, Object>> resourceMapByType = new HashMap<>();
+        for (Map.Entry<Integer, List<Like>> entry : grouped.entrySet()) {
+            Integer sourceType = entry.getKey();
+            ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(sourceType);
+            if (resourceTypeEnum == null) {
+                continue;
+            }
+            ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(resourceTypeEnum.getCode());
+            List<Long> sourceIds = entry.getValue().stream()
+                    .map(Like::getSourceId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (sourceIds.isEmpty()) {
+                continue;
+            }
+            List<Object> resourceList = resourceStrategy.getResourceList(sourceIds);
+            if (resourceList == null || resourceList.isEmpty()) {
+                continue;
+            }
+            Map<Long, Object> resourceMap = new HashMap<>(resourceList.size());
+            for (Object item : resourceList) {
+                Long sourceId = resourceStrategy.getResourceId(item);
+                if (sourceId != null) {
+                    resourceMap.putIfAbsent(sourceId, item);
+                }
+            }
+            resourceMapByType.put(sourceType, resourceMap);
+        }
+
+        List<LikeVO> result = new ArrayList<>(likeList.size());
+        for (Like item : likeList) {
+            if (item.getSourceType() == null || item.getSourceId() == null) {
+                continue;
+            }
+            Map<Long, Object> resourceMap = resourceMapByType.get(item.getSourceType());
+            if (resourceMap == null) {
+                continue;
+            }
+            Object data = resourceMap.get(item.getSourceId());
+            if (data == null) {
+                continue;
+            }
+            result.add(new LikeVO(item.getCreateTime(), data));
+        }
+        return result;
+    }
+
+    private Map<Long, Date> queryLikeTimeFromRedis(String userLikeKey, List<Long> sourceIdList) {
+        if (sourceIdList == null || sourceIdList.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Object> results = redisService.redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            RedisSerializer keySerializer = redisService.redisTemplate.getKeySerializer();
+            RedisSerializer valueSerializer = redisService.redisTemplate.getValueSerializer();
+            byte[] keyBytes = keySerializer.serialize(userLikeKey);
+            for (Long sourceId : sourceIdList) {
+                connection.zSetCommands().zScore(keyBytes, valueSerializer.serialize(sourceId.toString()));
+            }
+            return null;
+        });
+
+        Map<Long, Date> likeTimeMap = new HashMap<>(sourceIdList.size());
+        if (results == null || results.isEmpty()) {
+            return likeTimeMap;
+        }
+
+        int limit = Math.min(sourceIdList.size(), results.size());
+        for (int i = 0; i < limit; i++) {
+            Object scoreObj = results.get(i);
+            if (scoreObj == null) {
+                continue;
+            }
+
+            long score;
+            if (scoreObj instanceof Double) {
+                score = ((Double) scoreObj).longValue();
+            } else if (scoreObj instanceof byte[]) {
+                score = Double.valueOf(new String((byte[]) scoreObj)).longValue();
+            } else {
+                score = Double.valueOf(Objects.toString(scoreObj)).longValue();
+            }
+            likeTimeMap.put(sourceIdList.get(i), new Date(score));
+        }
+        return likeTimeMap;
+    }
+
     @Override
     public List<?> queryLikeUserList(Like like) {
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         if (likeTypeEnum == null) {
-            log.error("点赞类型错误");
-            return null;
+            log.error("like type invalid");
+            return Collections.emptyList();
         }
-        String likeKeyPrefix = likeTypeEnum.getLikeKeyPrefix();
-        String key = likeKeyPrefix + like.getSourceId();
-        //查询top5的点赞数 zrange key 0 4
-        Set<Object> top5 =redisService.getCacheZSetRange(key, 0, 4);
+
+        String sourceLikeKey = sourceLikeKey(likeTypeEnum, like.getSourceId());
+        Set<Object> top5 = redisService.getCacheZSetRange(sourceLikeKey, 0, 4);
         List<Long> userIdList;
+
         if (top5 == null || top5.isEmpty()) {
-         List<Like> userList = query()
+            List<Like> userList = query()
                     .eq("source_type", like.getSourceType())
                     .eq("source_id", like.getSourceId())
                     .orderByDesc("create_time")
                     .list();
-         if (userList == null || userList.isEmpty()) {
-            return Collections.emptyList();
-        }
-            //写入redis
-            saveLikeIdListToRedis(likeKeyPrefix+like.getSourceId(),userList);
+            if (userList == null || userList.isEmpty()) {
+                return Collections.emptyList();
+            }
+            zSetIdManager.saveToZSet(sourceLikeKey, userList, Like::getUserId, Like::getCreateTime);
             userIdList = userList.stream().map(Like::getUserId).collect(Collectors.toList());
-            userIdList = userIdList.size() > 4  ? userIdList.subList(0, 4) : userIdList;
-        }else {
-            //解析其中的用户id
+            userIdList = userIdList.size() > 4 ? userIdList.subList(0, 4) : userIdList;
+        } else {
             userIdList = top5.stream().map(obj -> Long.valueOf(obj.toString())).collect(Collectors.toList());
         }
-        if (userIdList == null || userIdList.isEmpty()) {
+
+        if (userIdList.isEmpty()) {
             return Collections.emptyList();
         }
-//        IdentityStrategy identityStrategy = identityStrategyMap.get(FollowTypeEnum.USER_IDENTITY.getCode());
-//        List<?> socialInfoVOList = identityStrategy.getFollowList(userIdList);
-        log.info("查询点赞用户列表: {}", userIdList);
+
         ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(FollowTypeEnum.USER_IDENTITY.getCode());
-        List<UserDTO> socialInfoVOList = resourceStrategy.getResourceList(userIdList);
-        return socialInfoVOList;
+        return resourceStrategy.getResourceList(userIdList);
     }
 
-    /**
-     * 判断是否点赞
-     *
-     * @param like@return 是否点赞
-     */
     @Override
     public Boolean isLike(Like like) {
-        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        UserDTO user = UserContextHolder.getUser();
         if (user == null) {
             return false;
         }
-        //获取当前用户id
-        Long userId = user.getId();
-        // 1. 获取对应的枚举策略
+
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         if (likeTypeEnum == null) {
-            log.info("like{}",like);
-            log.error("点赞类型错误");
+            log.error("like type invalid");
             return false;
         }
-        String key =likeTypeEnum.getLikeKeyPrefix()+ like.getSourceId();
-        //判断是否关注 从redis的zSet集合中查询
-        //如果分数不为 null，说明元素存在（已关注）；如果为 null，说明不存在（未关注）
-        Boolean isLike = redisService.getCacheZSetScore(key, userId.toString()) != null;
+
+        String userLikeKey = userLikeKey(likeTypeEnum, user.getId());
+        Boolean isLike = redisService.getCacheZSetScore(userLikeKey, like.getSourceId().toString()) != null;
         if (isLike) {
-            //已点赞
             return true;
         }
-        //判断是否点赞 从数据库中查询
-        Long count = this.count(new LambdaQueryWrapper<Like>()
-                .eq(Like::getUserId, userId)
+
+        long count = this.count(new LambdaQueryWrapper<Like>()
+                .eq(Like::getUserId, user.getId())
                 .eq(Like::getSourceType, like.getSourceType())
                 .eq(Like::getSourceId, like.getSourceId()));
-        return count > 0;
+        if (count > 0) {
+            redisService.setCacheZSet(userLikeKey, like.getSourceId().toString(), System.currentTimeMillis());
+            return true;
+        }
+        return false;
     }
     /**
-     * 保存点赞用户列表到Redis
-     *
-     * @param key
-      * @param likeList
-     */
-    private void saveLikeIdListToRedis(String key,List<Like> likeList) {
-        zSetIdManager.saveToZSet(key, likeList, Like::getUserId, Like::getCreateTime);
-    }
-
-    /**
-     * 批量查询是否点赞
+     * 批量查询用户是否点赞
      *
      * @param likeDTO
      * @param sourceIds
@@ -299,6 +458,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         if (sourceIds == null || sourceIds.isEmpty()) {
             return Collections.emptyMap();
         }
+
         Long userId = null;
         UserDTO user = UserContextHolder.getUser();
         if (user != null) {
@@ -315,31 +475,29 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         if (likeTypeEnum == null) {
             return sourceIds.stream().collect(Collectors.toMap(id -> id, id -> false));
         }
-        String likeKeyPrefix = likeTypeEnum.getLikeKeyPrefix();
 
-        // Pipeline execution for batch check
-        Long finalUserId = userId;
+        String userLikeKey = userLikeKey(likeTypeEnum, userId);
         List<Object> results = redisService.redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             RedisSerializer keySerializer = redisService.redisTemplate.getKeySerializer();
             RedisSerializer valueSerializer = redisService.redisTemplate.getValueSerializer();
+            byte[] keyBytes = keySerializer.serialize(userLikeKey);
             for (Long sourceId : sourceIds) {
-                String key = likeKeyPrefix + sourceId;
-                // ZSCORE key member
-                connection.zSetCommands().zScore(
-                        keySerializer.serialize(key),
-                        valueSerializer.serialize(finalUserId.toString())
-                );
+                connection.zSetCommands().zScore(keyBytes, valueSerializer.serialize(sourceId.toString()));
             }
             return null;
         });
 
-        Map<Long, Boolean> resultMap = new HashMap<>();
+        Map<Long, Boolean> resultMap = new HashMap<>(sourceIds.size());
         for (int i = 0; i < sourceIds.size(); i++) {
-            Long sourceId = sourceIds.get(i);
-            Object result = results.get(i);
-            // If result is not null (Double score), it means verify true
-            resultMap.put(sourceId, result != null);
+            resultMap.put(sourceIds.get(i), results.get(i) != null);
         }
         return resultMap;
+    }
+    private String sourceLikeKey(LikeTypeEnum likeTypeEnum, Long sourceId) {
+        return likeTypeEnum.getLikeKeyPrefix() + sourceId;
+    }
+
+    private String userLikeKey(LikeTypeEnum likeTypeEnum, Long userId) {
+        return likeTypeEnum.getUserLikedKeyPrefix() + userId;
     }
 }

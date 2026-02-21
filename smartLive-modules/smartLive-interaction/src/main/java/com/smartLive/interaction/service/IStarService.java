@@ -5,7 +5,6 @@ import com.smartLive.interaction.domain.DTO.StarDTO;
 import com.smartLive.interaction.domain.Star;
 import java.util.List;
 import java.util.Map;
-import java.util.List;
 
 
 /**
@@ -83,6 +82,14 @@ public interface IStarService extends IService<Star>
      * @return
      */
     List<?> getStarList(StarDTO starDTO, Integer current);
+
+    /**
+     * 查询收藏用户列表
+     *
+     * @param star 收藏查询条件
+     * @return 收藏用户列表
+     */
+    List<?> queryStarUserList(Star star);
 
     /**
      * 获取收藏数量

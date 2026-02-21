@@ -152,6 +152,14 @@ public class ReviewController extends BaseController
     public Result getReviewById(@PathVariable("id")Long id){
         return Result.ok(reviewService.getReviewById(id));
     }
+
+    /**
+     * 判断当前用户是否评价过目标资源
+     */
+    @GetMapping("/isReview")
+    public Result isReview(Review review){
+        return Result.ok(reviewService.isReview(review));
+    }
     /**
      * 获取评价总数
      * @return

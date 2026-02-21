@@ -19,18 +19,21 @@ public enum CommentTypeEnum {
     BLOG_COMMENT(GlobalBizTypeEnum.BLOG.getCode(), "博客的评论",GlobalBizTypeEnum.BLOG.getBizDomain(),
             RedisConstants.BLOG_COMMENT_KEY,
             RedisConstants.BLOG_COMMENT_COUNT_KEY,
-            RedisConstants.BLOG_COMMENT_DIRTY_KEY),
+            RedisConstants.BLOG_COMMENT_DIRTY_KEY,
+            RedisConstants.USER_COMMENT_KEY),
 
     // 2. 评论评论配置
     COMMENT_COMMENT(GlobalBizTypeEnum.COMMENT.getCode(), "评论的评论",GlobalBizTypeEnum.COMMENT.getBizDomain(),
             RedisConstants.COMMENT_COMMENT_KEY,
             RedisConstants.COMMENT_COMMENT_COUNT_KEY,
-            RedisConstants.COMMENT_COMMENT_DIRTY_KEY),
+            RedisConstants.COMMENT_COMMENT_DIRTY_KEY,
+            RedisConstants.USER_COMMENT_KEY),
     // 2. 评价评论配置
     REVIEW_COMMENT(GlobalBizTypeEnum.REVIEW.getCode(), "评价的评论",GlobalBizTypeEnum.REVIEW.getBizDomain(),
             RedisConstants.REVIEW_COMMENT_KEY,
             RedisConstants.REVIEW_COMMENT_COUNT_KEY,
-            RedisConstants.REVIEW_COMMENT_DIRTY_KEY );
+            RedisConstants.REVIEW_COMMENT_DIRTY_KEY,
+            RedisConstants.USER_COMMENT_KEY );
 
     /**
      * 业务类型编码 (与 ResourceTypeEnum 保持一致)
@@ -64,6 +67,11 @@ public enum CommentTypeEnum {
      * e.g. likes:dirty:blog -> {101, 102}
      */
     private final String commentDirtyKeyPrefix;
+
+    /**
+     * 4. 反向索引 Key (用户 -> 已评论源ID)
+     */
+    private final String userCommentKeyPrefix;
 
     /**
      * 根据 code 获取枚举

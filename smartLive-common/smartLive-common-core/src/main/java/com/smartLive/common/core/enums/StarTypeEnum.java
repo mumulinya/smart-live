@@ -5,77 +5,74 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 收藏类型总枚举
- * 职责：
- * 1. 收藏类型编码 (数据库存储值)
- * 2. 提供策略模式所需的 Bean 名称 (strategyName)
- * 3. 提供 MQ/API 用的业务域标识 (bizDomain)
+ * 收藏类型与 Redis 键前缀映射
  */
 @Getter
 @AllArgsConstructor
 public enum StarTypeEnum {
 
-    // 1. 博客收藏配置
-    BLOG_STAR(GlobalBizTypeEnum.BLOG.getCode(), "博客的收藏",GlobalBizTypeEnum.BLOG.getBizDomain(),
+    BLOG_STAR(
+            GlobalBizTypeEnum.BLOG.getCode(),
+            "博客收藏",
+            GlobalBizTypeEnum.BLOG.getBizDomain(),
             RedisConstants.BLOG_STAR_KEY,
+            RedisConstants.BLOG_STAR_SOURCE_KEY,
             RedisConstants.BLOG_STAR_COUNT_KEY,
-            RedisConstants.BLOG_STAR_DIRTY_KEY),
-    // 2. 店铺收藏配置
-    SHOP_STAR(GlobalBizTypeEnum.SHOP.getCode(), "店铺的收藏",GlobalBizTypeEnum.SHOP.getBizDomain(),
+            RedisConstants.BLOG_STAR_DIRTY_KEY
+    ),
+    SHOP_STAR(
+            GlobalBizTypeEnum.SHOP.getCode(),
+            "店铺收藏",
+            GlobalBizTypeEnum.SHOP.getBizDomain(),
             RedisConstants.SHOP_STAR_KEY,
+            RedisConstants.SHOP_STAR_SOURCE_KEY,
             RedisConstants.SHOP_STAR_COUNT_KEY,
-            RedisConstants.SHOP_STAR_DIRTY_KEY),
-    // 2. 商品收藏配置
-    Voucher_STAR(GlobalBizTypeEnum.PRODUCT.getCode(), "代金券的收藏",GlobalBizTypeEnum.PRODUCT.getBizDomain(),
+            RedisConstants.SHOP_STAR_DIRTY_KEY
+    ),
+    PRODUCT_STAR(
+            GlobalBizTypeEnum.PRODUCT.getCode(),
+            "商品收藏",
+            GlobalBizTypeEnum.PRODUCT.getBizDomain(),
             RedisConstants.PRODUCT_STAR_KEY,
+            RedisConstants.PRODUCT_STAR_SOURCE_KEY,
             RedisConstants.PRODUCT_STAR_COUNT_KEY,
-            RedisConstants.PRODUCT_STAR_DIRTY_KEY),
-    // 3. 评价收藏配置
-    REVIEW_STAR(GlobalBizTypeEnum.REVIEW.getCode(), "评价的收藏",GlobalBizTypeEnum.REVIEW.getBizDomain(),
+            RedisConstants.PRODUCT_STAR_DIRTY_KEY
+    ),
+    REVIEW_STAR(
+            GlobalBizTypeEnum.REVIEW.getCode(),
+            "评价收藏",
+            GlobalBizTypeEnum.REVIEW.getBizDomain(),
             RedisConstants.REVIEW_STAR_KEY,
+            RedisConstants.REVIEW_STAR_SOURCE_KEY,
             RedisConstants.REVIEW_STAR_COUNT_KEY,
-            RedisConstants.REVIEW_STAR_DIRTY_KEY);
-    /**
-     * 业务类型编码 (与 ResourceTypeEnum 保持一致)
-     */
+            RedisConstants.REVIEW_STAR_DIRTY_KEY
+    );
+
     private final Integer code;
-    
-    /**
-     * 描述
-     */
     private final String desc;
-    
-    /**
-     * 业务域标识
-     */
     private final String bizDomain;
 
     /**
-     * 1. 用户点赞关系 Key (Set结构: 存userId)
-     * e.g. likes:blog:101 -> {user1, user2}
+     * 反向索引: 用户 -> 收藏资源
      */
     private final String starKeyPrefix;
 
     /**
-     * 2. 点赞计数 Key (String结构: 存数字)
-     * e.g. likes:count:blog:101 -> 99
+     * 正向索引: 资源 -> 收藏用户
      */
-    private final String starCountKeyPrefix;
+    private final String sourceStarKeyPrefix;
 
-    /**
-     * 3. 脏数据 Key (Set结构: 存bizId，用于定时任务同步)
-     * e.g. likes:dirty:blog -> {101, 102}
-     */
+    private final String starCountKeyPrefix;
     private final String starDirtyKeyPrefix;
 
-    /**
-     * 根据 code 获取枚举
-     * 如果传入不支持点赞的 code (如店铺 2)，这里直接返回 null
-     */
     public static StarTypeEnum getByCode(Integer code) {
-        if (code == null) return null;
+        if (code == null) {
+            return null;
+        }
         for (StarTypeEnum e : values()) {
-            if (e.code.equals(code)) return e;
+            if (e.code.equals(code)) {
+                return e;
+            }
         }
         return null;
     }

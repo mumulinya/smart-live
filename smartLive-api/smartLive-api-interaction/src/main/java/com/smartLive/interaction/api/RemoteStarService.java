@@ -47,6 +47,14 @@ public interface RemoteStarService {
      Integer getUserStarCount(@SpringQueryMap StarDTO starDTO);
 
     /**
+     * 查询收藏用户列表
+     * @param starDTO 收藏查询条件
+     * @return 收藏用户列表
+     */
+    @GetMapping("/inner/star/starUserList")
+    List<?> queryStarUserList(@SpringQueryMap StarDTO starDTO);
+
+    /**
      * 批量查询是否收藏
      * @param starDTO
      * @param sourceIds

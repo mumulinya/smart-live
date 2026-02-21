@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ReviewTypeEnum;
@@ -333,11 +334,19 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 remoteOrderService.updateOrderReviewStatus(orderId);
             }
             ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
+            if (reviewType == null) {
+                log.error("reviewType is null, sourceType={}", review.getSourceType());
+                return i;
+            }
             String reviewKeyPrefix = reviewType.getReviewKeyPrefix()+ review.getSourceId();
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
             String reviewDirtyKeyPrefix = reviewType.getReviewDirtyKeyPrefix();
+            String userReviewKey = userReviewKey(reviewType, review.getUserId());
             //保存评价信息
             redisService.setCacheZSet(reviewKeyPrefix, review.getId().toString(), System.currentTimeMillis());
+            if (userReviewKey != null) {
+                redisService.setCacheZSet(userReviewKey, review.getSourceId().toString(), System.currentTimeMillis());
+            }
             //记录评价数量
             redisService.incrementCacheValue(reviewCountKeyPrefix);
             //记录脏数据
@@ -374,19 +383,27 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Override
     @Transactional
     public Boolean deleteReview(Review review) {
-        boolean i = removeById(review.getId());
+        Review dbReview = getById(review.getId());
+        if (dbReview == null) {
+            return false;
+        }
+        boolean i = removeById(dbReview.getId());
         if (i) {
-            clearReviewCache(review.getId());
-            ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
-            String reviewKeyPrefix = reviewType.getReviewKeyPrefix()+ review.getSourceId();
-            String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
+            clearReviewCache(dbReview.getId());
+            ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(dbReview.getSourceType());
+            if (reviewType == null) {
+                return true;
+            }
+            String reviewKeyPrefix = reviewType.getReviewKeyPrefix()+ dbReview.getSourceId();
+            String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ dbReview.getSourceId();
             String reviewDirtyKeyPrefix = reviewType.getReviewDirtyKeyPrefix();
             //删除评论信息
-            redisService.removeCacheZSetObject(reviewKeyPrefix, review.getId().toString());
+            redisService.removeCacheZSetObject(reviewKeyPrefix, dbReview.getId().toString());
             //记录评论数量
             redisService.decrementCacheValue(reviewCountKeyPrefix);
             //记录脏数据
-            redisService.setCacheSet(reviewDirtyKeyPrefix, Collections.singleton(review.getId().toString()));
+            redisService.setCacheSet(reviewDirtyKeyPrefix, Collections.singleton(dbReview.getSourceId().toString()));
+            evictUserReviewSourceIfNeeded(reviewType, dbReview);
         }
         return i;
     }
@@ -399,21 +416,95 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public List<Review> getReviewOfUser(Review review,Integer current) {
-        Page<Review> page = query()
-                .eq("user_id", review.getUserId())
-                .eq("status", review.getStatus())
-                .orderByDesc("create_time")
-                .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        List<Review> list = page.getRecords();
-        list.stream().forEach(c -> {
-            ShopDTO shop = remoteShopService.getShopById(c.getShopId());
-            if (shop != null) {
-                c.setSourceName(shop.getName());
+        if (review == null) {
+            return Collections.emptyList();
+        }
+        Long userId = review.getUserId();
+        if (userId == null) {
+            com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+            if (user != null) {
+                userId = user.getId();
+                review.setUserId(userId);
             }
-        });
+        }
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        int pageNo = current == null || current < 1 ? 1 : current;
+        int pageSize = SystemConstants.MAX_PAGE_SIZE;
+        ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
+        List<Review> list = Collections.emptyList();
+        int redisSourceCount = 0;
+
+        if (reviewType != null) {
+            Page<Long> idPage = zSetIdManager.pageIds(reviewType.getUserReviewKeyPrefix() + reviewType.getCode() + ":", userId, pageNo, pageSize);
+            List<Long> sourceIdList = idPage.getRecords();
+            redisSourceCount = CollUtil.isEmpty(sourceIdList) ? 0 : sourceIdList.size();
+            if (CollUtil.isNotEmpty(sourceIdList)) {
+//                list = queryLatestUserReviewBySourceIds(userId, review.getSourceType(), review.getStatus(), sourceIdList);
+                list=getReviewListByIds(sourceIdList);
+            }
+        }
+        if (redisSourceCount > 0 && list.size() < redisSourceCount) {
+            list = Collections.emptyList();
+        }
+
+        if (CollUtil.isEmpty(list)) {
+            List<Review> dbList = query()
+                    .eq("user_id", userId)
+                    .eq(review.getSourceType() != null, "source_type", review.getSourceType())
+                    .eq(review.getStatus() != null, "status", review.getStatus())
+                    .orderByDesc("create_time")
+                    .list();
+
+            if (CollUtil.isEmpty(dbList)) {
+                return Collections.emptyList();
+            }
+
+            if (reviewType != null) {
+                //保存用户评价源
+                zSetIdManager.saveToZSet(userReviewKey(reviewType, userId),dbList, Review::getId, Review::getCreateTime);
+            }
+            //截取数据
+            int start = (pageNo - 1) * pageSize;
+            if (start >= dbList.size()) {
+                return Collections.emptyList();
+            }
+            int end = Math.min(start + pageSize, dbList.size());
+            list=dbList.subList(start, end);
+        }
+        enrichUserReviewList(list, userId);
         return list;
     }
+
+    /**
+     * 获取评价列表的用户信息
+     *
+     * @param
+     * @return
+     */
+    private void enrichUserReviewList(List<Review> list, Long userId) {
+        if (CollUtil.isEmpty(list)) {
+            return;
+        }
+        UserDTO owner = remoteAppUserService.queryUserById(userId);
+        for (Review r : list) {
+            if (owner != null) {
+                r.setNickName(owner.getNickName());
+                r.setUserIcon(owner.getIcon());
+            }
+            Long shopId = r.getShopId() != null ? r.getShopId() : r.getSourceId();
+            if (shopId != null) {
+                ShopDTO shop = remoteShopService.getShopById(shopId);
+                if (shop != null) {
+                    r.setSourceName(shop.getName());
+                    r.setShopImages(shop.getImages());
+                }
+            }
+        }
+    }
+
     /**
      * 获取用户发表的评论数
      *
@@ -447,8 +538,64 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public List<Review> getReviewListByIds(List<Long> sourceIdList) {
-        List<Review> list = query().in("id", sourceIdList).list();
-        return list;
+        if (CollUtil.isEmpty(sourceIdList)) {
+            return Collections.emptyList();
+        }
+
+        List<Review> list = redisMultiCacheManager.queryBatchWithCache(
+                RedisConstants.CACHE_REVIEW_KEY,
+                sourceIdList,
+                Review.class,
+                missingIds -> query().in("id", missingIds).list(),
+                Review::getId,
+                RedisConstants.CACHE_REVIEW_TTL,
+                java.util.concurrent.TimeUnit.MINUTES
+        );
+        if (CollUtil.isEmpty(list)) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Review> reviewMap = list.stream()
+                .filter(review -> review != null && review.getId() != null)
+                .collect(Collectors.toMap(Review::getId, review -> review, (v1, v2) -> v1));
+        List<Review> orderedList = new ArrayList<>(sourceIdList.size());
+        for (Long id : sourceIdList) {
+            Review review = reviewMap.get(id);
+            if (review != null) {
+                orderedList.add(review);
+            }
+        }
+        if (CollUtil.isEmpty(orderedList)) {
+            return Collections.emptyList();
+        }
+
+        List<Long> userIds = orderedList.stream()
+                .map(Review::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(userIds)) {
+            try {
+                List<UserDTO> userList = remoteAppUserService.getUserList(userIds);
+                if (CollUtil.isNotEmpty(userList)) {
+                    Map<Long, UserDTO> userMap = userList.stream().collect(Collectors.toMap(
+                            UserDTO::getId,
+                            user -> user,
+                            (v1, v2) -> v1
+                    ));
+                    orderedList.forEach(review -> {
+                        UserDTO user = userMap.get(review.getUserId());
+                        if (user != null) {
+                            review.setNickName(user.getNickName());
+                            review.setUserIcon(user.getIcon());
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                log.error("Batch query review user info failed, reviewIds={}", sourceIdList, e);
+            }
+        }
+        return orderedList;
     }
 
     /**
@@ -670,9 +817,72 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             //记录评论数量
             redisService.decrementCacheValue(reviewCountKeyPrefix);
             //记录脏数据
-            redisService.setCacheSet(reviewDirtyKeyPrefix, Collections.singleton(review.getId().toString()));
+            redisService.setCacheSet(reviewDirtyKeyPrefix, Collections.singleton(review.getSourceId().toString()));
+            evictUserReviewSourceIfNeeded(reviewType, review);
         }
         return update;
 
+    }
+
+    @Override
+    public Boolean isReview(Review review) {
+        if (review == null || review.getSourceType() == null || review.getSourceId() == null) {
+            return false;
+        }
+        Long userId = review.getUserId();
+        if (userId == null) {
+            com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+            if (user != null) {
+                userId = user.getId();
+            }
+        }
+        if (userId == null) {
+            return false;
+        }
+        ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
+        if (reviewType == null) {
+            return false;
+        }
+        String userReviewKey = userReviewKey(reviewType, userId);
+        if (userReviewKey == null) {
+            return false;
+        }
+        if (redisService.getCacheZSetScore(userReviewKey, review.getSourceId().toString()) != null) {
+            return true;
+        }
+
+        long count = query()
+                .eq("user_id", userId)
+                .eq("source_type", review.getSourceType())
+                .eq("source_id", review.getSourceId())
+                .ne("status", 2)
+                .count();
+        if (count > 0) {
+            redisService.setCacheZSet(userReviewKey, review.getSourceId().toString(), System.currentTimeMillis());
+            return true;
+        }
+        return false;
+    }
+
+    private String userReviewKey(ReviewTypeEnum reviewType, Long userId) {
+        if (reviewType == null || userId == null) {
+            return null;
+        }
+        return reviewType.getUserReviewKeyPrefix() + reviewType.getCode() + ":" + userId;
+    }
+
+    private void evictUserReviewSourceIfNeeded(ReviewTypeEnum reviewType, Review review) {
+        if (reviewType == null || review == null || review.getUserId() == null || review.getSourceId() == null) {
+            return;
+        }
+        long remains = query()
+                .eq("user_id", review.getUserId())
+                .eq("source_type", review.getSourceType())
+                .eq("source_id", review.getSourceId())
+                .ne("status", 2)
+                .count();
+        if (remains <= 0) {
+            redisService.removeCacheZSetObject(userReviewKey(reviewType, review.getUserId()), review.getSourceId().toString());
+        }
     }
 }

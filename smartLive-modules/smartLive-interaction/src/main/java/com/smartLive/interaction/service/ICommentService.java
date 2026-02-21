@@ -185,4 +185,12 @@ public interface ICommentService extends IService<Comment> {
      * @return
      */
     Boolean updateCommentStatus(Long id, Integer status);
+
+    /**
+     * 判断当前用户是否评论过目标资源
+     *
+     * @param comment 评论查询条件（至少包含 sourceType/sourceId）
+     * @return 是否评论过
+     */
+    Boolean isComment(Comment comment);
 }

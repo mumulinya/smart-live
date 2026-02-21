@@ -12,6 +12,7 @@ import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
@@ -19,6 +20,7 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.RedisMultiCacheManager;
 import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.BO.AuditCommentBO;
@@ -40,6 +42,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -68,6 +71,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private RedisService redisService;
     @Autowired
     private ZSetIdManager zSetIdManager;
+    @Autowired
+    private RedisMultiCacheManager redisMultiCacheManager;
     private ResourceStrategyFactory resourceStrategyFactory;
     private ILikeService iLikeService;
 
@@ -257,11 +262,19 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         int i = commentMapper.insertComment(comment);
         if (i > 0) {
             CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+            if (commentType == null) {
+                log.error("commentType is null, sourceType={}", comment.getSourceType());
+                return i;
+            }
             String commentKeyPrefix = commentType.getCommentKeyPrefix()+ comment.getSourceId();
             String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
             String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
+            String userCommentKey = userCommentKey(commentType, comment.getUserId());
             //保存评论信息
             redisService.setCacheZSet(commentKeyPrefix, comment.getId().toString(), System.currentTimeMillis());
+            if (userCommentKey != null) {
+                redisService.setCacheZSet(userCommentKey, comment.getSourceId().toString(), System.currentTimeMillis());
+            }
             //记录评论数量
             redisService.incrementCacheValue(commentCountKeyPrefix);
             //记录脏数据
@@ -300,18 +313,26 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Override
     @Transactional
     public Boolean deleteComment(Comment comment) {
-        boolean i = removeById(comment.getId());
+        Comment dbComment = getById(comment.getId());
+        if (dbComment == null) {
+            return false;
+        }
+        boolean i = removeById(dbComment.getId());
         if (i) {
-            CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
-            String commentKeyPrefix = commentType.getCommentKeyPrefix()+ comment.getSourceId();
-            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
+            CommentTypeEnum commentType = CommentTypeEnum.getByCode(dbComment.getSourceType());
+            if (commentType == null) {
+                return true;
+            }
+            String commentKeyPrefix = commentType.getCommentKeyPrefix()+ dbComment.getSourceId();
+            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ dbComment.getSourceId();
             String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
             //删除评论信息
-            redisService.removeCacheZSetObject(commentKeyPrefix, comment.getId().toString());
+            redisService.removeCacheZSetObject(commentKeyPrefix, dbComment.getId().toString());
             //记录评论数量
             redisService.decrementCacheValue(commentCountKeyPrefix);
             //记录脏数据
-            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getId().toString()));
+            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(dbComment.getSourceId().toString()));
+            evictUserCommentSourceIfNeeded(commentType, dbComment);
         }
         return i;
     }
@@ -324,20 +345,90 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     @Override
     public List<Comment> getCommentOfUser(Comment comment,Integer current) {
-        Page<Comment> page = query()
-                .eq("source_type", comment.getSourceType())
-                .eq("parent_id", 0)
-                .eq("user_id", comment.getUserId())
-                .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        List<Comment> list = page.getRecords();
-        list.stream().forEach(c -> {
-            ShopDTO shop = remoteShopService.getShopById(c.getSourceId());
-            if (shop != null) {
-                c.setSourceName(shop.getName());
+        if (comment == null) {
+            return Collections.emptyList();
+        }
+        Long userId = comment.getUserId();
+        if (userId == null) {
+            com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+            if (user != null) {
+                userId = user.getId();
+                comment.setUserId(userId);
             }
-        });
+        }
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        int pageNo = current == null || current < 1 ? 1 : current;
+        int pageSize = SystemConstants.MAX_PAGE_SIZE;
+        CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+        List<Comment> list = Collections.emptyList();
+        int redisSourceCount = 0;
+
+        if (commentType != null) {
+            Page<Long> idPage = zSetIdManager.pageIds(commentType.getUserCommentKeyPrefix() + commentType.getCode() + ":", userId, pageNo, pageSize);
+            List<Long> sourceIdList = idPage.getRecords();
+            redisSourceCount = CollUtil.isEmpty(sourceIdList) ? 0 : sourceIdList.size();
+            if (CollUtil.isNotEmpty(sourceIdList)) {
+                list=getCommentListByIds(sourceIdList);
+            }
+        }
+        if (redisSourceCount > 0 && list.size() < redisSourceCount) {
+            list = Collections.emptyList();
+        }
+        //从数据库中获取数据
+        if (CollUtil.isEmpty(list)) {
+            List<Comment> dbList = query()
+                    .eq(comment.getSourceType() != null, "source_type", comment.getSourceType())
+                    .eq("parent_id", 0)
+                    .eq("user_id", userId)
+                    .orderByDesc("create_time")
+                    .list();
+
+            if (CollUtil.isEmpty(dbList)) {
+                return Collections.emptyList();
+            }
+
+            if (commentType != null) {
+                //保存到redis
+                zSetIdManager.saveToZSet(userCommentKey(commentType, userId), dbList, Comment::getId, Comment::getCreateTime);
+            }
+            //截取数据
+            int start = (pageNo - 1) * pageSize;
+            if (start >= dbList.size()) {
+                return Collections.emptyList();
+            }
+            int end = Math.min(start + pageSize, dbList.size());
+            list =  dbList.subList(start, end);
+        }
+        enrichUserCommentList(list, userId);
         return list;
+    }
+
+    private void enrichUserCommentList(List<Comment> list, Long userId) {
+        if (CollUtil.isEmpty(list)) {
+            return;
+        }
+        UserDTO owner = remoteAppUserService.queryUserById(userId);
+        for (Comment c : list) {
+            if (owner != null) {
+                c.setNickName(owner.getNickName());
+                c.setUserIcon(owner.getIcon());
+            }
+            if (GlobalBizTypeEnum.BLOG.getCode().equals(c.getSourceType())) {
+                BlogDTO blog = remoteBlogService.getBlogById(c.getSourceId());
+                if (blog != null) {
+                    c.setSourceName(blog.getTitle());
+                }
+            } else if (GlobalBizTypeEnum.SHOP.getCode().equals(c.getSourceType())) {
+                ShopDTO shop = remoteShopService.getShopById(c.getSourceId());
+                if (shop != null) {
+                    c.setSourceName(shop.getName());
+                    c.setShopImages(shop.getImages());
+                }
+            }
+        }
     }
 
     /**
@@ -448,8 +539,35 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     @Override
     public List<Comment> getCommentListByIds(List<Long> sourceIdList) {
-        List<Comment> list = query().in("id", sourceIdList).list();
-        return list;
+        if (CollUtil.isEmpty(sourceIdList)) {
+            return Collections.emptyList();
+        }
+
+        List<Comment> list = redisMultiCacheManager.queryBatchWithCache(
+                RedisConstants.CACHE_COMMENT_KEY,
+                sourceIdList,
+                Comment.class,
+                missingIds -> query().in("id", missingIds).list(),
+                Comment::getId,
+                RedisConstants.CACHE_COMMENT_TTL,
+                TimeUnit.MINUTES
+        );
+        if (CollUtil.isEmpty(list)) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Comment> commentMap = list.stream()
+                .filter(comment -> comment != null && comment.getId() != null)
+                .collect(Collectors.toMap(Comment::getId, comment -> comment, (v1, v2) -> v1));
+        List<Comment> orderedList = new ArrayList<>(sourceIdList.size());
+        for (Long id : sourceIdList) {
+            Comment comment = commentMap.get(id);
+            if (comment != null) {
+                orderedList.add(comment);
+            }
+        }
+
+        return orderedList;
     }
 
     /**
@@ -583,8 +701,82 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             //记录评论数量
             redisService.decrementCacheValue(commentCountKeyPrefix);
             //记录脏数据
-            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getId().toString()));
+            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getSourceId().toString()));
+            evictUserCommentSourceIfNeeded(commentType, comment);
         }
         return update;
+    }
+    /**
+     * 判断当前用户是否已评论
+     *
+     * @param comment
+     * @return
+     */
+    @Override
+    public Boolean isComment(Comment comment) {
+        if (comment == null || comment.getSourceType() == null || comment.getSourceId() == null) {
+            return false;
+        }
+        Long userId = comment.getUserId();
+        if (userId == null) {
+            com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+            if (user != null) {
+                userId = user.getId();
+            }
+        }
+        if (userId == null) {
+            return false;
+        }
+        CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+        if (commentType == null) {
+            return false;
+        }
+        String userCommentKey = userCommentKey(commentType, userId);
+        if (userCommentKey == null) {
+            return false;
+        }
+        if (redisService.getCacheZSetScore(userCommentKey, comment.getSourceId().toString()) != null) {
+            return true;
+        }
+
+        long count = query()
+                .eq("user_id", userId)
+                .eq("source_type", comment.getSourceType())
+                .eq("source_id", comment.getSourceId())
+                .ne("status", "2")
+                .count();
+        if (count > 0) {
+            redisService.setCacheZSet(userCommentKey, comment.getSourceId().toString(), System.currentTimeMillis());
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 获取用户评论的key
+     *
+     * @param commentType
+     * @param userId
+     * @return
+     */
+    private String userCommentKey(CommentTypeEnum commentType, Long userId) {
+        if (commentType == null || userId == null) {
+            return null;
+        }
+        return commentType.getUserCommentKeyPrefix() + commentType.getCode() + ":" + userId;
+    }
+
+    private void evictUserCommentSourceIfNeeded(CommentTypeEnum commentType, Comment comment) {
+        if (commentType == null || comment == null || comment.getUserId() == null || comment.getSourceId() == null) {
+            return;
+        }
+        long remains = query()
+                .eq("user_id", comment.getUserId())
+                .eq("source_type", comment.getSourceType())
+                .eq("source_id", comment.getSourceId())
+                .ne("status", "2")
+                .count();
+        if (remains <= 0) {
+            redisService.removeCacheZSetObject(userCommentKey(commentType, comment.getUserId()), comment.getSourceId().toString());
+        }
     }
 }

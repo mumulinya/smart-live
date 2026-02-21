@@ -94,7 +94,7 @@ public class CacheConstants
     /**
      * 博客点赞
      */
-    public static final String BLOG_LIKED_KEY = "blog:liked:";
+    public static final String BLOG_LIKED_KEY = InteractionRedisKeyConstants.Like.BLOG_LIKED;
     /**
      * 缓存博客信息
      */
@@ -112,7 +112,7 @@ public class CacheConstants
      * 关注用户
      */
 
-    public static final String FOLLOW_SHOP_KEY = "follow:shop:";
+    public static final String FOLLOW_SHOP_KEY = InteractionRedisKeyConstants.Follow.USER_FOLLOW_SHOP;
     /**
      * 推送博客
      */

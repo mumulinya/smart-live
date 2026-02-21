@@ -18,9 +18,18 @@ public enum ReviewTypeEnum {
         SHOP_REVIEW(GlobalBizTypeEnum.SHOP.getCode(), "店铺的评价",GlobalBizTypeEnum.SHOP.getBizDomain(),
         RedisConstants.SHOP_REVIEW_KEY,
         RedisConstants.SHOP_REVIEW_COUNT_KEY,
-        RedisConstants.SHOP_REVIEW_DIRTY_KEY),
+        RedisConstants.SHOP_REVIEW_DIRTY_KEY,
+        RedisConstants.USER_REVIEW_KEY),
     // 商品评价配置
-    VOUCHER_REVIEW(GlobalBizTypeEnum.PRODUCT.getCode(), "代金券的评价",GlobalBizTypeEnum.PRODUCT.getBizDomain(), RedisConstants.PRODUCT_REVIEW_KEY, RedisConstants.PRODUCT_REVIEW_COUNT_KEY, RedisConstants.PRODUCT_REVIEW_DIRTY_KEY);
+    VOUCHER_REVIEW(
+            GlobalBizTypeEnum.PRODUCT.getCode(),
+            "代金券的评价",
+            GlobalBizTypeEnum.PRODUCT.getBizDomain(),
+            RedisConstants.PRODUCT_REVIEW_KEY,
+            RedisConstants.PRODUCT_REVIEW_COUNT_KEY,
+            RedisConstants.PRODUCT_REVIEW_DIRTY_KEY,
+            RedisConstants.USER_REVIEW_KEY
+    );
 
     /**
      * 业务类型编码 (与 ResourceTypeEnum 保持一致)
@@ -54,6 +63,11 @@ public enum ReviewTypeEnum {
      * e.g. likes:dirty:blog -> {101, 102}
      */
     private final String reviewDirtyKeyPrefix;
+
+    /**
+     * 4. 反向索引 Key (用户 -> 已评价源ID)
+     */
+    private final String userReviewKeyPrefix;
 
     /**
      * 根据 code 获取枚举

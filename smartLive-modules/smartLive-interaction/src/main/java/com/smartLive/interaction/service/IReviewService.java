@@ -2,7 +2,6 @@ package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.interaction.domain.Review;
-import com.smartLive.interaction.domain.Review;
 
 import java.util.List;
 import java.util.Map;
@@ -168,4 +167,12 @@ public interface IReviewService extends IService<Review> {
      * @return
      */
     Boolean updateReviewStatus(Long id, Integer status);
+
+    /**
+     * 判断当前用户是否评价过目标资源
+     *
+     * @param review 评价查询条件（至少包含 sourceType/sourceId）
+     * @return 是否评价过
+     */
+    Boolean isReview(Review review);
 }

@@ -19,7 +19,7 @@ public enum ResourceTypeEnum {
             null, null),
     // 1. 博客
     BLOG_RESOURCE(GlobalBizTypeEnum.BLOG.getCode(), "博客资源", GlobalBizTypeEnum.BLOG.getBizDomain(),
-            RedisConstants.BLOG_COMMENT_KEY, RedisConstants.BLOG_STAR_KEY),
+            RedisConstants.BLOG_COMMENT_KEY, RedisConstants.BLOG_STAR_SOURCE_KEY),
 
     // 2. 店铺
     SHOP_RESOURCE(GlobalBizTypeEnum.SHOP.getCode(), "店铺资源", GlobalBizTypeEnum.SHOP.getBizDomain(),
@@ -27,13 +27,13 @@ public enum ResourceTypeEnum {
 
     // 3. 商品
     PRODUCT_RESOURCE(GlobalBizTypeEnum.PRODUCT.getCode(), "商品资源", GlobalBizTypeEnum.PRODUCT.getBizDomain(),
-            null, RedisConstants.PRODUCT_STAR_KEY),
+            null, RedisConstants.PRODUCT_STAR_SOURCE_KEY),
 
     // 4. 评论 (支持楼中楼)
     COMMENT_RESOURCE(GlobalBizTypeEnum.COMMENT.getCode(), "评论资源", GlobalBizTypeEnum.COMMENT.getBizDomain(),
             RedisConstants.COMMENT_COMMENT_KEY,null),
     REVIEW_RESOURCE(GlobalBizTypeEnum.REVIEW.getCode(), "评价资源", GlobalBizTypeEnum.REVIEW.getBizDomain(),
-            RedisConstants.REVIEW_COMMENT_KEY, RedisConstants.REVIEW_STAR_KEY);
+            RedisConstants.REVIEW_COMMENT_KEY, RedisConstants.REVIEW_STAR_SOURCE_KEY);
 
     /**
      * 业务类型编码 (数据库存储值)

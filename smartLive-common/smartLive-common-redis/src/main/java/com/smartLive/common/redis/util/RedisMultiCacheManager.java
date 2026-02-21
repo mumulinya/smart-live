@@ -27,7 +27,17 @@ public class RedisMultiCacheManager {
     private RedisService redisService;
 
     /**
-     * Generic batch cache query utility.
+     * 批量查询缓存，如果缓存不存在，则从DB中查询，并写入缓存。
+     *
+     * @param keyPrefix
+     * @param ids
+     * @param clazz
+     * @param dbQueryFn
+     * @param idExtractor
+     * @param expireTime
+     * @param timeUnit
+     * @param <T>
+     * @return
      */
     public <T> List<T> queryBatchWithCache(
             String keyPrefix,

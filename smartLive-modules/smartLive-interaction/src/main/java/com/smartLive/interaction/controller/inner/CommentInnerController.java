@@ -56,6 +56,14 @@ public class CommentInnerController extends BaseController
     Integer getCommentTotal(){
         return commentService.getCommentTotal();
     }
+
+    /**
+     * 判断当前用户是否评论过目标资源
+     */
+    @GetMapping("/isComment")
+    public Boolean isComment(Comment comment){
+        return commentService.isComment(comment);
+    }
     /**
      * 更新评论状态
      * @param targetId

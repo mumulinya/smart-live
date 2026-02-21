@@ -51,6 +51,16 @@ public class StarInnerController {
     }
 
     /**
+     * 查询收藏用户列表
+     * @param star 收藏查询条件
+     * @return 收藏用户列表
+     */
+    @GetMapping("/starUserList")
+    public List<?> queryStarUserList(Star star){
+        return starService.queryStarUserList(star);
+    }
+
+    /**
      * 批量查询是否收藏
      * @param starDTO
      * @param sourceIds

@@ -157,8 +157,10 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
 
         // 3. 对方的粉丝列表
         String targetFansKey = followType.getFansKeyPrefix() + follow.getSourceId();
+        String followDirtyKey = followType.getFollowDirtyKeyPrefix();
+        String fansDirtyKey = followType.getFansDirtyKeyPrefix();
         //判断是关注还是取关
-        if(follow.getIsFollow()){
+        if(Boolean.TRUE.equals(follow.getIsFollow())){
             //关注
             follow.setUserId(userId);
             follow.setCreateTime(DateUtils.getNowDate());
@@ -167,6 +169,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 //关注成功，添加关注到redis
                 redisService.setCacheZSet(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(targetFansKey, userId.toString(), System.currentTimeMillis());
+                redisService.setCacheSet(followDirtyKey, userId.toString());
+                redisService.setCacheSet(fansDirtyKey, follow.getSourceId().toString());
                 //同步个人资源到es
                 followStrategyFactory.getStrategy(follow.getSourceType()).syncUserResource(userId, follow.getSourceId());
             }
@@ -178,6 +182,8 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 //取关成功，从redis中删除关注
                 redisService.removeCacheZSetObject(myFollowKey, follow.getSourceId().toString());
                 redisService.removeCacheZSetObject(targetFansKey, userId.toString());
+                redisService.setCacheSet(followDirtyKey, userId.toString());
+                redisService.setCacheSet(fansDirtyKey, follow.getSourceId().toString());
             }
             return remove;
         }
@@ -249,7 +255,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             //获取当前用户的粉丝id列表
             List<Long> currentUserFollowIdList = new ArrayList<>();
             if (!currentUserFollowList.isEmpty()) {
-                currentUserFollowIdList = currentUserFollowList.stream().map(Follow::getSourceId).collect(Collectors.toList()); // This line is incorrect
+                currentUserFollowIdList = currentUserFollowList.stream().map(Follow::getSourceId).collect(Collectors.toList());
                 //把当前用户关注列表id写入redis当中
                 zSetIdManager.saveToZSet(followTypeEnum.getFollowKeyPrefix()+currentUserId, currentUserFollowList, Follow::getSourceId, Follow::getCreateTime);
             }
@@ -263,7 +269,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             if (!targetUserFollowList.isEmpty()) {
                 targetUserFollowIdList = targetUserFollowList.stream().map(Follow::getSourceId).collect(Collectors.toList());
                 //把目标用户关注列表id写入redis当中
-                zSetIdManager.saveToZSet(followTypeEnum.getFollowKeyPrefix()+currentUserId, currentUserFollowList, Follow::getSourceId, Follow::getCreateTime);
+                zSetIdManager.saveToZSet(followTypeEnum.getFollowKeyPrefix()+follow.getUserId(), targetUserFollowList, Follow::getSourceId, Follow::getCreateTime);
 
             }
             //获取两个列表的交集
@@ -275,7 +281,13 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
           }
           if(!commonFollowList.isEmpty()){
               //截取当前页
-              idList = commonFollowList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? commonFollowList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : commonFollowList;
+              int start = Math.max(0, (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE);
+              if (start < commonFollowList.size()) {
+                  int end = Math.min(commonFollowList.size(), start + SystemConstants.DEFAULT_PAGE_SIZE);
+                  idList = commonFollowList.subList(start, end);
+              } else {
+                  idList = Collections.emptyList();
+              }
           }
         }
         if(idList==null||idList.isEmpty()){
@@ -391,18 +403,24 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             //获取粉丝id
             List<Follow> sourceList = query()
                     .eq("source_type",follow.getSourceType())
-                    .eq("user_id", follow.getUserId())
+                    .eq("source_id", follow.getSourceId())
                     .orderByDesc("create_time") // 添加排序
                     .list();
             if(!sourceList.isEmpty()){
-                sourceIdList = sourceList.stream().map(Follow::getSourceId).collect(Collectors.toList());
+                sourceIdList = sourceList.stream().map(Follow::getUserId).collect(Collectors.toList());
                 //截取
                 if(!sourceIdList.isEmpty()){
                     //截取当前页
-                    sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
+                    int start = Math.max(0, (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE);
+                    if (start < sourceIdList.size()) {
+                        int end = Math.min(sourceIdList.size(), start + SystemConstants.DEFAULT_PAGE_SIZE);
+                        sourceIdList = sourceIdList.subList(start, end);
+                    } else {
+                        sourceIdList = Collections.emptyList();
+                    }
                 }
                 //存入redis
-                zSetIdManager.saveToZSet(identityType.getFollowKeyPrefix()+follow.getUserId(), sourceList, Follow::getSourceId, Follow::getCreateTime);
+                zSetIdManager.saveToZSet(identityType.getFansKeyPrefix()+follow.getSourceId(), sourceList, Follow::getUserId, Follow::getCreateTime);
 
             }
         }
@@ -446,7 +464,13 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 //截取
                 if(!sourceIdList.isEmpty()){
                     //截取当前页
-                    sourceIdList = sourceIdList.size() > current + SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList(current, current + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
+                    int start = Math.max(0, (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE);
+                    if (start < sourceIdList.size()) {
+                        int end = Math.min(sourceIdList.size(), start + SystemConstants.DEFAULT_PAGE_SIZE);
+                        sourceIdList = sourceIdList.subList(start, end);
+                    } else {
+                        sourceIdList = Collections.emptyList();
+                    }
                 }
                 //存入redis
                 zSetIdManager.saveToZSet(followTypeEnum.getFollowKeyPrefix()+followDTO.getUserId(), sourceList, Follow::getSourceId, Follow::getCreateTime);

@@ -23,6 +23,15 @@ public interface RemoteCommentService {
      */
     @GetMapping("/inner/comment/getCommentCount")
     Integer getCommentCount(@SpringQueryMap CommentDTO commentDTO);
+
+    /**
+     * 判断当前用户是否评论过目标资源
+     *
+     * @param commentDTO 评论查询条件（至少包含 sourceType/sourceId）
+     * @return 是否评论过
+     */
+    @GetMapping("/inner/comment/isComment")
+    Boolean isComment(@SpringQueryMap CommentDTO commentDTO);
     /**
      * 获取评论总数
      * @return

@@ -150,6 +150,14 @@ public class CommentController extends BaseController
     public Result getCommentById(@PathVariable("id")Long id){
         return Result.ok(commentService.getCommentById(id));
     }
+
+    /**
+     * 判断当前用户是否评论过目标资源
+     */
+    @GetMapping("/isComment")
+    public Result isComment(Comment comment){
+        return Result.ok(commentService.isComment(comment));
+    }
     /**
      * AI创建评论
      */

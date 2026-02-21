@@ -47,6 +47,17 @@ public class LikeController {
     public Result queryLikeRecord(Like like, @RequestParam("current")Integer current) {
         return Result.ok(likeRecordService.queryLikeRecord(like, current));
     }
+
+    /**
+     * 查询用户点赞记录（与评论/评价模块保持一致的路由）
+     * @param like 点赞查询条件
+     * @param current 当前页
+     * @return 点赞记录
+     */
+    @GetMapping("/of/user")
+    public Result getLikeOfUser(Like like, @RequestParam("current") Integer current) {
+        return Result.ok(likeRecordService.queryLikeRecord(like, current));
+    }
     /**
      * 查询点赞用户列表
      * @param like 点赞查询条件

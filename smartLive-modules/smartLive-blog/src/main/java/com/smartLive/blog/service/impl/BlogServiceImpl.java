@@ -3,8 +3,6 @@ package com.smartLive.blog.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -24,6 +22,7 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
+import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.api.RemoteLikeService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.LikeDTO;
@@ -53,6 +52,8 @@ import com.smartLive.common.redis.util.RedisMultiCacheManager;
 @Slf4j
 public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IBlogService
 {
+    private static final long BLOG_LIST_ZSET_SLOT = 0L;
+
     @Autowired
     private BlogMapper blogMapper;
     @Autowired
@@ -75,6 +76,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private RedisMultiCacheManager redisMultiCacheManager;
     @Autowired
     private CacheClient cacheClient;
+    @Autowired
+    private ZSetIdManager zSetIdManager;
 
     /**
      * 将Blog实体转换为BlogVO
@@ -271,10 +274,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public List<BlogVO> queryHotBlog(Integer current) {
         //从redis查询热门博客
         String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
-        List<Blog> blogList = getBlogListFromRedis(key);
-        if (blogList != null) {
-            queryBlogListIsLike(blogList);
-            return convertToBlogVOList(blogList);
+        List<Long> blogIdList = getBlogIdListFromRedis(key, SystemConstants.DEFAULT_PAGE_SIZE);
+        if (CollUtil.isNotEmpty(blogIdList)) {
+            return convertToBlogVOList(getBlogListByIds(blogIdList));
         }
         // 根据用户查询
         Page<Blog> page = query()
@@ -282,13 +284,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         // 获取当前页数据
-         blogList = page.getRecords();
+        List<Blog> blogList = page.getRecords();
         if(blogList!= null&& !blogList.isEmpty()){
             // 查询blog有关的用户信息
             queryBlogListUserMessage(blogList);
             queryBlogListIsLike(blogList);
             //把查询结果写入redis
-            redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
+            saveBlogIdListToRedis(key, blogList, RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
         return convertToBlogVOList(blogList); // Changed from return blogList;
     }
@@ -436,34 +438,37 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public List<Blog> getBlogListByIds(List<Long> sourceIdList) {
-        // 1. Utilize RedisBatchCacheUtil for cached batch retrieval
+        if (CollUtil.isEmpty(sourceIdList)) {
+            return Collections.emptyList();
+        }
         List<Blog> blogList = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_BLOG_KEY,
                 sourceIdList,
                 Blog.class,
-                missingIds -> {
-                    // DB Fallback
-                    String idStr = StrUtil.join(",", missingIds);
-                    return query().in("id", missingIds)
-                            .last("order by field(id," + idStr + ")")
-                            .list();
-                },
+                missingIds -> query().in("id", missingIds).list(),
                 Blog::getId,
-                // Using general blog TTL or similar? Reusing PRODUCT/SHOP TTL logic or existing RedisConstants.CACHE_HOT_BLOG_TTL (which is 1 day). 
-                // Let's use 30 minutes like others or defined constant. 
-                // RedisConstants.CACHE_BLOG_TTL is not defined, but RedisConstants.CACHE_HOT_BLOG_TTL is. 
-                // Let's use 30 minutes (generic TTL) or create one. 
-                // For now, I'll use 30L and TimeUnit.MINUTES directly as per other services.
-                30L,
+                RedisConstants.CACHE_BLOG_TTL,
                 TimeUnit.MINUTES
         );
-
-        // 2. Populate dynamic info (isLiked, isStared) in Batch
-        if (CollUtil.isNotEmpty(blogList)) {
-            queryBlogListUserMessage(blogList);
-            queryBlogListIsLike(blogList);
+        if (CollUtil.isEmpty(blogList)) {
+            return Collections.emptyList();
         }
-        return blogList;
+        Map<Long, Blog> blogMap = blogList.stream()
+                .filter(blog -> blog != null && blog.getId() != null)
+                .collect(Collectors.toMap(Blog::getId, Function.identity(), (v1, v2) -> v1));
+        List<Blog> orderedBlogList = new ArrayList<>(sourceIdList.size());
+        for (Long blogId : sourceIdList) {
+            Blog blog = blogMap.get(blogId);
+            if (blog != null) {
+                orderedBlogList.add(blog);
+            }
+        }
+        if (CollUtil.isEmpty(orderedBlogList)) {
+            return Collections.emptyList();
+        }
+        queryBlogListUserMessage(orderedBlogList);
+        queryBlogListIsLike(orderedBlogList);
+        return orderedBlogList;
     }
 
     /**
@@ -768,10 +773,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public List<BlogVO> queryBlogByCategory(Long typeId, Integer current) {
         //从redis查询分类博客
         String key= RedisConstants.CACHE_BLOG_TYPE_KEY + typeId+":"+ current;
-        List<Blog> blogList = getBlogListFromRedis(key);
-        if (blogList != null) {
-            queryBlogListIsLike(blogList);
-            return convertToBlogVOList(blogList);
+        List<Long> blogIdList = getBlogIdListFromRedis(key, SystemConstants.MAX_PAGE_SIZE);
+        if (CollUtil.isNotEmpty(blogIdList)) {
+            return convertToBlogVOList(getBlogListByIds(blogIdList));
         }
         Page<Blog> page = query()
                 .select("images","liked","user_id","title","id")
@@ -779,14 +783,14 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
-        blogList = page.getRecords();
+        List<Blog> blogList = page.getRecords();
         if(blogList!= null&&blogList.size()>0){
             // 查询blog有关的用户信息
             // 查询blog有关的用户信息
             queryBlogListUserMessage(blogList);
             queryBlogListIsLike(blogList);
             //把查询结果写入redis
-            redisService.setCacheObject(key, JSONUtil.toJsonStr(blogList), RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
+            saveBlogIdListToRedis(key, blogList, RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
         return convertToBlogVOList(blogList);
     }
@@ -959,18 +963,61 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param key
      * @return
      */
-    private List<Blog> getBlogListFromRedis(String key) {
-        Object blogJson = redisService.getCacheObject(key);
-        if (blogJson != null) {
-            //存在
-            List<Blog> blogs = JSONUtil.toList(blogJson.toString(), Blog.class);
-            //获取用户是否点赞
-            blogs.forEach(blog ->{
-                isBlogLiked(blog);
-            });
-            return blogs;
+    private List<Long> getBlogIdListFromRedis(String key, long size) {
+        Page<Long> idPage = zSetIdManager.pageIds(buildBlogListZSetPrefix(key), BLOG_LIST_ZSET_SLOT, 1L, size);
+        if (idPage == null || CollUtil.isEmpty(idPage.getRecords())) {
+            return Collections.emptyList();
         }
-        return null;
+        return idPage.getRecords();
+    }
+
+    private void saveBlogIdListToRedis(String key, List<Blog> blogList, long timeout, TimeUnit unit) {
+        if (key == null || key.isEmpty() || CollUtil.isEmpty(blogList)) {
+            return;
+        }
+        long scoreSeed = System.currentTimeMillis();
+        List<BlogListRankItem> rankItems = new ArrayList<>(blogList.size());
+        for (int i = 0; i < blogList.size(); i++) {
+            Blog blog = blogList.get(i);
+            if (blog == null || blog.getId() == null) {
+                continue;
+            }
+            rankItems.add(new BlogListRankItem(blog.getId(), new Date(scoreSeed - i)));
+        }
+        if (CollUtil.isEmpty(rankItems)) {
+            return;
+        }
+        String zSetKey = buildBlogListZSetKey(key);
+        redisService.deleteObject(key);
+        redisService.deleteObject(zSetKey);
+        zSetIdManager.saveToZSet(zSetKey, rankItems, BlogListRankItem::getId, BlogListRankItem::getScoreTime);
+        redisService.expire(zSetKey, timeout, unit);
+    }
+
+    private String buildBlogListZSetPrefix(String key) {
+        return key + ":";
+    }
+
+    private String buildBlogListZSetKey(String key) {
+        return buildBlogListZSetPrefix(key) + BLOG_LIST_ZSET_SLOT;
+    }
+
+    private static class BlogListRankItem {
+        private final Long id;
+        private final Date scoreTime;
+
+        private BlogListRankItem(Long id, Date scoreTime) {
+            this.id = id;
+            this.scoreTime = scoreTime;
+        }
+
+        private Long getId() {
+            return id;
+        }
+
+        private Date getScoreTime() {
+            return scoreTime;
+        }
     }
     /**
      * 清空当前博客缓存
