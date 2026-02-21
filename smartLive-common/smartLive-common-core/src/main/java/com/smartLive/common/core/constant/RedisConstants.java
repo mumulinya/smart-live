@@ -156,19 +156,19 @@ public class RedisConstants {
     //博客评论脏数据列表
     public static final String BLOG_COMMENT_DIRTY_KEY = "blog:comment:dirty:";
 
-    //店铺的评论
+    //评价的评论
     public static final String REVIEW_COMMENT_KEY = "review:comment:";
-    //店铺的评论总数
+    //评价的评论总数
     public static final String REVIEW_COMMENT_COUNT_KEY = "review:comment:count:";
-    //店铺的评论脏数据列表
+    //评价的评论脏数据列表
     public static final String REVIEW_COMMENT_DIRTY_KEY = "review:comment:dirty:";
 
     //评论的评论
     public static final String COMMENT_COMMENT_KEY = "comment:comment:";
     //评论的评论总数
-    public static final String COMMENT_COMMENT_COUNT_KEY = "shop:comment:count:";
+    public static final String COMMENT_COMMENT_COUNT_KEY = "comment:comment:count:";
     //评论的评论脏数据列表
-    public static final String COMMENT_COMMENT_DIRTY_KEY = "shop:comment:dirty:";
+    public static final String COMMENT_COMMENT_DIRTY_KEY = "comment:comment:dirty:";
 
     /**
      * 评价数据

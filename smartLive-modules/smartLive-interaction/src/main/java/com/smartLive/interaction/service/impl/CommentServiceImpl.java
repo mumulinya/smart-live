@@ -19,6 +19,7 @@ import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.BO.AuditCommentBO;
 import com.smartLive.interaction.domain.Comment;
@@ -28,7 +29,6 @@ import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
-import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
@@ -37,8 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
@@ -67,9 +65,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
-    private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
-    @Autowired
     private RedisService redisService;
+    @Autowired
+    private ZSetIdManager zSetIdManager;
     private ResourceStrategyFactory resourceStrategyFactory;
     private ILikeService iLikeService;
 
@@ -162,7 +160,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             return Collections.emptyList();
         }
         String commentKeyPrefix = commentType.getCommentKeyPrefix();
-        Page<Long> longPage = queryRedisSourceIdsTool.queryRedisIdPage(commentKeyPrefix, comment.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
+        Page<Long> longPage = zSetIdManager.pageIds(commentKeyPrefix, comment.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> commentIdList = longPage.getRecords();
         List<Comment> list=new ArrayList<>();
         if(commentIdList != null && commentIdList.size() > 0){
@@ -559,13 +557,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     private void saveCommentListToRedis(String key,List<Comment> commentList) {
         log.info("保存点赞用户列表到Redis{}",commentList);
-        Set<ZSetOperations.TypedTuple<String>> followIdListSet = commentList.stream()
-                .map(t -> {
-                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getId().toString(), (double) t.getCreateTime().getTime());
-                    return tuple;
-                })
-                .collect(Collectors.toSet());
-        redisService.setCacheZSet(key, followIdListSet);
+        zSetIdManager.saveToZSet(key, commentList, Comment::getId, Comment::getCreateTime);
     }
 
     /**

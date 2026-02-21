@@ -11,6 +11,7 @@ import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.mapper.LikeMapper;
 import com.smartLive.interaction.service.ILikeService;
@@ -21,11 +22,8 @@ import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.smartLive.interaction.api.DTO.LikeDTO;
@@ -49,7 +47,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
     @Autowired
     private  RedisService redisService;
     @Autowired
-    private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
+    private ZSetIdManager zSetIdManager;
 
     /**
      * 点赞或取消点赞
@@ -286,13 +284,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
       * @param likeList
      */
     private void saveLikeIdListToRedis(String key,List<Like> likeList) {
-        Set<ZSetOperations.TypedTuple<String>> followIdListSet = likeList.stream()
-                .map(t -> {
-                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getUserId().toString(), (double) t.getCreateTime().getTime());
-                    return tuple;
-                })
-                .collect(Collectors.toSet());
-        redisService.setCacheZSet(key, followIdListSet);
+        zSetIdManager.saveToZSet(key, likeList, Like::getUserId, Like::getCreateTime);
     }
 
     /**

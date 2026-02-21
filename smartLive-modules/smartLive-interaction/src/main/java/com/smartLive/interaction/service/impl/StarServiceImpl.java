@@ -6,13 +6,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.UserDTO;
-import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.enums.StarTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.domain.DTO.StarDTO;
-import com.smartLive.interaction.domain.Follow;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.mapper.StarMapper;
 import com.smartLive.interaction.service.IStarService;
@@ -20,16 +19,11 @@ import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.factory.StarStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.interaction.strategy.star.StarStrategy;
-import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
@@ -52,7 +46,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
     @Autowired
     private RedisService redisService;
     @Autowired
-    private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
+    private ZSetIdManager zSetIdManager;
     @Autowired
     private ResourceStrategyFactory resourceStrategyFactory;
     @Autowired
@@ -241,7 +235,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         //根据关注类型从关注策略工程获取bean
         ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(resourceType.getCode());
         //从redis获取
-        Page<Long> fanIdPage = queryRedisSourceIdsTool.queryRedisIdPage(starTypeEnum.getStarKeyPrefix(), starDTO.getUserId(), current, SystemConstants.DEFAULT_PAGE_SIZE);
+        Page<Long> fanIdPage = zSetIdManager.pageIds(starTypeEnum.getStarKeyPrefix(), starDTO.getUserId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> sourceIdList = fanIdPage.getRecords();
         //redis获取失败，从数据库获取
         if (sourceIdList.isEmpty()) {
@@ -256,7 +250,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
                 //截取
                 if(!sourceIdList.isEmpty()){
                     //截取当前页
-                    sourceIdList = sourceIdList.size() > SystemConstants.DEFAULT_PAGE_SIZE ? sourceIdList.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : sourceIdList;
+                    sourceIdList = sourceIdList.size() > SystemConstants.MAX_PAGE_SIZE ? sourceIdList.subList((current-1)*SystemConstants.MAX_PAGE_SIZE, (current-1)*SystemConstants.MAX_PAGE_SIZE + SystemConstants.MAX_PAGE_SIZE) : sourceIdList;
                 }
                 //存入redis
                 saveStarIdListToRedis(starTypeEnum.getStarKeyPrefix()+starDTO.getUserId(),sourceList);
@@ -266,8 +260,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
        if(sourceIdList.isEmpty()){
            return Collections.emptyList();
        }
-        List<?> resourceList = resourceStrategy.getResourceList(sourceIdList);
-        return resourceList;
+        return (List<?>) resourceStrategy.getResourceList(sourceIdList);
     }
 
     /**
@@ -308,13 +301,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
      */
     private void saveStarIdListToRedis(String key, List<Star> sourceList) {
         log.info("保存关注列表到Redis{}",sourceList);
-        Set<ZSetOperations.TypedTuple<String>> followIdListSet = sourceList.stream()
-                .map(t -> {
-                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getSourceId().toString(), (double) t.getCreateTime().getTime());
-                    return tuple;
-                })
-                .collect(Collectors.toSet());
-        redisService.setCacheZSet(key, followIdListSet);
+        zSetIdManager.saveToZSet(key, sourceList, Star::getSourceId, Star::getCreateTime);
     }
 
     /**

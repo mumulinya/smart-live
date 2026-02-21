@@ -26,11 +26,8 @@ import com.smartLive.interaction.service.IFollowService;
 import com.smartLive.interaction.strategy.factory.FollowStrategyFactory;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
-import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 
@@ -56,8 +53,6 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Autowired
     private FollowStrategyFactory followStrategyFactory;
-    @Autowired
-    private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
     @Autowired
     private ZSetIdManager zSetIdManager;
     @Autowired

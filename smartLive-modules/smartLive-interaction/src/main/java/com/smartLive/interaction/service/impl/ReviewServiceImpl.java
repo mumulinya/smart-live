@@ -19,6 +19,7 @@ import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
+import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.domain.BO.AuditReviewBO;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.Review;
@@ -31,7 +32,6 @@ import com.smartLive.interaction.service.IReviewService;
 import com.smartLive.interaction.service.IStarService;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
-import com.smartLive.interaction.tool.QueryRedisSourceIdsTool;
 import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.shop.api.RemoteShopService;
@@ -41,8 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,9 +65,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Autowired
     private RemoteShopService remoteShopService;
     @Autowired
-    private QueryRedisSourceIdsTool queryRedisSourceIdsTool;
-    @Autowired
     private RedisService redisService;
+    @Autowired
+    private ZSetIdManager zSetIdManager;
 
     private ILikeService likeService;
     private IStarService starService;
@@ -190,7 +188,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         String reviewKeyPrefix = reviewType.getReviewKeyPrefix();
 
         // 1. 使用 QueryRedisSourceIdsTool 获取分页 ID 列表 (ZSet 分页)
-        Page<Long> longPage = queryRedisSourceIdsTool.queryRedisIdPage(reviewKeyPrefix, review.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
+        Page<Long> longPage = zSetIdManager.pageIds(reviewKeyPrefix, review.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> reviewIdList = longPage.getRecords();
 
         if (CollUtil.isEmpty(reviewIdList)) {
@@ -642,14 +640,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     private void saveReviewListToRedis(String key,List<Review> reviewList) {
         log.info("保存点赞用户列表到Redis{}",reviewList);
-        Set<ZSetOperations.TypedTuple<String>> followIdListSet = reviewList.stream()
-                .map(t -> {
-                    ZSetOperations.TypedTuple<String> tuple = new DefaultTypedTuple<>(t.getId().toString(), (double) t.getCreateTime().getTime());
-                    return tuple;
-                })
-                .collect(Collectors.toSet());
-        if (CollUtil.isNotEmpty(followIdListSet)) {
-            redisService.setCacheZSet(key, followIdListSet);
+        if (CollUtil.isNotEmpty(reviewList)) {
+            zSetIdManager.saveToZSet(key, reviewList, Review::getId, Review::getCreateTime);
         }
     }
 

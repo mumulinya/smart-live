@@ -57,7 +57,7 @@ public class ZSetIdManager {
 
         // 2. 计算下标 (ZREVRANGE start stop)
         long start = (page - 1) * size;
-        long end = start + size - 1;
+        long end = start + size ;
 
         // 3. 查 ID 集合 (按分数倒序，即时间倒序)
         Set<Object> idStrSet = redisService.getCacheZSetReverseRange(key, start, end);
@@ -100,7 +100,7 @@ public class ZSetIdManager {
         redisService.expire(destKey, 60, TimeUnit.SECONDS);
         // 4. 标准的分页查询逻辑 (从临时 Key 里查)
         long start = (page - 1) * size;
-        long end = start + size - 1;
+        long end = start + size ;
 
         // 按分数倒序取 (ZSet 交集默认是将两个元素的分数相加，通常这能反映"两人都比较晚关注"的权重)
         Set<String> idStrSet = redisService.getCacheZSetReverseRange(destKey, start, end);
