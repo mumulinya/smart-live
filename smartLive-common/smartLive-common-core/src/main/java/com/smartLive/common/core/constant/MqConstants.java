@@ -34,6 +34,9 @@ public class MqConstants {
     public static final String  INTERACT_FEED_QUEUE = "interact.feed.queue";
     //数据推送
     public static final String  INTERACT_FEED_ROUTING = "interact.feed";
+    public static final String INTERACTION_SYNC_EXCHANGE_NAME = "interaction.sync.direct";
+    public static final String INTERACTION_SYNC_QUEUE = "interaction.sync.queue";
+    public static final String INTERACTION_SYNC_ROUTING = "interaction.sync.trigger";
     //ai交换机
     public static final String AI_EXCHANGE_NAME = "ai.direct";
     public static final String AI_COMMENT_QUEUE = "ai.comment.queue";

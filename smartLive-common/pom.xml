@@ -19,6 +19,7 @@
         <module>smartLive-common-datascope</module>
         <module>smartLive-common-datasource</module>
         <module>smartLive-common-rabbitmq</module>
+        <module>smartLive-common-xxl</module>
     </modules>
 
     <artifactId>smartLive-common</artifactId>

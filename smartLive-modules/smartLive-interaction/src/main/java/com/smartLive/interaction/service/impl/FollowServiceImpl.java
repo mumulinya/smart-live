@@ -333,7 +333,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             value=feedEventMessage.getAction()+":"+value;
         }
         boolean isSendSystemNotice=false;
-        if(feedEventMessage.getBizType()==GlobalBizTypeEnum.PRODUCT.getCode()||feedEventMessage.getBizType()==GlobalBizTypeEnum.GROUP_BUY.getCode()){
+        if(feedEventMessage.getBizType()==GlobalBizTypeEnum.PRODUCT.getCode()){
             isSendSystemNotice=true;
         }
         for (Long userId : userIdList) {

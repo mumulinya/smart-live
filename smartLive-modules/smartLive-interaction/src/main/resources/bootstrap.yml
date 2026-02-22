@@ -31,6 +31,13 @@ spring:
         server-addr: 127.0.0.1:8848
         # 配置文件格式
         file-extension: yml
-        # 共享配置
-        shared-configs:
-          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+        # 统一使用 extension-configs 引入外部配置
+        extension-configs:
+            # 1. 引入全局环境配置
+            - data-id: application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+              group: DEFAULT_GROUP
+              refresh: true
+           # 2. 引入 XXL-JOB 公共配置
+            - data-id: xxl-job-common.yml
+              group: DEFAULT_GROUP
+              refresh: true # 支持动态刷新

@@ -18,7 +18,6 @@ public enum GlobalBizTypeEnum {
     BLOG(ResourceTypeConstants.BLOG_CODE, "博客", "blog"),      // 注意：原来是1，现在改成了3
     PRODUCT(ResourceTypeConstants.PRODUCT_CODE, "商品", "product"), // 注意：原来是3，现在改成了4
     COMMENT(ResourceTypeConstants.COMMENT_CODE, "评论", "comment"),   // 注意：原来是4，现在改成了5
-    GROUP_BUY(ResourceTypeConstants.GROUP_BUY_CODE, "团购", "group_buy"),
     REVIEW(ResourceTypeConstants.REVIEW_CODE,"评价","review");
 
     private final Integer code;

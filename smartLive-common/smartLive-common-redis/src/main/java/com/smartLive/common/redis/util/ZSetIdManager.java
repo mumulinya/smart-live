@@ -57,7 +57,7 @@ public class ZSetIdManager {
 
         // 2. 计算下标 (ZREVRANGE start stop)
         long start = (page - 1) * size;
-        long end = start + size ;
+        long end = start + size-1 ;
 
         // 3. 查 ID 集合 (按分数倒序，即时间倒序)
         Set<Object> idStrSet = redisService.getCacheZSetReverseRange(key, start, end);

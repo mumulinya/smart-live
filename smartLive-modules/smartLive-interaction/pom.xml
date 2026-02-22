@@ -77,6 +77,11 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-redis</artifactId>
         </dependency>
+        <!--xxl-job-->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-xxl</artifactId>
+        </dependency>
         <!--hutool-->
         <dependency>
             <groupId>cn.hutool</groupId>
