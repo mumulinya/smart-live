@@ -122,7 +122,6 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         }
         return true;
     }
-
     @Override
     public Integer queryLikeCount(Like like) {
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());

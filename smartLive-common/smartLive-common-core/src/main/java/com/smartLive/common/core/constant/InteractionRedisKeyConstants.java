@@ -86,17 +86,23 @@ public interface InteractionRedisKeyConstants {
      */
     interface Comment {
         // --- 实体下的评论列表 & 计数 & 脏数据 ---
-        String BLOG_COMMENT = "blog:comment:";
+        String BLOG_COMMENT_NEW_RANK = "blog:comment:new_rank:";
+        String BLOG_COMMENT_HOT_RANK = "blog:comment:hot_rank:";
         String BLOG_COMMENT_COUNT = "blog:comment:count:";
-        String BLOG_COMMENT_DIRTY = "blog:comment:dirty:";
+        String BLOG_COMMENT_SYNC = "blog:comment:sync_ids";
+        String BLOG_COMMENT_CALC = "blog:comment:calc_ids";
 
-        String REVIEW_COMMENT = "review:comment:";
+        String REVIEW_COMMENT_NEW_RANK = "review:comment:new_rank:";
+        String REVIEW_COMMENT_HOT_RANK = "review:comment:hot_rank:";
         String REVIEW_COMMENT_COUNT = "review:comment:count:";
-        String REVIEW_COMMENT_DIRTY = "review:comment:dirty:";
+        String REVIEW_COMMENT_SYNC = "review:comment:sync_ids";
+        String REVIEW_COMMENT_CALC = "review:comment:calc_ids";
 
-        String COMMENT_COMMENT = "comment:comment:";
+        String COMMENT_COMMENT_NEW_RANK = "comment:comment:new_rank:";
+        String COMMENT_COMMENT_HOT_RANK = "comment:comment:hot_rank:";
         String COMMENT_COMMENT_COUNT = "comment:comment:count:";
-        String COMMENT_COMMENT_DIRTY = "comment:comment:dirty:";
+        String COMMENT_COMMENT_SYNC = "comment:comment:sync_ids";
+        String COMMENT_COMMENT_CALC = "comment:comment:calc_ids";
 
         // --- 反向索引 (我的评论记录) ---
         String USER_COMMENT = "user:comment:";
@@ -107,13 +113,17 @@ public interface InteractionRedisKeyConstants {
      */
     interface Review {
         // --- 实体下的评价列表 & 计数 & 脏数据 ---
-        String SHOP_REVIEW = "shop:review:";
+        String SHOP_REVIEW_HOT_RANK = "shop:review:hot_rank:";
+        String SHOP_REVIEW_NEW_RANK = "shop:review:new_rank:";
         String SHOP_REVIEW_COUNT = "shop:review:count:";
-        String SHOP_REVIEW_DIRTY = "shop:review:dirty:";
+        String SHOP_REVIEW_SYNC = "shop:review:sync_ids";
+        String SHOP_REVIEW_CALC = "shop:review:calc_ids";
 
-        String PRODUCT_REVIEW = "product:review:";
+        String PRODUCT_REVIEW_HOT_RANK = "product:review:hot_rank:";
+        String PRODUCT_REVIEW_NEW_RANK = "product:review:new_rank:";
         String PRODUCT_REVIEW_COUNT = "product:review:count:";
-        String PRODUCT_REVIEW_DIRTY = "product:review:dirty:";
+        String PRODUCT_REVIEW_SYNC = "product:review:sync_ids";
+        String PRODUCT_REVIEW_CALC = "product:review:calc_ids";
 
         // --- 反向索引 (我的评价记录) ---
         String USER_REVIEW = "user:review:";

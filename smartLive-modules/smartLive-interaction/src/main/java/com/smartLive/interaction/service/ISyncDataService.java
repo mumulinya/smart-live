@@ -1,12 +1,12 @@
 package com.smartLive.interaction.service;
 
 /**
- * 数据同步服务
+ * 互动数据同步服务
  */
-public interface ISyncDataService
-{
+public interface ISyncDataService {
+
     /**
-     * 主入口：并发触发所有同步任务
+     * 触发全部同步任务
      */
     void syncAllData();
 
@@ -29,4 +29,9 @@ public interface ISyncDataService
      * 同步评价计数
      */
     void syncReviewData();
+
+    /**
+     * 重算评论/评价热度榜
+     */
+    void calcHotRankData();
 }

@@ -166,25 +166,31 @@ public class RedisConstants {
      * 评论数据
      */
     //博客的评论
-    public static final String BLOG_COMMENT_KEY = InteractionRedisKeyConstants.Comment.BLOG_COMMENT;
+    public static final String BLOG_COMMENT_NEW_RANK_KEY = InteractionRedisKeyConstants.Comment.BLOG_COMMENT_NEW_RANK;
+    public static final String BLOG_COMMENT_HOT_RANK_KEY = InteractionRedisKeyConstants.Comment.BLOG_COMMENT_HOT_RANK;
     //博客评论总数
     public static final String BLOG_COMMENT_COUNT_KEY = InteractionRedisKeyConstants.Comment.BLOG_COMMENT_COUNT;
     //博客评论脏数据列表
-    public static final String BLOG_COMMENT_DIRTY_KEY = InteractionRedisKeyConstants.Comment.BLOG_COMMENT_DIRTY;
+    public static final String BLOG_COMMENT_SYNC_KEY = InteractionRedisKeyConstants.Comment.BLOG_COMMENT_SYNC;
+    public static final String BLOG_COMMENT_CALC_KEY = InteractionRedisKeyConstants.Comment.BLOG_COMMENT_CALC;
 
     //评价的评论
-    public static final String REVIEW_COMMENT_KEY = InteractionRedisKeyConstants.Comment.REVIEW_COMMENT;
+    public static final String REVIEW_COMMENT_NEW_RANK_KEY = InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_NEW_RANK;
+    public static final String REVIEW_COMMENT_HOT_RANK_KEY = InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_HOT_RANK;
     //评价的评论总数
     public static final String REVIEW_COMMENT_COUNT_KEY = InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_COUNT;
     //评价的评论脏数据列表
-    public static final String REVIEW_COMMENT_DIRTY_KEY = InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_DIRTY;
+    public static final String REVIEW_COMMENT_SYNC_KEY = InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_SYNC;
+    public static final String REVIEW_COMMENT_CALC_KEY = InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_CALC;
 
     //评论的评论
-    public static final String COMMENT_COMMENT_KEY = InteractionRedisKeyConstants.Comment.COMMENT_COMMENT;
+    public static final String COMMENT_COMMENT_NEW_RANK_KEY = InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_NEW_RANK;
+    public static final String COMMENT_COMMENT_HOT_RANK_KEY = InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_HOT_RANK;
     //评论的评论总数
     public static final String COMMENT_COMMENT_COUNT_KEY = InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_COUNT;
     //评论的评论脏数据列表
-    public static final String COMMENT_COMMENT_DIRTY_KEY = InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_DIRTY;
+    public static final String COMMENT_COMMENT_SYNC_KEY = InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_SYNC;
+    public static final String COMMENT_COMMENT_CALC_KEY = InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_CALC;
     //用户评论反向索引
     public static final String USER_COMMENT_KEY = InteractionRedisKeyConstants.Comment.USER_COMMENT;
 
@@ -192,18 +198,22 @@ public class RedisConstants {
      * 评价数据
      */
     //店铺评价
-    public static final String SHOP_REVIEW_KEY = InteractionRedisKeyConstants.Review.SHOP_REVIEW;
+    public static final String SHOP_REVIEW_HOT_RANK_KEY = InteractionRedisKeyConstants.Review.SHOP_REVIEW_HOT_RANK;
+    public static final String SHOP_REVIEW_NEW_RANK_KEY = InteractionRedisKeyConstants.Review.SHOP_REVIEW_NEW_RANK;
     //店铺评价总数
     public static final String SHOP_REVIEW_COUNT_KEY = InteractionRedisKeyConstants.Review.SHOP_REVIEW_COUNT;
     //店铺评价脏数据列表
-    public static final String SHOP_REVIEW_DIRTY_KEY = InteractionRedisKeyConstants.Review.SHOP_REVIEW_DIRTY;
+    public static final String SHOP_REVIEW_SYNC_KEY = InteractionRedisKeyConstants.Review.SHOP_REVIEW_SYNC;
+    public static final String SHOP_REVIEW_CALC_KEY = InteractionRedisKeyConstants.Review.SHOP_REVIEW_CALC;
 
     //商品评价
-    public static final String PRODUCT_REVIEW_KEY = InteractionRedisKeyConstants.Review.PRODUCT_REVIEW;
+    public static final String PRODUCT_REVIEW_HOT_RANK_KEY = InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_HOT_RANK;
+    public static final String PRODUCT_REVIEW_NEW_RANK_KEY = InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_NEW_RANK;
     //商品评价总数
     public static final String PRODUCT_REVIEW_COUNT_KEY = InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_COUNT;
     //商品评价脏数据列表
-    public static final String PRODUCT_REVIEW_DIRTY_KEY = InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_DIRTY;
+    public static final String PRODUCT_REVIEW_SYNC_KEY = InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_SYNC;
+    public static final String PRODUCT_REVIEW_CALC_KEY = InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_CALC;
     //用户评价反向索引
     public static final String USER_REVIEW_KEY = InteractionRedisKeyConstants.Review.USER_REVIEW;
     /**

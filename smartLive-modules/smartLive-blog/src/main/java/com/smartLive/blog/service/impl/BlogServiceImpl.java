@@ -274,7 +274,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public List<BlogVO> queryHotBlog(Integer current) {
         //从redis查询热门博客
         String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
-        List<Long> blogIdList = getBlogIdListFromRedis(key, SystemConstants.DEFAULT_PAGE_SIZE);
+        List<Long> blogIdList = getBlogIdListFromRedis(key, SystemConstants.MAX_PAGE_SIZE);
         if (CollUtil.isNotEmpty(blogIdList)) {
             return convertToBlogVOList(getBlogListByIds(blogIdList));
         }
@@ -282,7 +282,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Page<Blog> page = query()
                 .eq("status",0)
                 .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
         List<Blog> blogList = page.getRecords();
         if(blogList!= null&& !blogList.isEmpty()){
@@ -412,7 +412,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .eq("status",0)
                 .orderByDesc("pin")
                 .orderByAsc("create_time")
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Blog> records = page.getRecords();
         queryBlogListIsLike(records);
         return convertToBlogVOList(records);

@@ -16,12 +16,14 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
 import com.smartLive.common.redis.util.ZSetIdManager;
+import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.BO.AuditCommentBO;
 import com.smartLive.interaction.domain.Comment;
@@ -43,11 +45,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * 评论Service业务层处理
- * 
+ * 评论服务核心实现类
+ *
+ * 架构说明：
+ * 1. 坚持“单一职责原则”：本类专注于评论数据的 CRUD、组装外部依赖（RPC）、以及发送数据到 Redis/MQ。
+ * 2. 动静分离设计：所有评论详细内容大一统存储在 CACHE_COMMENT_KEY 中，排行榜 ID 列表按业务隔离开。
+ * 3. 级联异步计算解耦：去除了所有手动的父级分数计算流转，统交由 SyncDataServiceImpl 后台通过 Sync 队列级联到 Calc 队列进行全自动处理。
+ *
  * @author mumulin
  * @date 2025-09-21
  */
@@ -56,13 +64,10 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService {
     @Autowired
     private CommentMapper commentMapper;
-
     @Autowired
     private RemoteAppUserService remoteAppUserService;
-
     @Autowired
     private RemoteBlogService remoteBlogService;
-
     @Autowired
     private RemoteShopService remoteShopService;
     @Autowired
@@ -74,19 +79,19 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Autowired
     private RedisMultiCacheManager redisMultiCacheManager;
     private ResourceStrategyFactory resourceStrategyFactory;
-    private ILikeService iLikeService;
-
+    private ILikeService likeService;
 
     @Autowired
     public CommentServiceImpl(@Lazy ILikeService iLikeService, @Lazy ResourceStrategyFactory resourceStrategyFactory) {
-        this.iLikeService = iLikeService;
+        this.likeService = iLikeService;
         this.resourceStrategyFactory = resourceStrategyFactory;
     }
+
     /**
-     * 查询评论
+     * 根据 ID 查询单条评论（直接查库）
      *
      * @param id 评论主键
-     * @return 评论
+     * @return 评论实体
      */
     @Override
     public Comment selectCommentById(Long id) {
@@ -94,10 +99,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 查询评论列表
+     * 根据条件查询评论列表（常用于后台管理）
      *
-     * @param comment 评论
-     * @return 评论
+     * @param comment 查询条件
+     * @return 评论集合
      */
     @Override
     public List<Comment> selectCommentList(Comment comment) {
@@ -105,10 +110,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 新增评论
+     * 底层新增评论数据
      *
-     * @param comment 评论
-     * @return 结果
+     * @param comment 评论实体
+     * @return 影响行数
      */
     @Override
     public int insertComment(Comment comment) {
@@ -117,10 +122,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 修改评论
+     * 更新评论数据
      *
-     * @param comment 评论
-     * @return 结果
+     * @param comment 评论实体
+     * @return 影响行数
      */
     @Override
     public int updateComment(Comment comment) {
@@ -129,10 +134,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 批量删除评论
+     * 批量物理删除评论
      *
-     * @param ids 需要删除的评论主键
-     * @return 结果
+     * @param ids 评论主键数组
+     * @return 影响行数
      */
     @Override
     public int deleteCommentByIds(Long[] ids) {
@@ -140,10 +145,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 删除评论信息
+     * 物理删除单条评论
      *
      * @param id 评论主键
-     * @return 结果
+     * @return 影响行数
      */
     @Override
     public int deleteCommentById(Long id) {
@@ -151,63 +156,59 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 获取评论列表
+     * 【核心读链路】分页获取前台展示的评论列表
+     * 采用 "ID List (ZSet) + 详情缓存 (Cache)" 的大厂标准架构，极致抗压。
      *
-     * @param comment
-     * @return
+     * @param comment 包含目标源信息
+     * @param current 当前页码
+     * @return 评论视图列表
      */
     @Override
     public List<Comment> listComment(Comment comment, Integer current) {
-        //从redis里面获取
         CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
         if (commentType == null) {
-            log.error("参数错误");
+            log.error("参数错误：未知的评论类型");
             return Collections.emptyList();
         }
-        String commentKeyPrefix = commentType.getCommentKeyPrefix();
+
+        // 1. 尝试从 Redis 排行榜拉取排好序的 ID
+        String commentKeyPrefix = commentType.getCommentHotRankKeyPrefix();
         Page<Long> longPage = zSetIdManager.pageIds(commentKeyPrefix, comment.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> commentIdList = longPage.getRecords();
-        List<Comment> list=new ArrayList<>();
-        if(commentIdList != null && commentIdList.size() > 0){
-             list = lambdaQuery()
-                     .ne(Comment::getStatus, "2")
-                     .in(Comment::getId, commentIdList)
-                     .orderByDesc(Comment::getLiked).list();
+        List<Comment> list = new ArrayList<>();
+
+        if (commentIdList != null && commentIdList.size() > 0) {
+            // 去统一详情池捞取具体数据
+            list = getCommentListByIds(commentIdList);
         }
-        //如果redis里面没有数据，则从数据库里面获取
-        if(list == null || list.size() == 0){
-            log.info("从数据库里面获取");
-             list = query()
+
+        // 兜底逻辑：缓存击穿时查库并重建 ZSet 榜单
+        if (list == null || list.isEmpty()) {
+            log.info("从数据库中获取评论数据");
+            list = query()
                     .eq("source_id", comment.getSourceId())
-                     .ne("status", "2")
-                     .eq("source_type", comment.getSourceType())
+                    .ne("status", "2")
+                    .eq("source_type", comment.getSourceType())
                     .orderByDesc("liked")
+                    .orderByDesc("create_time")
                     .list();
-            //截取
-            if(!list.isEmpty()){
-                //保存到redis里面
-                saveCommentListToRedis(commentKeyPrefix+comment.getSourceId(), list);
-                //截取当前页
-                list = list.size() > SystemConstants.DEFAULT_PAGE_SIZE ? list.subList((current-1)*SystemConstants.DEFAULT_PAGE_SIZE, (current-1)*SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : list;
+            if (!list.isEmpty()) {
+                String hotRankKey = commentType.getCommentHotRankKeyPrefix() + comment.getSourceId();
+                String newRankKey = commentType.getCommentNewRankKeyPrefix() + comment.getSourceId();
+                zSetIdManager.saveToZSet(hotRankKey, list, Comment::getId, Comment::getCreateTime);
+                zSetIdManager.saveToZSet(newRankKey, list, Comment::getId, Comment::getCreateTime);
+
+                list = list.size() > SystemConstants.DEFAULT_PAGE_SIZE ? list.subList((current - 1) * SystemConstants.DEFAULT_PAGE_SIZE, (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : list;
+                queryCommentListIsLike(list);
+                queryCommentListUserMessage(list);
             }
         }
-        if(list == null){
+
+        if (list == null) {
             return Collections.emptyList();
         }
-        list.stream().forEach(c -> {
-            Long id = c.getUserId();
-            //判断是否点赞
-            Like like = new Like();
-            like.setSourceType(GlobalBizTypeEnum.COMMENT.getCode());
-            like.setSourceId(c.getId());
-            c.setIsLike(iLikeService.isLike(like));
-            UserDTO user = remoteAppUserService.queryUserById(id);
-            if (user != null) {
-                c.setNickName(user.getNickName());
-                c.setUserIcon(user.getIcon());
-            }
-        });
-        //获取是否有ai生成评论
+
+        // 挂载 AI 生成的摘要或热评
         String key = RedisConstants.CACHE_AI_COMMENT_KEY + comment.getSourceType() + ":" + comment.getSourceId();
         String JsonStr = redisService.getCacheObject(key);
         if (JsonStr != null) {
@@ -218,11 +219,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 获取子评论列表
+     * 获取楼中楼（子评论）列表
      *
-     * @param comment
-     * @param current
-     * @return
+     * @param comment 查询条件（主要包含 answer_id 父评论ID）
+     * @param current 当前页码
+     * @return 子评论列表
      */
     @Override
     public List<Comment> listChildComment(Comment comment, Integer current) {
@@ -232,28 +233,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
                 .getRecords();
-        if(commentList!=null&& !commentList.isEmpty()){
-            commentList.stream().forEach(c -> {
-                Like like = new Like();
-                like.setSourceType(GlobalBizTypeEnum.COMMENT.getCode());
-                like.setSourceId(c.getId());
-                c.setIsLike(iLikeService.isLike(like));
-                Long id = c.getUserId();
-                UserDTO user = remoteAppUserService.queryUserById(id);
-                if (user != null) {
-                    c.setNickName(user.getNickName());
-                    c.setUserIcon(user.getIcon());
-                }
-            });
+        if (commentList != null && !commentList.isEmpty()) {
+            queryCommentListIsLike(commentList);
+            queryCommentListUserMessage(commentList);
         }
         return commentList;
     }
 
     /**
-     * 新增评论
+     * 【核心写链路】前端发布新增评论
+     * 将繁重计算剥离，利用双轨制异步队列保证 C 端响应的极速体验。
+     * 父级分数变化的触发全部交由 SyncDataServiceImpl 的回调处理完成闭环。
      *
-     * @param comment
-     * @return
+     * @param comment 评论实体
+     * @return 影响行数
      */
     @Override
     @Transactional
@@ -266,32 +259,43 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 log.error("commentType is null, sourceType={}", comment.getSourceType());
                 return i;
             }
-            String commentKeyPrefix = commentType.getCommentKeyPrefix()+ comment.getSourceId();
-            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
-            String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
+            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix() + comment.getSourceId();
+            String commentSyncKey = commentType.getCommentSyncKey();
             String userCommentKey = userCommentKey(commentType, comment.getUserId());
-            //保存评论信息
-            redisService.setCacheZSet(commentKeyPrefix, comment.getId().toString(), System.currentTimeMillis());
+
+            // 1. 将新评论存入排行榜（时间戳占位，重排序交由 XXL-JOB）
+            saveCommentRankToRedis(commentType, comment);
+
+            // 2. 记录用户的足迹
             if (userCommentKey != null) {
                 redisService.setCacheZSet(userCommentKey, comment.getSourceId().toString(), System.currentTimeMillis());
             }
-            //记录评论数量
+
+            // 3. 自增该目标主体的评论总数
             redisService.incrementCacheValue(commentCountKeyPrefix);
-            //记录脏数据
-            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getSourceId().toString()));
-            //发送审核消息
+
+            // 4. 【数据落库轨】：记录有变化的目标源，交由定时任务批量更新 MySQL。
+            // 注意：这里将目标源的 ID 放入了 Sync 队列，定时任务同步完数据后，会自动级联触发该目标源的算分逻辑。
+            redisService.setCacheSet(commentSyncKey, Collections.singleton(comment.getSourceId().toString()));
+
+            // 5. 【热度计算轨】：新产生的评论自己也需要进行一次初始热度算分。
+            redisService.setCacheSet(commentType.getCommentCalcKey(), comment.getId().toString());
+
+            // 6. 发送审核消息队列
             sendAuditMessage(comment);
         }
         return i;
     }
+
     /**
-     * 发送审核消息
-     * @param comment
+     * 封装发送审核 MQ 消息
+     *
+     * @param comment 待审核的评论
      */
     private void sendAuditMessage(Comment comment) {
         ResourceStrategy resourceType = resourceStrategyFactory.getStrategy(comment.getSourceType());
         HashMap<String, String> content = resourceType.getResourceContentById(comment.getSourceId());
-        AuditCommentBO auditCommentBO=new AuditCommentBO();
+        AuditCommentBO auditCommentBO = new AuditCommentBO();
         BeanUtil.copyProperties(comment, auditCommentBO);
         auditCommentBO.setTargetTitle(content.get("title"));
         auditCommentBO.setTargetImages(content.get("images"));
@@ -302,13 +306,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .auditContent(BeanUtil.beanToMap(auditCommentBO))
                 .createTime(comment.getCreateTime())
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME, MqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
+
     /**
-     * 删除评论
+     * 用户前端逻辑删除自己的评论
      *
-     * @param comment
-     * @return
+     * @param comment 包含要删除 ID 的评论实体
+     * @return 是否成功
      */
     @Override
     @Transactional
@@ -323,28 +328,34 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             if (commentType == null) {
                 return true;
             }
-            String commentKeyPrefix = commentType.getCommentKeyPrefix()+ dbComment.getSourceId();
-            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ dbComment.getSourceId();
-            String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
-            //删除评论信息
+            String commentKeyPrefix = commentType.getCommentHotRankKeyPrefix() + dbComment.getSourceId();
+            String commentNewRankKeyPrefix = commentType.getCommentNewRankKeyPrefix() + dbComment.getSourceId();
+            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix() + dbComment.getSourceId();
+            String commentSyncKey = commentType.getCommentSyncKey();
+
+            // 清理缓存排行榜与计数器
             redisService.removeCacheZSetObject(commentKeyPrefix, dbComment.getId().toString());
-            //记录评论数量
+            redisService.removeCacheZSetObject(commentNewRankKeyPrefix, dbComment.getId().toString());
             redisService.decrementCacheValue(commentCountKeyPrefix);
-            //记录脏数据
-            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(dbComment.getSourceId().toString()));
+
+            // 双轨制触发：同步扣减 MySQL 计数。
+            // 同样，定时任务在同步完成后会自动级联触发父级主体的降权算分，无需在此处手动操作。
+            redisService.setCacheSet(commentSyncKey, Collections.singleton(dbComment.getSourceId().toString()));
+
             evictUserCommentSourceIfNeeded(commentType, dbComment);
         }
         return i;
     }
 
     /**
-     * 获取用户的评论
+     * 获取指定用户的评论历史足迹
      *
-     * @param current
-     * @return
+     * @param comment 查询条件封装
+     * @param current 当前页码
+     * @return 评论历史列表
      */
     @Override
-    public List<Comment> getCommentOfUser(Comment comment,Integer current) {
+    public List<Comment> getCommentOfUser(Comment comment, Integer current) {
         if (comment == null) {
             return Collections.emptyList();
         }
@@ -371,18 +382,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             List<Long> sourceIdList = idPage.getRecords();
             redisSourceCount = CollUtil.isEmpty(sourceIdList) ? 0 : sourceIdList.size();
             if (CollUtil.isNotEmpty(sourceIdList)) {
-                list=getCommentListByIds(sourceIdList);
+                list = getCommentListByIds(sourceIdList);
             }
         }
         if (redisSourceCount > 0 && list.size() < redisSourceCount) {
             list = Collections.emptyList();
         }
-        //从数据库中获取数据
         if (CollUtil.isEmpty(list)) {
             List<Comment> dbList = query()
                     .eq(comment.getSourceType() != null, "source_type", comment.getSourceType())
                     .eq("parent_id", 0)
                     .eq("user_id", userId)
+                    .orderByDesc("liked")
                     .orderByDesc("create_time")
                     .list();
 
@@ -391,21 +402,25 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             }
 
             if (commentType != null) {
-                //保存到redis
                 zSetIdManager.saveToZSet(userCommentKey(commentType, userId), dbList, Comment::getId, Comment::getCreateTime);
             }
-            //截取数据
             int start = (pageNo - 1) * pageSize;
             if (start >= dbList.size()) {
                 return Collections.emptyList();
             }
             int end = Math.min(start + pageSize, dbList.size());
-            list =  dbList.subList(start, end);
+            list = dbList.subList(start, end);
         }
         enrichUserCommentList(list, userId);
         return list;
     }
 
+    /**
+     * 为用户视角的评论列表组装冗余的业务显示数据（如被评论的文章标题）
+     *
+     * @param list   基础评论列表
+     * @param userId 目标用户ID
+     */
     private void enrichUserCommentList(List<Comment> list, Long userId) {
         if (CollUtil.isEmpty(list)) {
             return;
@@ -432,9 +447,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 获取所有评论列表
-     *
-     * @return
+     * 获取全量系统评论集合
      */
     @Override
     public List<Comment> getCommentList() {
@@ -446,7 +459,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                     c.setSourceName(blog.getTitle());
             } else if (c.getSourceType() == 2) {
                 ShopDTO shop = remoteShopService.getShopById(c.getSourceId());
-                if ((shop!= null))
+                if ((shop != null))
                     c.setSourceName(shop.getName());
             }
         });
@@ -454,47 +467,35 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 保存ai自动创建的评论
-     *
-     * @param comments
-     * @return
+     * 接收并缓存 AI 总结生成的评论
      */
     @Override
     public Boolean saveAiCreateComment(List<Comment> comments) {
         if (comments.size() == 0) {
-            throw new RuntimeException("请传入数据");
+            throw new RuntimeException("评论列表不能为空");
         }
-        //清空redis缓存
         redisService.deleteObject(redisService.keys(RedisConstants.CACHE_AI_COMMENT_KEY + "*"));
         comments.forEach(commentDTO -> {
             String key = RedisConstants.CACHE_AI_COMMENT_KEY + commentDTO.getSourceType() + ":" + commentDTO.getSourceId();
             redisService.setCacheObject(key, JSON.toJSONString(commentDTO));
-            //设置过期时间
-//          redisService.expire(key, RedisConstants.CACHE_AI_COMMENT_TTL, TimeUnit.MINUTES);
         });
         return true;
     }
 
     /**
-     * 获取用户发表的评论数
-     *
-     * @param comment
-     * @return
+     * 获取指定条件下的评论总数
      */
     @Override
     public Integer getCommentCount(Comment comment) {
-        int commentCount = query()
+        return query()
                 .eq(comment.getSourceType() != null, "source_type", comment.getSourceType())
                 .eq(comment.getSourceId() != null, "source_id", comment.getSourceId())
                 .eq(comment.getUserId() != null, "user_id", comment.getUserId())
                 .count().intValue();
-        return commentCount;
     }
 
     /**
-     * 获取评论总数
-     *
-     * @return
+     * 获取系统全量评论数
      */
     @Override
     public Integer getCommentTotal() {
@@ -502,14 +503,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 创建ai自动创建的评论
-     *
-     * @param
-     * @return
+     * 触发异步收集聚合 AI 需要生成的任务列表
      */
     @Override
     public void aiCreateComment() {
-        // 获取有评论的博客和店铺的id（保持顺序的去重）
         List<AIGenerateRequest> list = query().list().stream()
                 .collect(Collectors.groupingBy(
                         Comment::getSourceType,
@@ -527,15 +524,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                         entry.getValue()
                 ))
                 .collect(Collectors.toList());
-        //发送rabbitMq消息给ai服务
         rabbitTemplate.convertAndSend(MqConstants.AI_EXCHANGE_NAME, MqConstants.AI_COMMENT_ROUTING, list);
     }
 
     /**
-     * 根据评论id列表获取评论列表
+     * 批量从 Redis 详情池中根据 ID 获取评论详情
      *
-     * @param sourceIdList
-     * @return
+     * @param sourceIdList 评论主键集合
+     * @return 对应的评论实体
      */
     @Override
     public List<Comment> getCommentListByIds(List<Long> sourceIdList) {
@@ -566,26 +562,91 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 orderedList.add(comment);
             }
         }
-
+        queryCommentListIsLike(orderedList);
+        queryCommentListUserMessage(orderedList);
         return orderedList;
     }
 
     /**
-     * 批量更新点赞数
+     * RPC 调用装配评论对应的用户昵称与头像
      *
-     * @param updateMap
-     * @return
+     * @param commentList 原始评论集合
+     */
+    private void queryCommentListUserMessage(List<Comment> commentList) {
+        if (CollUtil.isEmpty(commentList)) {
+            return;
+        }
+        List<Long> userIds = commentList.stream()
+                .map(Comment::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(userIds)) {
+            return;
+        }
+
+        List<UserDTO> userList = remoteAppUserService.getUserList(userIds);
+        if (CollUtil.isEmpty(userList)) {
+            return;
+        }
+
+        Map<Long, UserDTO> userMap = userList.stream().collect(Collectors.toMap(
+                com.smartLive.user.api.domain.UserDTO::getId,
+                Function.identity(),
+                (v1, v2) -> v1
+        ));
+        commentList.forEach(comment -> {
+            UserDTO user = userMap.get(comment.getUserId());
+            if (user != null) {
+                comment.setNickName(user.getNickName());
+                comment.setUserIcon(user.getIcon());
+            }
+        });
+    }
+
+    /**
+     * 批量校验并装载当前登录用户对列表中评论的点赞状态
+     *
+     * @param commentList 原始评论集合
+     */
+    private void queryCommentListIsLike(List<Comment> commentList) {
+        if (CollUtil.isEmpty(commentList)) {
+            return;
+        }
+        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        if (user == null) {
+            commentList.forEach(comment -> {
+                if (comment != null) {
+                    comment.setIsLike(false);
+                }
+            });
+            return;
+        }
+
+        List<Long> commentIds = commentList.stream()
+                .map(Comment::getId)
+                .collect(Collectors.toList());
+        LikeDTO likeDTO = new LikeDTO();
+        likeDTO.setUserId(user.getId());
+        likeDTO.setSourceType(GlobalBizTypeEnum.COMMENT.getCode());
+        Map<Long, Boolean> likeMap = likeService.isLikeBatch(likeDTO, commentIds);
+
+        commentList.forEach(comment -> {
+            if (comment != null) {
+                comment.setIsLike(likeMap.getOrDefault(comment.getId(), false));
+            }
+        });
+    }
+
+    /**
+     * 批量同步落库点赞数（被 XXL-JOB 调用）
      */
     @Override
     public Boolean updateLikeCountBatch(Map<Long, Integer> updateMap) {
         if (CollUtil.isEmpty(updateMap)) {
             return false;
         }
-
-        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
-        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
         if (updateMap.size() > 500) {
-            // 分批逻辑 (每500条提交一次)
             List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
             for (List<Long> batchKeys : partition) {
                 Map<Long, Integer> batchMap = new HashMap<>();
@@ -595,28 +656,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 baseMapper.updateLikeCountBatch(batchMap);
             }
         } else {
-            // 数量少直接执行
             baseMapper.updateLikeCountBatch(updateMap);
         }
         return true;
     }
 
     /**
-     * 批量更新评论数
-     *
-     * @param updateMap
-     * @return
+     * 批量同步落库子评论回复数（被 XXL-JOB 调用）
      */
     @Override
     public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
         if (CollUtil.isEmpty(updateMap)) {
             return false;
         }
-
-        // 建议：如果数量特别大(超过500)，建议分批，防止 SQL 语句超长报错
-        // 如果你确信每 30秒 的点赞更新量不会导致 SQL 超过 4MB，可以直接调 baseMapper
         if (updateMap.size() > 500) {
-            // 分批逻辑 (每500条提交一次)
             List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
             for (List<Long> batchKeys : partition) {
                 Map<Long, Integer> batchMap = new HashMap<>();
@@ -626,17 +679,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 baseMapper.updateCommentCountBatch(batchMap);
             }
         } else {
-            // 数量少直接执行
             baseMapper.updateCommentCountBatch(updateMap);
         }
         return true;
     }
 
     /**
-     * 获取评论点赞数
-     *
-     * @param sourceId
-     * @return
+     * 获取特定目标的总点赞数
      */
     @Override
     public Integer getCommentLikeCount(Long sourceId) {
@@ -645,72 +694,57 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 根据id获取评论详情
-     *
-     * @param id
-     * @return
+     * 获取单条评论的详细内容并挂载关联的外部冗余信息
      */
     @Override
     public Comment getCommentById(Long id) {
         Comment comment = getById(id);
         if (comment != null) {
             ShopDTO shop = remoteShopService.getShopById(comment.getSourceId());
-            if(shop!=null){
+            if (shop != null) {
                 comment.setSourceName(shop.getName());
                 comment.setShopImages(shop.getImages());
             }
             UserDTO userDTO = remoteAppUserService.queryUserById(comment.getUserId());
-            if(userDTO!=null){
+            if (userDTO != null) {
                 comment.setNickName(userDTO.getNickName());
                 comment.setUserIcon(userDTO.getIcon());
             }
         }
         return comment;
     }
-    /**
-     * 保存点赞用户列表到Redis
-     *
-     * @param key
-      * @param commentList
-     */
-    private void saveCommentListToRedis(String key,List<Comment> commentList) {
-        log.info("保存点赞用户列表到Redis{}",commentList);
-        zSetIdManager.saveToZSet(key, commentList, Comment::getId, Comment::getCreateTime);
-    }
 
     /**
-     * 更新评论状态
-     * @param id 评论ID
-     * @param status 状态
-     * @return
+     * 运营后台处理违规审核逻辑
      */
     @Override
     public Boolean updateCommentStatus(Long id, Integer status) {
         boolean update = update(new UpdateWrapper<Comment>()
                 .set("status", status)
                 .eq("id", id));
-        if (update&&status== AuditStatusEnum.REJECT.getCode()) {
-            //修改源数据的评论数量
+        // 如果审核不通过，直接将数据移出排行榜并触发其父级目标的重计算扣分
+        if (update && status == AuditStatusEnum.REJECT.getCode()) {
             Comment comment = getById(id);
             CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
-            String commentKeyPrefix = commentType.getCommentKeyPrefix()+ comment.getSourceId();
-            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix()+ comment.getSourceId();
-            String commentDirtyKeyPrefix = commentType.getCommentDirtyKeyPrefix();
-            //删除评论信息
+            String commentKeyPrefix = commentType.getCommentHotRankKeyPrefix() + comment.getSourceId();
+            String commentNewRankKeyPrefix = commentType.getCommentNewRankKeyPrefix() + comment.getSourceId();
+            String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix() + comment.getSourceId();
+            String commentSyncKey = commentType.getCommentSyncKey();
+
             redisService.removeCacheZSetObject(commentKeyPrefix, comment.getId().toString());
-            //记录评论数量
+            redisService.removeCacheZSetObject(commentNewRankKeyPrefix, comment.getId().toString());
             redisService.decrementCacheValue(commentCountKeyPrefix);
-            //记录脏数据
-            redisService.setCacheSet(commentDirtyKeyPrefix, Collections.singleton(comment.getSourceId().toString()));
+
+            // 将所属父级目标扔入同步与级联队列
+            redisService.setCacheSet(commentSyncKey, Collections.singleton(comment.getSourceId().toString()));
+
             evictUserCommentSourceIfNeeded(commentType, comment);
         }
         return update;
     }
+
     /**
-     * 判断当前用户是否已评论
-     *
-     * @param comment
-     * @return
+     * 校验当前登录用户是否操作过当前目标业务源
      */
     @Override
     public Boolean isComment(Comment comment) {
@@ -751,12 +785,25 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         return false;
     }
+
     /**
-     * 获取用户评论的key
-     *
-     * @param commentType
-     * @param userId
-     * @return
+     * 新增评论时将自身 ID 加入 Redis 排行榜（极简占位版）
+     */
+    private void saveCommentRankToRedis(CommentTypeEnum commentType, Comment comment) {
+        if (commentType == null || comment == null || comment.getId() == null || comment.getSourceId() == null) {
+            return;
+        }
+        long scoreTime = comment.getCreateTime() == null ? System.currentTimeMillis() : comment.getCreateTime().getTime();
+        String hotRankKey = commentType.getCommentHotRankKeyPrefix() + comment.getSourceId();
+        String newRankKey = commentType.getCommentNewRankKeyPrefix() + comment.getSourceId();
+
+        // 赋予最新榜绝对的时间戳，赋予热门榜极高的临时分保证优先曝光
+        redisService.setCacheZSet(newRankKey, comment.getId().toString(), scoreTime);
+        redisService.setCacheZSet(hotRankKey, comment.getId().toString(), (double) scoreTime);
+    }
+
+    /**
+     * 抽取获取用户针对目标源的已评足迹缓存 Key
      */
     private String userCommentKey(CommentTypeEnum commentType, Long userId) {
         if (commentType == null || userId == null) {
@@ -765,6 +812,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return commentType.getUserCommentKeyPrefix() + commentType.getCode() + ":" + userId;
     }
 
+    /**
+     * 若评论被管理员清空，连带清理其在 Redis 中的“已操作”记录
+     */
     private void evictUserCommentSourceIfNeeded(CommentTypeEnum commentType, Comment comment) {
         if (commentType == null || comment == null || comment.getUserId() == null || comment.getSourceId() == null) {
             return;
