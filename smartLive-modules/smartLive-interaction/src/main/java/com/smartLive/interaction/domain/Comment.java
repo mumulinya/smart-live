@@ -90,4 +90,8 @@ public class Comment extends BaseEntity
     private String shopImages;
     @TableField(exist = false)
     private Boolean isLike;
+    
+    /** 排序依据：如 latest 最新，hot 最热 */
+    @TableField(exist = false)
+    private String sort;
 }

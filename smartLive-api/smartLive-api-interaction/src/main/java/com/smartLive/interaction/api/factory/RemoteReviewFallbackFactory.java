@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @Slf4j
 public class RemoteReviewFallbackFactory implements FallbackFactory<RemoteReviewService> {
@@ -21,6 +23,18 @@ public class RemoteReviewFallbackFactory implements FallbackFactory<RemoteReview
             @Override
             public Boolean updateReviewStatus(Long id, Integer status) {
                 log.error("评价服务调用失败:{}", throwable.getMessage());
+                return false;
+            }
+
+            /**
+             * 保存AI创建的评价到Redis
+             *
+             * @param reviews 评价列表
+             * @return 操作结果
+             */
+            @Override
+            public Boolean saveAiCreateReview(List<ReviewDTO> reviews) {
+                log.error("保存AI创建的评价到Redis失败:{}", throwable.getMessage());
                 return false;
             }
         };

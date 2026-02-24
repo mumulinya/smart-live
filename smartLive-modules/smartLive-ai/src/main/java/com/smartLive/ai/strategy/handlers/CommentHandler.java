@@ -5,7 +5,9 @@ import com.smartLive.ai.entity.request.AIGenerateRequest;
 import com.smartLive.ai.service.ai.AIClient;
 import com.smartLive.ai.service.rag.impl.CommentRagService;
 import com.smartLive.interaction.api.DTO.CommentDTO;
+import com.smartLive.interaction.api.DTO.ReviewDTO;
 import com.smartLive.interaction.api.RemoteCommentService;
+import com.smartLive.interaction.api.RemoteReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,7 +30,7 @@ public class CommentHandler implements ChatHandler {
     private AIClient aiClient;
 
     @Autowired
-    private RemoteCommentService remoteCommentService;
+    private RemoteReviewService remoteReviewService;
 
     /**
      * 处理器类型
@@ -224,51 +226,58 @@ public class CommentHandler implements ChatHandler {
 
 
     /**
-     * ai生成评论
+     * ai生成评价 (原为评论)
      *
-     * @param
-     * @return
+     * @param list 请求
      */
     public void aiCreateComment(List<AIGenerateRequest> list) {
-        List<CommentDTO> comments = new ArrayList<>();
+        List<ReviewDTO> reviews = new ArrayList<>();
         list.forEach(request -> {
             request.getSourceIds().forEach(sourceId -> {
-                CommentDTO commentDTO = new CommentDTO();
-                commentDTO.setSourceType(Integer.valueOf(request.getSourceType()));
-                commentDTO.setSourceId(sourceId);
-                CommentDTO comment = createComment(commentDTO);
-                comments.add(comment);
+                CommentDTO queryCond = new CommentDTO();
+                queryCond.setSourceType(Integer.valueOf(request.getSourceType()));
+                queryCond.setSourceId(sourceId);
+                
+                ReviewDTO review = createReview(queryCond);
+                if(review != null) {
+                    reviews.add(review);
+                }
             });
         });
-        if (comments.isEmpty()){
+        if (reviews.isEmpty()){
             return;
         }
-        log.info("要生成的评价为，参数：{}", comments);
+        log.info("要生成的评价为，参数：{}", reviews);
         // 保存
-        remoteCommentService.saveAiCreateComment(comments);
+        remoteReviewService.saveAiCreateReview(reviews);
     }
+    
     /**
-     * 创建评论
+     * 利用查询出的评论来创建合并评价
      *
      * @param commentDTO
      */
-    private CommentDTO createComment(CommentDTO commentDTO){
-        // 获取评论
+    private ReviewDTO createReview(CommentDTO commentDTO){
+        // 获取评论作为语料
         List<CommentDTO> comments = commentRagService.getComments(commentDTO, null);
         if (comments == null || comments.isEmpty()) {
             return null;
         }
         String prompt = buildSummaryPrompt(comments);
         String context = aiClient.firstGenerate(prompt);
-        commentDTO.setContent(context);
-        commentDTO.setRating(5);
-        commentDTO.setCreateTime(new Date());
-        commentDTO.setStatus(1);
-        commentDTO.setUserId(99999L);
-        commentDTO.setParentId(0L);
-        commentDTO.setIsAIGenerated(true);
-        log.info("生成的评论为：{}", commentDTO);
-        return commentDTO;
+        
+        ReviewDTO reviewDTO = new ReviewDTO();
+        reviewDTO.setSourceType(commentDTO.getSourceType());
+        reviewDTO.setSourceId(commentDTO.getSourceId());
+        reviewDTO.setContent(context);
+        reviewDTO.setScore(5);
+        reviewDTO.setCreateTime(new Date());
+        reviewDTO.setStatus(0);
+        reviewDTO.setUserId(99999L);
+        // 原来代码中有 setParentId(0L)，ReviewDTO 没有暂且不赋
+        reviewDTO.setIsAIGenerated(true);
+        log.info("生成的跨域评价为：{}", reviewDTO);
+        return reviewDTO;
     }
 
     /**

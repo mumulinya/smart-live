@@ -158,30 +158,5 @@ public class CommentController extends BaseController
     public Result isComment(Comment comment){
         return Result.ok(commentService.isComment(comment));
     }
-    /**
-     * AI创建评论
-     */
-    @PostMapping("/aiCreateComment")
-    public Result aiCreateComment(){
-         commentService.aiCreateComment();
-        return Result.ok("创建成功");
-    }
-    /**
-     * 获取所有评论列表
-     * @return 评论列表
-     */
-    @GetMapping("/list2")
-    List<Comment> getCommentList(){
-        return commentService.getCommentList();
-    }
 
-    /**
-     * 保存AI创建的评论到Redis
-     * @param comments 评论列表
-     * @return 操作结果
-     */
-    @PostMapping("/saveAiCreateComment")
-    public Result saveAiCreateComment(@RequestBody List<Comment> comments){
-        return Result.ok(commentService.saveAiCreateComment(comments));
-    }
 }

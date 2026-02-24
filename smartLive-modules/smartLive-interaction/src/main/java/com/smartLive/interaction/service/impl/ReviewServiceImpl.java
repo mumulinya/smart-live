@@ -13,6 +13,7 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.RankRedisEnum;
 import com.smartLive.common.core.enums.ReviewTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
@@ -46,6 +47,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -73,6 +75,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private RedisService redisService;
     @Autowired
     private ZSetIdManager zSetIdManager;
+    @Autowired
+    private ExecutorService executorService;
 
     private ILikeService likeService;
     private IStarService starService;
@@ -193,7 +197,15 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             log.error("参数错误：未知的评价类型");
             return Collections.emptyList();
         }
-        String reviewKeyPrefix = reviewType.getReviewHotRankKeyPrefix();
+        RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", reviewType.getCode());
+        String reviewKeyPrefix = "";
+        if (hotRankRedisEnum != null) {
+            if ("latest".equalsIgnoreCase(review.getSort())) {
+                reviewKeyPrefix = hotRankRedisEnum.getNewRankKeyPrefix();
+            } else {
+                reviewKeyPrefix = hotRankRedisEnum.getHotRankKeyPrefix();
+            }
+        }
 
         // 1. 第一步：从 ZSet 排行榜中极速获取排好序的评价 ID 列表
         Page<Long> longPage = zSetIdManager.pageIds(reviewKeyPrefix, review.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
@@ -211,10 +223,20 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                     .list();
 
             if (CollUtil.isNotEmpty(dbList)) {
-                String hotRankKey = reviewType.getReviewHotRankKeyPrefix() + review.getSourceId();
-                String newRankKey = reviewType.getReviewNewRankKeyPrefix() + review.getSourceId();
-                zSetIdManager.saveToZSet(hotRankKey, dbList, Review::getId, Review::getCreateTime);
-                zSetIdManager.saveToZSet(newRankKey, dbList, Review::getId, Review::getCreateTime);
+                final List<Review> finalDbList = dbList;
+                executorService.execute(() -> {
+                    String hotRankKey = hotRankRedisEnum.getHotRankKeyPrefix() + review.getSourceId();
+                    String newRankKey = hotRankRedisEnum.getNewRankKeyPrefix() + review.getSourceId();
+                    zSetIdManager.saveToZSet(hotRankKey, finalDbList, Review::getId, Review::getCreateTime);
+                    zSetIdManager.saveToZSet(newRankKey, finalDbList, Review::getId, Review::getCreateTime);
+
+                    // 【核心补充】将从数据库里粗排兜底拉出来的数据 ID，推入热度待算队列，
+                    // 交给底层的 XXL-Job 异步执行“基于衰减函数和各项互动数据”的精准重算！
+
+                    if (hotRankRedisEnum.getCalcQueueKey() != null) {
+                        redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(),finalDbList.stream().map(r -> String.valueOf(r.getId())).collect(Collectors.toSet()));
+                    }
+                });
 
                 int start = (current - 1) * SystemConstants.MAX_PAGE_SIZE;
                 int pageSize = SystemConstants.MAX_PAGE_SIZE;
@@ -254,7 +276,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         queryReviewListUserMessage(list);
 
         // 挂载 AI 自动评价（如果存在）
-        String key = RedisConstants.CACHE_AI_COMMENT_KEY + review.getSourceType() + ":" + review.getSourceId();
+        String key = RedisConstants.CACHE_AI_REVIEW_KEY + review.getSourceType() + ":" + review.getSourceId();
         String JsonStr = redisService.getCacheObject(key);
         if (JsonStr != null) {
             Review reviewDTO = JSON.parseObject(JsonStr, Review.class);
@@ -310,7 +332,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             redisService.setCacheSet(reviewSyncKey, Collections.singleton(review.getSourceId().toString()));
 
             // 6. 【双轨制：算分轨】将新增的评价 ID 推入待算分队列，触发 XXL-JOB 稍后基于衰减算法重排榜单
-            redisService.setCacheSet(reviewType.getReviewCalcKey(), review.getId().toString());
+            RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", reviewType.getCode());
+            if (hotRankRedisEnum != null) {
+                redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), review.getId().toString());
+            }
         }
         return i;
     }
@@ -361,8 +386,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 return true;
             }
 
-            String reviewKeyPrefix = reviewType.getReviewHotRankKeyPrefix()+ dbReview.getSourceId();
-            String reviewNewRankKeyPrefix = reviewType.getReviewNewRankKeyPrefix()+ dbReview.getSourceId();
+            RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", reviewType.getCode());
+            String reviewKeyPrefix = hotRankRedisEnum.getHotRankKeyPrefix()+ dbReview.getSourceId();
+            String reviewNewRankKeyPrefix = hotRankRedisEnum.getNewRankKeyPrefix()+ dbReview.getSourceId();
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ dbReview.getSourceId();
             String reviewSyncKey = reviewType.getReviewSyncKey();
 
@@ -377,7 +403,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             redisService.setCacheSet(reviewSyncKey, Collections.singleton(dbReview.getSourceId().toString()));
 
             // 5. 评价被删，目标源的互动量减少，必须把它扔进算分队列，让定时任务给目标源【降火/降权】
-            redisService.setCacheSet(reviewType.getReviewCalcKey(), dbReview.getId().toString());
+            if (hotRankRedisEnum != null) {
+                redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), dbReview.getId().toString());
+            }
 
             evictUserReviewSourceIfNeeded(reviewType, dbReview);
         }
@@ -787,8 +815,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             return;
         }
         long scoreTime = review.getCreateTime() == null ? System.currentTimeMillis() : review.getCreateTime().getTime();
-        String hotRankKey = reviewType.getReviewHotRankKeyPrefix() + review.getSourceId();
-        String newRankKey = reviewType.getReviewNewRankKeyPrefix() + review.getSourceId();
+        RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", reviewType.getCode());
+        String hotRankKey = hotRankRedisEnum.getHotRankKeyPrefix() + review.getSourceId();
+        String newRankKey = hotRankRedisEnum.getNewRankKeyPrefix() + review.getSourceId();
 
         // 1. 【最新榜】：绝对准确。直接存入发布时间戳。
         redisService.setCacheZSet(newRankKey, review.getId().toString(), scoreTime);
@@ -817,8 +846,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if(update && status == AuditStatusEnum.REJECT.getCode()){
             Review review = getById(id);
             ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
-            String reviewKeyPrefix = reviewType.getReviewHotRankKeyPrefix()+ review.getSourceId();
-            String reviewNewRankKeyPrefix = reviewType.getReviewNewRankKeyPrefix()+ review.getSourceId();
+            RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", reviewType.getCode());
+            String reviewKeyPrefix = hotRankRedisEnum.getHotRankKeyPrefix()+ review.getSourceId();
+            String reviewNewRankKeyPrefix = hotRankRedisEnum.getNewRankKeyPrefix()+ review.getSourceId();
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
             String reviewSyncKey = reviewType.getReviewSyncKey();
 
@@ -828,7 +858,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             redisService.decrementCacheValue(reviewCountKeyPrefix);
             redisService.setCacheSet(reviewSyncKey, Collections.singleton(review.getSourceId().toString()));
             // 通知定时任务扣减所属主体的热度分
-            redisService.setCacheSet(reviewType.getReviewCalcKey(), review.getId().toString());
+            if (hotRankRedisEnum != null) {
+                redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), review.getId().toString());
+            }
 
             evictUserReviewSourceIfNeeded(reviewType, review);
         }
@@ -918,5 +950,21 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (remains <= 0) {
             redisService.removeCacheZSetObject(userReviewKey(reviewType, review.getUserId()), review.getSourceId().toString());
         }
+    }
+
+    /**
+     * 接收并缓存 AI 总结生成的评价
+     */
+    @Override
+    public Boolean saveAiCreateReview(List<Review> reviews) {
+        if (reviews.size() == 0) {
+            throw new RuntimeException("评价列表不能为空");
+        }
+        redisService.deleteObject(redisService.keys(RedisConstants.CACHE_AI_REVIEW_KEY + "*"));
+        reviews.forEach(reviewDTO -> {
+            String key = RedisConstants.CACHE_AI_REVIEW_KEY + reviewDTO.getSourceType() + ":" + reviewDTO.getSourceId();
+            redisService.setCacheObject(key, com.alibaba.fastjson.JSON.toJSONString(reviewDTO));
+        });
+        return true;
     }
 }

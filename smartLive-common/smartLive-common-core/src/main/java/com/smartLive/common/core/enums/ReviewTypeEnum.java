@@ -15,34 +15,23 @@ public enum ReviewTypeEnum {
             GlobalBizTypeEnum.SHOP.getCode(),
             "店铺评价",
             GlobalBizTypeEnum.SHOP.getBizDomain(),
-            RedisConstants.SHOP_REVIEW_HOT_RANK_KEY,
             RedisConstants.SHOP_REVIEW_COUNT_KEY,
             RedisConstants.USER_REVIEW_KEY,
-            RedisConstants.SHOP_REVIEW_NEW_RANK_KEY,
-            RedisConstants.SHOP_REVIEW_SYNC_KEY,
-            RedisConstants.SHOP_REVIEW_CALC_KEY
+            RedisConstants.SHOP_REVIEW_SYNC_KEY
     ),
 
     PRODUCT_REVIEW(
             GlobalBizTypeEnum.PRODUCT.getCode(),
             "商品评价",
             GlobalBizTypeEnum.PRODUCT.getBizDomain(),
-            RedisConstants.PRODUCT_REVIEW_HOT_RANK_KEY,
             RedisConstants.PRODUCT_REVIEW_COUNT_KEY,
             RedisConstants.USER_REVIEW_KEY,
-            RedisConstants.PRODUCT_REVIEW_NEW_RANK_KEY,
-            RedisConstants.PRODUCT_REVIEW_SYNC_KEY,
-            RedisConstants.PRODUCT_REVIEW_CALC_KEY
+            RedisConstants.PRODUCT_REVIEW_SYNC_KEY
     );
 
     private final Integer code;
     private final String desc;
     private final String bizDomain;
-
-    /**
-     * 热门榜前缀（ZSet）
-     */
-    private final String reviewHotRankKeyPrefix;
 
     /**
      * 互动计数前缀（String）
@@ -55,19 +44,9 @@ public enum ReviewTypeEnum {
     private final String userReviewKeyPrefix;
 
     /**
-     * 最新榜前缀（ZSet）
-     */
-    private final String reviewNewRankKeyPrefix;
-
-    /**
      * 落库队列 key（Set）
      */
     private final String reviewSyncKey;
-
-    /**
-     * 算分队列 key（Set）
-     */
-    private final String reviewCalcKey;
 
     public static ReviewTypeEnum getByCode(Integer code) {
         if (code == null) {

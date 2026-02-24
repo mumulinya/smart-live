@@ -102,13 +102,6 @@ public interface ICommentService extends IService<Comment> {
      */
     List<Comment> getCommentList();
 
-    /**
-     * 保存ai自动创建的评论
-     *
-     * @param comments
-     * @return
-     */
-    Boolean saveAiCreateComment(List<Comment> comments);
 
     /**
      * 获取用户发表的评论数

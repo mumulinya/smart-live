@@ -45,10 +45,4 @@ public class InteractionSyncXxlJob {
         log.info("xxl-job start: interactionSyncReviewJob");
         syncDataService.syncReviewData();
     }
-
-    @XxlJob("interactionCalcHotRankJob")
-    public void executeHotRankCalc() {
-        log.info("xxl-job start: interactionCalcHotRankJob");
-        syncDataService.calcHotRankData();
-    }
 }

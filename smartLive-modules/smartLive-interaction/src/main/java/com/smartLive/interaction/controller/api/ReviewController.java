@@ -177,4 +177,5 @@ public class ReviewController extends BaseController
     R<Integer> getReviewTotal(){
         return R.ok(reviewService.getReviewTotal());
     }
+
 }

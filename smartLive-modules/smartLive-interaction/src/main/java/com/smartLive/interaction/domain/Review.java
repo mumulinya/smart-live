@@ -98,6 +98,10 @@ public class Review extends BaseEntity
     /** 用户头像 */
     @TableField(exist = false)
     private String userIcon;
+    
+    /** 排序字段：latest(最新), hot(最热) */
+    @TableField(exist = false)
+    private String sort;
     @TableField(exist = false)
     private String shopImages;
     /**
@@ -110,4 +114,10 @@ public class Review extends BaseEntity
      */
     @TableField(exist = false)
     private Boolean isStared;
+
+    /**
+     * 是否AI生成
+     */
+    @TableField(exist = false)
+    private Boolean isAIGenerated;
 }

@@ -272,27 +272,38 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
 
     public List<BlogVO> queryHotBlog(Integer current) {
-        //从redis查询热门博客
-        String key= RedisConstants.CACHE_HOT_BLOG_KEY+ current;
-        List<Long> blogIdList = getBlogIdListFromRedis(key, SystemConstants.MAX_PAGE_SIZE);
+        // 从最新的 ZSet 热度排行榜中获取博客 ID 极其分页数据
+        Page<Long> longPage = zSetIdManager.pageIds(RedisConstants.BLOG_HOT_RANK_KEY, null, current, SystemConstants.MAX_PAGE_SIZE);
+        List<Long> blogIdList = longPage.getRecords();
+
+        List<Blog> blogList = new ArrayList<>();
         if (CollUtil.isNotEmpty(blogIdList)) {
-            return convertToBlogVOList(getBlogListByIds(blogIdList));
+            blogList = getBlogListByIds(blogIdList);
+        } else {
+            // ZSet 击穿或尚无数据时的兜底：按总点赞从数据库粗略大排返回，并异步推入计算队列
+            Page<Blog> page = query()
+                    .eq("status", 0)
+                    .orderByDesc("liked")
+                    .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+            blogList = page.getRecords();
+
+            if (CollUtil.isNotEmpty(blogList)) {
+                final List<Blog> finalList = blogList;
+                executorService.execute(() -> {
+                    log.info("重建博客热榜 ZSet");
+                    zSetIdManager.saveToZSet(RedisConstants.BLOG_HOT_RANK_KEY, finalList, Blog::getId, Blog::getCreateTime);
+
+                    // 推进计算队列等候定时长函数处理真正的衰减和融合热度分
+                    if (RedisConstants.BLOG_CALC_QUEUE_KEY != null) {
+                        redisService.setCacheSet(RedisConstants.BLOG_CALC_QUEUE_KEY, finalList.stream().map(b -> String.valueOf(b.getId())).collect(Collectors.toSet()));
+                    }
+                });
+
+                queryBlogListUserMessage(blogList);
+                queryBlogListIsLike(blogList);
+            }
         }
-        // 根据用户查询
-        Page<Blog> page = query()
-                .eq("status",0)
-                .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        // 获取当前页数据
-        List<Blog> blogList = page.getRecords();
-        if(blogList!= null&& !blogList.isEmpty()){
-            // 查询blog有关的用户信息
-            queryBlogListUserMessage(blogList);
-            queryBlogListIsLike(blogList);
-            //把查询结果写入redis
-            saveBlogIdListToRedis(key, blogList, RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
-        }
-        return convertToBlogVOList(blogList); // Changed from return blogList;
+        return convertToBlogVOList(blogList);
     }
 
 

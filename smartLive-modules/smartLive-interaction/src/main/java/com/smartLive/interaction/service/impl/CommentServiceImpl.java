@@ -16,6 +16,7 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.RankRedisEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
@@ -27,7 +28,6 @@ import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.BO.AuditCommentBO;
 import com.smartLive.interaction.domain.Comment;
-import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.service.ILikeService;
@@ -44,6 +44,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -78,6 +79,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private ZSetIdManager zSetIdManager;
     @Autowired
     private RedisMultiCacheManager redisMultiCacheManager;
+    //引入线程池
+    @Autowired
+    private ExecutorService executorService;
+
     private ResourceStrategyFactory resourceStrategyFactory;
     private ILikeService likeService;
 
@@ -172,12 +177,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         // 1. 尝试从 Redis 排行榜拉取排好序的 ID
-        String commentKeyPrefix = commentType.getCommentHotRankKeyPrefix();
+        RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());
+        String commentKeyPrefix = "";
+        if (hotRankRedisEnum != null) {
+             if ("latest".equals(comment.getSort())) {
+                 commentKeyPrefix = hotRankRedisEnum.getNewRankKeyPrefix();
+             } else {
+                 commentKeyPrefix = hotRankRedisEnum.getHotRankKeyPrefix();
+             }
+        }
         Page<Long> longPage = zSetIdManager.pageIds(commentKeyPrefix, comment.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> commentIdList = longPage.getRecords();
         List<Comment> list = new ArrayList<>();
 
-        if (commentIdList != null && commentIdList.size() > 0) {
+        if (commentIdList != null && !commentIdList.isEmpty()) {
             // 去统一详情池捞取具体数据
             list = getCommentListByIds(commentIdList);
         }
@@ -185,20 +198,33 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         // 兜底逻辑：缓存击穿时查库并重建 ZSet 榜单
         if (list == null || list.isEmpty()) {
             log.info("从数据库中获取评论数据");
-            list = query()
+            var q = query()
                     .eq("source_id", comment.getSourceId())
                     .ne("status", "2")
-                    .eq("source_type", comment.getSourceType())
-                    .orderByDesc("liked")
-                    .orderByDesc("create_time")
-                    .list();
+                    .eq("source_type", comment.getSourceType());
+            if ("latest".equals(comment.getSort())) {
+                 q.orderByDesc("create_time");
+            } else {
+                 q.orderByDesc("liked").orderByDesc("create_time");
+            }
+            list = q.list();
             if (!list.isEmpty()) {
-                String hotRankKey = commentType.getCommentHotRankKeyPrefix() + comment.getSourceId();
-                String newRankKey = commentType.getCommentNewRankKeyPrefix() + comment.getSourceId();
-                zSetIdManager.saveToZSet(hotRankKey, list, Comment::getId, Comment::getCreateTime);
-                zSetIdManager.saveToZSet(newRankKey, list, Comment::getId, Comment::getCreateTime);
+                final List<Comment> finalList = list;
+                executorService.execute(() -> {
+                    log.info("重建 ZSet 榜单");
+                    RankRedisEnum redisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());
+                    String hotRankKey = redisEnum.getHotRankKeyPrefix() + comment.getSourceId();
+                    String newRankKey = redisEnum.getNewRankKeyPrefix() + comment.getSourceId();
+                    zSetIdManager.saveToZSet(hotRankKey, finalList, Comment::getId, Comment::getCreateTime);
+                    zSetIdManager.saveToZSet(newRankKey, finalList, Comment::getId, Comment::getCreateTime);
 
-                list = list.size() > SystemConstants.DEFAULT_PAGE_SIZE ? list.subList((current - 1) * SystemConstants.DEFAULT_PAGE_SIZE, (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE + SystemConstants.DEFAULT_PAGE_SIZE) : list;
+                    // 【核心补充】将这批临时用 createTime 重建排行榜的评论推入排队，等待异步精细算分矫正
+                    if (redisEnum.getCalcQueueKey() != null) {
+                        redisService.setCacheSet(redisEnum.getCalcQueueKey(), finalList.stream().map(c -> String.valueOf(c.getId())).collect(Collectors.toSet()));
+                    }
+                });
+
+                list = list.size() > SystemConstants.MAX_PAGE_SIZE ? list.subList((current - 1) * SystemConstants.MAX_PAGE_SIZE, (current - 1) * SystemConstants.MAX_PAGE_SIZE + SystemConstants.MAX_PAGE_SIZE) : list;
                 queryCommentListIsLike(list);
                 queryCommentListUserMessage(list);
             }
@@ -208,13 +234,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             return Collections.emptyList();
         }
 
-        // 挂载 AI 生成的摘要或热评
-        String key = RedisConstants.CACHE_AI_COMMENT_KEY + comment.getSourceType() + ":" + comment.getSourceId();
-        String JsonStr = redisService.getCacheObject(key);
-        if (JsonStr != null) {
-            Comment commentDTO = JSON.parseObject(JsonStr, Comment.class);
-            list.add(commentDTO);
-        }
+
         return list;
     }
 
@@ -279,7 +299,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             redisService.setCacheSet(commentSyncKey, Collections.singleton(comment.getSourceId().toString()));
 
             // 5. 【热度计算轨】：新产生的评论自己也需要进行一次初始热度算分。
-            redisService.setCacheSet(commentType.getCommentCalcKey(), comment.getId().toString());
+            RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());
+            if (hotRankRedisEnum != null) {
+                redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), comment.getId().toString());
+            }
 
             // 6. 发送审核消息队列
             sendAuditMessage(comment);
@@ -328,8 +351,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             if (commentType == null) {
                 return true;
             }
-            String commentKeyPrefix = commentType.getCommentHotRankKeyPrefix() + dbComment.getSourceId();
-            String commentNewRankKeyPrefix = commentType.getCommentNewRankKeyPrefix() + dbComment.getSourceId();
+            RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());
+            String commentKeyPrefix = hotRankRedisEnum.getHotRankKeyPrefix() + dbComment.getSourceId();
+            String commentNewRankKeyPrefix = hotRankRedisEnum.getNewRankKeyPrefix() + dbComment.getSourceId();
             String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix() + dbComment.getSourceId();
             String commentSyncKey = commentType.getCommentSyncKey();
 
@@ -466,21 +490,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return list;
     }
 
-    /**
-     * 接收并缓存 AI 总结生成的评论
-     */
-    @Override
-    public Boolean saveAiCreateComment(List<Comment> comments) {
-        if (comments.size() == 0) {
-            throw new RuntimeException("评论列表不能为空");
-        }
-        redisService.deleteObject(redisService.keys(RedisConstants.CACHE_AI_COMMENT_KEY + "*"));
-        comments.forEach(commentDTO -> {
-            String key = RedisConstants.CACHE_AI_COMMENT_KEY + commentDTO.getSourceType() + ":" + commentDTO.getSourceId();
-            redisService.setCacheObject(key, JSON.toJSONString(commentDTO));
-        });
-        return true;
-    }
+
 
     /**
      * 获取指定条件下的评论总数
@@ -726,8 +736,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         if (update && status == AuditStatusEnum.REJECT.getCode()) {
             Comment comment = getById(id);
             CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
-            String commentKeyPrefix = commentType.getCommentHotRankKeyPrefix() + comment.getSourceId();
-            String commentNewRankKeyPrefix = commentType.getCommentNewRankKeyPrefix() + comment.getSourceId();
+            RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());
+            String commentKeyPrefix = hotRankRedisEnum.getHotRankKeyPrefix() + comment.getSourceId();
+            String commentNewRankKeyPrefix = hotRankRedisEnum.getNewRankKeyPrefix() + comment.getSourceId();
             String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix() + comment.getSourceId();
             String commentSyncKey = commentType.getCommentSyncKey();
 
@@ -794,8 +805,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             return;
         }
         long scoreTime = comment.getCreateTime() == null ? System.currentTimeMillis() : comment.getCreateTime().getTime();
-        String hotRankKey = commentType.getCommentHotRankKeyPrefix() + comment.getSourceId();
-        String newRankKey = commentType.getCommentNewRankKeyPrefix() + comment.getSourceId();
+        RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());
+        String hotRankKey = hotRankRedisEnum.getHotRankKeyPrefix() + comment.getSourceId();
+        String newRankKey = hotRankRedisEnum.getNewRankKeyPrefix() + comment.getSourceId();
 
         // 赋予最新榜绝对的时间戳，赋予热门榜极高的临时分保证优先曝光
         redisService.setCacheZSet(newRankKey, comment.getId().toString(), scoreTime);

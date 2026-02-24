@@ -2,6 +2,8 @@ package com.smartLive.interaction.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.smartLive.common.core.enums.CommentTypeEnum;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.RankRedisEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ReviewTypeEnum;
 import com.smartLive.common.core.enums.StarTypeEnum;
@@ -21,17 +23,10 @@ import com.smartLive.interaction.strategy.review.ReviewStrategy;
 import com.smartLive.interaction.strategy.star.StarStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,13 +45,6 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class SyncDataServiceImpl implements ISyncDataService {
-
-    /** 热度榜计算时，需要拉取参与重算的老数据前 N 名（防霸榜机制） */
-    private static final int HOT_RANK_MERGE_TOP_N = 50;
-    /** 热度衰减算法参数：基础缓冲时间（小时） */
-    private static final double HOT_SCORE_BASE_HOURS = 2.0D;
-    /** 热度衰减算法参数：重力衰减因子（值越大，老数据降分越快） */
-    private static final double HOT_SCORE_GRAVITY = 1.2D;
 
     @Autowired
     private RedisService redisService;
@@ -87,9 +75,6 @@ public class SyncDataServiceImpl implements ISyncDataService {
         CompletableFuture<Void> commentFuture = CompletableFuture.runAsync(this::syncCommentData, executorService);
         CompletableFuture<Void> starFuture = CompletableFuture.runAsync(this::syncStarData, executorService);
         CompletableFuture<Void> reviewFuture = CompletableFuture.runAsync(this::syncReviewData, executorService);
-        CompletableFuture<Void> hotRankFuture = CompletableFuture.runAsync(this::calcHotRankData, executorService);
-
-        CompletableFuture.allOf(likeFuture, commentFuture, starFuture, reviewFuture, hotRankFuture).join();
         log.info("互动数据同步主任务结束，耗时:{}ms", System.currentTimeMillis() - start);
     }
 
@@ -244,17 +229,6 @@ public class SyncDataServiceImpl implements ISyncDataService {
     }
 
     /**
-     * 重算各业务线的排行榜热度分。
-     */
-    @Override
-    public void calcHotRankData() {
-        log.info("开始重算评论/评价热度榜");
-        Arrays.stream(CommentTypeEnum.values()).forEach(this::calcCommentHotRank);
-        Arrays.stream(ReviewTypeEnum.values()).forEach(this::calcReviewHotRank);
-        log.info("重算评论/评价热度榜完成");
-    }
-
-    /**
      * 点赞数据同步后，将受影响的目标源推入算分队列。
      * 逻辑：“父凭子贵”，评论/评价被点赞，其自身需要重新计算热度。
      *
@@ -262,28 +236,33 @@ public class SyncDataServiceImpl implements ISyncDataService {
      * @param sourceIds 发生点赞变化的目标 ID 集合
      */
     private void enqueueCalcAfterLikeSync(LikeTypeEnum likeType, Collection<Long> sourceIds) {
-        if (CollUtil.isEmpty(sourceIds)) {
+        if (CollUtil.isEmpty(sourceIds) || likeType == null) {
             return;
         }
-        if (Objects.equals(likeType.getCode(), com.smartLive.common.core.enums.GlobalBizTypeEnum.COMMENT.getCode())) {
+
+        if (Objects.equals(likeType.getCode(),GlobalBizTypeEnum.COMMENT.getCode())) {
             List<Comment> comments = commentMapper.selectBatchIds(sourceIds);
-            if (CollUtil.isEmpty(comments)) {
-                return;
-            }
+            if (CollUtil.isEmpty(comments)) return;
+            
             for (Comment comment : comments) {
-                if (comment == null || comment.getId() == null) {
-                    continue;
-                }
-                CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
-                if (commentType != null) {
-                    redisService.setCacheSet(commentType.getCommentCalcKey(), comment.getId().toString());
+                if (comment == null || comment.getId() == null) continue;
+                RankRedisEnum rankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", comment.getSourceType());
+                if (rankRedisEnum != null && rankRedisEnum.getCalcQueueKey() != null) {
+                    redisService.setCacheSet(rankRedisEnum.getCalcQueueKey(), comment.getId().toString());
                 }
             }
             return;
         }
 
-        if (Objects.equals(likeType.getCode(), com.smartLive.common.core.enums.GlobalBizTypeEnum.REVIEW.getCode())) {
+        if (Objects.equals(likeType.getCode(), GlobalBizTypeEnum.REVIEW.getCode())) {
             enqueueReviewIdsToCalcBySourceType(sourceIds);
+            return;
+        }
+        
+        // 实体本体被点赞（如博客），通过 "ENTITY" 寻址本体专属的 RankRedisEnum
+        RankRedisEnum entityRankEnum = RankRedisEnum.getByCategoryAndCode("ENTITY", likeType.getCode());
+        if (entityRankEnum != null && entityRankEnum.getCalcQueueKey() != null) {
+            enqueueIds(entityRankEnum.getCalcQueueKey(), sourceIds);
         }
     }
 
@@ -296,12 +275,23 @@ public class SyncDataServiceImpl implements ISyncDataService {
         if (commentType == null || CollUtil.isEmpty(sourceIds)) {
             return;
         }
+        
         if (commentType == CommentTypeEnum.COMMENT_COMMENT) {
-            enqueueIds(commentType.getCommentCalcKey(), sourceIds);
+            RankRedisEnum rankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());
+            if (rankRedisEnum != null && rankRedisEnum.getCalcQueueKey() != null) {
+                enqueueIds(rankRedisEnum.getCalcQueueKey(), sourceIds);
+            }
             return;
         }
         if (commentType == CommentTypeEnum.REVIEW_COMMENT) {
             enqueueReviewIdsToCalcBySourceType(sourceIds);
+            return;
+        }
+        
+        // 实体本体被评论（如博客底下的直接评论），借由 "ENTITY" 和 code 获取本体自身热度队列
+        RankRedisEnum entityRankEnum = RankRedisEnum.getByCategoryAndCode("ENTITY", commentType.getCode());
+        if (entityRankEnum != null && entityRankEnum.getCalcQueueKey() != null) {
+            enqueueIds(entityRankEnum.getCalcQueueKey(), sourceIds);
         }
     }
 
@@ -315,8 +305,14 @@ public class SyncDataServiceImpl implements ISyncDataService {
         if (starType == null || CollUtil.isEmpty(sourceIds)) {
             return;
         }
-        if (Objects.equals(starType.getCode(), com.smartLive.common.core.enums.GlobalBizTypeEnum.REVIEW.getCode())) {
+        if (Objects.equals(starType.getCode(), GlobalBizTypeEnum.REVIEW.getCode())) {
             enqueueReviewIdsToCalcBySourceType(sourceIds);
+            return;
+        }
+        
+        RankRedisEnum entityRankEnum = RankRedisEnum.getByCategoryAndCode("ENTITY", starType.getCode());
+        if (entityRankEnum != null && entityRankEnum.getCalcQueueKey() != null) {
+            enqueueIds(entityRankEnum.getCalcQueueKey(), sourceIds);
         }
     }
 
@@ -341,328 +337,11 @@ public class SyncDataServiceImpl implements ISyncDataService {
             if (reviewType == null) {
                 continue;
             }
-            redisService.setCacheSet(reviewType.getReviewCalcKey(), review.getId().toString());
-        }
-    }
-
-    /**
-     * 执行评论体系的热度计算与排行榜洗牌。
-     * 核心逻辑：获取活跃评论 + 拉取原有霸榜前N名老评论 -> 统一应用衰减算法 -> 更新 ZSet。
-     *
-     * @param type 评论枚举类型
-     */
-    private void calcCommentHotRank(CommentTypeEnum type) {
-        if (type == null || type.getCommentCalcKey() == null) {
-            return;
-        }
-        String calcKey = type.getCommentCalcKey();
-        String tempKey = calcKey + ":TEMP";
-
-        try {
-            if (Boolean.FALSE.equals(redisService.hasKey(calcKey))) {
-                return;
-            }
-            if (Boolean.TRUE.equals(redisService.hasKey(tempKey))) {
-                redisService.deleteObject(tempKey);
-            }
-            redisService.rename(calcKey, tempKey);
-            Set<Object> activeSet = redisService.getCacheSet(tempKey);
-            if (CollUtil.isEmpty(activeSet)) {
-                redisService.deleteObject(tempKey);
-                return;
-            }
-
-            Set<Long> activeIds = toLongSet(activeSet);
-            Map<Long, Comment> activeCommentMap = toCommentMap(commentMapper.selectBatchIds(activeIds));
-            if (activeCommentMap.isEmpty()) {
-                redisService.deleteObject(tempKey);
-                return;
-            }
-
-            // 按 sourceId（如对应的博客ID）进行分组
-            Map<Long, Set<Long>> sourceIdToIds = new LinkedHashMap<>();
-            for (Comment comment : activeCommentMap.values()) {
-                if (comment == null || comment.getId() == null || comment.getSourceId() == null) {
-                    continue;
-                }
-                if (!Objects.equals(comment.getSourceType(), type.getCode())) {
-                    continue;
-                }
-                sourceIdToIds.computeIfAbsent(comment.getSourceId(), k -> new LinkedHashSet<>()).add(comment.getId());
-            }
-
-            // 遍历每个被评论的主体，更新其名下的评论排行榜
-            for (Map.Entry<Long, Set<Long>> entry : sourceIdToIds.entrySet()) {
-                Long sourceId = entry.getKey();
-                Set<Long> candidateIds = new LinkedHashSet<>(entry.getValue());
-                String hotRankKey = type.getCommentHotRankKeyPrefix() + sourceId;
-
-                // 【防霸榜机制】强制拉取原有榜单前 N 名，使其被动接受时间衰减的制裁
-                candidateIds.addAll(getTopIds(hotRankKey, HOT_RANK_MERGE_TOP_N));
-
-                Map<Long, Comment> candidateMap = toCommentMap(commentMapper.selectBatchIds(candidateIds));
-                Set<ZSetOperations.TypedTuple<String>> tuples = new HashSet<>();
-                for (Long id : candidateIds) {
-                    Comment comment = candidateMap.get(id);
-                    // 脏数据或所属源不匹配，移出排行榜
-                    if (comment == null || comment.getSourceId() == null || !Objects.equals(comment.getSourceId(), sourceId)) {
-                        redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
-                        continue;
-                    }
-                    // 状态为 2 (例如已删除或封禁)，移出排行榜和最新榜
-                    if ("2".equals(comment.getStatus())) {
-                        redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
-                        redisService.removeCacheZSetObject(type.getCommentNewRankKeyPrefix() + sourceId, String.valueOf(id));
-                        continue;
-                    }
-                    // 应用算法计算最新分数
-                    double score = calcCommentHotScore(type, comment);
-                    tuples.add(new DefaultTypedTuple<>(String.valueOf(id), score));
-                }
-                // 批量洗牌写入 ZSet
-                if (!tuples.isEmpty()) {
-                    redisService.setCacheZSet(hotRankKey, tuples);
-                }
-            }
-
-            redisService.deleteObject(tempKey);
-        } catch (Exception e) {
-            log.error("计算评论热度榜异常, type={}", type.name(), e);
-        }
-    }
-
-    /**
-     * 执行评价体系（如商铺评价）的热度计算与排行榜洗牌。
-     * 逻辑同 {@link #calcCommentHotRank(CommentTypeEnum)}。
-     *
-     * @param type 评价枚举类型
-     */
-    private void calcReviewHotRank(ReviewTypeEnum type) {
-        if (type == null || type.getReviewCalcKey() == null) {
-            return;
-        }
-        String calcKey = type.getReviewCalcKey();
-        String tempKey = calcKey + ":TEMP";
-
-        try {
-            if (Boolean.FALSE.equals(redisService.hasKey(calcKey))) {
-                return;
-            }
-            if (Boolean.TRUE.equals(redisService.hasKey(tempKey))) {
-                redisService.deleteObject(tempKey);
-            }
-            redisService.rename(calcKey, tempKey);
-            Set<Object> activeSet = redisService.getCacheSet(tempKey);
-            if (CollUtil.isEmpty(activeSet)) {
-                redisService.deleteObject(tempKey);
-                return;
-            }
-
-            Set<Long> activeIds = toLongSet(activeSet);
-            Map<Long, Review> activeReviewMap = toReviewMap(reviewMapper.selectBatchIds(activeIds));
-            if (activeReviewMap.isEmpty()) {
-                redisService.deleteObject(tempKey);
-                return;
-            }
-
-            Map<Long, Set<Long>> sourceIdToIds = new LinkedHashMap<>();
-            for (Review review : activeReviewMap.values()) {
-                if (review == null || review.getId() == null || review.getSourceId() == null) {
-                    continue;
-                }
-                if (!Objects.equals(review.getSourceType(), type.getCode())) {
-                    continue;
-                }
-                sourceIdToIds.computeIfAbsent(review.getSourceId(), k -> new LinkedHashSet<>()).add(review.getId());
-            }
-
-            for (Map.Entry<Long, Set<Long>> entry : sourceIdToIds.entrySet()) {
-                Long sourceId = entry.getKey();
-                Set<Long> candidateIds = new LinkedHashSet<>(entry.getValue());
-                String hotRankKey = type.getReviewHotRankKeyPrefix() + sourceId;
-
-                candidateIds.addAll(getTopIds(hotRankKey, HOT_RANK_MERGE_TOP_N));
-
-                Map<Long, Review> candidateMap = toReviewMap(reviewMapper.selectBatchIds(candidateIds));
-                Set<ZSetOperations.TypedTuple<String>> tuples = new HashSet<>();
-                for (Long id : candidateIds) {
-                    Review review = candidateMap.get(id);
-                    if (review == null || review.getSourceId() == null || !Objects.equals(review.getSourceId(), sourceId)) {
-                        redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
-                        continue;
-                    }
-                    // 状态为 2 则清理该数据
-                    if (review.getStatus() != null && review.getStatus() == 2) {
-                        redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
-                        redisService.removeCacheZSetObject(type.getReviewNewRankKeyPrefix() + sourceId, String.valueOf(id));
-                        continue;
-                    }
-                    double score = calcReviewHotScore(type, review);
-                    tuples.add(new DefaultTypedTuple<>(String.valueOf(id), score));
-                }
-                if (!tuples.isEmpty()) {
-                    redisService.setCacheZSet(hotRankKey, tuples);
-                }
-            }
-
-            redisService.deleteObject(tempKey);
-        } catch (Exception e) {
-            log.error("计算评价热度榜异常, type={}", type.name(), e);
-        }
-    }
-
-    /**
-     * 计算单条评论的综合质量分（分子部分）。
-     * 根据业务类型分配不同的点赞和回复权重。
-     *
-     * @param type    评论枚举类型
-     * @param comment 评论实体
-     * @return 计算后的热度基础分
-     */
-    private double calcCommentHotScore(CommentTypeEnum type, Comment comment) {
-        double likeWeight = 1.0D;
-        double replyWeight = 2.0D;
-
-        if (type == CommentTypeEnum.REVIEW_COMMENT) {
-            likeWeight = 1.2D;
-            replyWeight = 1.5D;
-        } else if (type == CommentTypeEnum.COMMENT_COMMENT) {
-            likeWeight = 1.0D;
-            replyWeight = 1.2D;
-        }
-
-        double interaction =
-                safeInt(comment.getLiked()) * likeWeight +
-                        safeInt(comment.getReplyCount()) * replyWeight +
-                        1.0D;
-
-        return applyTimeDecay(interaction, comment.getCreateTime() == null ? null : comment.getCreateTime().getTime());
-    }
-
-    /**
-     * 计算单条评价的综合质量分（分子部分）。
-     * 评价算法更复杂，融入了星级打分、收藏量等维度。
-     *
-     * @param type   评价枚举类型
-     * @param review 评价实体
-     * @return 计算后的热度基础分
-     */
-    private double calcReviewHotScore(ReviewTypeEnum type, Review review) {
-        double likeWeight = 1.1D;
-        double replyWeight = 2.2D;
-        double starWeight = 1.5D;
-        double ratingWeight = type == ReviewTypeEnum.SHOP_REVIEW ? 1.3D : 0.8D;
-
-        double rating = safeInt(review.getScore());
-        // 商铺评价：提取环境、口味、服务综合评分作为权重维度
-        if (type == ReviewTypeEnum.SHOP_REVIEW) {
-            rating = (safeInt(review.getServiceScore()) + safeInt(review.getTasteScore()) + safeInt(review.getEnvScore())) / 3.0D;
-            if (rating <= 0D) {
-                rating = safeInt(review.getScore());
+            RankRedisEnum rankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", review.getSourceType());
+            if (rankRedisEnum != null && rankRedisEnum.getCalcQueueKey() != null) {
+                redisService.setCacheSet(rankRedisEnum.getCalcQueueKey(), review.getId().toString());
             }
         }
-
-        double interaction =
-                safeInt(review.getLiked()) * likeWeight +
-                        safeInt(review.getReplyCount()) * replyWeight +
-                        safeInt(review.getStared()) * starWeight +
-                        rating * ratingWeight +
-                        1.0D;
-
-        return applyTimeDecay(interaction, review.getCreateTime() == null ? null : review.getCreateTime().getTime());
-    }
-
-    /**
-     * 【核心算法】应用牛顿冷却/重力时间衰减公式。
-     * 随着时间流逝，分母呈指数级增长，压低总分，从而给新数据出头之日。
-     *
-     * @param interactionScore 综合互动分（分子）
-     * @param createTimeMillis 数据发布时间戳
-     * @return 最终的热度排序分
-     */
-    private double applyTimeDecay(double interactionScore, Long createTimeMillis) {
-        long now = System.currentTimeMillis();
-        long createAt = createTimeMillis == null ? now : createTimeMillis;
-        double hours = Math.max(0D, (now - createAt) / 3600000D);
-        return interactionScore / Math.pow(hours + HOT_SCORE_BASE_HOURS, HOT_SCORE_GRAVITY);
-    }
-
-    /**
-     * 安全的 Integer 转换，防止 NPE。
-     *
-     * @param value 数值对象
-     * @return 转换后的 int 值，null 返回 0
-     */
-    private int safeInt(Number value) {
-        return value == null ? 0 : value.intValue();
-    }
-
-    /**
-     * 从 ZSet 排行榜中拉取当前排名前 N 的 ID 集合。
-     *
-     * @param hotRankKey 排行榜 Redis Key
-     * @param topN       提取前 N 名
-     * @return 排名靠前的 ID 集合
-     */
-    private Set<Long> getTopIds(String hotRankKey, int topN) {
-        Set<Object> raw = redisService.getCacheZSetReverseRange(hotRankKey, 0, topN - 1L);
-        return toLongSet(raw);
-    }
-
-    /**
-     * 将评论列表转换为以 ID 为 Key 的 Map 结构，过滤空数据。
-     *
-     * @param comments 评论列表
-     * @return 过滤后的 Map 结构
-     */
-    private Map<Long, Comment> toCommentMap(List<Comment> comments) {
-        if (CollUtil.isEmpty(comments)) {
-            return Collections.emptyMap();
-        }
-        return comments.stream()
-                .filter(Objects::nonNull)
-                .filter(item -> item.getId() != null)
-                .collect(Collectors.toMap(Comment::getId, item -> item, (a, b) -> a));
-    }
-
-    /**
-     * 将评价列表转换为以 ID 为 Key 的 Map 结构，过滤空数据。
-     *
-     * @param reviews 评价列表
-     * @return 过滤后的 Map 结构
-     */
-    private Map<Long, Review> toReviewMap(List<Review> reviews) {
-        if (CollUtil.isEmpty(reviews)) {
-            return Collections.emptyMap();
-        }
-        return reviews.stream()
-                .filter(Objects::nonNull)
-                .filter(item -> item.getId() != null)
-                .collect(Collectors.toMap(Review::getId, item -> item, (a, b) -> a));
-    }
-
-    /**
-     * 将 Redis 取出的 Object 集合安全转换为 Long 类型的 Set。
-     *
-     * @param rawSet 原始对象集合
-     * @return 转换后的 Long 集合
-     */
-    private Set<Long> toLongSet(Set<Object> rawSet) {
-        if (CollUtil.isEmpty(rawSet)) {
-            return Collections.emptySet();
-        }
-        Set<Long> result = new LinkedHashSet<>(rawSet.size());
-        for (Object raw : rawSet) {
-            if (raw == null) {
-                continue;
-            }
-            try {
-                result.add(Long.valueOf(raw.toString()));
-            } catch (Exception e) {
-                log.warn("redis set 中存在非法 id: {}", raw);
-            }
-        }
-        return result;
     }
 
     /**
@@ -681,4 +360,5 @@ public class SyncDataServiceImpl implements ISyncDataService {
             }
         }
     }
+
 }

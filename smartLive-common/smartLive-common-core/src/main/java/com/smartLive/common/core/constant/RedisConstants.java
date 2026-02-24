@@ -224,8 +224,8 @@ public class RedisConstants {
     /**
      * 缓存AI评论
      */
-    public static final String CACHE_AI_COMMENT_KEY = "cache:aiComment:";
-    public static final long CACHE_AI_COMMENT_TTL = 600L;
+    public static final String CACHE_AI_REVIEW_KEY = "cache:aiReview:";
+    public static final long CACHE_AI_REVIEW_TTL = 600L;
     /**
      * 用户的首页搜索历史
      */
@@ -249,4 +249,12 @@ public class RedisConstants {
      * 用户会话
      */
     public static final String IM_SESSION_KEY = "im:session:";
+
+    /** 实体的自身热度榜及独立计算队列 */
+    public static final String BLOG_CALC_QUEUE_KEY = "queue:calc:blog";
+    public static final String SHOP_CALC_QUEUE_KEY = "queue:calc:shop";
+    public static final String PRODUCT_CALC_QUEUE_KEY = "queue:calc:product";
+    public static final String BLOG_HOT_RANK_KEY = "blog:hot:rank:";
+    public static final String SHOP_HOT_RANK_KEY = "shop:hot:rank:";
+    public static final String PRODUCT_HOT_RANK_KEY = "product:hot:rank:";
 }

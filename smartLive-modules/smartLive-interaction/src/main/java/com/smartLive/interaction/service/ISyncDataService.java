@@ -30,8 +30,4 @@ public interface ISyncDataService {
      */
     void syncReviewData();
 
-    /**
-     * 重算评论/评价热度榜
-     */
-    void calcHotRankData();
 }

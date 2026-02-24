@@ -6,8 +6,11 @@ import com.smartLive.interaction.api.factory.RemoteReviewFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import java.util.List;
 
 @FeignClient(contextId = "remoteReviewService", value = ServiceNameConstants.INTERACTION_SERVICE, fallbackFactory = RemoteReviewFallbackFactory.class)
 public interface RemoteReviewService {
@@ -26,4 +29,11 @@ public interface RemoteReviewService {
      */
     @PostMapping("/inner/review/updateReviewStatus")
     Boolean updateReviewStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
+    /**
+     * 保存AI创建的评价到Redis
+     * @param reviews 评价列表
+     * @return 操作结果
+     */
+    @PostMapping("/inner/review/saveAiCreateReview")
+    public Boolean saveAiCreateReview(@RequestBody List<ReviewDTO> reviews);
 }

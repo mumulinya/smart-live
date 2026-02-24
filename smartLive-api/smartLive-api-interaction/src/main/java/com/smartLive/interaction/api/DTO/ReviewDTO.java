@@ -71,7 +71,7 @@ public class ReviewDTO extends BaseEntity
 
     /** 状态，0：正常，1：草稿，2：禁止查看 */
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
-    private String status;
+    private Integer status;
 
     /** 评分 */
     @Excel(name = "评分")
@@ -109,4 +109,10 @@ public class ReviewDTO extends BaseEntity
      */
     @TableField(exist = false)
     private Boolean isStared;
+
+    /**
+     * 是否AI生成
+     */
+    @TableField(exist = false)
+    private Boolean isAIGenerated;
 }

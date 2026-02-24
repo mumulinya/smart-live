@@ -175,4 +175,12 @@ public interface IReviewService extends IService<Review> {
      * @return 是否评价过
      */
     Boolean isReview(Review review);
+
+    /**
+     * 保存ai自动创建的评价
+     *
+     * @param reviews
+     * @return
+     */
+    Boolean saveAiCreateReview(List<Review> reviews);
 }
