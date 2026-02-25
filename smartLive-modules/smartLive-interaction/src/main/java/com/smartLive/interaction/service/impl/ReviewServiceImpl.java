@@ -453,7 +453,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (redisSourceCount > 0 && list.size() < redisSourceCount) {
             list = Collections.emptyList();
         }
-
         if (CollUtil.isEmpty(list)) {
             List<Review> dbList = query()
                     .eq("user_id", userId)
@@ -479,6 +478,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             queryReviewListIsLike(list);
             queryReviewListUserMessage(list);
         }
+        queryReviewListShopMessage(list);
         return list;
     }
 
@@ -547,7 +547,45 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         queryReviewListUserMessage(orderedList);
         queryReviewListIsLike(orderedList);
+
         return orderedList;
+    }
+
+    /**
+     * RPC 批量远程调用获取评价的店铺详情
+     *
+     * @param reviewList 待挂载店铺信息的评价列表
+     */
+    private void queryReviewListShopMessage(List<Review> reviewList) {
+        if (CollUtil.isEmpty(reviewList)) {
+            return;
+        }
+        List<Long> shopIds = reviewList.stream()
+                .map(Review::getShopId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(shopIds)) {
+            return;
+        }
+
+        List<ShopDTO> userList = remoteShopService.getShopList(shopIds);
+        if (CollUtil.isEmpty(userList)) {
+            return;
+        }
+
+        Map<Long, ShopDTO> userMap = userList.stream().collect(Collectors.toMap(
+                ShopDTO::getId,
+                Function.identity(),
+                (v1, v2) -> v1
+        ));
+        reviewList.forEach(review -> {
+            ShopDTO shopDTO = userMap.get(review.getUserId());
+            if (shopDTO != null) {
+                review.setShopLogo(shopDTO.getShopLogo());
+                review.setShopName((shopDTO.getName()));
+            }
+        });
     }
 
     /**
@@ -586,7 +624,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             }
         });
     }
-
     /**
      * 批量查询当前登录用户对传入列表中各项评价的点赞状态
      *
@@ -746,8 +783,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
             ShopDTO shop = remoteShopService.getShopById(review.getShopId());
             if(shop!=null){
-                review.setSourceName(shop.getName());
-                review.setShopImages(shop.getImages());
+                review.setShopName(shop.getName());
+                review.setShopLogo(shop.getImages());
             }
             UserDTO userDTO = remoteAppUserService.queryUserById(review.getUserId());
             if(userDTO!=null){

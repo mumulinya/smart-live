@@ -79,7 +79,7 @@ public class SearchController {
     public ResponseEntity<Object> searchShops(@RequestBody  FilterSearchRequest request) {
         try {
             SearchResponse response = searchService.searchShops(request);
-            List<ShopDoc> shops = ResponseConverter.convertToShopList(response);
+            List<ShopDoc> shops = ResponseConverter.convertToShopList(response,request);
             Map<String, Object> result = ResponseConverter.buildPageResult(response, shops);
             return ResponseEntity.ok(SearchResult.success(result));
         } catch (Exception e) {

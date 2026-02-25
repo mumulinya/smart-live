@@ -79,4 +79,7 @@ public class ShopVO implements Serializable
 
     /** 是否关注 */
     private Boolean isFollowed;
+
+    /** 热度评分 */
+    private Double hotScore;
 }

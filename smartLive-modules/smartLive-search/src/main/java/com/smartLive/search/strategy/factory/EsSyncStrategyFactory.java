@@ -1,7 +1,7 @@
 package com.smartLive.search.strategy.factory;
 
-import com.smartLive.search.strategy.DefaultEsSyncStrategy;
-import com.smartLive.search.strategy.EsSyncStrategy;
+import com.smartLive.search.strategy.esSync.DefaultEsSyncStrategy;
+import com.smartLive.search.strategy.esSync.EsSyncStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

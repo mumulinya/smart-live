@@ -151,6 +151,17 @@ public interface IShopService extends IService<Shop> {
      * @return 结果
      */
     Boolean updateShopStatus(Long id, Integer status);
+
+    /**
+     * 获取热门店铺排行榜
+     *
+     * @param current 页码
+     * @param size 每页数量
+     * @param x 经度
+     * @param y 纬度
+     * @return 热门店铺列表
+     */
+    List<ShopVO> getHotShopRank(Integer current, Integer size, Double x, Double y);
 }
 
 

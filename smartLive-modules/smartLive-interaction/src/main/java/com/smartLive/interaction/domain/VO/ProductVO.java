@@ -88,4 +88,6 @@ public class ProductVO {
     private String shopName;
     private String shopLogo; // ProductDTO has shopImages, ProductVO had shopLogo/shopImages.
     private Long typeId;
+    @TableField(exist = false)
+    private Double hotSource;
 }

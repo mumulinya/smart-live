@@ -1,4 +1,4 @@
-package com.smartLive.search.strategy;
+package com.smartLive.search.strategy.esSync;
 
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import org.springframework.stereotype.Component;

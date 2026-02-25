@@ -109,9 +109,29 @@ public class ProductController extends BaseController {
     /**
      * 修改商品状态
      */
-    @PutMapping("/changeStatus")
-    public AjaxResult changeStatus(@RequestBody Product product) {
-        return toAjax(productService.changeStatus(product));
+    @PostMapping("/updateProductStatus")
+    public Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status) {
+        return productService.updateProductStatus(id, status);
+    }
+
+    /**
+     * 获取热门商品排行榜（按类别区分代金券/团购套餐）
+     * 首页调用：传 current=1, size=10, category=1 或 2
+     * 榜单页调用：传 current=n, size=10, category=1 或 2
+     *
+     * @param current  页码，默认 1
+     * @param size     每页数量，默认 10
+     * @param category 商品种类 (1:代金券, 2:团购套餐) 必传，参考 ProductEnum
+     */
+    @GetMapping("/hot/rank")
+    public Result getHotProductRank(
+            @RequestParam(value = "current", defaultValue = "1") Integer current,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "category") Integer category) {
+        if (category == null || (category != 1 && category != 2)) {
+            return Result.fail("获取商品排行失败：商品分类参数 category 不合法(应为1或2)");
+        }
+        return Result.ok(productService.getHotProductRank(current, size, category));
     }
 
     /**

@@ -116,4 +116,17 @@ public class BlogInnerController extends BaseController
     Integer getStarCount(@PathVariable("sourceId") Long sourceId){
         return blogService.getBlogStarCount(sourceId);
     }
+
+    /**
+     * 获取全部博客ID列表（供热榜全量重建使用）
+     */
+    @GetMapping("/getAllBlogIds")
+    public List<Long> getAllBlogIds() {
+        return blogService.query().eq("status", 0)
+                .select("id")
+                .list()
+                .stream()
+                .map(blog -> blog.getId())
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

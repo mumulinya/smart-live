@@ -39,6 +39,8 @@ import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.domain.VO.ShopVO;
 import com.smartLive.shop.service.IShopTypeService;
 import com.smartLive.common.redis.util.CacheClient;
+import com.smartLive.common.redis.util.ZSetIdManager;
+import org.apache.lucene.util.SloppyMath;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -74,6 +76,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     RemoteFollowService remoteFollowService;
     @Autowired
     private RedisMultiCacheManager redisMultiCacheManager;
+    @Autowired
+    private ZSetIdManager zSetIdManager;
     /**
      * 将Shop实体转换为ShopVO
      * @param shop Shop实体
@@ -833,5 +837,92 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             }
         }
         return updated;
+    }
+
+    /**
+     * 获取热门店铺排行榜（大一统分页接口）
+     * 首页调用：传 current=1, size=10
+     * 榜单页调用：传 current=n, size=10
+     *
+     * @param current 页码
+     * @param size    每页数量
+     * @param x       用户经度
+     * @param y       用户纬度
+     * @return 热门店铺列表
+     */
+    @Override
+    public List<ShopVO> getHotShopRank(Integer current, Integer size, Double x, Double y) {
+        int pageNo = current == null || current < 1 ? 1 : current;
+        int pageSize = size == null || size < 1 ? 10 : size;
+
+        // 1. 防御性拦截：最多只给看前 100 名
+        if (pageNo * pageSize > 100) {
+            return Collections.emptyList();
+        }
+
+        List<ShopVO> resultList;
+
+        // 从最新的 ZSet 热度排行榜中获取博客 ID 极其分页数据
+        Page<Long> longPage = zSetIdManager.pageIds(RedisConstants.SHOP_HOT_RANK_KEY, null, current, SystemConstants.MAX_PAGE_SIZE);
+        List<Long> shopIdList = longPage.getRecords();
+
+        if (CollUtil.isEmpty(shopIdList)) {
+            // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
+            log.info("店铺热榜 ZSet 为空，走数据库兜底查询");
+            List<Shop> dbList = query()
+                    .orderByDesc("sold")
+                    .orderByDesc("create_time")
+                    .list();
+
+            if (CollUtil.isNotEmpty(dbList)) {
+                final List<Shop> finalDbList = dbList;
+                executorService.execute(() -> {
+                    log.info("重建店铺热榜 ZSet");
+                    zSetIdManager.saveToZSet(RedisConstants.SHOP_HOT_RANK_KEY, finalDbList, Shop::getId, Shop::getCreateTime);
+
+                    // 推入计算队列，等候定时任务处理真正的衰减和融合热度分
+                    redisService.setCacheSet(RedisConstants.SHOP_CALC_QUEUE_KEY,
+                            finalDbList.stream()
+                                    .map(s -> String.valueOf(s.getId()))
+                                    .collect(Collectors.toSet()));
+                });
+
+                // 手动分页截取当前页数据
+                int start = (pageNo - 1) * pageSize;
+                if (dbList.size() > start) {
+                    dbList = dbList.subList(start, Math.min(start + pageSize, dbList.size()));
+                    shopIdList = dbList.stream().map(Shop::getId).collect(Collectors.toList());
+                } else {
+                    shopIdList = Collections.emptyList();
+                }
+            }
+            resultList = CollUtil.isEmpty(shopIdList) ? Collections.emptyList() : getShopList(shopIdList);
+        } else {
+            // 4. 批量查询店铺详情（复用缓存批量查询）
+            resultList = getShopList(shopIdList);
+        }
+
+        // 计算距离
+        if (x != null && y != null && CollUtil.isNotEmpty(resultList)) {
+            for (ShopVO shopVO : resultList) {
+                if (shopVO.getX() != null && shopVO.getY() != null) {
+                    double distance = SloppyMath.haversinMeters(y, x, shopVO.getY(), shopVO.getX());
+                    shopVO.setDistance(distance);
+                }
+            }
+        }
+
+        // 从 Redis ZSet 中批量获取热度评分（Pipeline 一次往返）
+        if (CollUtil.isNotEmpty(resultList)) {
+            List<String> memberIds = resultList.stream()
+                    .map(s -> String.valueOf(s.getId()))
+                    .collect(Collectors.toList());
+            List<Double> scores = redisService.getCacheZSetScoreBatch(RedisConstants.SHOP_HOT_RANK_KEY, memberIds);
+            log.info("获取店铺 {} 的热度评分为{}",memberIds,scores);
+            for (int i = 0; i < resultList.size(); i++) {
+                resultList.get(i).setHotScore(scores.get(i));
+            }
+        }
+        return resultList;
     }
 }

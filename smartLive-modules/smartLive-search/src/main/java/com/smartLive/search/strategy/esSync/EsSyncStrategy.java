@@ -1,11 +1,9 @@
-package com.smartLive.search.strategy;
+package com.smartLive.search.strategy.esSync;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Function;
 
 public interface EsSyncStrategy {
 

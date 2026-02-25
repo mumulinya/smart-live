@@ -5,6 +5,8 @@ import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.search.domain.req.FilterSearchRequest;
 import com.smartLive.search.service.ISearchService;
+import com.smartLive.search.strategy.factory.ShopSortStrategyFactory;
+import com.smartLive.search.strategy.shopSort.ShopSortStrategy;
 import com.smartLive.search.utils.EsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
@@ -32,6 +34,8 @@ public class SearchServiceImpl implements ISearchService {
     private RestHighLevelClient client;
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private  ShopSortStrategyFactory shopSortStrategyFactory; // 注入策略工厂
     /**
      * 简单搜索
      */
@@ -95,12 +99,9 @@ public class SearchServiceImpl implements ISearchService {
 
         sourceBuilder.query(boolQuery);
 
-       if(searchRequest.getLon()!=null&&searchRequest.getLat()!=null){
-           // 按距离排序
-           sourceBuilder.sort(SortBuilders.geoDistanceSort("location", searchRequest.getLat(), searchRequest.getLon())
-                   .order(SortOrder.ASC)
-                   .unit(DistanceUnit.METERS));
-       }
+        //设置排序
+        ShopSortStrategy strategy = shopSortStrategyFactory.getStrategy(searchRequest.getSortBy());
+        strategy.buildSortAndQuery(sourceBuilder, boolQuery, searchRequest);
         //进行分页
         sourceBuilder.from((searchRequest.getPage() - 1) * searchRequest.getSize());
         sourceBuilder.size(searchRequest.getSize());

@@ -129,7 +129,7 @@ public class EsTool {
             case ResourceTypeConstants.BLOG_CODE:
                 return ResponseConverter.convertToBlogList(response);
             case ResourceTypeConstants.SHOP_CODE:
-                return ResponseConverter.convertToShopList(response);
+                return ResponseConverter.convertToShopList(response, null);
             case ResourceTypeConstants.USER_CODE:
                 return ResponseConverter.convertToUserList(response);
             case ResourceTypeConstants.PRODUCT_CODE:
@@ -166,7 +166,7 @@ public class EsTool {
             case EsIndexNameConstants.USER_INDEX_NAME:
                 return ResponseConverter.convertToUserList(response);
             case EsIndexNameConstants.SHOP_INDEX_NAME:
-                return ResponseConverter.convertToShopList(response);
+                return ResponseConverter.convertToShopList(response, null);
             case EsIndexNameConstants.PRODUCT_INDEX_NAME:
                 return ResponseConverter.convertToProductList(response);
             default:

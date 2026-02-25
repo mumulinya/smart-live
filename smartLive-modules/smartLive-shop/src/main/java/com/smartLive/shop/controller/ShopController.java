@@ -149,6 +149,20 @@ public class ShopController extends BaseController {
         return success(shopService.publish(ids));
     }
     /**
+     * 获取热门店铺排行榜 (大一统分页接口)
+     * 首页调用：传 current=1, size=10
+     * 榜单页调用：传 current=n, size=10
+     */
+    @GetMapping("/hot/rank")
+    public Result getHotShopRank(
+            @RequestParam(value = "current", defaultValue = "1") Integer current,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "x", required = false) Double x,
+            @RequestParam(value = "y", required = false) Double y) {
+        return Result.ok(shopService.getHotShopRank(current, size, x, y));
+    }
+
+    /**
      * 根据id查询商铺信息
      *
      * @param id 商铺id

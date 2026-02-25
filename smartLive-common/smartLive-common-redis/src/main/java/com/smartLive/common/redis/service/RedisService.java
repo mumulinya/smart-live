@@ -4,6 +4,8 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Distance;
@@ -379,6 +381,29 @@ public class RedisService
      */
     public Double getCacheZSetScore(final String key, final Object value) {
         return redisTemplate.opsForZSet().score(key, value);
+    }
+
+    /**
+     * 批量获取有序集合(ZSet)中多个元素的分数（Pipeline 一次往返）
+     *
+     * @param key    缓存键
+     * @param values 成员列表
+     * @return 分数列表，与传入 values 顺序一致，不存在的成员返回 null
+     */
+    @SuppressWarnings("unchecked")
+    public List<Double> getCacheZSetScoreBatch(final String key, final List<String> values) {
+        List<Object> results = redisTemplate.executePipelined(new org.springframework.data.redis.core.SessionCallback<Object>() {
+            @Override
+            public Object execute(org.springframework.data.redis.core.RedisOperations operations) throws org.springframework.dao.DataAccessException {
+                for (String value : values) {
+                    operations.opsForZSet().score(key, value);
+                }
+                return null;
+            }
+        });
+        return results.stream()
+                .map(obj -> obj instanceof Double ? (Double) obj : null)
+                .collect(Collectors.toList());
     }
     /**
      * 获取 ZSet 集合的大小

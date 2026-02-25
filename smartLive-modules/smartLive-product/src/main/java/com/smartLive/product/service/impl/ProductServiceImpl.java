@@ -23,6 +23,7 @@ import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
+import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
@@ -73,6 +74,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private RedisMultiCacheManager redisMultiCacheManager;
     @Autowired
     private CacheClient cacheClient;
+    @Autowired
+    private ZSetIdManager zSetIdManager;
 
     /**
      * 查询商品
@@ -506,6 +509,115 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             product.setIsFollow(isFollow);
         }
         return convertToProductVO(product);
+    }
+
+    /**
+     * 获取热门商品排行榜（按类别区分代金券/团购套餐）
+     * 首页调用：传 current=1, size=10
+     * 榜单页调用：传 current=n, size=10
+     *
+     * @param current  页码
+     * @param size     每页数量
+     * @param category 种类 (1:代金券, 2:团购套餐)
+     * @return 热门商品列表
+     */
+    @Override
+    public List<ProductVO> getHotProductRank(Integer current, Integer size, Integer category) {
+        int pageNo = current == null || current < 1 ? 1 : current;
+        int pageSize = size == null || size < 1 ? 10 : size;
+
+        // 1. 防御性拦截：最多只给看前 100 名
+        if (pageNo * pageSize > 100) {
+            return Collections.emptyList();
+        }
+
+        // 2. 根据 category 决定对应的 Redis Key
+        String hotRankKey = RedisConstants.PRODUCT_HOT_RANK_KEY;
+        if (com.smartLive.common.core.enums.ProductEnum.VOUCHER.getCode().equals(category)) {
+            hotRankKey += "voucher";
+        } else if (com.smartLive.common.core.enums.ProductEnum.SET_MEAL.getCode().equals(category)) {
+            hotRankKey += "deal";
+        } else {
+            return Collections.emptyList();
+        }
+
+        List<ProductVO> resultList;
+
+        // 3. 从最新的 ZSet 热度排行榜中获取商品 ID 分页数据
+        Page<Long> longPage = zSetIdManager.pageIds(hotRankKey, null, current, SystemConstants.MAX_PAGE_SIZE);
+        List<Long> productIdList = longPage.getRecords();
+
+        if (CollUtil.isEmpty(productIdList)) {
+            // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页
+            log.info("商品热榜 ZSet ({}) 为空，走数据库兜底查询", hotRankKey);
+            List<Product> dbList = query()
+                    .eq("category", category)
+                    .orderByDesc("sold")
+                    .orderByDesc("create_time")
+                    .list();
+
+            if (CollUtil.isEmpty(dbList)) return Collections.emptyList();
+
+            // 仅取前 100
+            List<Product> finalDbList = dbList.stream().limit(100).collect(Collectors.toList());
+            final String finalHotRankKey = hotRankKey;
+            // 开启异步线程写入 ZSet
+            executorService.execute(() -> {
+                try {
+                    zSetIdManager.saveToZSet(finalHotRankKey, finalDbList, Product::getId, Product::getCreateTime);
+                    // 顺便把 ID 塞入重算热度任务队列，等待凌晨重新计算正常的分数
+                    if (RedisConstants.PRODUCT_CALC_QUEUE_KEY != null) {
+                        redisService.setCacheSet(RedisConstants.PRODUCT_CALC_QUEUE_KEY, finalDbList.stream().map(p -> String.valueOf(p.getId())).collect(Collectors.toSet()));
+                    }
+                } catch (Exception e) {
+                    log.error("兜底重写商品热榜到 ZSet 失败", e);
+                }
+            });
+
+            // 手动对 dbList 进行分页
+            int start = (pageNo - 1) * pageSize;
+            int end = Math.min(start + pageSize, finalDbList.size());
+            if (start >= finalDbList.size()) return Collections.emptyList();
+
+            List<Product> pageList = finalDbList.subList(start, end);
+            queryProductListShopMessage(pageList);
+            resultList = convertToProductVOList(pageList);
+            
+            // 此处走兜底，无实际 score，假分数
+            for (int i = 0; i < resultList.size(); i++) {
+                resultList.get(i).setHotScore(100.0 - i);
+            }
+            return resultList;
+        }
+
+        // 4. 有缓存的情况：拿到 ID 列表去获取详情
+        List<Product> productList = getProductListByIds(productIdList);
+        
+        // 5. 将获取到的 productList 重新按照 ZSet 中 ID 的排序进行恢复
+        Map<Long, Product> productMap = productList.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p, (oldVal, newVal) -> oldVal));
+        List<Product> sortedList = productIdList.stream()
+                .map(productMap::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        resultList = convertToProductVOList(sortedList);
+
+        // 6. 附加快照缓存的 Score 数据给外部前端用作热度值展示
+        try {
+            List<Double> scores = redisService.getCacheZSetScoreBatch(hotRankKey,
+                    productIdList.stream().map(String::valueOf).collect(Collectors.toList()));
+            if (!CollUtil.isEmpty(scores) && scores.size() == resultList.size()) {
+                for (int i = 0; i < resultList.size(); i++) {
+                    Double score = scores.get(i);
+                    resultList.get(i).setHotScore(score != null ? score : 0.0);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("获取商品热榜 score 失败", e);
+        }
+
+        return resultList;
     }
 
     /**

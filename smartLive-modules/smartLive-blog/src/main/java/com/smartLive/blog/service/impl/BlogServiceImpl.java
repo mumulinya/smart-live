@@ -280,28 +280,35 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (CollUtil.isNotEmpty(blogIdList)) {
             blogList = getBlogListByIds(blogIdList);
         } else {
-            // ZSet 击穿或尚无数据时的兜底：按总点赞从数据库粗略大排返回，并异步推入计算队列
-            Page<Blog> page = query()
+            // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
+            List<Blog> dbList = query()
                     .eq("status", 0)
                     .orderByDesc("liked")
-                    .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-            blogList = page.getRecords();
+                    .orderByDesc("create_time")
+                    .list();
 
-            if (CollUtil.isNotEmpty(blogList)) {
-                final List<Blog> finalList = blogList;
+            if (CollUtil.isNotEmpty(dbList)) {
+                final List<Blog> finalDbList = dbList;
                 executorService.execute(() -> {
                     log.info("重建博客热榜 ZSet");
-                    zSetIdManager.saveToZSet(RedisConstants.BLOG_HOT_RANK_KEY, finalList, Blog::getId, Blog::getCreateTime);
+                    zSetIdManager.saveToZSet(RedisConstants.BLOG_HOT_RANK_KEY, finalDbList, Blog::getId, Blog::getCreateTime);
 
                     // 推进计算队列等候定时长函数处理真正的衰减和融合热度分
                     if (RedisConstants.BLOG_CALC_QUEUE_KEY != null) {
-                        redisService.setCacheSet(RedisConstants.BLOG_CALC_QUEUE_KEY, finalList.stream().map(b -> String.valueOf(b.getId())).collect(Collectors.toSet()));
+                        redisService.setCacheSet(RedisConstants.BLOG_CALC_QUEUE_KEY, finalDbList.stream().map(b -> String.valueOf(b.getId())).collect(Collectors.toSet()));
                     }
                 });
 
-                queryBlogListUserMessage(blogList);
-                queryBlogListIsLike(blogList);
+                // 手动分页截取当前页数据
+                int start = (current - 1) * SystemConstants.MAX_PAGE_SIZE;
+                int pageSize = SystemConstants.MAX_PAGE_SIZE;
+                if (dbList.size() > start) {
+                    blogList = dbList.subList(start, Math.min(start + pageSize, dbList.size()));
+                }
             }
+
+            queryBlogListUserMessage(blogList);
+            queryBlogListIsLike(blogList);
         }
         return convertToBlogVOList(blogList);
     }

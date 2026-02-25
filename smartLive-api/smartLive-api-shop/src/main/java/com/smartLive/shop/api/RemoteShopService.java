@@ -74,4 +74,10 @@ public interface RemoteShopService {
      */
     @PostMapping("/inner/shop/updateShopStatus")
     Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
+
+    /**
+     * 获取全部店铺ID列表
+     */
+    @GetMapping("/inner/shop/getAllShopIds")
+    List<Long> getAllShopIds();
 }

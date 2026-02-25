@@ -47,11 +47,14 @@ public class ZSetIdManager {
      * 从 ZSet 中分页获取 ID 列表 (按时间/分数倒序)
      */
     public Page<Long> pageIds(String keyPrefix, Long userId, long page, long size) {
-        String key = keyPrefix + userId;
-
+        String key = keyPrefix;
+        if(userId!= null){
+            key+=userId;
+        }
         // 1. 查总数 (ZCARD)
         Long total = redisService.getCacheZSetSize(key);
         if (total == null || total == 0) {
+            log.info("pageIds:{}",total);
             return new Page<>(page, size, 0); // 返回空页
         }
 
@@ -74,7 +77,7 @@ public class ZSetIdManager {
         Page<Long> idPage = new Page<>(page, size);
         idPage.setTotal(total);
         idPage.setRecords(idList);
-         log.info("pageIds:{}",idPage.getRecords());
+        log.info("pageIds:{}",idPage.getRecords());
         return idPage;
     }
     /**

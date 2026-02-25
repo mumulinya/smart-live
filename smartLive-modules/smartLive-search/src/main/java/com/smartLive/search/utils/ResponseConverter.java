@@ -6,10 +6,11 @@ import com.smartLive.search.domain.BlogDoc;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
 import com.smartLive.search.domain.ProductDoc;
+import com.smartLive.search.domain.req.FilterSearchRequest;
+import org.apache.lucene.util.SloppyMath;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,18 +54,24 @@ public class ResponseConverter {
     /**
      * 将ES搜索结果转换为店铺列表
      */
-    public static List<ShopDoc> convertToShopList(SearchResponse response) {
+    public static List<ShopDoc> convertToShopList(SearchResponse response, FilterSearchRequest request) {
         List<ShopDoc> shops = new ArrayList<>();
         for (SearchHit hit : response.getHits().getHits()) {
             String source = hit.getSourceAsString();
             ShopDoc shop = JSON.parseObject(source, ShopDoc.class);
-            
-            // 处理距离信息（如果有）
-            Object[] sortValues = hit.getSortValues();
-            if (sortValues != null && sortValues.length > 0) {
-                double distance = Double.parseDouble(sortValues[0].toString());
+            //设置距离
+            if(request!=null){
+                // 假设 shop.getLocation() 格式是 "lat,lon" 或包含这两者
+                double shopLat = shop.getY(); // 提取店铺纬度
+                double shopLon = shop.getX(); // 提取店铺经度
+
+                // 使用 Hutool 工具类直接算出距离（精确到米），然后塞给 DTO！
+                double distance = SloppyMath.haversinMeters(request.getLat(), request.getLon(), shopLat, shopLon);
+
+                // 格式化一下（比如 1550 米变成 "1.5km"）再传给前端
                 shop.setDistance(distance);
             }
+
             //处理高亮结果
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
             if (highlightFields != null&&highlightFields.size()>0) {
@@ -150,27 +157,21 @@ public class ResponseConverter {
         result.put("took", response.getTook().getMillis() + "ms");
         return result;
     }
-    
+
     /**
-     * 转换搜索结果
+     * 将米转换为前端展示的格式化字符串
+     *
+     * @param distanceMeters 距离（米）
+     * @return 格式化后的字符串，如 "850m" 或 "1.2km"
      */
-    public static Object convertSearchResult(String indexName, SearchResponse response) {
-        switch (indexName) {
-            case EsIndexNameConstants.BLOG_INDEX_NAME:
-                return convertToBlogList(response);
-            case EsIndexNameConstants.SHOP_INDEX_NAME:
-                return convertToShopList(response);
-            case EsIndexNameConstants.USER_INDEX_NAME:
-                return convertToUserList(response);
-            case EsIndexNameConstants.PRODUCT_INDEX_NAME:
-                return convertToProductList(response);
-            default:
-                // 返回原始命中数据 
-                List<Map<String, Object>> result = new ArrayList<>();
-                for (SearchHit hit : response.getHits().getHits()) {
-                    result.add(hit.getSourceAsMap());
-                }
-                return result;
+    private static String formatDistance(double distanceMeters) {
+        if (distanceMeters < 1000) {
+            // 小于 1 公里，直接显示整数米
+            return (int) distanceMeters + "m";
+        } else {
+            // 大于 1 公里，转换为 km 并保留一位小数
+            double km = distanceMeters / 1000.0;
+            return String.format("%.1fkm", km);
         }
     }
 }

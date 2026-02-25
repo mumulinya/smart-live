@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * 热榜计算的 xxl-job 定时任务处理器
  */
@@ -18,13 +20,18 @@ public class HotRankJobHandler {
     @Autowired
     private IHotRankService hotRankService;
 
+    @Autowired
+    private ExecutorService executorService;
+
     /**
      * 定时统计博客热榜并洗牌排行榜
      */
     @XxlJob("blogHotRankJobHandler")
     public ReturnT<String> blogHotRankJobHandler() throws Exception {
         log.info("触发 xxl-job: 博客热榜计算任务 blogHotRankJobHandler");
-        hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.BLOG.getCode());
+        executorService.execute(() -> {
+            hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.BLOG.getCode());
+        });
         return ReturnT.SUCCESS;
     }
 
@@ -34,7 +41,9 @@ public class HotRankJobHandler {
     @XxlJob("shopHotRankJobHandler")
     public ReturnT<String> shopHotRankJobHandler() throws Exception {
         log.info("触发 xxl-job: 店铺热榜计算任务 shopHotRankJobHandler");
-        hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.SHOP.getCode());
+        executorService.execute(() -> {
+            hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.SHOP.getCode());
+        });
         return ReturnT.SUCCESS;
     }
     /**
@@ -43,7 +52,9 @@ public class HotRankJobHandler {
     @XxlJob("productHotRankJobHandler")
     public ReturnT<String> productHotRankJobHandler() throws Exception {
         log.info("触发 xxl-job: 商品热榜计算任务 productHotRankJobHandler");
-        hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.PRODUCT.getCode());
+        executorService.execute(() -> {
+            hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.PRODUCT.getCode());
+        });
         return ReturnT.SUCCESS;
     }
     /**
@@ -52,7 +63,9 @@ public class HotRankJobHandler {
     @XxlJob("reviewHotRankJobHandler")
     public ReturnT<String> reviewHotRankJobHandler() throws Exception {
         log.info("触发 xxl-job: 评价热榜计算任务 reviewHotRankJobHandler");
-        hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.REVIEW.getCode());
+        executorService.execute(() -> {
+            hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.REVIEW.getCode());
+        });
         return ReturnT.SUCCESS;
     }
 
@@ -62,7 +75,33 @@ public class HotRankJobHandler {
     @XxlJob("commentHotRankJobHandler")
     public ReturnT<String> commentHotRankJobHandler() throws Exception {
         log.info("触发 xxl-job: 普通评论热榜计算任务 commentHotRankJobHandler");
-        hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.COMMENT.getCode());
+        executorService.execute(() -> {
+            hotRankService.calcHotRankDataByBizType(GlobalBizTypeEnum.COMMENT.getCode());
+        });
+        return ReturnT.SUCCESS;
+    }
+
+    /**
+     * 凌晨全量重建店铺热榜（建议 CRON: 0 0 3 * * ?）
+     */
+    @XxlJob("shopFullRebuildRankJob")
+    public ReturnT<String> shopFullRebuildRankJob() throws Exception {
+        log.info("触发 xxl-job: 店铺热榜全量重建任务 shopFullRebuildRankJob");
+        executorService.execute(() -> {
+            hotRankService.fullRebuildHotRankByBizType(GlobalBizTypeEnum.SHOP.getCode());
+        });
+        return ReturnT.SUCCESS;
+    }
+
+    /**
+     * 凌晨全量重建博客热榜（建议 CRON: 0 0 3 * * ?）
+     */
+    @XxlJob("blogFullRebuildRankJob")
+    public ReturnT<String> blogFullRebuildRankJob() throws Exception {
+        log.info("触发 xxl-job: 博客热榜全量重建任务 blogFullRebuildRankJob");
+        executorService.execute(() -> {
+            hotRankService.fullRebuildHotRankByBizType(GlobalBizTypeEnum.BLOG.getCode());
+        });
         return ReturnT.SUCCESS;
     }
 }

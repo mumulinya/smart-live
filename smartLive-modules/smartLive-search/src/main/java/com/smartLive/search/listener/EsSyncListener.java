@@ -4,7 +4,7 @@ import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
-import com.smartLive.search.strategy.EsSyncStrategy;
+import com.smartLive.search.strategy.esSync.EsSyncStrategy;
 import com.smartLive.search.strategy.factory.EsSyncStrategyFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;

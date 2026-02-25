@@ -128,6 +128,12 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
                 log.error("更新博客状态失败:{}", cause.getMessage());
                 return false;
             }
+
+            @Override
+            public List<Long> getAllBlogIds() {
+                log.error("获取全部博客ID失败:{}", cause.getMessage());
+                return null;
+            }
         };
  }
 }

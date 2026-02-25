@@ -122,6 +122,12 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
                 log.error("更新店铺状态失败:{}", cause.getMessage());
                 return false;
             }
+
+            @Override
+            public List<Long> getAllShopIds() {
+                log.error("获取全部店铺ID失败:{}", cause.getMessage());
+                return null;
+            }
         };
     }
 }

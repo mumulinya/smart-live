@@ -29,4 +29,8 @@ public class FilterSearchRequest {
     private Double lat;
     private Double lon;
     private String distance="5km";
+    /**
+     * 排序类型
+     */
+    private String sortBy;
 }

@@ -1,12 +1,10 @@
-package com.smartLive.search.strategy;
+package com.smartLive.search.strategy.esSync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.search.domain.BlogDoc;
-import com.smartLive.search.domain.ShopDoc;
-import com.smartLive.search.domain.ProductDoc;
 import com.smartLive.search.utils.EsTool;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -20,34 +18,32 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 @Component
 @Slf4j
-public class ProductEsStrategy implements EsSyncStrategy {
+public class BlogEsSyncStrategy implements EsSyncStrategy {
     @Autowired
     private RestHighLevelClient esClient;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-
     /**
      * 获取策略的类型
      */
     @Override
     public Integer getType() {
-        return GlobalBizTypeEnum.PRODUCT.getCode();
+        return GlobalBizTypeEnum.BLOG.getCode();
     }
 
     /**
@@ -61,38 +57,33 @@ public class ProductEsStrategy implements EsSyncStrategy {
      */
     @Override
     public boolean insertOrUpdate(String indexName, String id, Object data) throws IOException {
-        ProductDoc doc = convertToProductDoc((Map<String, Object>) data);
-        // ProductDoc doc = EsTool.convertToObject((Map) data, ProductDoc.class);
+        BlogDoc doc = EsTool.convertToObject((Map) data, BlogDoc.class);
         // 1. 数据校验
-        validateProduct(doc);
+        validateBlog(doc);
         // 2. 转换为JSON
         String json = objectMapper.writeValueAsString(data);
-        // 3. 执行ES插入/更新（ID存在则更新，不存在则插入）
+        // 3. 执行ES插入/更新
         IndexRequest request = new IndexRequest(indexName)
                 .id(id)
                 .source(json, XContentType.JSON);
         IndexResponse response = esClient.index(request, RequestOptions.DEFAULT);
-
         if (response.status() == RestStatus.CREATED
                 || response.status() == RestStatus.OK) {
-
-            log.info("商品ES插入/更新成功：index={}, id={}, result={}",
+            log.info("博客ES插入/更新成功：index={}, id={}, result={}",
                     indexName, id, response.getResult());
             UserResourceMessage userResourceMessage = UserResourceMessage
                     .builder()
                     .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
-                    .sourceType(GlobalBizTypeEnum.PRODUCT.getCode())
+                    .sourceType(GlobalBizTypeEnum.BLOG.getCode())
                     .sourceId(doc.getId())
                     .data(doc)
                     .build();
             updateUserResource(userResourceMessage);
             return true;
         }
-
-        log.error("商品ES插入/更新失败：index={}, id={}, status={}, result={}",
+        log.error("博客ES插入/更新失败：index={}, id={}, status={}, result={}",
                 indexName, id, response.status(), response.getResult());
         return false;
-
     }
 
     /**
@@ -104,32 +95,33 @@ public class ProductEsStrategy implements EsSyncStrategy {
      */
     @Override
     public boolean batchInsert(String indexName, List<Object> dataList) throws IOException {
-        // List<ProductDoc> docList = EsTool.convertList(dataList, ProductDoc.class);
-        List<ProductDoc> docList = new java.util.ArrayList<>();
-        for (Object data : dataList) {
-            docList.add(convertToProductDoc((Map<String, Object>) data));
-        }
+        List<BlogDoc> docList = EsTool.convertList(dataList, BlogDoc.class);
         if (docList.isEmpty()) {
-            log.warn("商品批量插入数据为空：index={}", indexName);
-            return true;
-        }
-        BulkRequest bulkRequest = new BulkRequest();
-        for (ProductDoc data : docList) {
-            // 1. 逐条校验
-            validateProduct(data);
-            // 2. 生成ID并添加到批量请求
-            String id = data.getId().toString();
-            String json = objectMapper.writeValueAsString(data);
-            bulkRequest.add(new IndexRequest(indexName).id(id).source(json, XContentType.JSON));
-        }
-        // 3. 执行批量操作
-        BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-        if (response.hasFailures()) {
-            log.error("商品批量插入失败：index={}, failures={}", indexName, response.buildFailureMessage());
+            log.warn("博客批量插入数据为空：index={}", indexName);
             return false;
-        }else {
-            log.info("商品批量插入成功：index={}, 数量={}", indexName, dataList.size());
-            return true;
+        }
+        try {
+            BulkRequest bulkRequest = new BulkRequest();
+            for (BlogDoc data : docList) {
+                // 1. 逐条校验
+                validateBlog(data);
+                // 2. 生成ID并添加到批量请求
+                String id = data.getId().toString();
+                String json = objectMapper.writeValueAsString(data);
+                bulkRequest.add(new IndexRequest(indexName).id(id).source(json, XContentType.JSON));
+            }
+            // 3. 执行批量操作
+            BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+            if (response.hasFailures()) {
+                log.error("线程{}博客批量插入失败：index={}, 数量={}, failures={}",Thread.currentThread().getName(),indexName, dataList.size(), response.buildFailureMessage());
+                return false;
+            }else{
+                log.info("线程{}博客批量插入成功：index={}, 数量={}",Thread.currentThread().getName(),indexName, dataList.size());
+                return true;
+            }
+        }catch (Exception e){
+            log.error("线程{}博客批量插入失败：index={}, 数量={}",Thread.currentThread().getName(),indexName, dataList.size(),e);
+            return false;
         }
     }
 
@@ -145,24 +137,24 @@ public class ProductEsStrategy implements EsSyncStrategy {
         DeleteRequest request = new DeleteRequest(indexName, id);
         DeleteResponse delete = esClient.delete(request, RequestOptions.DEFAULT);
         if (delete.status() != RestStatus.OK) {
-            log.error("商品ES删除失败：index={}, id={}, status={}", indexName, id, delete.status());
+            log.error("博客ES删除失败：index={}, id={}, status={}", indexName, id, delete.status());
             return false;
         }
-        log.info("商品ES删除成功：index={}, id={}", indexName, id);
+        log.info("博客ES删除成功：index={}, id={}", indexName, id);
         //删除用户资源
-        deleteUserResourceBySource(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME, Long.valueOf(id), GlobalBizTypeEnum.PRODUCT.getCode());
+        deleteUserResourceBySource(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME, Long.valueOf(id), GlobalBizTypeEnum.BLOG.getCode());
         return true;
     }
+
     /**
      * @param
      * @return
      */
     @Override
     public boolean insertUserResource(UserResourceMessage userResourceMessage) throws IOException {
-        ProductDoc doc = convertToProductDoc((Map<String, Object>) userResourceMessage.getData());
-        // ProductDoc doc = EsTool.convertToObject((Map) userResourceMessage.getData(), ProductDoc.class);
+        BlogDoc doc = EsTool.convertToObject((Map) userResourceMessage.getData(), BlogDoc.class);
         // 1. 数据校验
-        validateProduct(doc);
+        validateBlog(doc);
         doc.setSourceType(userResourceMessage.getSourceType());
         doc.setSourceId(userResourceMessage.getSourceId());
         doc.setActionType(userResourceMessage.getActionType());
@@ -175,107 +167,138 @@ public class ProductEsStrategy implements EsSyncStrategy {
         IndexResponse response = esClient.index(request, RequestOptions.DEFAULT);
         if (response.status() == RestStatus.CREATED
                 || response.status() == RestStatus.OK) {
-            log.info("店铺ES插入/更新成功：index={}, id={}, result={}",
+            log.info("博客ES插入/更新成功：index={}, id={}, result={}",
                     userResourceMessage.getIndexName(), userResourceMessage.getId(), response.getResult());
             return true;
         }
-        log.error("店铺ES插入/更新失败：index={}, id={}, status={}, result={}",
+        log.error("博客ES插入/更新失败：index={}, id={}, status={}, result={}",
                 userResourceMessage.getIndexName(), userResourceMessage.getId(), response.status(), response.getResult());
         return false;
     }
 
 
     /**
-     * 商品全量字段更新
-     * 同步：标题、副标题、店铺名、规则、价格、时间、类型、状态 以及 Payload
+     * 批量更新用户资源（当源博客/店铺信息修改时调用）
+     * 涵盖字段：标题、封面图、简介、博主头像、博主昵称、点赞数
      */
     @Override
     public boolean updateUserResource(UserResourceMessage msg) throws IOException {
-        // 1. 校验
+        // 1. 校验关键条件
         if (msg.getSourceId() == null || msg.getSourceType() == null) {
-            log.error("商品更新失败：sourceId 或 sourceType 为空");
+            log.error("更新用户资源失败：sourceId 或 sourceType 为空");
             return false;
         }
 
-        // 2. 数据转换
-        ProductDoc product = objectMapper.convertValue(msg.getData(), ProductDoc.class);
-        if (product == null) {
+        // 2. ★ 安全转换数据 (防止 ClassCastException)
+        // 使用 ObjectMapper 或你自己的工具类将 Map 转为 BlogDoc
+        BlogDoc newBlogData = null;
+        try {
+            if (msg.getData() instanceof BlogDoc) {
+                newBlogData = (BlogDoc) msg.getData();
+            } else {
+                // 假设 msg.getData() 是 Map，转为对象
+                newBlogData = objectMapper.convertValue(msg.getData(), BlogDoc.class);
+            }
+        } catch (Exception e) {
+            log.error("数据转换失败", e);
+            return false;
+        }
+
+        if (newBlogData == null) {
             return false;
         }
 
         // 3. 准备 Request
         UpdateByQueryRequest request = new UpdateByQueryRequest(msg.getIndexName());
+
+        // 4. 设置 WHERE 条件
         request.setQuery(QueryBuilders.boolQuery()
                 .must(QueryBuilders.termQuery("sourceId", msg.getSourceId()))
                 .must(QueryBuilders.termQuery("sourceType", msg.getSourceType())));
 
-        // 4. ★★★ 准备脚本参数 (全字段映射) ★★★
+        // 5. ★★★ 核心：字段映射 (Java字段 -> ES参数 -> ES字段) ★★★
         Map<String, Object> params = new HashMap<>();
 
-        // --- A. 通用搜索/展示字段 (映射到 ES 标准字段) ---
-        if (product.getName() != null) params.put("name", product.getName());
-        if (product.getSubTitle() != null) params.put("subTitle", product.getSubTitle());
-        // 商品的"店铺名称" -> ES的"name"
-        if (product.getShopName() != null) params.put("Shopname", product.getShopName());
-
-        // --- B. 商品业务字段 (映射到 ES 同名字段) ---
-        // 价格
-        if (product.getPrice() != null) params.put("price", product.getPrice());
-        if (product.getOriginalPrice() != null) params.put("originalPrice", product.getOriginalPrice()); 
-
-        // 规则与类型
-        if (product.getRulesJson() != null) params.put("rulesJson", product.getRulesJson());
-        if (product.getActivityType() != null) params.put("activityType", product.getActivityType()); // 0普通 1秒杀
-        if (product.getStatus() != null) params.put("status", product.getStatus());
-
-        // 时间相关 (用于排序或判断过期)
-        if (product.getBeginTime() != null) params.put("beginTime", product.getBeginTime());
-        if (product.getEndTime() != null) params.put("endTime", product.getEndTime());
-        if (product.getUseStartTime() != null) params.put("useStartTime", product.getUseStartTime());
-        if (product.getUseEndTime() != null) params.put("useEndTime", product.getUseEndTime());
-        if (product.getValidDays() != null) params.put("validDays", product.getValidDays());
-        if (product.getValidityType() != null) params.put("validityType", product.getValidityType());
-
-        // --- C. ★ 核心：更新 Payload (完整数据快照) ---
-        // 将整个 product 对象转为 JSON 字符串存入 payload
-        // 这样前端获取详情时，可以直接解析 payload 拿到上面所有字段，甚至包括库存等生僻字段
-        try {
-            String payloadJson = objectMapper.writeValueAsString(product);
-            params.put("payload", payloadJson);
-        } catch (Exception e) {
-            log.warn("Payload序列化失败", e);
+        // --- A. 基础内容映射 ---
+        // 1. 标题
+        if (newBlogData.getTitle() != null) {
+            params.put("newTitle", newBlogData.getTitle());
         }
 
-        // 5. 动态构建 Script
+        // 2. 封面图 (只取第一张)
+        if (newBlogData.getImages() != null) {
+            String cover = newBlogData.getImages().split(",")[0];
+            params.put("newImage", cover);
+        }
+
+        // 3. 简介 (截取前50字)
+        if (newBlogData.getContent() != null) {
+            String summary = newBlogData.getContent().length() > 50
+                    ? newBlogData.getContent().substring(0, 50)
+                    : newBlogData.getContent();
+            params.put("newSubTitle", summary);
+        }
+
+        // --- B. 新增字段映射 (你要求的) ---
+        // 4. 用户头像 (博主换头像了，收藏里的头像也要变)
+        if (newBlogData.getIcon() != null) {
+            params.put("newIcon", newBlogData.getIcon());
+        }
+
+        // 5. 用户昵称 (博主改名了)
+        if (newBlogData.getName() != null) {
+            params.put("newName", newBlogData.getName());
+        }
+
+        // 6. 点赞数 (同步最新的点赞数量)
+        if (newBlogData.getLiked() != null) {
+            params.put("newLiked", newBlogData.getLiked());
+        }
+
+        // 6. 动态构建 Script 脚本
+        // 只有当 params 里有值时，才拼接对应的赋值语句
         StringBuilder scriptCode = new StringBuilder();
 
-        // 循环遍历 params，自动生成赋值语句
-        // 效果等同于：ctx._source.title = params.title; ctx._source.rules = params.rules; ...
-        // 注意：这里用 entrySet 遍历，代码非常简洁，不需要写几十个 if
-        String loopScript =
-                "for (entry in params.entrySet()) { " +
-                        "  if (entry.getKey().equals('name')) { " +
-                        "      ctx._source.name = entry.getValue(); " + // 特殊处理 name 字段
-                        "  } else { " +
-                        "      ctx._source[entry.getKey()] = entry.getValue(); " + // 其他字段同名赋值
-                        "  } " +
-                        "}";
+        if (params.containsKey("newTitle")) {
+            scriptCode.append("ctx._source.title = params.newTitle;");
+        }
+        if (params.containsKey("newImage")) {
+            scriptCode.append("ctx._source.imageUrl = params.newImage;"); // 假设ES里叫 imageUrl
+        }
+        if (params.containsKey("newSubTitle")) {
+            scriptCode.append("ctx._source.subTitle = params.newSubTitle;");
+        }
+        if (params.containsKey("newIcon")) {
+            scriptCode.append("ctx._source.icon = params.newIcon;"); // 假设ES里叫 icon
+        }
+        if (params.containsKey("newName")) {
+            scriptCode.append("ctx._source.name = params.newName;"); // 假设ES里叫 name
+        }
+        if (params.containsKey("newLiked")) {
+            scriptCode.append("ctx._source.liked = params.newLiked;"); // 假设ES里叫 liked
+        }
+
+        // 如果没有字段需要更新，直接跳过
+        if (scriptCode.length() == 0) {
+            log.info("没有检测到变化字段，跳过更新");
+            return true;
+        }
 
         request.setScript(new Script(
                 ScriptType.INLINE,
                 "painless",
-                loopScript,
+                scriptCode.toString(),
                 params
         ));
 
-        // 6. 执行
+        // 7. 执行更新
         request.setConflicts("proceed");
         try {
             BulkByScrollResponse response = esClient.updateByQuery(request, RequestOptions.DEFAULT);
-            log.info("商品全字段同步成功，sourceId={}, 影响={}", msg.getSourceId(), response.getUpdated());
+            log.info("同步更新成功，sourceId={}, 影响条数={}", msg.getSourceId(), response.getUpdated());
             return true;
         } catch (Exception e) {
-            log.error("商品同步失败", e);
+            log.error("同步更新用户资源失败", e);
             return false;
         }
     }
@@ -311,19 +334,21 @@ public class ProductEsStrategy implements EsSyncStrategy {
         }
     }
     /**
-     * 商品数据校验（特有的校验逻辑）
+     * 博客数据校验（特有的校验逻辑）
      */
-    private void validateProduct(ProductDoc data) {
+    private void validateBlog(BlogDoc data) {
         if (data.getId() == null) {
-            throw new IllegalArgumentException("商品ID不能为空");
+            throw new IllegalArgumentException("博客ID不能为空");
         }
-        if (data.getName() == null || data.getName().isEmpty()) {
-            throw new IllegalArgumentException("商品名称不能为空");
+        if (data.getTitle() == null || data.getTitle().isEmpty()) {
+            throw new IllegalArgumentException("博客标题不能为空");
+        }
+        if (data.getContent() == null || data.getContent().isEmpty()) {
+            throw new IllegalArgumentException("博客内容不能为空");
+        }
+        if (data.getCreateTime() == null) {
+            throw new IllegalArgumentException("博客创建时间不能为空");
         }
     }
 
-    private ProductDoc convertToProductDoc(Map<String, Object> data) {
-        ProductDoc doc = EsTool.convertToObject(data, ProductDoc.class);
-        return doc;
-    }
 }

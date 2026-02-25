@@ -96,4 +96,14 @@ public class ShopInnerController extends BaseController {
     Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status){
         return shopService.updateShopStatus(id, status);
     }
+
+    /**
+     * 获取全部店铺ID列表（供热榜全量重建使用）
+     */
+    @GetMapping("/getAllShopIds")
+    public List<Long> getAllShopIds() {
+        return shopService.list().stream()
+                .map(Shop::getId)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

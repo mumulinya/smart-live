@@ -40,4 +40,29 @@ public class HotRankServiceImpl implements IHotRankService {
         
         log.info("[{}]类型的热度榜单重算结束，耗时:{}ms", strategy.getClass().getSimpleName(), System.currentTimeMillis() - start);
     }
+
+    @Override
+    public void fullRebuildHotRankByBizType(Integer bizTypeCode) {
+        if (bizTypeCode == null) {
+            log.warn("全量重建热榜失败：业务类型为空");
+            return;
+        }
+
+        HotRankStrategy strategy = hotRankStrategyFactory.getStrategy(bizTypeCode);
+        if (strategy == null) {
+            log.warn("未找到对应业务类型[{}]的热榜策略", bizTypeCode);
+            return;
+        }
+
+        long start = System.currentTimeMillis();
+        log.info("开始执行[{}]类型的热度榜单全量重建", strategy.getClass().getSimpleName());
+
+        try {
+            strategy.fullRebuildRank();
+        } catch (Exception e) {
+            log.error("[{}]类型热度全量重建异常", strategy.getClass().getSimpleName(), e);
+        }
+
+        log.info("[{}]类型的热度榜单全量重建结束，耗时:{}ms", strategy.getClass().getSimpleName(), System.currentTimeMillis() - start);
+    }
 }

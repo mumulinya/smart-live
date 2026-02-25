@@ -103,7 +103,9 @@ public class Review extends BaseEntity
     @TableField(exist = false)
     private String sort;
     @TableField(exist = false)
-    private String shopImages;
+    private String shopLogo;
+    @TableField(exist = false)
+    private String shopName;
     /**
      * 是否点赞过了
      */

@@ -1,13 +1,17 @@
 package com.smartLive.interaction.task;
 
 import com.smartLive.interaction.service.ISyncDataService;
+import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.ExecutorService;
+
 /**
- * 互动同步任务触发入口
+ * 互动同步定时任务处理器 (XXL-JOB)
+ * 职责：定时将 Redis 中的互动数据（点赞、收藏、评论、评价等）异步同步落盘到 MySQL 数据库
  */
 @Component
 @Slf4j
@@ -16,33 +20,91 @@ public class InteractionSyncXxlJob {
     @Autowired
     private ISyncDataService syncDataService;
 
+    @Autowired
+    private ExecutorService executorService;
+
+    /**
+     * 同步所有互动数据（点赞、评论、收藏、评价）到数据库
+     */
     @XxlJob("interactionSyncAllDataJob")
-    public void executeAllDataSync() {
-        log.info("xxl-job start: interactionSyncAllDataJob");
-        syncDataService.syncAllData();
+    public ReturnT<String> executeAllDataSync() {
+        log.info("触发 XXL-JOB 定时任务：同步所有互动数据到数据库 (interactionSyncAllDataJob)");
+        executorService.execute(() -> {
+            try {
+                syncDataService.syncAllData();
+                log.info("异步执行完成：同步所有互动数据成功");
+            } catch (Exception e) {
+                log.error("异步执行失败：同步所有互动数据异常", e);
+            }
+        });
+        return ReturnT.SUCCESS;
     }
 
+    /**
+     * 仅同步点赞数据到数据库
+     */
     @XxlJob("interactionSyncLikeJob")
-    public void executeLikeSync() {
-        log.info("xxl-job start: interactionSyncLikeJob");
-        syncDataService.syncLikeData();
+    public ReturnT<String> executeLikeSync() {
+        log.info("触发 XXL-JOB 定时任务：同步点赞数据到数据库 (interactionSyncLikeJob)");
+        executorService.execute(() -> {
+            try {
+                syncDataService.syncLikeData();
+                log.info("异步执行完成：同步点赞数据成功");
+            } catch (Exception e) {
+                log.error("异步执行失败：同步点赞数据异常", e);
+            }
+        });
+        return ReturnT.SUCCESS;
     }
 
+    /**
+     * 仅同步评论数据到数据库
+     */
     @XxlJob("interactionSyncCommentJob")
-    public void executeCommentSync() {
-        log.info("xxl-job start: interactionSyncCommentJob");
-        syncDataService.syncCommentData();
+    public ReturnT<String> executeCommentSync() {
+        log.info("触发 XXL-JOB 定时任务：同步评论数据到数据库 (interactionSyncCommentJob)");
+        executorService.execute(() -> {
+            try {
+                syncDataService.syncCommentData();
+                log.info("异步执行完成：同步评论数据成功");
+            } catch (Exception e) {
+                log.error("异步执行失败：同步评论数据异常", e);
+            }
+        });
+        return ReturnT.SUCCESS;
     }
 
+    /**
+     * 仅同步收藏数据到数据库
+     */
     @XxlJob("interactionSyncStarJob")
-    public void executeStarSync() {
-        log.info("xxl-job start: interactionSyncStarJob");
-        syncDataService.syncStarData();
+    public ReturnT<String> executeStarSync() {
+        log.info("触发 XXL-JOB 定时任务：同步收藏数据到数据库 (interactionSyncStarJob)");
+        executorService.execute(() -> {
+            try {
+                syncDataService.syncStarData();
+                log.info("异步执行完成：同步收藏数据成功");
+            } catch (Exception e) {
+                log.error("异步执行失败：同步收藏数据异常", e);
+            }
+        });
+        return ReturnT.SUCCESS;
     }
 
+    /**
+     * 仅同步评价数据到数据库
+     */
     @XxlJob("interactionSyncReviewJob")
-    public void executeReviewSync() {
-        log.info("xxl-job start: interactionSyncReviewJob");
-        syncDataService.syncReviewData();
+    public ReturnT<String> executeReviewSync() {
+        log.info("触发 XXL-JOB 定时任务：同步评价数据到数据库 (interactionSyncReviewJob)");
+        executorService.execute(() -> {
+            try {
+                syncDataService.syncReviewData();
+                log.info("异步执行完成：同步评价数据成功");
+            } catch (Exception e) {
+                log.error("异步执行失败：同步评价数据异常", e);
+            }
+        });
+        return ReturnT.SUCCESS;
     }
 }

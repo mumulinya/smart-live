@@ -89,6 +89,8 @@ public class ProductVO implements Serializable {
     private Boolean isStar;
     private Boolean IsFollow;
 
+    private double hotScore;
+
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

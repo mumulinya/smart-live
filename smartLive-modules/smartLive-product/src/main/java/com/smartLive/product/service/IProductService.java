@@ -196,6 +196,16 @@ public interface IProductService extends IService<Product>
     Boolean updateProductStatus(Long id, Integer status);
 
     /**
+     * 获取热门商品排行榜
+     *
+     * @param current  页码
+     * @param size     每页数量
+     * @param category 种类 (1:代金券, 2:团购套餐)
+     * @return 热门商品列表
+     */
+    List<ProductVO> getHotProductRank(Integer current, Integer size, Integer category);
+
+    /**
      * 扣减库存
      * @param id 商品id
      * @return 结果

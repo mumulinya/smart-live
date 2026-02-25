@@ -1,4 +1,4 @@
-package com.smartLive.search.strategy;
+package com.smartLive.search.strategy.esSync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
@@ -24,7 +24,7 @@ import java.util.Map;
 
 @Component
 @Slf4j
-public class UserEsStrategy implements EsSyncStrategy {
+public class UserEsSyncStrategy implements EsSyncStrategy {
     @Autowired
     private RestHighLevelClient esClient;
 

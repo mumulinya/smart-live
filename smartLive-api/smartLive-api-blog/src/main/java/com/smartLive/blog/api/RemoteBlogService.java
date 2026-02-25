@@ -84,4 +84,10 @@ public interface RemoteBlogService {
      */
     @PostMapping("/inner/blog/updateBlogStatus")
     Boolean updateBlogStatus(@RequestParam("targetId") Long targetId,@RequestParam("status") Integer status);
+
+    /**
+     * 获取全部博客ID列表
+     */
+    @GetMapping("/inner/blog/getAllBlogIds")
+    List<Long> getAllBlogIds();
 }

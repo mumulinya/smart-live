@@ -12,4 +12,11 @@ public interface IHotRankService {
      * @param bizTypeCode GlobalBizTypeEnum 中的 code 对应的业务线
      */
     void calcHotRankDataByBizType(Integer bizTypeCode);
+
+    /**
+     * 全量重建指定业务类型的热榜（凌晨定时任务使用）
+     *
+     * @param bizTypeCode GlobalBizTypeEnum 中的 code
+     */
+    void fullRebuildHotRankByBizType(Integer bizTypeCode);
 }
