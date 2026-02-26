@@ -376,19 +376,6 @@ services:
     ports:
       - "9207:9207"
 
-  # 定时任务模块 [9208]
-  smartLive-modules-job:
-    container_name: smartLive-modules-job
-    image: smartlive-modules-job
-    environment:
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
-    build:
-      context: ./smartLive/modules/job
-      dockerfile: dockerfile
-    ports:
-      - "9208:9208"
-
   # 互动模块 [9209]
   smartLive-modules-interaction:
     container_name: smartLive-modules-interaction
@@ -418,19 +405,6 @@ services:
       dockerfile: dockerfile
     ports:
       - "9210:9210"
-
-  # 代码生成模块 [9211]
-  smartLive-modules-gen:
-    container_name: smartLive-modules-gen
-    image: smartlive-modules-gen
-    environment:
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=smartLive-nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=smartLive-nacos:8848
-    build:
-      context: ./smartLive/modules/gen
-      dockerfile: dockerfile
-    ports:
-      - "9211:9211"
 
   # 文件服务 [9212]
   smartLive-modules-file:

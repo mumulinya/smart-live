@@ -72,8 +72,6 @@ copy_jar "../smartLive-modules/smartLive-user/target/smartLive-modules-user.jar"
 
 # 业务功能
 copy_jar "../smartLive-modules/smartLive-file/target/smartLive-modules-file.jar" "./smartLive/modules/file/jar"
-copy_jar "../smartLive-modules/smartLive-job/target/smartLive-modules-job.jar" "./smartLive/modules/job/jar"
-copy_jar "../smartLive-modules/smartLive-gen/target/smartLive-modules-gen.jar" "./smartLive/modules/gen/jar"
 copy_jar "../smartLive-modules/smartLive-ai/target/smartLive-modules-ai.jar" "./smartLive/modules/ai/jar"
 copy_jar "../smartLive-modules/smartLive-blog/target/smartLive-modules-blog.jar" "./smartLive/modules/blog/jar"
 copy_jar "../smartLive-modules/smartLive-chat/target/smartLive-modules-chat.jar" "./smartLive/modules/chat/jar"

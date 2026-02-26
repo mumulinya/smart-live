@@ -50,10 +50,8 @@ port(){
  firewall-cmd --add-port=9205/tcp --permanent # Order
  firewall-cmd --add-port=9206/tcp --permanent # Marketing
  firewall-cmd --add-port=9207/tcp --permanent # Map
- firewall-cmd --add-port=9208/tcp --permanent # Job
  firewall-cmd --add-port=9209/tcp --permanent # Interaction
  firewall-cmd --add-port=9210/tcp --permanent # Index
- firewall-cmd --add-port=9211/tcp --permanent # Gen
  firewall-cmd --add-port=9212/tcp --permanent # File
  firewall-cmd --add-port=9213/tcp --permanent # Chat
  firewall-cmd --add-port=9214/tcp --permanent # Blog
@@ -92,7 +90,7 @@ modules(){
  # 启动其他所有模块 (使用通配符不太好控制顺序，建议明确列出或直接 up -d)
  # 这里列出所有 smartLive-modules- 开头的服务
  docker-compose up -d smartLive-modules-user smartLive-modules-shop smartLive-modules-search smartLive-modules-order \
-                      smartLive-modules-marketing smartLive-modules-map smartLive-modules-job smartLive-modules-gen \
+                      smartLive-modules-marketing smartLive-modules-map \
                       smartLive-modules-interaction smartLive-modules-file  smartLive-modules-chat \
                       smartLive-modules-blog smartLive-modules-index smartLive-modules-ai \
                       smartLive-modules-audit smartLive-modules-im

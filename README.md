@@ -179,11 +179,9 @@ com.smartLive
 │       ├── smartLive-blog                         // 博客笔记 [9214]
 │       ├── smartLive-chat                         // 即时通讯 [9213]
 │       ├── smartLive-file                         // 文件服务 [9212]
-│       ├── smartLive-gen                          // 代码生成 [9211]
 │       ├── smartLive-im                           // IM 消息
 │       ├── smartLive-index                        // 首页聚合 [9210]
 │       ├── smartLive-interaction                  // 社交互动 [9209]
-│       ├── smartLive-job                          // 定时任务 [9208]
 │       ├── smartLive-map                          // 地图服务 [9207]
 │       ├── smartLive-marketing                    // 营销活动 [9206]
 │       ├── smartLive-order                        // 订单管理 [9205]
@@ -348,22 +346,6 @@ com.smartLive
 | **登录日志** | 登录日志记录、异常登录告警 |
 | **在线用户** | 当前活跃用户状态监控 |
 
-#### ⏰ 定时任务 (smartLive-job) [9208]
-| 功能 | 说明 |
-|:---|:---|
-| 任务调度 | 在线任务创建、编辑、删除 |
-| 任务执行 | 手动触发执行、执行日志 |
-| 任务日志 | 任务执行结果记录 |
-| 定时管理 | Cron表达式配置、调度策略 |
-
-#### 💻 代码生成 (smartLive-gen) [9211]
-| 功能 | 说明 |
-|:---|:---|
-| 代码生成 | Java/HTML/XML/SQL自动生成 |
-| 生成配置 | 表单配置、列表配置 |
-| 预览代码 | 代码在线预览 |
-| 下载代码 | 代码包下载 |
-
 #### 📊 监控中心 (smartLive-visual-monitor) [9100]
 | 功能 | 说明 |
 |:---|:---|
@@ -484,10 +466,8 @@ bin/run-modules-file.bat   # 启动文件服务
 | 订单服务 | smartLive-order | 9205 |
 | 营销服务 | smartLive-marketing | 9206 |
 | 地图服务 | smartLive-map | 9207 |
-| 定时任务 | smartLive-job | 9208 |
 | 互动服务 | smartLive-interaction | 9209 |
 | 首页服务 | smartLive-index | 9210 |
-| 代码生成 | smartLive-gen | 9211 |
 | 文件服务 | smartLive-file | 9212 |
 | 聊天服务 | smartLive-chat | 9213 |
 | 博客服务 | smartLive-blog | 9214 |

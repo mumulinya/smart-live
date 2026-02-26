@@ -29,7 +29,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Search | `smartLive-modules/smartLive-search` | 9204 |
 | Order | `smartLive-modules/smartLive-order` | 9205 |
 | Marketing | `smartLive-modules/smartLive-marketing` | 9206 |
-| Job | `smartLive-modules/smartLive-job` | 9208 |
 | AI | `smartLive-modules/smartLive-ai` | 9215 |
 | Monitor | `smartLive-visual/smartLive-monitor` | 9100 |
 
