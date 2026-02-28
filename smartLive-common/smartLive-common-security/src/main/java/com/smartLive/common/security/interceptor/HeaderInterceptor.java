@@ -1,11 +1,11 @@
-package com.smartLive.common.security.interceptor;
+﻿package com.smartLive.common.security.interceptor;
 
 import com.smartLive.common.redis.service.RedisService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.core.domain.LoginUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.method.HandlerMethod;

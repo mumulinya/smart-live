@@ -1,9 +1,9 @@
-package com.smartLive.gateway.filter;
+﻿package com.smartLive.gateway.filter;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.smartLive.common.core.constant.*;
-import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.core.domain.LoginUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

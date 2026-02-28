@@ -1,4 +1,4 @@
-package com.smartLive.blog.service.impl;
+﻿package com.smartLive.blog.service.impl;
 import com.smartLive.common.core.constant.mq.InteractionMqConstants;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
@@ -18,7 +18,7 @@ import org.springframework.beans.BeanUtils;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
-import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.core.domain.LoginUser;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;

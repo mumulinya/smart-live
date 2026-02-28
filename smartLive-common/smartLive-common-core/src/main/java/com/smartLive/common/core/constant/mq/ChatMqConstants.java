@@ -1,11 +1,19 @@
 package com.smartLive.common.core.constant.mq;
 
 /**
- * 聊天室（私聊/在线状态）MQ 常量
+ * MQ Constants for Chat and System Notice
  */
 public interface ChatMqConstants {
-    // 私聊交换�?
+    // Private Chat Exchange
     String CHAT_EXCHANGE_NAME = "chat.topic";
     String CHAT_MESSAGE_QUEUE = "chat.message.queue";
     String CHAT_MESSAGE_ROUTING = "chat.session.";
+
+    // ==================== System Notice MQ Constants ====================
+    /** System Notice Exchange (Topic) */
+    String SYSTEM_NOTICE_EXCHANGE = "system.notice.exchange";
+    /** System Notice Queue */
+    String SYSTEM_NOTICE_QUEUE = "system.notice.queue";
+    /** System Notice Routing Key */
+    String SYSTEM_NOTICE_ROUTING = "system.notice.create";
 }

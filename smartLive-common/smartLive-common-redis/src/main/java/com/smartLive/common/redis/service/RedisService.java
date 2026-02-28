@@ -310,6 +310,26 @@ public class RedisService
     }
 
     /**
+     * 批量向多个 ZSet 写入相同的分数值（Pipeline 一次往返）
+     * 适用于 Feed 流的写扩散，合并海量网络请求
+     *
+     * @param keys  Redis 键的集合 (多个粉丝的 Feed Key)
+     * @param value 要存入的值 (通常是动态 ID)
+     * @param score 分数 (通常是时间戳)
+     */
+    public void setCacheZSetBatch(final Collection<String> keys, final String value, final double score) {
+        redisTemplate.executePipelined(new org.springframework.data.redis.core.SessionCallback<Object>() {
+            @Override
+            public Object execute(org.springframework.data.redis.core.RedisOperations operations) throws org.springframework.dao.DataAccessException {
+                for (String key : keys) {
+                    operations.opsForZSet().add(key, value, score);
+                }
+                return null;
+            }
+        });
+    }
+
+    /**
      * 获取缓存的ZSet (按排名范围)
      * 对应 Redis 命令: ZRANGE key start end
      *

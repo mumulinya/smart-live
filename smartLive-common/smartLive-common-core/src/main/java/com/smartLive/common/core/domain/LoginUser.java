@@ -1,4 +1,4 @@
-package com.smartLive.common.core.domain;
+﻿package com.smartLive.common.core.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDTO {
+public class LoginUser {
     private Long id;
     private String nickName;
     private String icon;

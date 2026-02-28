@@ -1,4 +1,4 @@
-package com.smartLive.interaction.service.impl;
+﻿package com.smartLive.interaction.service.impl;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -7,9 +7,10 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.smartLive.chat.api.RemoteChatService;
 import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.constant.mq.ChatMqConstants;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.core.enums.FollowTypeEnum;
@@ -28,6 +29,7 @@ import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.follow.FollowStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,7 +61,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     @Autowired
     private RedisService redisService;
     @Autowired
-    private RemoteChatService remoteChatService;
+    private RabbitTemplate rabbitTemplate;
     /**
      * 查询关注
      * 
@@ -213,7 +215,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Override
     public Boolean isFollowed(Follow follow) {
-        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
         if (user == null) {
             return false;
         }
@@ -352,19 +354,25 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         if(feedEventMessage.getBizType()==GlobalBizTypeEnum.PRODUCT.getCode()){
             isSendSystemNotice=true;
         }
+        // 优化方案：采用 Pipeline 批量写入替代循环写入
+        List<String> userFeedKeys = new ArrayList<>(userIdList.size());
+        List<String> allFeedKeys = new ArrayList<>(userIdList.size());
+        
         for (Long userId : userIdList) {
-            //推送
-            String key = feedKeyPrefix + userId;
-            redisService.setCacheZSet(key, value, System.currentTimeMillis());
-            //推送
-            String allFeedFeedKeyPrefix = FeedTypeEnum.ALL_FEED.getFeedKeyPrefix();
-            String allFeedKey = allFeedFeedKeyPrefix + userId;
-            redisService.setCacheZSet(allFeedKey, value, System.currentTimeMillis());
+            userFeedKeys.add(feedKeyPrefix + userId);
+            allFeedKeys.add(FeedTypeEnum.ALL_FEED.getFeedKeyPrefix() + userId);
+            
             if(isSendSystemNotice){
-                //发送系统通知
+                // 发送系统通知（当前设计为RPC，可进一步考虑发MQ或本地事件机制）
                 createSystemNotice(userId, feedEventMessage);
             }
         }
+        
+        long currentTimeMillis = System.currentTimeMillis();
+        // Pipeline 批量写入个人动态 Feed 中继层
+        redisService.setCacheZSetBatch(userFeedKeys, value, currentTimeMillis);
+        // Pipeline 批量写入总 Feed 聚合层
+        redisService.setCacheZSetBatch(allFeedKeys, value, currentTimeMillis);
     }
     /**
      * 创建系统通知
@@ -393,7 +401,11 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             createDTO.setContent(content);
             createDTO.setTitle(globalBizTypeEnum.getDesc()+desc);
             createDTO.setExtraData(map);
-            remoteChatService.createSystemNotice(createDTO);
+            // 通过 MQ 异步发送系统通知，解耦 interaction 模块与 chat 模块，避免同步 RPC 流量放大
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+                    ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
+                    ChatMqConstants.SYSTEM_NOTICE_ROUTING,
+                    createDTO);
         } catch (Exception e) {
             log.error("create reject system notice failed, auditTaskId={}", feedEventMessage.getBizId(), e);
         }

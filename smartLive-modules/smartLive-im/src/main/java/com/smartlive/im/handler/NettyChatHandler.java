@@ -1,4 +1,4 @@
-package com.smartlive.im.handler;
+﻿package com.smartlive.im.handler;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
@@ -10,9 +10,10 @@ import com.smartLive.chat.api.dto.ChatMessageEvent;
 import com.smartLive.chat.api.dto.UserSessionDTO;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.core.domain.LoginUser;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.user.api.domain.UserDTO;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;

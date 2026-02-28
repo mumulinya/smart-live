@@ -1,4 +1,4 @@
-package com.smartLive.ai.controller;
+﻿package com.smartLive.ai.controller;
 
 import com.smartLive.ai.domain.DTO.MessageDTO;
 import com.smartLive.ai.domain.Message;
@@ -7,7 +7,7 @@ import com.smartLive.ai.service.IMessageService;
 import com.smartLive.ai.service.orchestration.AIChatOrchestrator;
 import com.smartLive.ai.service.rag.impl.ShopRagService;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.core.domain.LoginUser;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.core.web.page.TableDataInfo;

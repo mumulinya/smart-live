@@ -5,6 +5,8 @@ import com.smartLive.common.core.constant.mq.ChatMqConstants;
 import com.rabbitmq.client.Channel;
 import com.smartlive.chat.consumer.SessionChatConsumer;
 import com.smartlive.chat.dto.ChatMessageEvent;
+import com.smartlive.chat.dto.SystemNoticeCreateDTO;
+import com.smartlive.chat.service.ISystemNoticeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.rabbit.annotation.*;
@@ -22,6 +24,9 @@ public class ChatListener {
     @Autowired
     private SessionChatConsumer sessionChatConsumer;
 
+    @Autowired
+    private ISystemNoticeService systemNoticeService;
+
     /**
      * 监听所有会话队列
      */
@@ -30,7 +35,6 @@ public class ChatListener {
                     value = @Queue(
                             value = ChatMqConstants.CHAT_MESSAGE_QUEUE,
                             durable = "true",
-                            // ⭐ 关键修改：这里配置死信交换机和死信路由键
                             arguments = {
                                     @Argument(name = "x-dead-letter-exchange", value = AiAuditMqConstants.DEAD_LETTER_EXCHANGE_NAME),
                                     @Argument(name = "x-dead-letter-routing-key", value = AiAuditMqConstants.DEAD_LETTER_ROUTING)
@@ -38,44 +42,73 @@ public class ChatListener {
                     ),
                     exchange = @Exchange(
                             value = ChatMqConstants.CHAT_EXCHANGE_NAME,
-                            type = ExchangeTypes.TOPIC // 一定要指定为 topic
+                            type = ExchangeTypes.TOPIC
                     ),
-                    key = ChatMqConstants.CHAT_MESSAGE_ROUTING + "*"            // 匹配所有 session.chat.xxx 的路由
+                    key = ChatMqConstants.CHAT_MESSAGE_ROUTING + "*"
             )
     )
     public void consumeAllSessionMessages(ChatMessageEvent messageEvent, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         Long sessionId = messageEvent.getSessionId();
         try {
-            log.info("✅ 收到会话消息: sessionId={}", sessionId);
-
-            // 执行你的业务逻辑
+            log.info("收到会话消息: sessionId={}", sessionId);
+            // 执行业务逻辑
             sessionChatConsumer.processChatMessage(messageEvent);
-            // 模拟业务逻辑...
-//            int i = 1 / 0; // 模拟异常
-
             // 成功：手动 ACK
             channel.basicAck(deliveryTag, false);
-
         } catch (Exception e) {
-            log.error(" 消息SessionId: {}消费失败，即将进入死信队列,报错消息为{} ", sessionId, e.getMessage());
-
-            // 失败：手动 NACK
-            // 参数1：Tag
-            // 参数2：multiple (是否批量) -> false
-            // 参数3：requeue (是否重回原队列) -> ⭐ false (设为 false 才会进死信队列)
+            log.error("消息SessionId: {}消费失败，即将进入死信队列,报错消息为{} ", sessionId, e.getMessage());
+            // 失败：手动 NACK，不重回原队列，进入死信队列
             channel.basicNack(deliveryTag, false, false);
         }
     }
+
+    /**
+     * 监听系统通知队列
+     * 消费来自 interaction 模块（Feed 流推送）和 audit 模块（审核拒绝）的系统通知消息
+     * 替代了原来的同步 RPC 调用（remoteChatService.createSystemNotice），实现跨模块异步解耦
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(
+                            value = ChatMqConstants.SYSTEM_NOTICE_QUEUE,
+                            durable = "true",
+                            // 配置死信交换机，消费失败后进入死信队列进行兜底处理
+                            arguments = {
+                                    @Argument(name = "x-dead-letter-exchange", value = AiAuditMqConstants.DEAD_LETTER_EXCHANGE_NAME),
+                                    @Argument(name = "x-dead-letter-routing-key", value = AiAuditMqConstants.DEAD_LETTER_ROUTING)
+                            }
+                    ),
+                    exchange = @Exchange(
+                            value = ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
+                            type = ExchangeTypes.TOPIC
+                    ),
+                    key = ChatMqConstants.SYSTEM_NOTICE_ROUTING
+            )
+    )
+    public void consumeSystemNotice(SystemNoticeCreateDTO createDTO, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        try {
+            log.info("收到系统通知消息: userId={}, action={}", createDTO.getUserId(), createDTO.getAction());
+            // 调用已有的服务方法：插入 DB + WebSocket 实时推送
+            systemNoticeService.createAndPush(createDTO);
+            // 消费成功：手动 ACK
+            channel.basicAck(deliveryTag, false);
+        } catch (Exception e) {
+            log.error("系统通知消费失败，即将进入死信队列, userId={}, error={}", createDTO.getUserId(), e.getMessage());
+            // 消费失败：NACK 并拒绝重回原队列，进入死信队列兜底
+            channel.basicNack(deliveryTag, false, false);
+        }
+    }
+
     /**
      * 监听死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = AiAuditMqConstants.DEAD_LETTER_QUEUE, durable = "true"), // 死信队列名
+            value = @Queue(value = AiAuditMqConstants.DEAD_LETTER_QUEUE, durable = "true"),
             exchange = @Exchange(value = AiAuditMqConstants.DEAD_LETTER_EXCHANGE_NAME),
             key = AiAuditMqConstants.DEAD_LETTER_ROUTING
     ))
-    public void handleDeadLetter(ChatMessageEvent messageEvent, Channel channel,@Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
-        log.error("🚨 死信队列收到消息: {}", messageEvent);
+    public void handleDeadLetter(ChatMessageEvent messageEvent, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        log.error("死信队列收到消息: {}", messageEvent);
         // TODO: 保存到数据库异常表
         channel.basicAck(deliveryTag, false);
     }

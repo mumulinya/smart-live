@@ -1,11 +1,11 @@
-package com.smartLive.interaction.service.impl;
+﻿package com.smartLive.interaction.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.core.domain.LoginUser;
 import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;

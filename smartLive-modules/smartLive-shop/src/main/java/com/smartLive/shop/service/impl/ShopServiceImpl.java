@@ -1,4 +1,4 @@
-package com.smartLive.shop.service.impl;
+﻿package com.smartLive.shop.service.impl;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
@@ -23,7 +23,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.SecurityContextHolder;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.UserDTO;
+import com.smartLive.common.core.domain.LoginUser;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;

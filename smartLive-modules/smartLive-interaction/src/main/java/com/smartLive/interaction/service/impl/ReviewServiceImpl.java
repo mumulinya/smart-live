@@ -1,4 +1,4 @@
-package com.smartLive.interaction.service.impl;
+﻿package com.smartLive.interaction.service.impl;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -428,7 +428,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         Long userId = review.getUserId();
         if (userId == null) {
-            com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+            com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
                 review.setUserId(userId);
@@ -654,7 +654,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (CollUtil.isEmpty(reviewList)) {
             return;
         }
-        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
         if (user == null) {
             reviewList.forEach(review -> {
                 if (review != null) {
@@ -941,7 +941,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         Long userId = review.getUserId();
         if (userId == null) {
-            com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+            com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
             }

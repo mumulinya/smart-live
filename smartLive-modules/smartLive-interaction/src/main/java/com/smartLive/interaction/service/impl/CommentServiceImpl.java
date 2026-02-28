@@ -1,4 +1,4 @@
-package com.smartLive.interaction.service.impl;
+﻿package com.smartLive.interaction.service.impl;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -388,7 +388,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         Long userId = comment.getUserId();
         if (userId == null) {
-            com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+            com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
                 comment.setUserId(userId);
@@ -645,7 +645,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         if (CollUtil.isEmpty(commentList)) {
             return;
         }
-        com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+        com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
         if (user == null) {
             commentList.forEach(comment -> {
                 if (comment != null) {
@@ -788,7 +788,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         Long userId = comment.getUserId();
         if (userId == null) {
-            com.smartLive.common.core.domain.UserDTO user = UserContextHolder.getUser();
+            com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
             }

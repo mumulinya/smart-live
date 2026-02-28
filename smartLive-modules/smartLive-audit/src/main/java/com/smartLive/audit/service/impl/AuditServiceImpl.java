@@ -10,14 +10,16 @@ import com.smartLive.audit.mapper.AuditTaskMapper;
 import com.smartLive.audit.service.IAuditService;
 import com.smartLive.audit.strategy.AuditStrategy;
 import com.smartLive.audit.strategy.AuditStrategyFactory;
-import com.smartLive.chat.api.RemoteChatService;
 import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
+import com.smartLive.common.core.constant.mq.ChatMqConstants;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.utils.SensitiveWordUtil;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.user.api.RemoteAppUserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,9 +42,9 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
     @Autowired
     private RemoteAppUserService remoteAppUserService;
     @Autowired
-    private RemoteChatService remoteChatService;
-    @Autowired
     private SensitiveWordUtil sensitiveWordUtil;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Override
     public List<AuditTaskVO> selectAuditList(AuditTask auditTask) {
@@ -143,7 +145,11 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
             createDTO.setTitle(title);
             createDTO.setExtraData(task.getAuditContent());
             createDTO.setRejectReason(StringUtils.isNotBlank(reason) ? reason : "");
-            remoteChatService.createSystemNotice(createDTO);
+            // 通过 MQ 异步发送审核拒绝的系统通知，解耦 audit 模块与 chat 模块
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+                    ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
+                    ChatMqConstants.SYSTEM_NOTICE_ROUTING,
+                    createDTO);
         } catch (Exception e) {
             log.error("create reject system notice failed, auditTaskId={}", task.getId(), e);
         }
