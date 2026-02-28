@@ -60,6 +60,9 @@ public class ShopVO implements Serializable
     
     /** 收藏数量 */
     private Integer stared;
+    
+    /** fans count */
+    private Integer fans;
 
     /** 评分，1~5分，乘10保存，避免小数 */
     private Integer score;

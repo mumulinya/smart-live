@@ -697,6 +697,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             userVO.setIntroduce(userInfo.getIntroduce());
             userVO.setBackgroundImage(userInfo.getBackgroundImage());
             userVO.setCity(userInfo.getCity());
+            userVO.setFans(userInfo.getFans());
+            userVO.setFollowee(userInfo.getFollowee());
         }
         return userVO;
     }

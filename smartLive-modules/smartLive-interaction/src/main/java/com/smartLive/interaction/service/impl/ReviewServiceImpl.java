@@ -325,7 +325,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
             String reviewSyncKey = reviewType.getReviewSyncKey();
 
-            // 4. 更新目标主体的评价总数缓存
+            // 4. 确保 Redis 计数器已初始化，再自增目标主体的评价总数
+            getReviewCount(review);
             redisService.incrementCacheValue(reviewCountKeyPrefix);
 
             // 5. 【双轨制：同步轨】将发生互动的数据源 ID 推入待同步队列
@@ -396,7 +397,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             redisService.removeCacheZSetObject(reviewKeyPrefix, dbReview.getId().toString());
             redisService.removeCacheZSetObject(reviewNewRankKeyPrefix, dbReview.getId().toString());
 
-            // 3. 同步递减目标主体的评价总数
+            // 3. 确保 Redis 计数器已初始化，再递减目标主体的评价总数
+            getReviewCount(dbReview);
             redisService.decrementCacheValue(reviewCountKeyPrefix);
 
             // 4. 将目标源 ID 放入待落库同步队列
@@ -484,12 +486,31 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     /**
      * 统计符合特定条件的评价数量
+     * 优先级: Redis 独立计数器 → review 表 COUNT
      *
      * @param review 查询条件
      * @return 统计总数
      */
     @Override
     public Integer getReviewCount(Review review) {
+        ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
+        // 只有同时指定了 sourceType 和 sourceId 时才走 Redis 计数器
+        if (reviewType != null && review.getSourceId() != null) {
+            String reviewCountKey = reviewType.getReviewCountKeyPrefix() + review.getSourceId();
+            // 1. 从 Redis 独立计数器读取
+            Integer count = redisService.getCacheObject(reviewCountKey);
+            if (count != null) {
+                return count;
+            }
+            // 2. 计数器不存在，从 review 表 COUNT 查询并回写 Redis
+            count = query()
+                    .eq("source_type", review.getSourceType())
+                    .eq("source_id", review.getSourceId())
+                    .count().intValue();
+            redisService.setCacheObject(reviewCountKey, count);
+            return count;
+        }
+        // 通用条件查询（后台管理等场景），直接走数据库
         return query()
                 .eq(review.getSourceType() != null, "source_type", review.getSourceType())
                 .eq(review.getSourceId() != null, "source_id", review.getSourceId())
@@ -892,6 +913,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             // 将违规评价从排行榜中剔除
             redisService.removeCacheZSetObject(reviewKeyPrefix, review.getId().toString());
             redisService.removeCacheZSetObject(reviewNewRankKeyPrefix, review.getId().toString());
+            // 确保 Redis 计数器已初始化，再递减
+            getReviewCount(review);
             redisService.decrementCacheValue(reviewCountKeyPrefix);
             redisService.setCacheSet(reviewSyncKey, Collections.singleton(review.getSourceId().toString()));
             // 通知定时任务扣减所属主体的热度分

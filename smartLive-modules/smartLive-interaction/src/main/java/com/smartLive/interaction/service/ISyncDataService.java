@@ -30,4 +30,14 @@ public interface ISyncDataService {
      */
     void syncReviewData();
 
+    /**
+     * 同步关注计数
+     */
+    void syncFollowData();
+
+    /**
+     * 同步粉丝计数
+     */
+    void syncFansData();
+
 }

@@ -25,6 +25,7 @@ import com.smartLive.interaction.mapper.FollowMapper;
 import com.smartLive.interaction.service.IFollowService;
 import com.smartLive.interaction.strategy.factory.FollowStrategyFactory;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
+import com.smartLive.interaction.strategy.follow.FollowStrategy;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -159,6 +160,9 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         String targetFansKey = followType.getFansKeyPrefix() + follow.getSourceId();
         String followDirtyKey = followType.getFollowDirtyKeyPrefix();
         String fansDirtyKey = followType.getFansDirtyKeyPrefix();
+        // 4. 独立计数器 key
+        String followCountKey = followType.getFollowCountKeyPrefix() + userId;
+        String fansCountKey = followType.getFansCountKeyPrefix() + follow.getSourceId();
         //判断是关注还是取关
         if(Boolean.TRUE.equals(follow.getIsFollow())){
             //关注
@@ -166,11 +170,17 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             follow.setCreateTime(DateUtils.getNowDate());
             boolean save = save(follow);
             if (save) {
-                //关注成功，添加关注到redis
+                //关注成功，添加关注到redis ZSet
                 redisService.setCacheZSet(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(targetFansKey, userId.toString(), System.currentTimeMillis());
+                //标记脏数据
                 redisService.setCacheSet(followDirtyKey, userId.toString());
                 redisService.setCacheSet(fansDirtyKey, follow.getSourceId().toString());
+                //确保 Redis 计数器已初始化，再递增独立计数器
+                getFollowCount(follow);
+                getFanCount(follow);
+                redisService.incrementCacheValue(followCountKey);
+                redisService.incrementCacheValue(fansCountKey);
                 //同步个人资源到es
                 followStrategyFactory.getStrategy(follow.getSourceType()).syncUserResource(userId, follow.getSourceId());
             }
@@ -179,11 +189,17 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             //取关
             boolean remove = remove(new QueryWrapper<Follow>().eq("user_id", userId).eq("source_type",follow.getSourceType()).eq("source_id", follow.getSourceId()));
             if (remove) {
-                //取关成功，从redis中删除关注
+                //取关成功，从redis ZSet中删除
                 redisService.removeCacheZSetObject(myFollowKey, follow.getSourceId().toString());
                 redisService.removeCacheZSetObject(targetFansKey, userId.toString());
+                //标记脏数据
                 redisService.setCacheSet(followDirtyKey, userId.toString());
                 redisService.setCacheSet(fansDirtyKey, follow.getSourceId().toString());
+                //确保 Redis 计数器已初始化，再递减独立计数器
+                getFollowCount(follow);
+                getFanCount(follow);
+                redisService.decrementCacheValue(followCountKey);
+                redisService.decrementCacheValue(fansCountKey);
             }
             return remove;
         }
@@ -487,33 +503,54 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
 
     /**
      * 获取关注数
+     * 优先级: Redis 独立计数器 → 源数据表 → follow 表 COUNT
      *
-     * @param follow
-     * @return
+     * @param follow 关注查询条件
+     * @return 关注数量
      */
     @Override
     public Integer getFollowCount(Follow follow) {
-        //从redis里面获取
-        int followCount = (int) zSetIdManager.pageIds(FollowTypeEnum.getByCode(follow.getSourceType()).getFollowKeyPrefix(), follow.getUserId(),1, 0).getTotal();
-        if(followCount==0){
-            //从数据库获取
-            followCount = query().eq("source_type", follow.getSourceType()).eq("user_id", follow.getUserId()).count().intValue();
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(follow.getSourceType());
+        // 1. 从 Redis 独立计数器读取关注数
+        String followCountKey = followType.getFollowCountKeyPrefix() + follow.getUserId();
+        Integer followCount = redisService.getCacheObject(followCountKey);
+        if (followCount == null) {
+            // 2. 计数器不存在，先从源数据表查询（如 user_info.followee）
+            FollowStrategy strategy = followStrategyFactory.getStrategy(follow.getSourceType());
+            followCount = strategy.getFollowCount(follow.getUserId());
+            // 3. 源表也查不到，fallback 到 follow 表 COUNT
+            if (followCount == null) {
+                followCount = query().eq("source_type", follow.getSourceType()).eq("user_id", follow.getUserId()).count().intValue();
+            }
+            // 回写 Redis 缓存
+            redisService.setCacheObject(followCountKey, followCount);
         }
         return followCount;
     }
 
     /**
      * 获取粉丝数
+     * 优先级: Redis 独立计数器 → 源数据表 → follow 表 COUNT
      *
-      * @param follow
-     * @return
+     * @param follow 关注查询条件
+     * @return 粉丝数量
      */
     @Override
     public Integer getFanCount(Follow follow) {
-        //从redis里面获取
-        int fansCount = (int) zSetIdManager.pageIds(FollowTypeEnum.getByCode(follow.getSourceType()).getFansKeyPrefix(), follow.getSourceId(),1, 0).getTotal();
-        if(fansCount==0){
-             fansCount = query().eq("source_type", follow.getSourceType()).eq("source_id", follow.getSourceId()).count().intValue();
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(follow.getSourceType());
+        // 1. 从 Redis 独立计数器读取粉丝数
+        String fansCountKey = followType.getFansCountKeyPrefix() + follow.getSourceId();
+        Integer fansCount = redisService.getCacheObject(fansCountKey);
+        if (fansCount == null) {
+            // 2. 计数器不存在，先从源数据表查询（如 user_info.fans、shop.fans）
+            FollowStrategy strategy = followStrategyFactory.getStrategy(follow.getSourceType());
+            fansCount = strategy.getFanCount(follow.getSourceId());
+            // 3. 源表也查不到，fallback 到 follow 表 COUNT
+            if (fansCount == null) {
+                fansCount = query().eq("source_type", follow.getSourceType()).eq("source_id", follow.getSourceId()).count().intValue();
+            }
+            // 回写 Redis 缓存
+            redisService.setCacheObject(fansCountKey, fansCount);
         }
         return fansCount;
     }

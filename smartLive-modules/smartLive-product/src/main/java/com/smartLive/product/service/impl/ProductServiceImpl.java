@@ -836,6 +836,33 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         clearProductCacheBatch(updateMap.keySet());
         return true;
     }
+
+    /**
+     * 批量更新商品粉丝数
+     *
+     * @param updateMap 商品ID与粉丝数的映射
+     * @return 更新结果
+     */
+    @Override
+    public Boolean updateFansCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+        if (updateMap.size() > 500) {
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                productMapper.updateFansCountBatch(batchMap);
+            }
+        } else {
+            productMapper.updateFansCountBatch(updateMap);
+        }
+        clearProductCacheBatch(updateMap.keySet());
+        return true;
+    }
     /**
      * 获取商品收藏数
      *

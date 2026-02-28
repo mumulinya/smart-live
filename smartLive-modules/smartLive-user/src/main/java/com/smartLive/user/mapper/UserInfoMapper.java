@@ -1,9 +1,12 @@
 package com.smartLive.user.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.smartLive.user.domain.UserInfo;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 
 /**
@@ -61,4 +64,38 @@ public interface UserInfoMapper extends BaseMapper<UserInfo>
      * @return 结果
      */
     public int deleteUserInfoByUserIds(Long[] userIds);
+
+    /**
+     * Batch update user fans count.
+     */
+    @Update("<script>" +
+            "UPDATE user_info " +
+            "SET fans = CASE user_id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE user_id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateFansCountBatch(@Param("map") Map<Long, Integer> updateMap);
+
+    /**
+     * Batch update user followee count.
+     */
+    @Update("<script>" +
+            "UPDATE user_info " +
+            "SET followee = CASE user_id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE user_id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateFolloweeCountBatch(@Param("map") Map<Long, Integer> updateMap);
 }

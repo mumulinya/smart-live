@@ -102,4 +102,22 @@ public interface ProductMapper extends BaseMapper<Product>
             "  </foreach>" +
             "</script>")
     void updateStarCountBatch(@Param("map") Map<Long, Integer> batchMap);
+
+    /**
+     * Batch update product fans count.
+     */
+    @Update("<script>" +
+            "UPDATE product " +
+            "SET fans" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateFansCountBatch(@Param("map") Map<Long, Integer> batchMap);
 }

@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @FeignClient(contextId = "remoteAppUserService", value = ServiceNameConstants.USER_SERVICE, fallbackFactory = RemoteAppUserFallbackFactory.class)
 public interface RemoteAppUserService {
@@ -53,4 +53,16 @@ public interface RemoteAppUserService {
      */
     @PostMapping("/inner/user/updateUserStatus")
     Boolean updateUserStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
+
+    /**
+     * Batch update user fans count.
+     */
+    @PostMapping("/inner/user/updateFansCountBatch")
+    Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap);
+
+    /**
+     * Batch update user followee count.
+     */
+    @PostMapping("/inner/user/updateFolloweeCountBatch")
+    Boolean updateFolloweeCountBatch(@RequestBody Map<Long, Integer> updateMap);
 }

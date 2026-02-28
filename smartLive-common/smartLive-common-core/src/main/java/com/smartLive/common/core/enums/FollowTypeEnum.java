@@ -17,7 +17,9 @@ public enum FollowTypeEnum {
             RedisConstants.FOLLOW_USER_KEY,
             RedisConstants.FANS_USER_KEY,
             RedisConstants.FOLLOW_USER_DIRTY_KEY,
-            RedisConstants.FANS_USER_DIRTY_KEY
+            RedisConstants.FANS_USER_DIRTY_KEY,
+            RedisConstants.FOLLOW_USER_COUNT_KEY,
+            RedisConstants.FANS_USER_COUNT_KEY
     ),
     SHOP_IDENTITY(
             GlobalBizTypeEnum.SHOP.getCode(),
@@ -26,7 +28,9 @@ public enum FollowTypeEnum {
             RedisConstants.FOLLOW_SHOP_KEY,
             RedisConstants.FANS_SHOP_KEY,
             RedisConstants.FOLLOW_SHOP_DIRTY_KEY,
-            RedisConstants.FANS_SHOP_DIRTY_KEY
+            RedisConstants.FANS_SHOP_DIRTY_KEY,
+            RedisConstants.FOLLOW_SHOP_COUNT_KEY,
+            RedisConstants.FANS_SHOP_COUNT_KEY
     ),
     PRODUCT_IDENTITY(
             GlobalBizTypeEnum.PRODUCT.getCode(),
@@ -35,7 +39,9 @@ public enum FollowTypeEnum {
             RedisConstants.FOLLOW_PRODUCT_KEY,
             RedisConstants.FANS_PRODUCT_KEY,
             RedisConstants.FOLLOW_PRODUCT_DIRTY_KEY,
-            RedisConstants.FANS_PRODUCT_DIRTY_KEY
+            RedisConstants.FANS_PRODUCT_DIRTY_KEY,
+            RedisConstants.FOLLOW_PRODUCT_COUNT_KEY,
+            RedisConstants.FANS_PRODUCT_COUNT_KEY
     );
 
     private final Integer code;
@@ -61,6 +67,16 @@ public enum FollowTypeEnum {
      * 粉丝列表脏数据 Key
      */
     private final String fansDirtyKeyPrefix;
+
+    /**
+     * 关注计数 Key 前缀 (独立 String 计数器, 如 user:follow:user:count:{userId})
+     */
+    private final String followCountKeyPrefix;
+
+    /**
+     * 粉丝计数 Key 前缀 (独立 String 计数器, 如 user:fans:count:{sourceId})
+     */
+    private final String fansCountKeyPrefix;
 
     public static FollowTypeEnum getByCode(Integer code) {
         if (code == null) {

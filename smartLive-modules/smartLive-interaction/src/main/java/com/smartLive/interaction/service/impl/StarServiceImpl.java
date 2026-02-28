@@ -106,11 +106,8 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             star.setCreateTime(DateUtils.getNowDate());
             boolean saved = save(star);
 
-            Integer starCount = redisService.getCacheObject(starCountKey);
-            if (starCount == null) {
-                starCount = starStrategy.getStarCount(star.getSourceId());
-                redisService.setCacheObject(starCountKey, starCount);
-            }
+            // 获取收藏数（复用统一的三级 fallback 逻辑）
+            Integer starCount = getStarCount(star);
 
             if (saved) {
                 redisService.setCacheZSet(userStarKey, star.getSourceId().toString(), System.currentTimeMillis());
@@ -127,6 +124,8 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             if (removed) {
                 redisService.removeCacheZSetObject(userStarKey, star.getSourceId().toString());
                 redisService.removeCacheZSetObject(sourceStarKey, userId.toString());
+                // 确保 Redis 计数器已初始化，再递减
+                getStarCount(star);
                 redisService.decrementCacheValue(starCountKey);
                 redisService.setCacheSet(starDirtyKey, star.getSourceId().toString());
             }
@@ -239,13 +238,24 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         return resourceStrategy.getResourceList(userIdList);
     }
 
+    /**
+     * 获取收藏数
+     * 优先级: Redis 独立计数器 → 源数据表(策略) → star 表 COUNT
+     */
     @Override
     public Integer getStarCount(Star star) {
         StarTypeEnum starTypeEnum = StarTypeEnum.getByCode(star.getSourceType());
         String starCountKey = starTypeEnum.getStarCountKeyPrefix() + star.getSourceId();
+        // 1. 从 Redis 独立计数器读取
         Integer starCount = redisService.getCacheObject(starCountKey);
         if (starCount == null) {
+            // 2. 计数器不存在，从源数据表获取（如 blog.stared、shop.star）
             starCount = starStrategyFactory.getStrategy(star.getSourceType()).getStarCount(star.getSourceId());
+            // 3. 源表也查不到，fallback 到 star 表 COUNT
+            if (starCount == null) {
+                starCount = query().eq("source_type", star.getSourceType()).eq("source_id", star.getSourceId()).count().intValue();
+            }
+            // 回写 Redis 缓存
             redisService.setCacheObject(starCountKey, starCount);
         }
         return starCount;

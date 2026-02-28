@@ -798,6 +798,29 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 批量更新结果
      */
     @Override
+    public Boolean updateFansCountBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+
+        if (updateMap.size() > 500) {
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateFansCountBatch(batchMap);
+            }
+        } else {
+            baseMapper.updateFansCountBatch(updateMap);
+        }
+        updateMap.keySet().forEach(this::flashShopRedisCache);
+        flushCache();
+        return true;
+    }
+
+    @Override
     public Boolean updateReviewCountBatch(Map<Long, Integer> updateMap) {
         if (CollUtil.isEmpty(updateMap)) {
             return false;

@@ -88,6 +88,13 @@ public class ShopInnerController extends BaseController {
    public Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return shopService.updateStarCountBatch(updateMap);
     }
+    /**
+     * Batch update shop fans count.
+     */
+    @PostMapping("/updateFansCountBatch")
+   public Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap){
+        return shopService.updateFansCountBatch(updateMap);
+    }
 
     /**
      * 更新店铺状态

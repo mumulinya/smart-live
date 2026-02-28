@@ -28,6 +28,16 @@ public interface InteractionRedisKeyConstants {
         String USER_FANS_DIRTY = "user:fans:dirty";
         String SHOP_FANS_DIRTY = "shop:fans:dirty";
         String PRODUCT_FANS_DIRTY = "product:fans:dirty";
+
+        // --- 关注计数 (独立 String 计数器) ---
+        String USER_FOLLOW_USER_COUNT = "user:follow:user:count:";
+        String USER_FOLLOW_SHOP_COUNT = "user:follow:shop:count:";
+        String USER_FOLLOW_PRODUCT_COUNT = "user:follow:product:count:";
+
+        // --- 粉丝计数 (独立 String 计数器) ---
+        String USER_FANS_COUNT = "user:fans:count:";
+        String SHOP_FANS_COUNT = "shop:fans:count:";
+        String PRODUCT_FANS_COUNT = "product:fans:count:";
     }
 
     /**

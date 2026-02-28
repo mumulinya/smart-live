@@ -77,6 +77,9 @@ public class Shop extends BaseEntity implements Serializable
     /** 收藏数量 */
     @Excel(name = "收藏数量")
     private Integer stared;
+    /** fans count */
+    @Excel(name = "fans")
+    private Integer fans;
 
     /** 评分，1~5分，乘10保存，避免小数 */
     @Excel(name = "评分，1~5分，乘10保存，避免小数")

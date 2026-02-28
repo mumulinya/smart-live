@@ -14,16 +14,43 @@ public interface FollowStrategy {
     Integer getType();
 
     /**
-     * 批量同步点赞数到数据库
-     * @param updateMap key: 业务ID, value: 最新点赞数
+     * Batch sync follow count to DB.
+     * key: userId, value: latest follow count
      */
-    void transStarCountFromRedis2DB(Map<Long, Integer> updateMap);
+    default void transFollowCountFromRedis2DB(Map<Long, Integer> updateMap) {
+    }
+
+    /**
+     * Batch sync fans count to DB.
+     * key: sourceId, value: latest fans count
+     */
+    default void transFansCountFromRedis2DB(Map<Long, Integer> updateMap) {
+    }
     /**
      * 获取收藏数
      * @param sourceId 业务ID
      * @return 收藏数
      */
     Integer getStarCount(Long sourceId);
+
+    /**
+     * 从源数据表获取粉丝数（如 user_info.fans、shop.fans、product.fans）
+     * @param sourceId 被关注实体 ID
+     * @return 粉丝数，null 表示源表无数据
+     */
+    default Integer getFanCount(Long sourceId) {
+        return null;
+    }
+
+    /**
+     * 从源数据表获取关注数（如 user_info.followee）
+     * @param userId 用户 ID
+     * @return 关注数，null 表示源表无数据
+     */
+    default Integer getFollowCount(Long userId) {
+        return null;
+    }
+
     /**
      * 同步数据到ES
      * 使用 default 关键字提供默认空实现

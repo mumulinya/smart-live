@@ -136,6 +136,13 @@ public interface IShopService extends IService<Shop> {
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
     /**
+     * Batch update shop fans count.
+     *
+     * @param updateMap shopId -> fansCount
+     * @return update result
+     */
+    Boolean updateFansCountBatch(Map<Long, Integer> updateMap);
+    /**
      * 批量更新商铺评价数
      *
      * @param updateMap 商铺id和评价数
@@ -163,5 +170,4 @@ public interface IShopService extends IService<Shop> {
      */
     List<ShopVO> getHotShopRank(Integer current, Integer size, Double x, Double y);
 }
-
 

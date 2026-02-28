@@ -68,6 +68,13 @@ public class RemoteProductFallbackFactory implements FallbackFactory<RemoteProdu
             {
                 return false;
             }
+
+            @Override
+            public Boolean updateFansCountBatch(Map<Long, Integer> updateMap)
+            {
+                return false;
+            }
+
             @Override
             public Integer getProductStarCount(Long sourceId)
             {

@@ -106,6 +106,12 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
              * @param sourceId
              */
             @Override
+            public Boolean updateFansCountBatch(Map<Long, Integer> updateMap) {
+                log.error("Batch update shop fans count failed: {}", cause.getMessage());
+                return false;
+            }
+
+            @Override
             public Integer getStarCount(Long sourceId) {
                 log.error("获取商家收藏数失败:{}", cause.getMessage());
                 return 0;

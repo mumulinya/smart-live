@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -285,5 +286,40 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
             userService.clearUserCache(id);
         }
         return updated;
+    }
+
+    @Override
+    public Boolean updateFansCountBatch(Map<Long, Integer> updateMap) {
+        if (updateMap == null || updateMap.isEmpty()) {
+            return false;
+        }
+        batchUpdate(updateMap, true);
+        updateMap.keySet().forEach(userService::clearUserCache);
+        return true;
+    }
+
+    @Override
+    public Boolean updateFolloweeCountBatch(Map<Long, Integer> updateMap) {
+        if (updateMap == null || updateMap.isEmpty()) {
+            return false;
+        }
+        batchUpdate(updateMap, false);
+        updateMap.keySet().forEach(userService::clearUserCache);
+        return true;
+    }
+
+    private void batchUpdate(Map<Long, Integer> updateMap, boolean fans) {
+        List<Long> keys = new ArrayList<>(updateMap.keySet());
+        int batchSize = 500;
+        for (int i = 0; i < keys.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, keys.size());
+            Map<Long, Integer> batchMap = keys.subList(i, end).stream()
+                    .collect(Collectors.toMap(k -> k, updateMap::get));
+            if (fans) {
+                baseMapper.updateFansCountBatch(batchMap);
+            } else {
+                baseMapper.updateFolloweeCountBatch(batchMap);
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.smartLive.interaction.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.smartLive.common.core.enums.CommentTypeEnum;
+import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.RankRedisEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
@@ -15,9 +16,11 @@ import com.smartLive.interaction.mapper.ReviewMapper;
 import com.smartLive.interaction.service.ISyncDataService;
 import com.smartLive.interaction.strategy.comment.CommentStrategy;
 import com.smartLive.interaction.strategy.factory.CommentStrategyFactory;
+import com.smartLive.interaction.strategy.factory.FollowStrategyFactory;
 import com.smartLive.interaction.strategy.factory.LikeStrategyFactory;
 import com.smartLive.interaction.strategy.factory.ReviewStrategyFactory;
 import com.smartLive.interaction.strategy.factory.StarStrategyFactory;
+import com.smartLive.interaction.strategy.follow.FollowStrategy;
 import com.smartLive.interaction.strategy.like.LikeStrategy;
 import com.smartLive.interaction.strategy.review.ReviewStrategy;
 import com.smartLive.interaction.strategy.star.StarStrategy;
@@ -57,6 +60,8 @@ public class SyncDataServiceImpl implements ISyncDataService {
     @Autowired
     private ReviewStrategyFactory reviewStrategyFactory;
     @Autowired
+    private FollowStrategyFactory followStrategyFactory;
+    @Autowired
     private CommentMapper commentMapper;
     @Autowired
     private ReviewMapper reviewMapper;
@@ -75,6 +80,8 @@ public class SyncDataServiceImpl implements ISyncDataService {
         CompletableFuture<Void> commentFuture = CompletableFuture.runAsync(this::syncCommentData, executorService);
         CompletableFuture<Void> starFuture = CompletableFuture.runAsync(this::syncStarData, executorService);
         CompletableFuture<Void> reviewFuture = CompletableFuture.runAsync(this::syncReviewData, executorService);
+        CompletableFuture<Void> followFuture = CompletableFuture.runAsync(this::syncFollowData, executorService);
+        CompletableFuture<Void> fansFuture = CompletableFuture.runAsync(this::syncFansData, executorService);
         log.info("互动数据同步主任务结束，耗时:{}ms", System.currentTimeMillis() - start);
     }
 
@@ -169,6 +176,59 @@ public class SyncDataServiceImpl implements ISyncDataService {
         });
         log.info("同步评价数完成");
     }
+
+    /**
+     * 从 Redis 独立计数器同步关注数到 MySQL。
+     */
+    @Override
+    public void syncFollowData() {
+        log.info("开始同步关注计数");
+        Arrays.stream(FollowTypeEnum.values()).forEach(type -> {
+            FollowStrategy strategy = followStrategyFactory.getStrategy(type.getCode());
+            if (strategy == null) {
+                log.warn("关注类型[{}]没有对应策略，跳过", type.getDesc());
+                return;
+            }
+            // 同步关注计数（使用独立计数器 key）
+            String followDirtyKey = type.getFollowDirtyKeyPrefix();
+            if (type.getFollowCountKeyPrefix() != null && followDirtyKey != null) {
+                sync(type.getDesc() + "-关注数",
+                        type.getFollowCountKeyPrefix(),
+                        followDirtyKey,
+                        followDirtyKey + ":TEMP",
+                        strategy::transFollowCountFromRedis2DB,
+                        null);
+            }
+        });
+        log.info("同步关注计数完成");
+    }
+
+    /**
+     * 从 Redis 独立计数器同步粉丝数到 MySQL。
+     */
+    @Override
+    public void syncFansData() {
+        log.info("开始同步粉丝计数");
+        Arrays.stream(FollowTypeEnum.values()).forEach(type -> {
+            FollowStrategy strategy = followStrategyFactory.getStrategy(type.getCode());
+            if (strategy == null) {
+                log.warn("粉丝类型[{}]没有对应策略，跳过", type.getDesc());
+                return;
+            }
+            // 同步粉丝计数（使用独立计数器 key）
+            String fansDirtyKey = type.getFansDirtyKeyPrefix();
+            if (type.getFansCountKeyPrefix() != null && fansDirtyKey != null) {
+                sync(type.getDesc() + "-粉丝数",
+                        type.getFansCountKeyPrefix(),
+                        fansDirtyKey,
+                        fansDirtyKey + ":TEMP",
+                        strategy::transFansCountFromRedis2DB,
+                        null);
+            }
+        });
+        log.info("同步粉丝计数完成");
+    }
+
 
     /**
      * 通用的 Redis 快照轮转与同步落库模型。

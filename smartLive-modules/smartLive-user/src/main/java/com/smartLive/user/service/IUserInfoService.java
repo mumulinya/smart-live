@@ -7,6 +7,7 @@ import com.smartLive.user.domain.VO.UserInfoVO;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户信息Service接口
@@ -67,4 +68,14 @@ public interface IUserInfoService extends IService<UserInfo> {
      * @return
      */
     Boolean updateUserStatus(Long id, Integer status);
+
+    /**
+     * Batch update user fans count.
+     */
+    Boolean updateFansCountBatch(Map<Long, Integer> updateMap);
+
+    /**
+     * Batch update user followee count.
+     */
+    Boolean updateFolloweeCountBatch(Map<Long, Integer> updateMap);
 }

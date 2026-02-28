@@ -1,15 +1,13 @@
 package com.smartLive.user.api.factory;
 
-import com.smartLive.common.core.domain.R;
 import com.smartLive.user.api.RemoteAppUserService;
-import com.smartLive.user.api.domain.BlogDTO;
-import com.smartLive.user.api.domain.User;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -87,6 +85,19 @@ public class RemoteAppUserFallbackFactory implements FallbackFactory<RemoteAppUs
                 log.error("更新用户状态失败:{}", throwable.getMessage());
                 return false;
             }
+
+            @Override
+            public Boolean updateFansCountBatch(Map<Long, Integer> updateMap) {
+                log.error("Batch update user fans count failed: {}", throwable.getMessage());
+                return false;
+            }
+
+            @Override
+            public Boolean updateFolloweeCountBatch(Map<Long, Integer> updateMap) {
+                log.error("Batch update user followee count failed: {}", throwable.getMessage());
+                return false;
+            }
         };
     }
 }
+

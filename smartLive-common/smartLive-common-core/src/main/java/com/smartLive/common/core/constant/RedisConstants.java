@@ -69,6 +69,14 @@ public class RedisConstants {
     public static final String FANS_USER_DIRTY_KEY = InteractionRedisKeyConstants.Follow.USER_FANS_DIRTY;
     public static final String FANS_SHOP_DIRTY_KEY = InteractionRedisKeyConstants.Follow.SHOP_FANS_DIRTY;
     public static final String FANS_PRODUCT_DIRTY_KEY = InteractionRedisKeyConstants.Follow.PRODUCT_FANS_DIRTY;
+    //关注计数（独立计数器）
+    public static final String FOLLOW_USER_COUNT_KEY = InteractionRedisKeyConstants.Follow.USER_FOLLOW_USER_COUNT;
+    public static final String FOLLOW_SHOP_COUNT_KEY = InteractionRedisKeyConstants.Follow.USER_FOLLOW_SHOP_COUNT;
+    public static final String FOLLOW_PRODUCT_COUNT_KEY = InteractionRedisKeyConstants.Follow.USER_FOLLOW_PRODUCT_COUNT;
+    //粉丝计数（独立计数器）
+    public static final String FANS_USER_COUNT_KEY = InteractionRedisKeyConstants.Follow.USER_FANS_COUNT;
+    public static final String FANS_SHOP_COUNT_KEY = InteractionRedisKeyConstants.Follow.SHOP_FANS_COUNT;
+    public static final String FANS_PRODUCT_COUNT_KEY = InteractionRedisKeyConstants.Follow.PRODUCT_FANS_COUNT;
     /**
      * 商品缓存
      */

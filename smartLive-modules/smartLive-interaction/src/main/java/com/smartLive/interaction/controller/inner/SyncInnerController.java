@@ -32,4 +32,19 @@ public class SyncInnerController
             return false;
         }
     }
+
+    @PostMapping("/trigger/follow")
+    public Boolean triggerFollow()
+    {
+        try
+        {
+            syncDataService.syncFollowData();
+            return true;
+        }
+        catch (Exception e)
+        {
+            log.error("trigger follow sync failed", e);
+            return false;
+        }
+    }
 }

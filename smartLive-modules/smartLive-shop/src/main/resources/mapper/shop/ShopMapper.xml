@@ -17,6 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="avgPrice"    column="avg_price"    />
         <result property="sold"    column="sold"    />
         <result property="reviews"    column="reviews"    />
+        <result property="fans"    column="fans"    />
         <result property="score"    column="score"    />
         <result property="openHours"    column="open_hours"    />
         <result property="createTime"    column="create_time"    />
@@ -24,7 +25,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectShopVo">
-        select id, name, type_id, shop_logo, images, area, address, x, y, avg_price, sold, reviews, score, open_hours, create_time, update_time from shop
+        select id, name, type_id, shop_logo, images, area, address, x, y, avg_price, sold, reviews, fans, score, open_hours, create_time, update_time from shop
     </sql>
 
     <select id="selectShopList" parameterType="com.smartLive.shop.domain.Shop" resultMap="ShopResult">
@@ -41,6 +42,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="avgPrice != null  and avgPrice != ''"> and avg_price = #{avgPrice}</if>
             <if test="sold != null "> and sold = #{sold}</if>
             <if test="reviews != null "> and reviews = #{reviews}</if>
+            <if test="fans != null "> and fans = #{fans}</if>
             <if test="score != null "> and score = #{score}</if>
             <if test="openHours != null  and openHours != ''"> and open_hours = #{openHours}</if>
         </where>
@@ -65,6 +67,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="avgPrice != null">avg_price,</if>
             <if test="sold != null">sold,</if>
             <if test="reviews != null">reviews,</if>
+            <if test="fans != null">fans,</if>
             <if test="score != null">score,</if>
             <if test="openHours != null">open_hours,</if>
             <if test="createTime != null">create_time,</if>
@@ -82,6 +85,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="avgPrice != null">#{avgPrice},</if>
             <if test="sold != null">#{sold},</if>
             <if test="reviews != null">#{reviews},</if>
+            <if test="fans != null">#{fans},</if>
             <if test="score != null">#{score},</if>
             <if test="openHours != null">#{openHours},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -103,6 +107,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="avgPrice != null">avg_price = #{avgPrice},</if>
             <if test="sold != null">sold = #{sold},</if>
             <if test="reviews != null">reviews = #{reviews},</if>
+            <if test="fans != null">fans = #{fans},</if>
             <if test="score != null">score = #{score},</if>
             <if test="openHours != null">open_hours = #{openHours},</if>
             <if test="createTime != null">create_time = #{createTime},</if>

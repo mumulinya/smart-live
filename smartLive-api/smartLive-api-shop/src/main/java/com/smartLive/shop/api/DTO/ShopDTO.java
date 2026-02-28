@@ -65,6 +65,9 @@ public class ShopDTO implements Serializable
     /** 评论数量 */
     private Integer reviews;
 
+    /** fans count */
+    private Integer fans;
+
     /** 评分，1~5分，乘10保存，避免小数 */
     private Integer score;
 

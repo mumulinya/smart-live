@@ -74,6 +74,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
 
         boolean isLiked = redisService.getCacheZSetScore(userLikeKey, like.getSourceId().toString()) != null;
         if (!isLiked) {
+            //从数据库查询
             long count = this.count(new LambdaQueryWrapper<Like>()
                     .eq(Like::getUserId, userId)
                     .eq(Like::getSourceType, like.getSourceType())
@@ -91,11 +92,8 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             }
         }
 
-        Integer likeCount = redisService.getCacheObject(likeCountKey);
-        if (likeCount == null) {
-            likeCount = likeStrategy.getLikeCount(like.getSourceId());
-            redisService.setCacheObject(likeCountKey, likeCount);
-        }
+        // 获取点赞数（复用统一的三级 fallback 逻辑）
+        Integer likeCount = queryLikeCount(like);
 
         if (isLiked) {
             boolean deleted = this.remove(new LambdaQueryWrapper<Like>()
@@ -122,13 +120,24 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         }
         return true;
     }
+    /**
+     * 获取点赞数
+     * 优先级: Redis 独立计数器 → 源数据表(策略) → like 表 COUNT
+     */
     @Override
     public Integer queryLikeCount(Like like) {
         LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
         String likeCountKey = likeTypeEnum.getLikedCountKeyPrefix() + like.getSourceId();
+        // 1. 从 Redis 独立计数器读取
         Integer likeCount = redisService.getCacheObject(likeCountKey);
         if (likeCount == null) {
+            // 2. 计数器不存在，从源数据表获取（如 blog.liked）
             likeCount = likeStrategyFactory.getStrategy(like.getSourceType()).getLikeCount(like.getSourceId());
+            // 3. 源表也查不到，fallback 到 like 表 COUNT
+            if (likeCount == null) {
+                likeCount = query().eq("source_type", like.getSourceType()).eq("source_id", like.getSourceId()).count().intValue();
+            }
+            // 回写 Redis 缓存
             redisService.setCacheObject(likeCountKey, likeCount);
         }
         return likeCount;

@@ -39,6 +39,12 @@ public class UserVO implements Serializable
     private String city;
     /** 背景图片 */
     private String backgroundImage;
+
+    /** 粉丝数量 */
+    private Integer fans;
+
+    /** 关注数量 */
+    private Integer followee;
     
     /** 是否有密码 */
     private Boolean hasPassword;

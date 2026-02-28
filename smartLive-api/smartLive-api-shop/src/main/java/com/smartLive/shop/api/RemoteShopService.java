@@ -64,6 +64,12 @@ public interface RemoteShopService {
     Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
 
     /**
+     * Batch update shop fans count.
+     */
+    @PostMapping("/inner/shop/updateFansCountBatch")
+    Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap);
+
+    /**
      * 获取商家收藏数
      */
     @GetMapping("/inner/shop/getStarCount/{sourceId}")

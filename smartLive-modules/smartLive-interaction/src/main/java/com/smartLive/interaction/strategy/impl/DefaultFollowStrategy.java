@@ -17,11 +17,6 @@ public class DefaultFollowStrategy implements FollowStrategy {
     }
 
     @Override
-    public void transStarCountFromRedis2DB(Map<Long, Integer> updateMap) {
-        // no-op
-    }
-
-    @Override
     public Integer getStarCount(Long sourceId) {
         return 0;
     }

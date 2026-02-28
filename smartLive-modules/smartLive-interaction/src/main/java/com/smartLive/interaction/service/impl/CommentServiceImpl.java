@@ -291,7 +291,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 redisService.setCacheZSet(userCommentKey, comment.getSourceId().toString(), System.currentTimeMillis());
             }
 
-            // 3. 自增该目标主体的评论总数
+            // 3. 确保 Redis 计数器已初始化，再自增该目标主体的评论总数
+            getCommentCount(comment);
             redisService.incrementCacheValue(commentCountKeyPrefix);
 
             // 4. 【数据落库轨】：记录有变化的目标源，交由定时任务批量更新 MySQL。
@@ -360,6 +361,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             // 清理缓存排行榜与计数器
             redisService.removeCacheZSetObject(commentKeyPrefix, dbComment.getId().toString());
             redisService.removeCacheZSetObject(commentNewRankKeyPrefix, dbComment.getId().toString());
+            // 确保 Redis 计数器已初始化，再递减
+            getCommentCount(dbComment);
             redisService.decrementCacheValue(commentCountKeyPrefix);
 
             // 双轨制触发：同步扣减 MySQL 计数。
@@ -494,9 +497,28 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     /**
      * 获取指定条件下的评论总数
+     * 优先级: Redis 独立计数器 → comment 表 COUNT
      */
     @Override
     public Integer getCommentCount(Comment comment) {
+        CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
+        // 只有同时指定了 sourceType 和 sourceId 时才走 Redis 计数器
+        if (commentType != null && comment.getSourceId() != null) {
+            String commentCountKey = commentType.getCommentCountKeyPrefix() + comment.getSourceId();
+            // 1. 从 Redis 独立计数器读取
+            Integer count = redisService.getCacheObject(commentCountKey);
+            if (count != null) {
+                return count;
+            }
+            // 2. 计数器不存在，从 comment 表 COUNT 查询并回写 Redis
+            count = query()
+                    .eq("source_type", comment.getSourceType())
+                    .eq("source_id", comment.getSourceId())
+                    .count().intValue();
+            redisService.setCacheObject(commentCountKey, count);
+            return count;
+        }
+        // 通用条件查询（后台管理等场景），直接走数据库
         return query()
                 .eq(comment.getSourceType() != null, "source_type", comment.getSourceType())
                 .eq(comment.getSourceId() != null, "source_id", comment.getSourceId())
@@ -744,6 +766,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
             redisService.removeCacheZSetObject(commentKeyPrefix, comment.getId().toString());
             redisService.removeCacheZSetObject(commentNewRankKeyPrefix, comment.getId().toString());
+            // 确保 Redis 计数器已初始化，再递减
+            getCommentCount(comment);
             redisService.decrementCacheValue(commentCountKeyPrefix);
 
             // 将所属父级目标扔入同步与级联队列

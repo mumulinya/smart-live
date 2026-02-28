@@ -14,4 +14,8 @@ public class UserDTO {
     private Boolean isFollow;
     private String introduce;
     private String password;
+    /** 粉丝数 */
+    private Integer fans;
+    /** 关注数 */
+    private Integer followee;
 }

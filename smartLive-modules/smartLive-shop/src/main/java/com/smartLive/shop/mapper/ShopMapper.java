@@ -99,4 +99,24 @@ public interface ShopMapper extends BaseMapper<Shop>
             "  </foreach>" +
             "</script>")
     void updateStarCountBatch(@Param("map")Map<Long, Integer> batchMap);
+
+    /**
+     * Batch update shop fans count.
+     *
+     * @param batchMap shopId -> fansCount
+     */
+    @Update("<script>" +
+            "UPDATE shop " +
+            "SET fans" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateFansCountBatch(@Param("map") Map<Long, Integer> batchMap);
 }

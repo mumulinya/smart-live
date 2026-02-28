@@ -183,6 +183,14 @@ public interface IProductService extends IService<Product>
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
 
     /**
+     * Batch update product fans count.
+     *
+     * @param updateMap productId -> fansCount
+     * @return update result
+     */
+    Boolean updateFansCountBatch(Map<Long, Integer> updateMap);
+
+    /**
      * 获取商品收藏数
      *
      * @param sourceId 商品id

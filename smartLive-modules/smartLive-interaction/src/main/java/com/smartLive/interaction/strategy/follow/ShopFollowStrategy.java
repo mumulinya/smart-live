@@ -26,15 +26,11 @@ public class ShopFollowStrategy implements FollowStrategy {
     public Integer getType() {
         return ResourceTypeEnum.SHOP_RESOURCE.getCode();
     }
-    /**
-     * 同步收藏数据到DB
-     *
-     * @param updateMap
-     */
+
     @Override
-    public void transStarCountFromRedis2DB(Map<Long, Integer> updateMap) {
+    public void transFansCountFromRedis2DB(Map<Long, Integer> updateMap) {
         // 调用博客服务的批量更新接口
-        remoteShopService.updateStarCountBatch(updateMap);
+        remoteShopService.updateFansCountBatch(updateMap);
     }
 
     /**
@@ -71,5 +67,17 @@ public class ShopFollowStrategy implements FollowStrategy {
     @Override
     public Integer getStarCount(Long sourceId) {
         return remoteShopService.getStarCount(sourceId);
+    }
+
+    /**
+     * 从店铺表获取粉丝数
+     *
+     * @param sourceId 店铺 ID
+     * @return 粉丝数
+     */
+    @Override
+    public Integer getFanCount(Long sourceId) {
+        ShopDTO shop = remoteShopService.getShopById(sourceId);
+        return shop != null ? shop.getFans() : null;
     }
 }

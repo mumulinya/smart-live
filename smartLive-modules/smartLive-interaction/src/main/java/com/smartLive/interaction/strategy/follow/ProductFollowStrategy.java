@@ -28,16 +28,12 @@ public class ProductFollowStrategy implements FollowStrategy {
     public Integer getType() {
         return ResourceTypeEnum.PRODUCT_RESOURCE.getCode();
     }
-    /**
-     * 同步数据到DB
-     *
-     * @param updateMap
-     */
+
     @Override
-    public void transStarCountFromRedis2DB(Map<Long, Integer> updateMap) {
+    public void transFansCountFromRedis2DB(Map<Long, Integer> updateMap) {
         log.info("正在调用商品服务，同步数据");
         // 调用商品服务的批量更新接口
-        Boolean b = remoteProductService.updateStarCountBatch(updateMap);
+        Boolean b = remoteProductService.updateFansCountBatch(updateMap);
         if (b) {
             log.info("同步数据成功");
         } else {
@@ -80,5 +76,17 @@ public class ProductFollowStrategy implements FollowStrategy {
     @Override
     public Integer getStarCount(Long sourceId) {
         return remoteProductService.getProductStarCount(sourceId);
+    }
+
+    /**
+     * 从商品表获取粉丝数
+     *
+     * @param sourceId 商品 ID
+     * @return 粉丝数
+     */
+    @Override
+    public Integer getFanCount(Long sourceId) {
+        ProductDTO product = remoteProductService.getProductById(sourceId);
+        return product != null ? product.getFans() : null;
     }
 }

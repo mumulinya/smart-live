@@ -50,6 +50,12 @@ public interface RemoteProductService {
     @PostMapping("/inner/product/updateStarCountBatch")
     Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
 
+    /**
+     * Batch update product fans count.
+     */
+    @PostMapping("/inner/product/updateFansCountBatch")
+    Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap);
+
      /**
      * 获取收藏数
      */
