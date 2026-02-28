@@ -22,7 +22,8 @@
 ## 📋 目录
 
 - [📖 项目简介](#项目简介)
-- [🏗️ 系统架构](#系统架构)
+- [� 效果预览](#效果预览)
+- [�🏗️ 系统架构](#系统架构)
 - [📦 项目仓库](#项目仓库)
 - [🔧 技术栈](#技术栈)
 - [📁 项目结构](#项目结构)
@@ -52,6 +53,16 @@
 - 🛒 **完整商业闭环** — 店铺入驻 → 内容发布 → 营销活动 → 在线下单 → 评价互动
 - 🏗️ **微服务架构** — Spring Cloud Alibaba 全家桶，Nacos + Gateway + Sentinel + Seata
 - 🐳 **一键部署** — 提供完整的 Docker Compose 编排，轻松启动全部服务
+
+## 🎨 效果预览
+
+> 📷 截图占位 — 替换为实际项目截图后删除本行
+
+| 首页 | 店铺详情 | 商品详情 |
+|:---:|:---:|:---:|
+| ![homepage](docs/screenshots/homepage.png) | ![shop](docs/screenshots/shop-detail.png) | ![product](docs/screenshots/product-detail.png) |
+| **AI 智能助手** | **聊天消息** | **后台管理** |
+| ![ai-chat](docs/screenshots/ai-chat.png) | ![im-chat](docs/screenshots/im-chat.png) | ![admin](docs/screenshots/admin.png) |
 
 ## 🏗️ 系统架构
 
@@ -87,15 +98,15 @@
                    │                                                        │
                    │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
                    │  │User │ │Shop │ │Blog │ │Order│ │ AI  │ │Chat │    │
-                   │  │9201 │ │9203 │ │9214 │ │9205 │ │9215 │ │9213 │    │
+                   │  │9201 │ │9203 │ │9211 │ │9205 │ │9213 │ │9210 │    │
                    │  └─────┘ └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
                    │  ┌─────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌─────┐ ┌────┐  │
                    │  │Index│ │Search│ │Wallet│ │Inter.│ │Point│ │File│  │
-                   │  │9210 │ │9204  │ │      │ │9209  │ │     │ │9212│  │
+                   │  │9208 │ │9204  │ │9216  │ │9207  │ │9215 │ │9209│  │
                    │  └─────┘ └──────┘ └──────┘ └──────┘ └─────┘ └────┘  │
                    │  ┌───────┐ ┌───────┐ ┌──────┐                        │
                    │  │Product│ │ Audit │ │  IM  │                        │
-                   │  │       │ │       │ │      │                        │
+                   │  │9206   │ │9212   │ │9214  │                        │
                    │  └───────┘ └───────┘ └──────┘                        │
                    └────────────────────────────────────────────────────────┘
                                              │
@@ -184,22 +195,22 @@ com.smartLive
 │       ├── smartLive-common-swagger               // API 文档
 │       └── smartLive-common-xxl                   // XXL-JOB 定时任务
 ├── smartLive-modules              // 业务模块
-│       ├── smartLive-ai                           // AI 智能模块 [9215]
+│       ├── smartLive-ai                           // AI 智能模块 [9213]
 │       ├── smartLive-audit                        // 审核模块
-│       ├── smartLive-blog                         // 博客笔记 [9214]
-│       ├── smartLive-chat                         // 即时通讯 [9213]
-│       ├── smartLive-file                         // 文件服务 [9212]
-│       ├── smartLive-im                           // IM 消息
-│       ├── smartLive-index                        // 首页聚合 [9210]
-│       ├── smartLive-interaction                  // 社交互动 [9209]
+│       ├── smartLive-blog                         // 博客笔记 [9211]
+│       ├── smartLive-chat                         // 即时通讯 [9210]
+│       ├── smartLive-file                         // 文件服务 [9209]
+│       ├── smartLive-im                           // IM 消息 [9214]
+│       ├── smartLive-index                        // 首页聚合 [9208]
+│       ├── smartLive-interaction                  // 社交互动 [9207]
 │       ├── smartLive-order                        // 订单管理 [9205]
-│       ├── smartLive-product                      // 商品管理
-│       ├── smartLive-points                       // 积分管理
+│       ├── smartLive-product                      // 商品管理 [9206]
+│       ├── smartLive-points                       // 积分管理 [9215]
 │       ├── smartLive-search                       // 搜索引擎 [9204]
 │       ├── smartLive-shop                         // 店铺管理 [9203]
 │       ├── smartLive-system                       // 系统管理 [9202]
 │       ├── smartLive-user                         // 用户中心 [9201]
-│       └── smartLive-wallet                       // 钱包支付
+│       └── smartLive-wallet                       // 钱包支付 [9216]
 ├── smartLive-visual               // 图形化管理
 │       └── smartLive-visual-monitor               // 监控中心 [9100]
 ├── smartLive-sentinel             // 限流控制台 [8718]
@@ -245,7 +256,7 @@ com.smartLive
 | 退款处理 | 订单退款申请、退款状态追踪 |
 | 订单导出 | 订单数据导出Excel |
 
-#### 📦 商品管理 (smartLive-product)
+#### 📦 商品管理 (smartLive-product) [9206]
 | 功能 | 说明 |
 |:---|:---|
 | 商品CRUD | 商品新增、修改、删除、查询 |
@@ -256,7 +267,7 @@ com.smartLive
 | 内容审核 | 商品发布自动触发 MQ 异步审核流程 |
 | Feed 推送 | 上新/降价/补货/上下架事件推送至粉丝动态 |
 
-#### 📝 博客笔记 (smartLive-blog) [9214]
+#### 📝 博客笔记 (smartLive-blog) [9211]
 | 功能 | 说明 |
 |:---|:---|
 | 博客发布 | 发布图文博客、博客内容编辑 |
@@ -267,7 +278,7 @@ com.smartLive
 | 博客置顶 | 设置博客是否置顶 |
 | 博客缓存 | 刷新博客缓存、批量发布 |
 
-#### 💬 即时通讯 (smartLive-chat + smartLive-im)
+#### 💬 即时通讯 (smartLive-chat + smartLive-im) [9210 / 9214]
 | 功能 | 说明 |
 |:---|:---|
 | Netty 长连接 | WebSocket 服务端，双线程组 + 心跳保活 |
@@ -279,7 +290,7 @@ com.smartLive
 | 系统通知 | 审核结果/商品动态/关注触达等系统消息实时下发 |
 | 消息可靠 | MQ 异步投递 + 死信队列兜底 |
 
-#### 🤖 AI 智能 (smartLive-ai) [9215]
+#### 🤖 AI 智能 (smartLive-ai) [9213]
 | 功能 | 说明 |
 |:---|:---|
 | 意图识别 | 关键词规则匹配路由至不同 ChatHandler |
@@ -300,7 +311,7 @@ com.smartLive
 | 热词排行 | Redis ZSet ZINCRBY 统计热门搜索关键词 |
 | 索引同步 | MQ 异步将商品/店铺/博客/用户行为变更同步至 ES |
 
-#### 👥 社交互动 (smartLive-interaction) [9209]
+#### 👥 社交互动 (smartLive-interaction) [9207]
 | 功能 | 说明 |
 |:---|:---|
 | 策略工厂 | 7 个策略工厂统一点赞/收藏/评论/评价/关注/热榜/资源处理流程 |
@@ -311,14 +322,14 @@ com.smartLive
 | 热榜排行 | 5 种业务类型（Blog/Shop/Product/Review/Comment）热度排行，增量重算 + 全量重建 |
 | 数据同步 | XXL-JOB 定时任务，Redis RENAME 原子快照批量回刷计数至 MySQL |
 
-#### 🏠 首页聚合 (smartLive-index) [9210]
+#### 🏠 首页聚合 (smartLive-index) [9208]
 | 功能 | 说明 |
 |:---|:---|
 | 热门推荐 | 热门内容聚合展示 |
 | 资源聚合 | 热门店铺、博客、用户推荐 |
 | 数据聚合 | 统一首页数据服务 |
 
-#### 📁 文件服务 (smartLive-file) [9212]
+#### 📁 文件服务 (smartLive-file) [9209]
 | 功能 | 说明 |
 |:---|:---|
 | 文件上传 | MinIO对象存储集成 |
@@ -326,7 +337,7 @@ com.smartLive
 | 头像管理 | 用户头像上传与存储 |
 | 图片处理 | 图片存储与CDN分发 |
 
-#### 🎁 积分管理 (smartLive-points)
+#### 🎁 积分管理 (smartLive-points) [9215]
 | 功能 | 说明 |
 |:---|:---|
 | 积分钱包 | 用户积分余额查询、等级体系（累计积分自动升级） |
@@ -335,7 +346,7 @@ com.smartLive
 | 积分流水 | 收支记录分页查询，按类型过滤 |
 | 管理后台 | 管理员手动调整积分（增加/扣除） |
 
-#### 💰 钱包/支付 (smartLive-wallet)
+#### 💰 钱包/支付 (smartLive-wallet) [9216]
 | 功能 | 说明 |
 |:---|:---|
 | 支付策略 | 策略工厂模式路由微信支付/支付宝/余额三种支付方式 |
@@ -343,7 +354,7 @@ com.smartLive
 | 在线支付 | 统一下单接口 + 支付回调处理 |
 | 交易流水 | 支付/充值/退款交易记录查询 |
 
-#### ✅ 审核中心 (smartLive-audit)
+#### ✅ 审核中心 (smartLive-audit) [9212]
 | 功能 | 说明 |
 |:---|:---|
 | 异步审核 | MQ 异步创建审核任务，手动 ACK + nack 拒绝 |
@@ -435,8 +446,17 @@ docker-compose ps
 git clone https://gitee.com/mumulinya/smart-live.git
 cd smart-live
 
-# 2. 导入数据库脚本
-#    执行 sql/ 目录下的 SQL 文件至 MySQL
+# 2. 初始化数据库
+#    按顺序导入 sql/ 目录下的脚本：
+#    ① ry_20250523.sql          → 核心系统表（用户/角色/菜单等）
+#    ② ry_config_20250902.sql    → Nacos 配置表
+#    ③ ry_seata_20210128.sql     → Seata 分布式事务表
+#    ④ quartz.sql                → Quartz 定时任务表
+#    ⑤ product.sql               → 商品模块表
+#    ⑥ payment.sql               → 支付记录表
+#    ⑦ wallet.sql                → 钱包模块表
+#    ⑧ points.sql                → 积分模块表
+#    ⑨ chat_system_notice.sql    → 系统通知表
 
 # 3. 启动中间件
 #    确保 Nacos、MySQL、Redis、RabbitMQ 已启动
@@ -475,25 +495,29 @@ bin/run-modules-file.bat   # 启动文件服务
 
 | 服务 | 模块 | 端口 |
 |:---|:---|:---:|
-| Nginx 代理 | - | 80 / 443 |
 | API 网关 | smartLive-gateway | 8080 |
 | 前台用户端 | smartLive-html | 8081 |
-| Sentinel 控制台 | smartLive-sentinel | 8718 |
-| Nacos 注册中心 | - | 8848 |
 | Seata 服务端 | smartLive-seata-server | 7091 |
+| Nacos 注册中心 | - | 8848 |
+| Sentinel 控制台 | smartLive-sentinel | 8718 |
+| 监控中心 | smartLive-visual-monitor | 9100 |
 | 认证中心 | smartLive-auth | 9200 |
 | 用户服务 | smartLive-user | 9201 |
 | 系统服务 | smartLive-system | 9202 |
 | 店铺服务 | smartLive-shop | 9203 |
 | 搜索服务 | smartLive-search | 9204 |
 | 订单服务 | smartLive-order | 9205 |
-| 互动服务 | smartLive-interaction | 9209 |
-| 首页服务 | smartLive-index | 9210 |
-| 文件服务 | smartLive-file | 9212 |
-| 聊天服务 | smartLive-chat | 9213 |
-| 博客服务 | smartLive-blog | 9214 |
-| AI 服务 | smartLive-ai | 9215 |
-| 监控中心 | smartLive-visual-monitor | 9100 |
+| 商品服务 | smartLive-product | 9206 |
+| 互动服务 | smartLive-interaction | 9207 |
+| 首页服务 | smartLive-index | 9208 |
+| 文件服务 | smartLive-file | 9209 |
+| 聊天服务 | smartLive-chat | 9210 |
+| 博客服务 | smartLive-blog | 9211 |
+| 审核服务 | smartLive-audit | 9212 |
+| AI 服务 | smartLive-ai | 9213 |
+| IM 服务 | smartLive-im | 9214 / 8888 (Netty) |
+| 积分服务 | smartLive-points | 9215 |
+| 钱包服务 | smartLive-wallet | 9216 |
 
 ## 📚 项目文档
 

@@ -1,12 +1,12 @@
 # Tomcat
 server:
-  port: 9218
+  port: 9215
 #arthas
 arthas:
   tunnel-server: ws://127.0.0.1:7777/ws
   app-name: ${spring.application.name}
-  http-port: 9318
-  telnet-port: 9418
+  http-port: 9315
+  telnet-port: 9415
 # Spring
 spring: 
   application:
