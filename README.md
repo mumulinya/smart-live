@@ -126,10 +126,9 @@
 
 | 仓库 | 说明 | 链接 |
 |:---:|:---:|:---:|
-| **smart-live-Cloud** | 后端微服务（本仓库） | [Gitee](https://gitee.com/mumulinya/smart-live) |
-| **smart-live-ui** | 后台管理前端（Vue） | [Gitee](https://gitee.com/mumulinya/smart-live-ui) |
-| **smart-live-html** | 用户端前端（H5/小程序） | [Gitee](https://gitee.com/mumulinya/smart-live-html) |
-| **smart-live-ai** | AI 模块（独立部署版） | [Gitee](https://gitee.com/mumulinya/smart-live-ai) |
+| **smartLive-Cloud** | 后端微服务（本仓库） | [GitHub](https://github.com/mumulinya/smart-live) |
+| **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin) |
+| **smartLive-web** | 用户端前台（Vue 响应式，兼容移动端） | [GitHub](https://github.com/mumulinya/smartLive-web) |
 
 ## 🔧 技术栈
 
