@@ -1,6 +1,6 @@
 package com.smartLive.common.rabbitmq.utils;
+import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.rabbitmq.domain.RetryCorrelationData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -158,7 +158,7 @@ public class MqMessageSendUtils {
         } else {
             log.error("❌ 消息发送彻底失败，执行本地补偿和持久化。ID: {}", cd.getId());
             // TODO: 判断这个消息是否是秒杀订单消息
-            if (cd.getRoutingKey().equals(MqConstants.ORDER_SECKILL_ROUTING)) {
+            if (cd.getRoutingKey().equals(OrderMqConstants.ORDER_SECKILL_ROUTING)) {
                 log.error("订单消息发送失败");
             }
         }

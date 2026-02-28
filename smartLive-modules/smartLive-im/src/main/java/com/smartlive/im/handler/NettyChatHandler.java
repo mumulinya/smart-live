@@ -1,4 +1,6 @@
 package com.smartlive.im.handler;
+import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
+import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,7 +8,6 @@ import com.smartLive.chat.api.RemoteChatService;
 import com.smartLive.chat.api.dto.ChatMessageDTO;
 import com.smartLive.chat.api.dto.ChatMessageEvent;
 import com.smartLive.chat.api.dto.UserSessionDTO;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.domain.UserDTO;
@@ -209,15 +210,15 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
             messageEvent.setMessageId(messageId);
             messageEvent.setCreateTime(new Date());
 
-            String routingKey = MqConstants.CHAT_MESSAGE_ROUTING + sessionId;
+            String routingKey = ChatMqConstants.CHAT_MESSAGE_ROUTING + sessionId;
 
             MqMessageSendUtils.sendMqMessage(
                 rabbitTemplate,
-                MqConstants.CHAT_EXCHANGE_NAME,
+                ChatMqConstants.CHAT_EXCHANGE_NAME,
                 routingKey,
                     messageEvent, // 发送 JSON 字符串
-                MqConstants.DEAD_LETTER_EXCHANGE_NAME,
-                MqConstants.DEAD_LETTER_ROUTING,
+                AiAuditMqConstants.DEAD_LETTER_EXCHANGE_NAME,
+                AiAuditMqConstants.DEAD_LETTER_ROUTING,
                 3
             );
         } else {

@@ -1,10 +1,10 @@
 package com.smartlive.chat.service.impl;
+import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartlive.chat.domain.SystemNotice;
@@ -162,7 +162,7 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
                     "userId", userId,
                     "json", json
             );
-            rabbitTemplate.convertAndSend(MqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMap);
+            rabbitTemplate.convertAndSend(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMap);
         } catch (Exception e) {
             log.error("push system notice failed, userId: {}, noticeId: {}", userId, noticeVO.getNoticeId(), e);
         }

@@ -138,4 +138,13 @@ public interface InteractionRedisKeyConstants {
         // --- 反向索引 (我的评价记录) ---
         String USER_REVIEW = "user:review:";
     }
+    /**
+     * 6. 推送数据
+     */
+    interface Feed {
+        String ALL_FEED = "feed:all:";
+        String USER_FEED = "feed:user:";
+        String SHOP_FEED = "feed:shop:";
+        String ITEM_FEED = "feed:item:";
+    }
 }

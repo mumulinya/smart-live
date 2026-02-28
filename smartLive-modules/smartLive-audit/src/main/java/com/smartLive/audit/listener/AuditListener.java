@@ -1,8 +1,8 @@
 package com.smartLive.audit.listener;
+import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import com.rabbitmq.client.Channel;
 import com.smartLive.audit.service.IAuditService;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -28,9 +28,9 @@ public class AuditListener {
     private IAuditService auditService;
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = MqConstants.AUDIT_QUEUE, declare = "true"),
-            exchange = @Exchange(name = MqConstants.AUDIT_EXCHANGE_NAME, type = ExchangeTypes.TOPIC),
-            key = MqConstants.AUDIT_ROUTING_KEY
+            value = @Queue(name = AiAuditMqConstants.AUDIT_QUEUE, declare = "true"),
+            exchange = @Exchange(name = AiAuditMqConstants.AUDIT_EXCHANGE_NAME, type = ExchangeTypes.TOPIC),
+            key = AiAuditMqConstants.AUDIT_ROUTING_KEY
     ))
     public void handleAuditCreate(AuditMessage auditMessage, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         log.info("收到审核任务消息: {}", auditMessage);

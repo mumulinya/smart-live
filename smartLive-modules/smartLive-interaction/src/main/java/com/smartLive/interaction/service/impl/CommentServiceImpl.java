@@ -1,4 +1,5 @@
 package com.smartLive.interaction.service.impl;
+import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -9,7 +10,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.blog.api.DTO.BlogDTO;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
@@ -330,7 +330,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .auditContent(BeanUtil.beanToMap(auditCommentBO))
                 .createTime(comment.getCreateTime())
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME, MqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, AiAuditMqConstants.AUDIT_EXCHANGE_NAME, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
 
     /**
@@ -556,7 +556,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                         entry.getValue()
                 ))
                 .collect(Collectors.toList());
-        rabbitTemplate.convertAndSend(MqConstants.AI_EXCHANGE_NAME, MqConstants.AI_COMMENT_ROUTING, list);
+        rabbitTemplate.convertAndSend(AiAuditMqConstants.AI_EXCHANGE_NAME, AiAuditMqConstants.AI_COMMENT_ROUTING, list);
     }
 
     /**

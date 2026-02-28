@@ -1,7 +1,7 @@
 package com.smartLive.order.listener;
+import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
 import com.rabbitmq.client.Channel;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
@@ -31,18 +31,18 @@ public class OrderListener {
     
     //秒杀订单监听
     @RabbitListener(bindings=@QueueBinding(
-            value = @Queue(name = MqConstants.ORDER_SECKILL_QUEUE,
+            value = @Queue(name = OrderMqConstants.ORDER_SECKILL_QUEUE,
                     declare = "true",
                     //配置死信交换机和死信路由键
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = MqConstants.ORDER_DEAD_LETTER_ROUTING),
+                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
+                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.ORDER_DEAD_LETTER_ROUTING),
                             //设置惰性队列
                             @Argument(name = "x-queue-mode", value = "lazy")
                     }
             ),
-            exchange = @Exchange(name = MqConstants.ORDER_EXCHANGE_NAME),
-            key = MqConstants.ORDER_SECKILL_ROUTING
+            exchange = @Exchange(name = OrderMqConstants.ORDER_EXCHANGE_NAME),
+            key = OrderMqConstants.ORDER_SECKILL_ROUTING
     ))
     public void handleSeckillOrder(Order order) {
         //判断当前订单是否重复创建
@@ -55,16 +55,16 @@ public class OrderListener {
 
     //普通订单监听
     @RabbitListener(bindings=@QueueBinding(
-            value = @Queue(name = MqConstants.ORDER_BUY_QUEUE,
+            value = @Queue(name = OrderMqConstants.ORDER_BUY_QUEUE,
                     declare = "true",
                     //配置死信交换机和死信路由键
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = MqConstants.ORDER_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
+                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.ORDER_DEAD_LETTER_ROUTING)
                     }
             ),
-            exchange = @Exchange(name = MqConstants.ORDER_EXCHANGE_NAME),
-            key = MqConstants.ORDER_BUY_ROUTING
+            exchange = @Exchange(name = OrderMqConstants.ORDER_EXCHANGE_NAME),
+            key = OrderMqConstants.ORDER_BUY_ROUTING
     ))
     public void handleBuyOrder(Order order){
         log.info("开始处理订单信息: {}", order);
@@ -85,19 +85,19 @@ public class OrderListener {
             redisService.deleteObject("order:status:" + order.getId());
             
             //发送延迟消息，检测订单支付状态
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,order.getId(),(MqConstants.DELAY_TIME));
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate, OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
         }
     }
 
     //支付延迟监听
     @RabbitListener(bindings=@QueueBinding(
-            value = @Queue(name = MqConstants.ORDER_DELAY_QUEUE),
-            exchange = @Exchange(name = MqConstants.ORDER_DELAY_EXCHANGE_NAME,
+            value = @Queue(name = OrderMqConstants.ORDER_DELAY_QUEUE),
+            exchange = @Exchange(name = OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,
                     type = "x-delayed-message", // 使用 x-delayed-message 类型交换机
                     durable = "true",
                     arguments = @Argument(name = "x-delayed-type", value = "direct") // 指定路由类型
                     ),
-            key = MqConstants.ORDER_DELAY_ROUTING
+            key = OrderMqConstants.ORDER_DELAY_ROUTING
     ))
     public void handlePayOrder(Long id){
         Order order = orderService.getById(id);
@@ -119,9 +119,9 @@ public class OrderListener {
      * 监听死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = MqConstants.ORDER_DEAD_LETTER_QUEUE, durable = "true"), // 死信队列名
-            exchange = @Exchange(value = MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
-            key = MqConstants.ORDER_DEAD_LETTER_ROUTING
+            value = @Queue(value = OrderMqConstants.ORDER_DEAD_LETTER_QUEUE, durable = "true"), // 死信队列名
+            exchange = @Exchange(value = OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
+            key = OrderMqConstants.ORDER_DEAD_LETTER_ROUTING
     ))
     public void handleDeadLetter(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         log.error("死信队列收到订单信息为: {}", order);

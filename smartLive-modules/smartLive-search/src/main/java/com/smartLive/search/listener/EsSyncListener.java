@@ -1,6 +1,6 @@
 package com.smartLive.search.listener;
+import com.smartLive.common.core.constant.mq.SearchMqConstants;
 
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
@@ -30,9 +30,9 @@ public class EsSyncListener {
      * Handle single insert.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = MqConstants.ES_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_INSERT)
+            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_INSERT_QUEUE, declare = "true"),
+                    exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
+                    key = SearchMqConstants.ES_ROUTING_INSERT)
     })
     public void handleSingleInsert(ContentSyncMessage request) {
         executorService.submit(() -> {
@@ -55,9 +55,9 @@ public class EsSyncListener {
      * Handle batch insert.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = MqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_BATCH_INSERT)
+            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
+                    exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
+                    key = SearchMqConstants.ES_ROUTING_BATCH_INSERT)
     })
     public void handleBatchInsert(ContentBatchSyncMessage request) {
         executorService.submit(() -> {
@@ -80,9 +80,9 @@ public class EsSyncListener {
      * Handle delete.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = MqConstants.ES_DELETE_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
-                    key = MqConstants.ES_ROUTING_DELETE)
+            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_DELETE_QUEUE, declare = "true"),
+                    exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
+                    key = SearchMqConstants.ES_ROUTING_DELETE)
     })
     public void handleDelete(ContentSyncMessage request) {
         executorService.submit(() -> {
@@ -102,10 +102,10 @@ public class EsSyncListener {
     }
 
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = MqConstants.ES_USER_RESOURCE_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.ES_EXCHANGE),
+            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_USER_RESOURCE_QUEUE, declare = "true"),
+                    exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = {
-                            MqConstants.ES_ROUTING_USER_RESOURCE_INSERT,
+                            SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT,
                     })
     })
     public void handleUserResourceInsert(UserResourceMessage request) {

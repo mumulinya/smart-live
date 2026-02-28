@@ -1,4 +1,6 @@
 package com.smartLive.user.service.impl;
+import com.smartLive.common.core.constant.mq.SearchMqConstants;
+import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -206,7 +208,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .auditContent(BeanUtil.beanToMap(userVO))
                 .createTime(user.getCreateTime())
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
     /**
      * 批量删除用户
@@ -231,7 +233,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     contentSyncMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
                     contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
                     //发起rabbitMq信息删除
-                    MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_DELETE, contentSyncMessage);
+                    MqMessageSendUtils.sendMqMessage(rabbitTemplate, SearchMqConstants.ES_EXCHANGE, SearchMqConstants.ES_ROUTING_DELETE, contentSyncMessage);
                 });
             }
         }
@@ -656,7 +658,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         request.setType(GlobalBizTypeEnum.USER.getCode());
         
         // 发送rabbitmq消息数据插入es
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE, MqConstants.ES_ROUTING_BATCH_INSERT, request);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, SearchMqConstants.ES_EXCHANGE, SearchMqConstants.ES_ROUTING_BATCH_INSERT, request);
     }
 
     /**

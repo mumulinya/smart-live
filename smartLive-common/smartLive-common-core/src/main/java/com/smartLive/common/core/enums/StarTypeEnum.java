@@ -1,4 +1,5 @@
 package com.smartLive.common.core.enums;
+import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
 import com.smartLive.common.core.constant.RedisConstants;
 import lombok.AllArgsConstructor;
@@ -15,37 +16,37 @@ public enum StarTypeEnum {
             GlobalBizTypeEnum.BLOG.getCode(),
             "博客收藏",
             GlobalBizTypeEnum.BLOG.getBizDomain(),
-            RedisConstants.BLOG_STAR_KEY,
-            RedisConstants.BLOG_STAR_SOURCE_KEY,
-            RedisConstants.BLOG_STAR_COUNT_KEY,
-            RedisConstants.BLOG_STAR_DIRTY_KEY
+            InteractionRedisKeyConstants.Star.USER_STAR_BLOG,
+            InteractionRedisKeyConstants.Star.BLOG_STAR,
+            InteractionRedisKeyConstants.Star.BLOG_STAR_COUNT,
+            InteractionRedisKeyConstants.Star.BLOG_STAR_DIRTY
     ),
     SHOP_STAR(
             GlobalBizTypeEnum.SHOP.getCode(),
             "店铺收藏",
             GlobalBizTypeEnum.SHOP.getBizDomain(),
-            RedisConstants.SHOP_STAR_KEY,
-            RedisConstants.SHOP_STAR_SOURCE_KEY,
-            RedisConstants.SHOP_STAR_COUNT_KEY,
-            RedisConstants.SHOP_STAR_DIRTY_KEY
+            InteractionRedisKeyConstants.Star.USER_STAR_SHOP,
+            InteractionRedisKeyConstants.Star.SHOP_STAR,
+            InteractionRedisKeyConstants.Star.SHOP_STAR_COUNT,
+            InteractionRedisKeyConstants.Star.SHOP_STAR_DIRTY
     ),
     PRODUCT_STAR(
             GlobalBizTypeEnum.PRODUCT.getCode(),
             "商品收藏",
             GlobalBizTypeEnum.PRODUCT.getBizDomain(),
-            RedisConstants.PRODUCT_STAR_KEY,
-            RedisConstants.PRODUCT_STAR_SOURCE_KEY,
-            RedisConstants.PRODUCT_STAR_COUNT_KEY,
-            RedisConstants.PRODUCT_STAR_DIRTY_KEY
+            InteractionRedisKeyConstants.Star.USER_STAR_PRODUCT,
+            InteractionRedisKeyConstants.Star.PRODUCT_STAR,
+            InteractionRedisKeyConstants.Star.PRODUCT_STAR_COUNT,
+            InteractionRedisKeyConstants.Star.PRODUCT_STAR_DIRTY
     ),
     REVIEW_STAR(
             GlobalBizTypeEnum.REVIEW.getCode(),
             "评价收藏",
             GlobalBizTypeEnum.REVIEW.getBizDomain(),
-            RedisConstants.REVIEW_STAR_KEY,
-            RedisConstants.REVIEW_STAR_SOURCE_KEY,
-            RedisConstants.REVIEW_STAR_COUNT_KEY,
-            RedisConstants.REVIEW_STAR_DIRTY_KEY
+            InteractionRedisKeyConstants.Star.USER_STAR_REVIEW,
+            InteractionRedisKeyConstants.Star.REVIEW_STAR,
+            InteractionRedisKeyConstants.Star.REVIEW_STAR_COUNT,
+            InteractionRedisKeyConstants.Star.REVIEW_STAR_DIRTY
     );
 
     private final Integer code;

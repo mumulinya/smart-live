@@ -1,10 +1,10 @@
 package com.smartLive.wallet.service.impl;
+import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
 import com.alipay.api.AlipayConstants;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.core.constant.PayTypeConstants;
@@ -127,11 +127,11 @@ public class PayServiceImpl implements IPayService {
 
         // 5. 发送延迟消息，超时自动取消支付
         MqMessageSendUtils.sendMqMessage(rabbitTemplate,
-                MqConstants.PAY_DELAY_EXCHANGE_NAME,
-                MqConstants.PAY_DELAY_ROUTING,
+                OrderMqConstants.PAY_DELAY_EXCHANGE_NAME,
+                OrderMqConstants.PAY_DELAY_ROUTING,
                 record.getId(),
-                MqConstants.PAY_DELAY_TIME);
-        log.info("已发送支付超时延迟消息, paySn={}, recordId={}, delay={}ms", paySn, record.getId(), MqConstants.PAY_DELAY_TIME);
+                OrderMqConstants.PAY_DELAY_TIME);
+        log.info("已发送支付超时延迟消息, paySn={}, recordId={}, delay={}ms", paySn, record.getId(), OrderMqConstants.PAY_DELAY_TIME);
 
         // 6. 调用策略下单
         PaymentStrategy strategy = paymentStrategyFactory.getStrategy(record.getPayMethod());

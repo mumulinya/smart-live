@@ -1,11 +1,11 @@
 package com.smartlive.chat.service.impl;
+import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
 import java.util.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.utils.DateUtils;
@@ -168,7 +168,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
                     "json", jsonString
             );
 
-            rabbitTemplate.convertAndSend(MqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMsg);
+            rabbitTemplate.convertAndSend(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMsg);
 
         } catch (Exception e) {
             log.error("发送MQ推送失败", e);

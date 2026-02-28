@@ -1,4 +1,5 @@
 package com.smartLive.common.core.enums;
+import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
 import com.smartLive.common.core.constant.RedisConstants;
 import lombok.AllArgsConstructor;
@@ -15,27 +16,27 @@ public enum CommentTypeEnum {
             GlobalBizTypeEnum.BLOG.getCode(),
             "博客评论",
             GlobalBizTypeEnum.BLOG.getBizDomain(),
-            RedisConstants.BLOG_COMMENT_COUNT_KEY,
-            RedisConstants.USER_COMMENT_KEY,
-            RedisConstants.BLOG_COMMENT_SYNC_KEY
+            InteractionRedisKeyConstants.Comment.BLOG_COMMENT_COUNT,
+            InteractionRedisKeyConstants.Comment.USER_COMMENT,
+            InteractionRedisKeyConstants.Comment.BLOG_COMMENT_SYNC
     ),
 
     COMMENT_COMMENT(
             GlobalBizTypeEnum.COMMENT.getCode(),
             "评论回复",
             GlobalBizTypeEnum.COMMENT.getBizDomain(),
-            RedisConstants.COMMENT_COMMENT_COUNT_KEY,
-            RedisConstants.USER_COMMENT_KEY,
-            RedisConstants.COMMENT_COMMENT_SYNC_KEY
+            InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_COUNT,
+            InteractionRedisKeyConstants.Comment.USER_COMMENT,
+            InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_SYNC
     ),
 
     REVIEW_COMMENT(
             GlobalBizTypeEnum.REVIEW.getCode(),
             "评价评论",
             GlobalBizTypeEnum.REVIEW.getBizDomain(),
-            RedisConstants.REVIEW_COMMENT_COUNT_KEY,
-            RedisConstants.USER_COMMENT_KEY,
-            RedisConstants.REVIEW_COMMENT_SYNC_KEY
+            InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_COUNT,
+            InteractionRedisKeyConstants.Comment.USER_COMMENT,
+            InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_SYNC
     );
 
     private final Integer code;

@@ -1,7 +1,7 @@
 package com.smartLive.wallet.listener;
+import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.wallet.domain.PaymentRecord;
 import com.smartLive.wallet.mapper.PaymentRecordMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +28,13 @@ public class PaymentListener {
      * 监听支付超时延迟消息
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = MqConstants.PAY_DELAY_QUEUE),
-            exchange = @Exchange(name = MqConstants.PAY_DELAY_EXCHANGE_NAME,
+            value = @Queue(name = OrderMqConstants.PAY_DELAY_QUEUE),
+            exchange = @Exchange(name = OrderMqConstants.PAY_DELAY_EXCHANGE_NAME,
                     type = "x-delayed-message",
                     durable = "true",
                     arguments = @Argument(name = "x-delayed-type", value = "direct")
             ),
-            key = MqConstants.PAY_DELAY_ROUTING
+            key = OrderMqConstants.PAY_DELAY_ROUTING
     ))
     public void handlePayTimeout(Long recordId) {
         log.info("收到支付超时延迟消息, recordId={}", recordId);

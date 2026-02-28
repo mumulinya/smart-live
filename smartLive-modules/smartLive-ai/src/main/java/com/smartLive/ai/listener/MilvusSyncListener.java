@@ -1,8 +1,8 @@
 package com.smartLive.ai.listener;
+import com.smartLive.common.core.constant.mq.SearchMqConstants;
 
 import com.smartLive.ai.strategy.factory.MilvusSyncFactory;
 import com.smartLive.ai.strategy.milvus.MilvusSyncStrategy;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +29,9 @@ public class MilvusSyncListener {
      * Milvus single insert.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = MqConstants.MILVUS_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),
-                    key = MqConstants.MILVUS_ROUTING_INSERT)
+            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_INSERT_QUEUE, declare = "true"),
+                    exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
+                    key = SearchMqConstants.MILVUS_ROUTING_INSERT)
     })
     public void handleSingleInsert(ContentSyncMessage request) {
         executorService.submit(() -> {
@@ -54,9 +54,9 @@ public class MilvusSyncListener {
      * Milvus batch insert.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = MqConstants.MILVUS_BATCH_INSERT_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),
-                    key = MqConstants.MILVUS_ROUTING_BATCH_INSERT)
+            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_BATCH_INSERT_QUEUE, declare = "true"),
+                    exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
+                    key = SearchMqConstants.MILVUS_ROUTING_BATCH_INSERT)
     })
     public void handleBatchInsert(ContentBatchSyncMessage request) {
         executorService.submit(() -> {
@@ -79,9 +79,9 @@ public class MilvusSyncListener {
      * Milvus delete.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = MqConstants.MILVUS_DELETE_QUEUE, declare = "true"),
-                    exchange = @Exchange(name = MqConstants.MILVUS_EXCHANGE),
-                    key = MqConstants.MILVUS_ROUTING_DELETE)
+            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_DELETE_QUEUE, declare = "true"),
+                    exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
+                    key = SearchMqConstants.MILVUS_ROUTING_DELETE)
     })
     public void handleDelete(ContentSyncMessage request) {
         executorService.submit(() -> {

@@ -1,6 +1,6 @@
 package com.smartLive.interaction.listener;
+import com.smartLive.common.core.constant.mq.InteractionMqConstants;
 
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.rabbitmq.domain.InteractionSyncTriggerMessage;
 import com.smartLive.interaction.service.ISyncDataService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +20,9 @@ public class InteractionSyncListener
     private ISyncDataService syncDataService;
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = MqConstants.INTERACTION_SYNC_QUEUE, declare = "true"),
-            exchange = @Exchange(name = MqConstants.INTERACTION_SYNC_EXCHANGE_NAME, type = ExchangeTypes.DIRECT),
-            key = MqConstants.INTERACTION_SYNC_ROUTING
+            value = @Queue(name = InteractionMqConstants.INTERACTION_SYNC_QUEUE, declare = "true"),
+            exchange = @Exchange(name = InteractionMqConstants.INTERACTION_SYNC_EXCHANGE_NAME, type = ExchangeTypes.DIRECT),
+            key = InteractionMqConstants.INTERACTION_SYNC_ROUTING
     ))
     public void handleTrigger(InteractionSyncTriggerMessage message)
     {

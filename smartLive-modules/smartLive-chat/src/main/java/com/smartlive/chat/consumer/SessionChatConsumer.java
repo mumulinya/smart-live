@@ -1,7 +1,7 @@
 package com.smartlive.chat.consumer;
+import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartlive.chat.domain.ChatMessages;
@@ -130,7 +130,7 @@ public class SessionChatConsumer {
 
             // 3. 直接发送 Map 对象，由 MessageConverter 处理序列化
             // 不要手动序列化 mqMap，否则会导致双重序列化，接收端解析失败
-            rabbitTemplate.convertAndSend(MqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMap);
+            rabbitTemplate.convertAndSend(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMap);
 
         } catch (Exception e) {
             log.error("发送MQ推送失败", e);

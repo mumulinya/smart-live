@@ -1,11 +1,11 @@
 package com.smartLive.user.service.impl;
+import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
@@ -139,7 +139,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
                     .auditContent(BeanUtil.beanToMap(userVO))
                     .createTime(userById.getCreateTime())
                     .build();
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate, AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
         }
         return update;
     }

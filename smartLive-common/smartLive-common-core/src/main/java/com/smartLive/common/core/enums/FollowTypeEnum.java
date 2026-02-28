@@ -1,4 +1,5 @@
 package com.smartLive.common.core.enums;
+import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
 import com.smartLive.common.core.constant.RedisConstants;
 import lombok.AllArgsConstructor;
@@ -14,34 +15,34 @@ public enum FollowTypeEnum {
             GlobalBizTypeEnum.USER.getCode(),
             "user",
             "用户信息",
-            RedisConstants.FOLLOW_USER_KEY,
-            RedisConstants.FANS_USER_KEY,
-            RedisConstants.FOLLOW_USER_DIRTY_KEY,
-            RedisConstants.FANS_USER_DIRTY_KEY,
-            RedisConstants.FOLLOW_USER_COUNT_KEY,
-            RedisConstants.FANS_USER_COUNT_KEY
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_USER,
+            InteractionRedisKeyConstants.Follow.USER_FANS,
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_USER_DIRTY,
+            InteractionRedisKeyConstants.Follow.USER_FANS_DIRTY,
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_USER_COUNT,
+            InteractionRedisKeyConstants.Follow.USER_FANS_COUNT
     ),
     SHOP_IDENTITY(
             GlobalBizTypeEnum.SHOP.getCode(),
             "shop",
             "店铺信息",
-            RedisConstants.FOLLOW_SHOP_KEY,
-            RedisConstants.FANS_SHOP_KEY,
-            RedisConstants.FOLLOW_SHOP_DIRTY_KEY,
-            RedisConstants.FANS_SHOP_DIRTY_KEY,
-            RedisConstants.FOLLOW_SHOP_COUNT_KEY,
-            RedisConstants.FANS_SHOP_COUNT_KEY
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_SHOP,
+            InteractionRedisKeyConstants.Follow.SHOP_FANS,
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_SHOP_DIRTY,
+            InteractionRedisKeyConstants.Follow.SHOP_FANS_DIRTY,
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_SHOP_COUNT,
+            InteractionRedisKeyConstants.Follow.SHOP_FANS_COUNT
     ),
     PRODUCT_IDENTITY(
             GlobalBizTypeEnum.PRODUCT.getCode(),
             "product",
             "商品信息",
-            RedisConstants.FOLLOW_PRODUCT_KEY,
-            RedisConstants.FANS_PRODUCT_KEY,
-            RedisConstants.FOLLOW_PRODUCT_DIRTY_KEY,
-            RedisConstants.FANS_PRODUCT_DIRTY_KEY,
-            RedisConstants.FOLLOW_PRODUCT_COUNT_KEY,
-            RedisConstants.FANS_PRODUCT_COUNT_KEY
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_PRODUCT,
+            InteractionRedisKeyConstants.Follow.PRODUCT_FANS,
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_PRODUCT_DIRTY,
+            InteractionRedisKeyConstants.Follow.PRODUCT_FANS_DIRTY,
+            InteractionRedisKeyConstants.Follow.USER_FOLLOW_PRODUCT_COUNT,
+            InteractionRedisKeyConstants.Follow.PRODUCT_FANS_COUNT
     );
 
     private final Integer code;

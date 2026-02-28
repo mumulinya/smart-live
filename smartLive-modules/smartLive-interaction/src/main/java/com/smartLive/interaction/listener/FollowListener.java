@@ -1,5 +1,5 @@
 package com.smartLive.interaction.listener;
-import com.smartLive.common.core.constant.MqConstants;
+import com.smartLive.common.core.constant.mq.InteractionMqConstants;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.interaction.service.IFollowService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +23,9 @@ public class FollowListener {
     private ExecutorService executorService;
     //普通数据推送
     @RabbitListener(bindings=@QueueBinding(
-            value = @Queue(name = MqConstants.INTERACT_FEED_QUEUE,declare = "true"),
-            exchange = @Exchange(name = MqConstants.INTERACT_FEED_EXCHANGE_NAME,type = ExchangeTypes.TOPIC),
-            key = MqConstants.INTERACT_FEED_ROUTING))
+            value = @Queue(name = InteractionMqConstants.INTERACT_FEED_QUEUE,declare = "true"),
+            exchange = @Exchange(name = InteractionMqConstants.INTERACT_FEED_EXCHANGE_NAME,type = ExchangeTypes.TOPIC),
+            key = InteractionMqConstants.INTERACT_FEED_ROUTING))
     public void handleSendNormalToFollowers(FeedEventMessage feedEventMessage){
         log.info("推送数据是：{}为",feedEventMessage);
         executorService.execute(() -> {

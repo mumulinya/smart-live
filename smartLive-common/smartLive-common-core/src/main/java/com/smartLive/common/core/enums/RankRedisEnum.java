@@ -1,4 +1,5 @@
 package com.smartLive.common.core.enums;
+import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
 import com.smartLive.common.core.constant.RedisConstants;
 import lombok.AllArgsConstructor;
@@ -16,41 +17,41 @@ public enum RankRedisEnum {
     /** 博客类的热榜及队列配置 */
     BLOG_COMMENT_RANK(
             "COMMENT", GlobalBizTypeEnum.BLOG.getCode(),
-            RedisConstants.BLOG_COMMENT_HOT_RANK_KEY,
-            RedisConstants.BLOG_COMMENT_NEW_RANK_KEY,
-            RedisConstants.BLOG_COMMENT_CALC_KEY
+            InteractionRedisKeyConstants.Comment.BLOG_COMMENT_HOT_RANK,
+            InteractionRedisKeyConstants.Comment.BLOG_COMMENT_NEW_RANK,
+            InteractionRedisKeyConstants.Comment.BLOG_COMMENT_CALC
     ),
 
     /** 评论类的热榜及队列配置 */
     COMMENT_COMMENT_RANK(
             "COMMENT", GlobalBizTypeEnum.COMMENT.getCode(),
-            RedisConstants.COMMENT_COMMENT_HOT_RANK_KEY,
-            RedisConstants.COMMENT_COMMENT_NEW_RANK_KEY,
-            RedisConstants.COMMENT_COMMENT_CALC_KEY
+            InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_HOT_RANK,
+            InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_NEW_RANK,
+            InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_CALC
     ),
 
     /** 评价（作为主语时底下的评论）类的热榜及队列配置 */
     REVIEW_COMMENT_RANK(
             "COMMENT", GlobalBizTypeEnum.REVIEW.getCode(),
-            RedisConstants.REVIEW_COMMENT_HOT_RANK_KEY,
-            RedisConstants.REVIEW_COMMENT_NEW_RANK_KEY,
-            RedisConstants.REVIEW_COMMENT_CALC_KEY
+            InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_HOT_RANK,
+            InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_NEW_RANK,
+            InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_CALC
     ),
 
     /** 商铺评价的热榜及队列配置 */
     SHOP_REVIEW_RANK(
             "REVIEW", GlobalBizTypeEnum.SHOP.getCode(),
-            RedisConstants.SHOP_REVIEW_HOT_RANK_KEY,
-            RedisConstants.SHOP_REVIEW_NEW_RANK_KEY,
-            RedisConstants.SHOP_REVIEW_CALC_KEY
+            InteractionRedisKeyConstants.Review.SHOP_REVIEW_HOT_RANK,
+            InteractionRedisKeyConstants.Review.SHOP_REVIEW_NEW_RANK,
+            InteractionRedisKeyConstants.Review.SHOP_REVIEW_CALC
     ),
 
     /** 商品评价的热榜及队列配置 */
     PRODUCT_REVIEW_RANK(
             "REVIEW", GlobalBizTypeEnum.PRODUCT.getCode(),
-            RedisConstants.PRODUCT_REVIEW_HOT_RANK_KEY,
-            RedisConstants.PRODUCT_REVIEW_NEW_RANK_KEY,
-            RedisConstants.PRODUCT_REVIEW_CALC_KEY
+            InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_HOT_RANK,
+            InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_NEW_RANK,
+            InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_CALC
     ),
 
     // ================= 以下为实体（非评价/评论）自身的热榜队列映射 =================

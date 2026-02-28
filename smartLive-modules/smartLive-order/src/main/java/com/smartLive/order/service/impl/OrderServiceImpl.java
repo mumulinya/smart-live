@@ -1,9 +1,9 @@
 package com.smartLive.order.service.impl;
+import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
@@ -223,7 +223,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             // 创建成功，删除 Redis 占位符
             redisService.deleteObject("order:status:" + order.getId());
             //发送延迟消息，检测订单支付状态
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ORDER_DELAY_EXCHANGE_NAME,MqConstants.ORDER_DELAY_ROUTING,order.getId(),(MqConstants.DELAY_TIME));
+            MqMessageSendUtils.sendMqMessage(rabbitTemplate, OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
         }
     }
 

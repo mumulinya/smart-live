@@ -1,8 +1,8 @@
 package com.smartLive.ai.listener;
+import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import com.smartLive.ai.entity.request.AIGenerateRequest;
 import com.smartLive.ai.strategy.handlers.CommentHandler;
-import com.smartLive.common.core.constant.MqConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -24,9 +24,9 @@ public class AiListener {
     private ExecutorService executorService;
     //
     @RabbitListener(bindings=@QueueBinding(
-            value = @Queue(name = MqConstants.AI_COMMENT_QUEUE,declare = "true"),
-            exchange = @Exchange(name = MqConstants.AI_EXCHANGE_NAME),
-            key = MqConstants.AI_COMMENT_ROUTING
+            value = @Queue(name = AiAuditMqConstants.AI_COMMENT_QUEUE,declare = "true"),
+            exchange = @Exchange(name = AiAuditMqConstants.AI_EXCHANGE_NAME),
+            key = AiAuditMqConstants.AI_COMMENT_ROUTING
     ))
     public void handleAiCreateComment(List<AIGenerateRequest> list){
       executorService.submit(()->{

@@ -1,7 +1,8 @@
 package com.smartlive.chat.listener;
+import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
+import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
 import com.rabbitmq.client.Channel;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartlive.chat.consumer.SessionChatConsumer;
 import com.smartlive.chat.dto.ChatMessageEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -27,19 +28,19 @@ public class ChatListener {
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(
-                            value = MqConstants.CHAT_MESSAGE_QUEUE,
+                            value = ChatMqConstants.CHAT_MESSAGE_QUEUE,
                             durable = "true",
                             // ⭐ 关键修改：这里配置死信交换机和死信路由键
                             arguments = {
-                                    @Argument(name = "x-dead-letter-exchange", value = MqConstants.DEAD_LETTER_EXCHANGE_NAME),
-                                    @Argument(name = "x-dead-letter-routing-key", value = MqConstants.DEAD_LETTER_ROUTING)
+                                    @Argument(name = "x-dead-letter-exchange", value = AiAuditMqConstants.DEAD_LETTER_EXCHANGE_NAME),
+                                    @Argument(name = "x-dead-letter-routing-key", value = AiAuditMqConstants.DEAD_LETTER_ROUTING)
                             }
                     ),
                     exchange = @Exchange(
-                            value = MqConstants.CHAT_EXCHANGE_NAME,
+                            value = ChatMqConstants.CHAT_EXCHANGE_NAME,
                             type = ExchangeTypes.TOPIC // 一定要指定为 topic
                     ),
-                    key = MqConstants.CHAT_MESSAGE_ROUTING + "*"            // 匹配所有 session.chat.xxx 的路由
+                    key = ChatMqConstants.CHAT_MESSAGE_ROUTING + "*"            // 匹配所有 session.chat.xxx 的路由
             )
     )
     public void consumeAllSessionMessages(ChatMessageEvent messageEvent, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
@@ -69,9 +70,9 @@ public class ChatListener {
      * 监听死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = MqConstants.DEAD_LETTER_QUEUE, durable = "true"), // 死信队列名
-            exchange = @Exchange(value = MqConstants.DEAD_LETTER_EXCHANGE_NAME),
-            key = MqConstants.DEAD_LETTER_ROUTING
+            value = @Queue(value = AiAuditMqConstants.DEAD_LETTER_QUEUE, durable = "true"), // 死信队列名
+            exchange = @Exchange(value = AiAuditMqConstants.DEAD_LETTER_EXCHANGE_NAME),
+            key = AiAuditMqConstants.DEAD_LETTER_ROUTING
     ))
     public void handleDeadLetter(ChatMessageEvent messageEvent, Channel channel,@Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         log.error("🚨 死信队列收到消息: {}", messageEvent);

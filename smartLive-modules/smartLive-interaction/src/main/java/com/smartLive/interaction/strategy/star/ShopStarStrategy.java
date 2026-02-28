@@ -1,7 +1,7 @@
 package com.smartLive.interaction.strategy.star;
+import com.smartLive.common.core.constant.mq.SearchMqConstants;
 
 import com.smartLive.common.core.constant.EsIndexNameConstants;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.constant.UserResourceActionTypeConstants;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
@@ -59,7 +59,7 @@ public class ShopStarStrategy implements StarStrategy{
                 .data(shop)
                 .build();
         //发送消息
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.ES_EXCHANGE,MqConstants.ES_ROUTING_USER_RESOURCE_INSERT, userResourceMessage);
+        MqMessageSendUtils.sendMqMessage(rabbitTemplate, SearchMqConstants.ES_EXCHANGE,SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT, userResourceMessage);
     }
 
     /**

@@ -1,4 +1,5 @@
 package com.smartLive.common.core.enums;
+import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
 import com.smartLive.common.core.constant.RedisConstants;
 import lombok.AllArgsConstructor;
@@ -15,18 +16,18 @@ public enum ReviewTypeEnum {
             GlobalBizTypeEnum.SHOP.getCode(),
             "店铺评价",
             GlobalBizTypeEnum.SHOP.getBizDomain(),
-            RedisConstants.SHOP_REVIEW_COUNT_KEY,
-            RedisConstants.USER_REVIEW_KEY,
-            RedisConstants.SHOP_REVIEW_SYNC_KEY
+            InteractionRedisKeyConstants.Review.SHOP_REVIEW_COUNT,
+            InteractionRedisKeyConstants.Review.USER_REVIEW,
+            InteractionRedisKeyConstants.Review.SHOP_REVIEW_SYNC
     ),
 
     PRODUCT_REVIEW(
             GlobalBizTypeEnum.PRODUCT.getCode(),
             "商品评价",
             GlobalBizTypeEnum.PRODUCT.getBizDomain(),
-            RedisConstants.PRODUCT_REVIEW_COUNT_KEY,
-            RedisConstants.USER_REVIEW_KEY,
-            RedisConstants.PRODUCT_REVIEW_SYNC_KEY
+            InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_COUNT,
+            InteractionRedisKeyConstants.Review.USER_REVIEW,
+            InteractionRedisKeyConstants.Review.PRODUCT_REVIEW_SYNC
     );
 
     private final Integer code;

@@ -1,7 +1,7 @@
 package com.smartlive.im.consumer;
+import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartlive.im.handler.NettyChatHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -30,7 +30,7 @@ public class ImPushConsumer {
      */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(name = "im.push.queue"),
-            exchange = @Exchange(name = MqConstants.CHAT_EXCHANGE_NAME, type = "topic"),
+            exchange = @Exchange(name = ChatMqConstants.CHAT_EXCHANGE_NAME, type = "topic"),
             key = "im.push.user"
     ))
     public void handlePushMessage(Map<String, Object> map) {

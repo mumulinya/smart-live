@@ -1,4 +1,5 @@
 package com.smartLive.common.core.enums;
+import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
 import com.smartLive.common.core.constant.RedisConstants;
 import lombok.AllArgsConstructor;
@@ -15,28 +16,28 @@ public enum LikeTypeEnum {
             GlobalBizTypeEnum.BLOG.getCode(),
             "博客点赞",
             GlobalBizTypeEnum.BLOG.getBizDomain(),
-            RedisConstants.BLOG_LIKED_KEY,
-            RedisConstants.USER_BLOG_LIKED_KEY,
-            RedisConstants.BLOG_LIKED_COUNT_KEY,
-            RedisConstants.BLOG_LIKED_DIRTY_KEY
+            InteractionRedisKeyConstants.Like.BLOG_LIKED,
+            InteractionRedisKeyConstants.Like.USER_LIKED_BLOG,
+            InteractionRedisKeyConstants.Like.BLOG_LIKED_COUNT,
+            InteractionRedisKeyConstants.Like.BLOG_LIKED_DIRTY
     ),
     COMMENT_LIKE(
             GlobalBizTypeEnum.COMMENT.getCode(),
             "评论点赞",
             GlobalBizTypeEnum.COMMENT.getBizDomain(),
-            RedisConstants.COMMENT_LIKED_KEY,
-            RedisConstants.USER_COMMENT_LIKED_KEY,
-            RedisConstants.COMMENT_LIKED_COUNT_KEY,
-            RedisConstants.COMMENT_LIKED_DIRTY_KEY
+            InteractionRedisKeyConstants.Like.COMMENT_LIKED,
+            InteractionRedisKeyConstants.Like.USER_LIKED_COMMENT,
+            InteractionRedisKeyConstants.Like.COMMENT_LIKED_COUNT,
+            InteractionRedisKeyConstants.Like.COMMENT_LIKED_DIRTY
     ),
     REVIEW_LIKE(
             GlobalBizTypeEnum.REVIEW.getCode(),
             "评价点赞",
             GlobalBizTypeEnum.REVIEW.getBizDomain(),
-            RedisConstants.REVIEW_LIKED_KEY,
-            RedisConstants.USER_REVIEW_LIKED_KEY,
-            RedisConstants.REVIEW_LIKED_COUNT_KEY,
-            RedisConstants.REVIEW_LIKED_DIRTY_KEY
+            InteractionRedisKeyConstants.Like.REVIEW_LIKED,
+            InteractionRedisKeyConstants.Like.USER_LIKED_REVIEW,
+            InteractionRedisKeyConstants.Like.REVIEW_LIKED_COUNT,
+            InteractionRedisKeyConstants.Like.REVIEW_LIKED_DIRTY
     );
 
     private final Integer code;

@@ -1,6 +1,6 @@
 package com.smartLive.common.core.enums;
 
-import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -13,13 +13,13 @@ import java.util.Arrays;
 @AllArgsConstructor
 public enum FeedTypeEnum {
     //全部推送
-    ALL_FEED(0, RedisConstants.ALL_FEED_KEY, "全部"),
+    ALL_FEED(0, InteractionRedisKeyConstants.Feed.ALL_FEED, "全部"),
     //用户推送
-    USER_FEED(1, RedisConstants.USER_FEED_KEY, "用户"),
+    USER_FEED(1, InteractionRedisKeyConstants.Feed.USER_FEED, "用户"),
     //店铺上新推送
-    SHOP_FEED(2, RedisConstants.SHOP_FEED_KEY, "店铺"),
+    SHOP_FEED(2, InteractionRedisKeyConstants.Feed.SHOP_FEED, "店铺"),
     //商品推送
-    ITEM_FEED(3, RedisConstants.ITEM_FEED_KEY, "商品");
+    ITEM_FEED(3, InteractionRedisKeyConstants.Feed.ITEM_FEED, "商品");
     private final Integer code;
     private final String feedKeyPrefix;
     private final String desc;

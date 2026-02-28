@@ -1,6 +1,6 @@
 package com.smartLive.product.service.strategy.impl;
+import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
-import com.smartLive.common.core.constant.MqConstants;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -88,11 +88,11 @@ public class SeckillPurchaseStrategy implements PurchaseStrategy {
             executorService.submit(() -> {
                 log.info("线程{}创建秒杀订单id为：{}", Thread.currentThread().getName(), orderId);
                 MqMessageSendUtils.sendMqMessage(rabbitTemplate,
-                        MqConstants.ORDER_EXCHANGE_NAME,
-                        MqConstants.ORDER_SECKILL_ROUTING,
+                        OrderMqConstants.ORDER_EXCHANGE_NAME,
+                        OrderMqConstants.ORDER_SECKILL_ROUTING,
                         voucherOrder,
-                        MqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME,
-                        MqConstants.ORDER_DEAD_LETTER_ROUTING,
+                        OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME,
+                        OrderMqConstants.ORDER_DEAD_LETTER_ROUTING,
                         3);
             });
         } catch (Exception e) {

@@ -1,4 +1,5 @@
 package com.smartLive.common.core.enums;
+import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
 import com.smartLive.common.core.constant.RedisConstants;
 import lombok.AllArgsConstructor;
@@ -21,8 +22,8 @@ public enum ResourceTypeEnum {
             GlobalBizTypeEnum.BLOG.getCode(),
             "博客资源",
             GlobalBizTypeEnum.BLOG.getBizDomain(),
-            RedisConstants.BLOG_COMMENT_HOT_RANK_KEY,
-            RedisConstants.BLOG_STAR_SOURCE_KEY
+            InteractionRedisKeyConstants.Comment.BLOG_COMMENT_HOT_RANK,
+            InteractionRedisKeyConstants.Star.BLOG_STAR
     ),
     SHOP_RESOURCE(
             GlobalBizTypeEnum.SHOP.getCode(),
@@ -36,21 +37,21 @@ public enum ResourceTypeEnum {
             "商品资源",
             GlobalBizTypeEnum.PRODUCT.getBizDomain(),
             null,
-            RedisConstants.PRODUCT_STAR_SOURCE_KEY
+            InteractionRedisKeyConstants.Star.PRODUCT_STAR
     ),
     COMMENT_RESOURCE(
             GlobalBizTypeEnum.COMMENT.getCode(),
             "评论资源",
             GlobalBizTypeEnum.COMMENT.getBizDomain(),
-            RedisConstants.COMMENT_COMMENT_HOT_RANK_KEY,
+            InteractionRedisKeyConstants.Comment.COMMENT_COMMENT_HOT_RANK,
             null
     ),
     REVIEW_RESOURCE(
             GlobalBizTypeEnum.REVIEW.getCode(),
             "评价资源",
             GlobalBizTypeEnum.REVIEW.getBizDomain(),
-            RedisConstants.REVIEW_COMMENT_HOT_RANK_KEY,
-            RedisConstants.REVIEW_STAR_SOURCE_KEY
+            InteractionRedisKeyConstants.Comment.REVIEW_COMMENT_HOT_RANK,
+            InteractionRedisKeyConstants.Star.REVIEW_STAR
     );
 
     private final Integer code;
