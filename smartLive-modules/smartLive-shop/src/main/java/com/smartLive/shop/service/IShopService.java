@@ -109,12 +109,12 @@ public interface IShopService extends IService<Shop> {
     String allPublish();
 
     /**
-     * 发布店铺
+     * 批量发布店铺至ES和Milvus索引
      *
-     * @param
+     * @param ids 店铺ID数组
      * @return 发布结果
      */
-    String publish( String[] ids);
+    String publish(String[] ids);
     /**
      * 获取商铺总数
      *

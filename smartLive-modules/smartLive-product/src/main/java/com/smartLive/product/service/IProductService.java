@@ -81,22 +81,25 @@ public interface IProductService extends IService<Product>
 
     /**
      * 根据店铺查询商品列表
-     * @param product
-     * @return
+     *
+     * @param product 商品查询条件（包含shopId和category）
+     * @return 商品VO列表
      */
     List<ProductVO> queryProductOfShop(Product product);
 
     /**
-     * 购买商品 (统一入口，内部策略分发)
-     * @param productId
-     * @param userId
+     * 购买商品（统一入口，内部策略分发）
+     *
+     * @param productId 商品ID
+     * @param userId    用户ID
      * @return 订单ID
      */
     Long purchaseProduct(Long productId, Long userId);
 
     /**
-     * 查询店铺的商品列表
-     * @return
+     * 查询全部商品列表（含店铺信息）
+     *
+     * @return 商品列表
      */
     List<Product> listProduct();
 
@@ -108,9 +111,9 @@ public interface IProductService extends IService<Product>
     String allPublish();
 
     /**
-     * 发布
+     * 批量发布商品至ES和Milvus索引
      *
-     * @param ids
+     * @param ids 商品ID数组
      * @return 发布结果
      */
     String publish(String[] ids);
@@ -188,10 +191,11 @@ public interface IProductService extends IService<Product>
     Integer getProductStarCount(Long sourceId);
 
     /**
-     * 更新商品状态
-     * @param id
-     * @param status
-     * @return
+     * 更新商品状态（审核通过/拒绝）
+     *
+     * @param id     商品ID
+     * @param status 商品状态
+     * @return 更新结果
      */
     Boolean updateProductStatus(Long id, Integer status);
 

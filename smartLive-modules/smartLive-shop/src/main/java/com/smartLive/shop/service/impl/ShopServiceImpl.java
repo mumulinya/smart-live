@@ -287,7 +287,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     /**
      * 判断当前用户是否已经收藏店铺
-     * @param shop
+     *
+     * @param shop 店铺实体（设置isStared属性）
      */
     private void isShopStared(Shop shop) {
         UserDTO user = UserContextHolder.getUser();
@@ -307,8 +308,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         shop.setIsStared(isStared);
     }
     /**
-     * 判断当前用户是否已经收藏店铺
-     * @param shop
+     * 判断当前用户是否已经关注店铺
+     *
+     * @param shop 店铺实体（设置isFollowed属性）
      */
     private void isShopFollowed(Shop shop) {
         UserDTO user = UserContextHolder.getUser();
@@ -327,10 +329,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         shop.setIsFollowed(isFollowed);
     }
     /**
-     * 缓存穿透
+     * 缓存穿透解决方案：查询店铺并缓存空值防止穿透
      *
-     * @param id
-     * @return
+     * @param id 店铺ID
+     * @return 店铺VO，不存在返回null
      */
     public ShopVO queryWithPassThrough(Long id) {
 
@@ -363,10 +365,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
 
     /**
-     * 逻辑过期来解决缓存穿透
+     * 逻辑过期解决缓存击穿：不删缓存，返回旧数据并异步重建
      *
-     * @param id
-     * @return
+     * @param id 店铺ID
+     * @return 店铺实体，缓存不存在返回null
      */
     public Shop queryWithLogicalExpire(Long id) {
         String key = RedisConstants.CACHE_SHOP_KEY + id;
@@ -410,10 +412,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
 
     /**
-     * 互斥锁解决缓存穿透
+     * 互斥锁解决缓存击穿：加锁防止并发查库
      *
-     * @param id
-     * @return
+     * @param id 店铺ID
+     * @return 店铺实体
      */
     public Shop queryWithMutex(Long id) {
         String key = RedisConstants.CACHE_SHOP_KEY + id;
@@ -464,10 +466,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 获取锁
+     * 尝试获取Redis分布式锁
      *
-     * @param key
-     * @return
+     * @param key 锁的键名
+     * @return 是否获取成功
      */
     private boolean tryLock(String key) {
         boolean flag = redisService.setCacheObjectIfAbsent(key, "1", RedisConstants.LOCK_SHOP_TTL, TimeUnit.SECONDS);
@@ -475,19 +477,20 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 释放锁
+     * 释放Redis分布式锁
      *
-     * @param key
+     * @param key 锁的键名
      */
     private void unLock(String key) {
         redisService.deleteObject(key);
     }
 
     /**
-     * 保存热点店铺数据到redis
+     * 保存热点店铺数据到Redis（带逻辑过期时间）
      *
-     * @param id
-     * @param expireSeconds
+     * @param id            店铺ID
+     * @param expireSeconds 逻辑过期时间（秒）
+     * @throws InterruptedException 模拟延时中断异常
      */
     public void saveHotShopRedis(Long id, Long expireSeconds) throws InterruptedException {
         //查询店铺数据
@@ -637,8 +640,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         return "刷新成功";
     }
     /**
-     * 发送审核消息
-     * @param shop
+     * 发送审核消息到MQ
+     *
+     * @param shop 店铺实体
      */
     private void sendAuditMessage(Shop shop) {
         AuditMessage auditMessage = AuditMessage.builder()
@@ -651,9 +655,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.AUDIT_EXCHANGE_NAME,MqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
     /**
-     * 清空店铺列表缓存
+     * 清空指定分类的店铺列表缓存
      *
-     * @param typeId
+     * @param typeId 分类ID
      */
     private void flashShopListRedisCache(Long typeId) {
         //清空缓存
@@ -661,9 +665,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 清空店铺缓存
+     * 清空指定店铺的详情缓存
      *
-     * @param id
+     * @param id 店铺ID
      */
     private void flashShopRedisCache(Long id){
         redisService.deleteObject(RedisConstants.CACHE_SHOP_KEY+id);
@@ -705,9 +709,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
 
     /**
-     * 发布店铺
+     * 批量发布店铺至ES和Milvus索引
      *
-     * @param
+     * @param ids 店铺ID数组
      * @return 发布结果
      */
     @Override
@@ -736,7 +740,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     /**
      * 批量发送ES和Milvus同步消息
-     * @param shops
+     *
+     * @param shops 店铺列表
      */
     private void sendShopBatchMessage(List<Shop> shops) {
         if (CollUtil.isEmpty(shops)) {

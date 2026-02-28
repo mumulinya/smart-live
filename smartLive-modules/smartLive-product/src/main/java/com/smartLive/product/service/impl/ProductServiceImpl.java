@@ -94,6 +94,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return convertToProductVO(product);
     }
 
+    /**
+     * 查询商品实体（内部使用，含店铺信息）
+     *
+     * @param id 商品主键
+     * @return 商品实体
+     */
     @Override
     public Product selectProductEntityById(Long id)
     {
@@ -119,6 +125,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
 
+    /**
+     * 查询商品列表（VO）
+     *
+     * @param product 商品查询条件
+     * @return 商品VO集合
+     */
     @Override
     public List<ProductVO> selectProductList(Product product)
     {
@@ -155,8 +167,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
-     * 店铺发布新商品，更新用户动态
-     * @param product
+     * 店铺发布新商品，发送MQ消息更新用户动态
+     *
+     * @param product 商品实体
      */
     public void sendNewProductMessageToMQ(Product product){
         FeedEventMessage feedEventMessage= FeedEventMessage
@@ -175,9 +188,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 feedEventMessage);
     }
     /**
-     * 商品动态操作
-     * @param productId
-     * @param itemActionType
+     * 发送商品动态操作MQ消息（降价/重新上架等）
+     *
+     * @param productId      商品ID
+     * @param itemActionType 动作类型
      */
     public void sendProductActionMessageToMQ(Long productId, ItemActionType itemActionType){
         FeedEventMessage feedEventMessage= FeedEventMessage
@@ -304,7 +318,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
 
     /**
-     * 购买商品 (Strategy Pattern)
+     * 购买商品（策略模式，根据活动类型分发普通/秒杀策略）
+     *
+     * @param productId 商品ID
+     * @param userId    用户ID
+     * @return 订单ID
      */
     @Override
     @Transactional
@@ -331,8 +349,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     /**
      * 根据店铺查询商品列表
      *
-     * @param product
-     * @return
+     * @param product 商品查询条件（包含shopId和category）
+     * @return 商品VO列表
      */
     @Override
     public List<ProductVO> queryProductOfShop(Product product) {
@@ -350,8 +368,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
 
     /**
-     * 发送审核消息
-     * @param product
+     * 发送审核消息到MQ
+     *
+     * @param product 商品实体
      */
     private void sendAuditMessage(Product product) {
         AuditMessage auditMessage = AuditMessage.builder()
@@ -365,9 +384,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
-     * 查询店铺的商品列表
+     * 查询全部商品列表（含店铺信息）
      *
-     * @return
+     * @return 商品列表
      */
     @Override
     public List<Product> listProduct( ) {
@@ -377,8 +396,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
-     * 查询商品店铺信息
-     * @param product
+     * 查询商品所属店铺信息（设置shopName/typeId/shopLogo）
+     *
+     * @param product 商品实体
      */
     void queryProductShopMessage(Product product){
         ShopDTO shopDTO = remoteShopService.getShopById(product.getShopId());
@@ -389,6 +409,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
     }
 
+    /**
+     * 将Product实体转换为ProductVO
+     *
+     * @param product 商品实体
+     * @return 商品VO对象
+     */
     private ProductVO convertToProductVO(Product product) {
         if (product == null) {
             return null;
@@ -398,6 +424,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return productVO;
     }
 
+    /**
+     * 将Product列表转换为ProductVO列表
+     *
+     * @param productList 商品实体列表
+     * @return 商品VO列表
+     */
     private List<ProductVO> convertToProductVOList(List<Product> productList) {
         if (productList == null || productList.isEmpty()) {
             return new ArrayList<>();
@@ -444,10 +476,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return productList;
     }
     /**
-     * 获取商品列表的店铺信息
+     * 批量查询商品列表的店铺信息
      *
-     * @param productList
-     * @return 商品信息
+     * @param productList 商品列表
      */
     private void queryProductListShopMessage(List<Product> productList) {
         // 获取所有店铺的 ID
@@ -667,9 +698,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
 
     /**
-     * 发布
+     * 批量发布商品至ES和Milvus索引
      *
-     * @param ids
+     * @param ids 商品ID数组
      * @return 发布结果
      */
     @Override
@@ -698,7 +729,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     /**
      * 批量发送ES和Milvus同步消息
-     * @param products
+     *
+     * @param products 商品列表
      */
     private void sendProductBatchMessage(List<Product> products) {
         if (CollUtil.isEmpty(products)) {
@@ -715,6 +747,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         MqMessageSendUtils.sendMqMessage(rabbitTemplate, MqConstants.MILVUS_EXCHANGE, MqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
     }
 
+    /**
+     * 清空单个商品缓存（详情 + 秒杀库存）
+     *
+     * @param productId 商品ID
+     */
     private void clearProductCache(Long productId) {
         if (productId == null) {
             return;
@@ -723,6 +760,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         redisService.deleteObject(RedisConstants.SECKILL_STOCK_KEY + productId);
     }
 
+    /**
+     * 批量清空商品缓存（详情 + 秒杀库存）
+     *
+     * @param productIds 商品ID集合
+     */
     private void clearProductCacheBatch(Collection<Long> productIds) {
         if (CollUtil.isEmpty(productIds)) {
             return;
@@ -743,10 +785,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
     }
     /**
-     * 批量更新商品收藏数量
+     * 批量更新商品评价数
      *
-     * @param updateMap
-     * @return
+     * @param updateMap 商品ID与评价数的映射
+     * @return 更新结果
      */
     @Override
     public Boolean updateReviewCountBatch(Map<Long, Integer> updateMap) {
@@ -769,10 +811,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return true;
     }
     /**
-     * 获取商品收藏数量
+     * 批量更新商品收藏数
      *
-     * @param
-     * @return
+     * @param updateMap 商品ID与收藏数的映射
+     * @return 更新结果
      */
     @Override
     public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
@@ -795,10 +837,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return true;
     }
     /**
-     * 获取商品收藏数量
+     * 获取商品收藏数
      *
-     * @param sourceId
-     * @return
+     * @param sourceId 商品ID
+     * @return 收藏数量
      */
     @Override
     public Integer getProductStarCount(Long sourceId) {
@@ -809,11 +851,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return product != null ? product.getStars() : 0;
     }
     /**
-     * 修改商品状态
+     * 更新商品状态（审核通过/拒绝）
      *
-     * @param id
-     * @param status
-     * @return
+     * @param id     商品ID
+     * @param status 商品状态
+     * @return 更新结果
      */
     @Override
     public Boolean updateProductStatus(Long id, Integer status) {
@@ -825,10 +867,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return b;
     }
     /**
-     * 扣减库存
+     * 扣减库存（库存-1，仅库存>0时成功）
      *
-     * @param id
-     * @return
+     * @param id 商品ID
+     * @return 扣减结果
      */
     @Override
     public boolean deductStock(Long id) {
@@ -836,10 +878,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return update().setSql("stock = stock - 1").eq("id", id).gt("stock", 0).update();
     }
     /**
-     * 恢复库存
+     * 恢复库存（库存+1，用于订单取消/超时回滚）
      *
-     * @param id
-     * @return
+     * @param id 商品ID
+     * @return 恢复结果
      */
     @Override
     public boolean recoverStock(Long id) {

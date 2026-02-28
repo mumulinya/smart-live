@@ -65,54 +65,71 @@ public interface IFollowService extends IService<Follow>
 
     /**
      * 关注或取关
-     * @param
-     * @return
+     *
+     * @param follow 关注实体
+     * @return 操作结果
      */
     Boolean follow(Follow follow);
 
     /**
-     * 判断是否关注
-     * @param follow
-     * @return
+     * 判断是否已关注
+     *
+     * @param follow 关注查询条件
+     * @return 是否已关注
      */
     Boolean isFollowed(Follow follow);
 
     /**
-     * 共同关注列表
-      * @param follow
-     * @return
+     * 获取共同关注列表
+     *
+     * @param follow  关注查询条件
+     * @param current 当前页码
+     * @return 共同关注列表
      */
     List<?> common(Follow follow, Integer current);
     /**
-     * 推送数据给粉丝
+     * 推送Feed动态给粉丝
+     *
+     * @param feedEventMessage Feed事件消息
      */
     void pushToFollowers(FeedEventMessage feedEventMessage);
 
     /**
-     * 获取粉丝列表
-     * @return
+     * 获取粉丝列表（分页）
+     *
+     * @param follow  关注查询条件
+     * @param current 当前页码
+     * @return 粉丝列表
      */
-    List<?> getFans(Follow follow,Integer current);
+    List<?> getFans(Follow follow, Integer current);
 
     /**
-     * 获取关注列表
-     * @return
+     * 获取关注列表（分页）
+     *
+     * @param followDTO 关注查询条件
+     * @param current   当前页码
+     * @return 关注列表
      */
     List<?> getFollows(FollowDTO followDTO, Integer current);
     /**
      * 获取关注数
-     * @return
+     *
+     * @param follow 关注查询条件
+     * @return 关注数量
      */
     Integer getFollowCount(Follow follow);
     /**
      * 获取粉丝数
-     * @return
+     *
+     * @param follow 关注查询条件
+     * @return 粉丝数量
      */
     Integer getFanCount(Follow follow);
     /**
      * 获取共同关注数
-     * @return
+     *
+     * @param follow 关注查询条件
+     * @return 共同关注数量
      */
-
     Integer getCommonFollowCount(Follow follow);
 }

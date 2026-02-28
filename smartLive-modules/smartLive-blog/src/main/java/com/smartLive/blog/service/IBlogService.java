@@ -64,86 +64,99 @@ public interface IBlogService extends IService<Blog>
      int deleteBlogById(Long id);
 
     /**
-     * 查询博客id查询博文详情
-     * @param id
-     * @return
+     * 根据博客ID查询博文详情
+     *
+     * @param id 博客主键
+     * @return 博客详情VO
      */
     BlogVO queryBlogById(Long id);
     /**
-     * 保存博客
-     * @param blog
-     * @return
+     * 保存博客（发布/草稿）
+     *
+     * @param blog 博客实体
+     * @return 博客ID
      */
     Long saveBlog(Blog blog);
 
     /**
-     * 查询最热博客
-     * @param current
-     * @return
+     * 查询最热博客列表
+     *
+     * @param current 当前页码
+     * @return 热门博客列表
      */
     List<BlogVO> queryHotBlog(Integer current);
 
     /**
-     * 查询用户发布的博客
-     * @param current
-     * @param userId
-     * @return
+     * 查询指定用户发布的博客列表
+     *
+     * @param current 当前页码
+     * @param userId  用户ID
+     * @return 博客列表
      */
     List<BlogVO> queryBlogByUserId(Integer current, Long userId);
 
 
     /**
-     * 查询我的博客
-     * @param current
-     * @return
+     * 查询我的博客列表
+     *
+     * @param blog    博客查询条件（包含状态等筛选参数）
+     * @param current 当前页码
+     * @return 我的博客列表
      */
-    List<BlogVO> queryMyBlog(Blog blog,Integer current);
+    List<BlogVO> queryMyBlog(Blog blog, Integer current);
 
     /**
-     * 查询博客详情
-     * @param id
-     * @return
+     * 查询博客详情（包含用户信息）
+     *
+     * @param id 博客主键
+     * @return 博客详情VO
      */
     BlogVO getBlogById(Long id);
 
 
 
     /**
-     * 查询分类下的博客
-     * @param typeId
-     * @param current
-     * @return
+     * 查询指定分类下的博客列表
+     *
+     * @param typeId  分类ID
+     * @param current 当前页码
+     * @return 博客列表
      */
     List<BlogVO> queryBlogByCategory(Long typeId, Integer current);
 
     /**
-     * 获取博客列表
-     * @param sourceIdList
-     * @return
+     * 根据ID列表批量获取博客（含用户信息、点赞状态）
+     *
+     * @param sourceIdList 博客ID列表
+     * @return 博客列表
      */
     List<Blog> getBlogListByIds(List<Long> sourceIdList);
     /**
-     * 置顶博客
+     * 置顶/取消置顶博客
      *
-     * @return 结果
+     * @param blog 博客实体（包含ID和置顶状态）
+     * @return 操作结果
      */
     boolean isPin(Blog blog);
     /**
-     * 批量更新点赞数
-     * @param updateMap
-     * @return
+     * 批量更新博客点赞数
+     *
+     * @param updateMap 博客ID与点赞数的映射
+     * @return 更新结果
      */
     Boolean updateLikeCountBatch(Map<Long, Integer> updateMap);
     /**
-     * 批量更新评论数
-     * @param updateMap
-     * @return
+     * 批量更新博客评论数
+     *
+     * @param updateMap 博客ID与评论数的映射
+     * @return 更新结果
      */
     Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
     /**
-     * 批量更新收藏数
-     * @param updateMap
-     * @return
+     * 批量更新博客收藏数
+     *
+     * @param updateMap 博客ID与收藏数的映射
+     * @return 更新结果
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
     /**
@@ -154,53 +167,59 @@ public interface IBlogService extends IService<Blog>
     String allPublish();
 
     /**
-     * 发布博客
+     * 批量发布博客至ES索引
      *
-     * @param
+     * @param ids 博客ID数组
      * @return 发布结果
      */
-    String publish( String[] ids);
+    String publish(String[] ids);
     /**
      * 获取博客点赞数
-     * @param sourceId
-     * @return
+     *
+     * @param sourceId 博客ID
+     * @return 点赞数量
      */
     Integer getBlogLikeCount(Long sourceId);
     /**
      * 获取博客收藏数
-     * @param sourceId
-     * @return
+     *
+     * @param sourceId 博客ID
+     * @return 收藏数量
      */
     Integer getBlogStarCount(Long sourceId);
     /**
      * 获取博客总数
-     * @return
+     *
+     * @return 博客总数
      */
     Integer getBlogTotal();
     /**
      * 查询用户博客数量
-     * @param userId
-     * @return
+     *
+     * @param userId 用户ID
+     * @return 博客数量
      */
-
     Integer getBlogCount(Long userId);
 
     /**
-     * 查询用户博客点赞数量
-     * @param userId
-     * @return
+     * 查询用户博客获得的总点赞数
+     *
+     * @param userId 用户ID
+     * @return 点赞总数
      */
     Integer getLikeCount(Long userId);
     /**
-     * 刷新缓存
-     * @return
+     * 刷新博客缓存（详情 + 列表 + 分类）
+     *
+     * @return 刷新结果
      */
     String flashCache();
     /**
-     * 更新博客状态
-     * @param targetId
-     * @param status
-     * @return
+     * 更新博客状态（审核通过/拒绝）
+     *
+     * @param targetId 博客ID
+     * @param status   博客状态
+     * @return 更新结果
      */
     Boolean updateBlogStatus(Long targetId, Integer status);
 }

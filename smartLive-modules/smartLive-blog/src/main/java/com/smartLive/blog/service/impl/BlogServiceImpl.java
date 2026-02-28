@@ -240,10 +240,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 查询博客id查询博文详情
+     * 根据博客ID查询博文详情
      *
-     * @param id
-     * @return
+     * @param id 博客主键
+     * @return 博客详情VO
      */
     @Override
     public BlogVO queryBlogById(Long id) {
@@ -264,10 +264,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return convertToBlogVO(blog);
     }
     /**
-     * 查询最热博客
+     * 查询最热博客列表
      *
-     * @param current
-     * @return
+     * @param current 当前页码
+     * @return 热门博客列表
      */
     @Override
 
@@ -315,10 +315,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
 
     /**
-     * 保存博客
+     * 保存博客（发布/草稿）
      *
-     * @param blog
-     * @return
+     * @param blog 博客实体
+     * @return 博客ID
      */
     @Override
     public Long saveBlog(Blog blog) {
@@ -392,10 +392,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 查询我的博客
+     * 查询我的博客列表
      *
-     * @param current
-     * @return
+     * @param b       博客查询条件（包含状态等筛选参数）
+     * @param current 当前页码
+     * @return 我的博客列表
      */
     @Override
     public List<BlogVO> queryMyBlog(Blog b,Integer current) {
@@ -417,11 +418,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return convertToBlogVOList(blogList);
     }
     /**
-     * 查询用户发布的博客
+     * 查询指定用户发布的博客列表
      *
-     * @param current
-     * @param userId
-     * @return
+     * @param current 当前页码
+     * @param userId  用户ID
+     * @return 博客列表
      */
     @Override
     public List<BlogVO> queryBlogByUserId(Integer current, Long userId) {
@@ -436,10 +437,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return convertToBlogVOList(records);
     }
     /**
-     * 查询博客详情
+     * 查询博客详情（包含用户信息）
      *
-     * @param id
-     * @return
+     * @param id 博客主键
+     * @return 博客详情VO
      */
     @Override
     public BlogVO getBlogById(Long id) {
@@ -449,10 +450,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 获取博客列表
+     * 根据ID列表批量获取博客（含用户信息、点赞状态）
      *
-     * @param sourceIdList
-     * @return
+     * @param sourceIdList 博客ID列表
+     * @return 博客列表
      */
     @Override
     public List<Blog> getBlogListByIds(List<Long> sourceIdList) {
@@ -620,10 +621,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 批量更新点赞数
+     * 批量更新博客点赞数
      *
-     * @param updateMap
-     * @return
+     * @param updateMap 博客ID与点赞数的映射
+     * @return 更新结果
      */
     @Override
     public Boolean updateLikeCountBatch(Map<Long, Integer> updateMap) {
@@ -652,10 +653,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 批量更新评论数
+     * 批量更新博客评论数
      *
-     * @param updateMap
-     * @return
+     * @param updateMap 博客ID与评论数的映射
+     * @return 更新结果
      */
     @Override
     public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
@@ -684,10 +685,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 批量更新收藏数
+     * 批量更新博客收藏数
      *
-     * @param updateMap
-     * @return
+     * @param updateMap 博客ID与收藏数的映射
+     * @return 更新结果
      */
     @Override
     public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
@@ -718,7 +719,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     /**
      * 获取博客总数
      *
-     * @return
+     * @return 博客总数
      */
     @Override
     public Integer getBlogTotal() {
@@ -727,8 +728,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     /**
      * 查询用户博客数量
      *
-     * @param userId
-     * @return
+     * @param userId 用户ID
+     * @return 博客数量
      */
     @Override
     public Integer getBlogCount(Long userId) {
@@ -740,10 +741,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 查询用户博客获得点赞数量
+     * 查询用户博客获得的总点赞数
      *
-     * @param userId
-     * @return
+     * @param userId 用户ID
+     * @return 点赞总数
      */
     @Override
     public Integer getLikeCount(Long userId) {
@@ -754,8 +755,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     /**
      * 获取博客点赞数
      *
-     * @param sourceId
-     * @return
+     * @param sourceId 博客ID
+     * @return 点赞数量
      */
     @Override
     public Integer getBlogLikeCount(Long sourceId) {
@@ -768,8 +769,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     /**
      * 获取博客收藏数
      *
-     * @param sourceId
-     * @return
+     * @param sourceId 博客ID
+     * @return 收藏数量
      */
     @Override
     public Integer getBlogStarCount(Long sourceId) {
@@ -781,11 +782,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 查询分类下的博客
+     * 查询指定分类下的博客列表
      *
-     * @param typeId
-     * @param current
-     * @return
+     * @param typeId  分类ID
+     * @param current 当前页码
+     * @return 博客列表
      */
     @Override
     public List<BlogVO> queryBlogByCategory(Long typeId, Integer current) {
@@ -814,11 +815,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     /**
-     * 更新博客状态
+     * 更新博客状态（审核通过/拒绝）
      *
-     * @param targetId
-     * @param status
-     * @return
+     * @param targetId 博客ID
+     * @param status   博客状态
+     * @return 更新结果
      */
     @Override
     public Boolean updateBlogStatus(Long targetId, Integer status) {
@@ -908,9 +909,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 request);
     }
     /**
-     * 刷新缓存
+     * 刷新博客缓存（详情 + 列表 + 分类）
      *
-     * @return
+     * @return 刷新结果
      */
     @Override
     public String flashCache() {
@@ -976,10 +977,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         blog.setIsStared(isStared);
     }
     /**
-     * 从redis中获取博客列表
+     * 从 Redis ZSet 中获取博客ID列表
      *
-     * @param key
-     * @return
+     * @param key  缓存键
+     * @param size 获取数量
+     * @return 博客ID列表
      */
     private List<Long> getBlogIdListFromRedis(String key, long size) {
         Page<Long> idPage = zSetIdManager.pageIds(buildBlogListZSetPrefix(key), BLOG_LIST_ZSET_SLOT, 1L, size);
@@ -989,6 +991,14 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return idPage.getRecords();
     }
 
+    /**
+     * 将博客ID列表以ZSet形式保存到Redis缓存
+     *
+     * @param key     缓存键
+     * @param blogList 博客列表
+     * @param timeout  过期时间
+     * @param unit     时间单位
+     */
     private void saveBlogIdListToRedis(String key, List<Blog> blogList, long timeout, TimeUnit unit) {
         if (key == null || key.isEmpty() || CollUtil.isEmpty(blogList)) {
             return;
@@ -1012,14 +1022,30 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         redisService.expire(zSetKey, timeout, unit);
     }
 
+    /**
+     * 构建博客列表ZSet缓存键前缀
+     *
+     * @param key 原始缓存键
+     * @return ZSet键前缀
+     */
     private String buildBlogListZSetPrefix(String key) {
         return key + ":";
     }
 
+    /**
+     * 构建博客列表ZSet缓存完整键名
+     *
+     * @param key 原始缓存键
+     * @return ZSet完整键名
+     */
     private String buildBlogListZSetKey(String key) {
         return buildBlogListZSetPrefix(key) + BLOG_LIST_ZSET_SLOT;
     }
 
+    /**
+     * 博客列表排行项，用于ZSet缓存排序
+     * 封装博客ID与评分时间，供ZSet写入时使用
+     */
     private static class BlogListRankItem {
         private final Long id;
         private final Date scoreTime;

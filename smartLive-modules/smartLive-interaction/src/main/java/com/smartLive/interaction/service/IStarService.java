@@ -64,22 +64,27 @@ public interface IStarService extends IService<Star>
      int deleteCollectionShopById(Long id);
 
     /**
-     * 关注或取关
-      * @param star
-     * @return
+     * 收藏或取消收藏
+     *
+     * @param star 收藏实体
+     * @return 操作结果
      */
     Boolean star(Star star);
 
     /**
-     * 判断是否收藏
-     * @param
-     * @return
+     * 判断是否已收藏
+     *
+     * @param star 收藏查询条件
+     * @return 是否已收藏
      */
     Boolean isStar(Star star);
 
     /**
-     * 获取收藏列表
-     * @return
+     * 获取收藏列表（分页）
+     *
+     * @param starDTO 收藏查询条件
+     * @param current 当前页码
+     * @return 收藏列表
      */
     List<?> getStarList(StarDTO starDTO, Integer current);
 
@@ -93,20 +98,24 @@ public interface IStarService extends IService<Star>
 
     /**
      * 获取收藏数量
-     * @param star
-     * @return
+     *
+     * @param star 收藏查询条件
+     * @return 收藏数量
      */
     Integer getStarCount(Star star);
      /**
-     * 获取用户收藏数量
-     * @param star
-     * @return
+     * 获取用户收藏总数
+     *
+     * @param star 收藏查询条件
+     * @return 用户收藏总数
      */
     Integer getUserStarCount(Star star);
     /**
-     * 批量判断是否收藏
-     * @param star
-     * @return
+     * 批量判断是否已收藏
+     *
+     * @param starDTO   收藏查询条件（含用户ID和来源类型）
+     * @param sourceIds 目标资源ID列表
+     * @return 资源ID与是否收藏的映射
      */
     Map<Long, Boolean> isStarBatch(StarDTO starDTO, List<Long> sourceIds);
 

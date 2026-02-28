@@ -62,109 +62,112 @@ public interface IReviewService extends IService<Review> {
      int deleteReviewById(Long id);
 
     /**
-     * 获取评论列表
+     * 获取评价列表（分页）
      *
-     * @param review
-     * @return
+     * @param review  评价查询条件
+     * @param current 当前页码
+     * @return 评价列表
      */
     List<Review> listReview(Review review, Integer current);
 
     /**
-     * 新增评论
+     * 用户新增评价
      *
-     * @param review
-     * @return
+     * @param review 评价实体
+     * @return 评价ID
      */
     Integer addReview(Review review);
 
 
     /**
-     * 删除评论
+     * 用户删除评价
      *
-     * @param review
-     * @return
+     * @param review 评价实体（包含ID和用户信息）
+     * @return 删除结果
      */
     Boolean deleteReview(Review review);
 
     /**
-     * 获取用户的评论
+     * 获取用户的评价列表
      *
-     * @param current
-     * @return
+     * @param review  评价查询条件
+     * @param current 当前页码
+     * @return 用户评价列表
      */
-    List<Review> getReviewOfUser(Review review,Integer current);
+    List<Review> getReviewOfUser(Review review, Integer current);
 
     /**
-     * 获取用户发表的评论数
+     * 获取用户发表的评价数
      *
-     * @param review
-     * @return
+     * @param review 评价查询条件
+     * @return 评价数量
      */
     Integer getReviewCount(Review review);
 
     /**
-     * 获取评论总数
+     * 获取评价总数
      *
-     * @return
+     * @return 评价总数
      */
     Integer getReviewTotal();
 
     /**
-     * 获取评论列表
+     * 根据ID列表批量获取评价
      *
-     * @param sourceIdList
-     * @return
+     * @param sourceIdList 评价ID列表
+     * @return 评价列表
      */
     List<Review> getReviewListByIds(List<Long> sourceIdList);
 
     /**
-     * 批量更新点赞数
+     * 批量更新评价点赞数
      *
-     * @param updateMap
-     * @return
+     * @param updateMap 评价ID与点赞数的映射
+     * @return 更新结果
      */
     Boolean updateLikeCountBatch(Map<Long, Integer> updateMap);
     /**
-     * 批量更新评论数
+     * 批量更新评价子评论数
      *
-     * @param updateMap
-     * @return
-     *  */
+     * @param updateMap 评价ID与子评论数的映射
+     * @return 更新结果
+     */
     Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
     /**
-     * 批量更新收藏数
+     * 批量更新评价收藏数
      *
-     * @param updateMap
-     * @return
+     * @param updateMap 评价ID与收藏数的映射
+     * @return 更新结果
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
     /**
-     * 获取评论点赞数
+     * 获取评价点赞数
      *
-     * @param sourceId
-     * @return
+     * @param sourceId 评价ID
+     * @return 点赞数量
      */
     Integer getReviewLikeCount(Long sourceId);
     /**
-     * 根据id获取评论详情
+     * 根据ID获取评价详情
      *
-     * @param id
-     * @return
+     * @param id 评价主键
+     * @return 评价实体
      */
     Review getReviewById(Long id);
     /**
      * 获取评价收藏数
      *
-     * @param sourceId
-     * @return
+     * @param sourceId 评价ID
+     * @return 收藏数量
      */
     Integer getReviewStarCount(Long sourceId);
 
     /**
-     * 更新评价状态
-     * @param id 评价ID
+     * 更新评价状态（审核通过/拒绝）
+     *
+     * @param id     评价ID
      * @param status 状态
-     * @return
+     * @return 更新结果
      */
     Boolean updateReviewStatus(Long id, Integer status);
 
@@ -177,10 +180,10 @@ public interface IReviewService extends IService<Review> {
     Boolean isReview(Review review);
 
     /**
-     * 保存ai自动创建的评价
+     * 保存AI自动创建的评价
      *
-     * @param reviews
-     * @return
+     * @param reviews 评价列表
+     * @return 保存结果
      */
     Boolean saveAiCreateReview(List<Review> reviews);
 }
