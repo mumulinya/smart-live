@@ -42,7 +42,7 @@ public class AuditController extends BaseController {
 
     /**
      * 提交审核结果
-     * 参数：id, status (1-通过, 2-驳回), reason
+     * 参数：id, status (1-审核通过, 2-人工驳回), reason
      */
     @PostMapping("/action")
     public AjaxResult action(@RequestBody Map<String, Object> body) {

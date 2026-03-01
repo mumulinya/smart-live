@@ -754,7 +754,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .set("status", status)
                 .eq("id", id));
         // 如果审核不通过，直接将数据移出排行榜并触发其父级目标的重计算扣分
-        if (update && status == AuditStatusEnum.REJECT.getCode()) {
+        if (update && AuditStatusEnum.isRejected(status)) {
             Comment comment = getById(id);
             CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
             RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());

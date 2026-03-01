@@ -3,7 +3,9 @@ package com.smartLive.audit.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.github.houbb.sensitive.word.core.SensitiveWordHelper;
+import com.smartLive.audit.chain.AuditDecision;
+import com.smartLive.audit.chain.AuditProcessChain;
+import com.smartLive.audit.chain.AuditProcessContext;
 import com.smartLive.audit.domain.AuditTask;
 import com.smartLive.audit.domain.vo.AuditTaskVO;
 import com.smartLive.audit.mapper.AuditTaskMapper;
@@ -13,11 +15,9 @@ import com.smartLive.audit.strategy.AuditStrategyFactory;
 import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.common.core.constant.mq.ChatMqConstants;
 import com.smartLive.common.core.enums.AuditStatusEnum;
-import com.smartLive.common.core.utils.SensitiveWordUtil;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
-import com.smartLive.user.api.RemoteAppUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -40,11 +38,9 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
     @Autowired
     private AuditStrategyFactory auditStrategyFactory;
     @Autowired
-    private RemoteAppUserService remoteAppUserService;
-    @Autowired
-    private SensitiveWordUtil sensitiveWordUtil;
-    @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private AuditProcessChain auditProcessChain;
 
     @Override
     public List<AuditTaskVO> selectAuditList(AuditTask auditTask) {
@@ -124,7 +120,7 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
         if (updated && strategy != null) {
             strategy.handleAuditResult(task.getBizId(), status, reason);
         }
-        if (updated && status != null && status.equals(AuditStatusEnum.REJECT.getCode())) {
+        if (updated && AuditStatusEnum.isRejected(status)) {
             createRejectSystemNotice(task, reason);
         }
 
@@ -157,16 +153,16 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
 
     private String buildRejectTitle(Integer bizType) {
         if (bizType == null) {
-            return "\u5ba1\u6838\u672a\u901a\u8fc7";
+            return "审核未通过";
         }
         return switch (bizType) {
-            case 1 -> "\u7528\u6237\u4fe1\u606f\u5ba1\u6838\u672a\u901a\u8fc7";
-            case 2 -> "\u5e97\u94fa\u4fe1\u606f\u5ba1\u6838\u672a\u901a\u8fc7";
-            case 3 -> "\u7b14\u8bb0\u5ba1\u6838\u672a\u901a\u8fc7";
-            case 4 -> "\u4f18\u60e0\u5238\u5ba1\u6838\u672a\u901a\u8fc7";
-            case 5 -> "\u8bc4\u8bba\u5ba1\u6838\u672a\u901a\u8fc7";
-            case 7 -> "\u8bc4\u4ef7\u5ba1\u6838\u672a\u901a\u8fc7";
-            default -> "\u5ba1\u6838\u672a\u901a\u8fc7";
+            case 1 -> "用户信息审核未通过";
+            case 2 -> "店铺信息审核未通过";
+            case 3 -> "笔记审核未通过";
+            case 4 -> "优惠券审核未通过";
+            case 5 -> "评论审核未通过";
+            case 7 -> "评价审核未通过";
+            default -> "审核未通过";
         };
     }
 
@@ -177,61 +173,50 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
      */
     @Override
     public void handleAudit(AuditMessage auditMessage) {
+        // 第一步：无论后续是否命中规则，先创建审核任务，保证全链路可追踪
         Long auditTaskId = createAuditTask(auditMessage);
-       if (auditTaskId != null) {
-           String content = extractTextFromMap(auditMessage.getAuditContent());
-           boolean contains = sensitiveWordUtil.hasSensitiveWord(content);
-           // 如果包含敏感词，说明不安全
-           if (contains) {
-               //找出敏感词
-               List<String> all = sensitiveWordUtil.findAll(content);
-               log.info("contains sensitive words: {}", all);
-               auditAction(auditTaskId, AuditStatusEnum.REJECT.getCode(), "你的消息包含敏感词："+String.join(",", all));
-           }
+        if (auditTaskId == null) {
+            log.error("创建审核任务失败，消息内容：{}", auditMessage);
+            return;
         }
+
+        // 第二步：执行责任链（敏感词 -> AI占位 -> 人工待审）
+        AuditProcessContext context = new AuditProcessContext(auditTaskId, auditMessage);
+        try {
+            auditProcessChain.execute(context);
+        } catch (Exception e) {
+            // 链路异常兜底：任务保留为待审，进入人工处理
+            context.waitManual("审核链执行异常，已转人工审核");
+            log.error("审核责任链执行异常，taskId={}", auditTaskId, e);
+        }
+
+        // 第三步：根据责任链决策更新任务状态
+        applyAuditDecision(context);
     }
+
     /**
-     * 【辅助方法】智能提取 Map 中的文本
-     * 针对不同的业务，字段名可能不同，这里统一处理
+     * 根据责任链结果推进审核状态
+     *
+     * @param context 审核上下文
      */
-    private String extractTextFromMap(Map<String, Object> map) {
-        if (map == null || map.isEmpty()) {
-            return "";
+    private void applyAuditDecision(AuditProcessContext context) {
+        if (context == null || context.getAuditTaskId() == null) {
+            return;
         }
 
-        StringBuilder sb = new StringBuilder();
-
-        // 1. 尝试提取标题 (针对博客/文章)
-        if (map.containsKey("title")) {
-            sb.append(map.get("title")).append("\n"); // 加换行符，防止标题和正文连在一起造成误判
+        if (context.getDecision() == AuditDecision.REJECT) {
+            String reason = StringUtils.isNotBlank(context.getReason()) ? context.getReason() : "内容不符合发布规范";
+            auditAction(context.getAuditTaskId(), AuditStatusEnum.AUTO_REJECT.getCode(), reason);
+            return;
         }
 
-        // 2. 尝试提取内容 (针对博客/评论)
-        if (map.containsKey("content")) {
-            sb.append(map.get("content"));
+        if (context.getDecision() == AuditDecision.PASS) {
+            String reason = StringUtils.isNotBlank(context.getReason()) ? context.getReason() : "自动审核通过";
+            auditAction(context.getAuditTaskId(), AuditStatusEnum.PASS.getCode(), reason);
+            return;
         }
 
-        // 3. 尝试提取昵称/签名 (针对用户修改信息)
-        if (map.containsKey("nickname")) {
-            sb.append(map.get("nickname"));
-        }
-        if (map.containsKey("introduce")) {
-            sb.append(map.get("introduce"));
-        }
-        // 4. 尝试提取副标题/规则 (针对店铺/团购)
-        if (map.containsKey("title")) {
-            sb.append(map.get("title"));
-        }
-        if (map.containsKey("subTitle")) {
-            sb.append(map.get("subTitle"));
-        }
-        if (map.containsKey("rules")) {
-            sb.append(map.get("rules"));
-        }
-        // 5. 尝试提取名称 (针对代店铺)
-        if (map.containsKey("name")) {
-            sb.append(map.get("name"));
-        }
-        return sb.toString();
+        // WAIT_MANUAL 或 CONTINUE 都保持 WAITING(0)，由人工审核页面继续处理
+        log.info("审核任务进入人工审核队列，taskId={}, reason={}", context.getAuditTaskId(), context.getReason());
     }
 }

@@ -35,7 +35,7 @@ public class AuditTask implements Serializable {
     /** 提交人ID */
     private Long submitterId;
 
-    /** 状态(0-待审, 1-通过, 2-驳回) */
+    /** 状态(0-待审核, 1-审核通过, 2-人工驳回, 3-自动驳回) */
     private Integer status;
 
     /** 驳回原因 */

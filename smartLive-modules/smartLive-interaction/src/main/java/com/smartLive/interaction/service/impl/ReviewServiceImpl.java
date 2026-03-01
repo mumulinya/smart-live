@@ -901,7 +901,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             clearReviewCache(id);
         }
         // 如果审核被拒绝，必须将其从前端的展示榜单中彻底移除，并触发依赖其主体的降分逻辑
-        if(update && status == AuditStatusEnum.REJECT.getCode()){
+        if(update && AuditStatusEnum.isRejected(status)){
             Review review = getById(id);
             ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
             RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", reviewType.getCode());

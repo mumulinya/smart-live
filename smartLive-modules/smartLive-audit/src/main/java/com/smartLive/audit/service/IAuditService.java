@@ -32,7 +32,7 @@ public interface IAuditService extends IService<AuditTask> {
      * 审核操作
      *
      * @param id 任务ID
-     * @param status 状态(1-通过, 2-驳回)
+     * @param status 状态(1-审核通过, 2-人工驳回, 3-自动驳回)
      * @param reason 驳回原因
      * @return 结果
      */
