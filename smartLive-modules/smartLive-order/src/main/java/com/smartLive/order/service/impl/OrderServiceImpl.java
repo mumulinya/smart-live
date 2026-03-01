@@ -206,14 +206,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("用户已经购买过了");
             return;
         }
-        //5.扣减库存
+        //5.获取商品信息以计算过期时间
+        ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
+        if (productDTO != null && productDTO.getValidityType() != null) {
+            if (productDTO.getValidityType() == 1 && productDTO.getUseEndTime() != null) {
+                order.setExpireTime(productDTO.getUseEndTime());
+            } else if (productDTO.getValidityType() == 2 && productDTO.getValidDays() != null) {
+                order.setExpireTime(DateUtils.addDays(DateUtils.getNowDate(), productDTO.getValidDays()));
+            }
+        }
+
+        //6.扣减库存
         Boolean success = remoteProductService.deductStock(order.getSourceId());
         if(!success){
             //扣减失败
             log.error("库存不足");
             return;
         }
-        //6.创建订单
+        //7.创建订单
         boolean save = save(order);
         if(!save){
             //创建失败

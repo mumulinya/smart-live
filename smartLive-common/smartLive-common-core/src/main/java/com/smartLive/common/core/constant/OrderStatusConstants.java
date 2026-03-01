@@ -17,4 +17,6 @@ public class OrderStatusConstants {
     public static final int REFUNDING = 5;
     //已退款
     public static final int REFUNDED = 6;
+    //已过期
+    public static final int EXPIRED = 7;
 }

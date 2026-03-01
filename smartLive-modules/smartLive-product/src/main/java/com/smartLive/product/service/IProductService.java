@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.smartLive.common.core.enums.ItemActionType;
 import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.domain.Product;
 
@@ -230,4 +231,12 @@ public interface IProductService extends IService<Product>
      * @return 结果
      */
     boolean recoverStock(Long id);
+
+    /**
+     * 发送商品动态操作 MQ 消息（降价/重新上架/即将下架等）
+     *
+     * @param productId      商品ID
+     * @param itemActionType 动作类型
+     */
+    void sendProductActionMessageToMQ(Long productId, ItemActionType itemActionType);
 }

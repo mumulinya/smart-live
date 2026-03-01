@@ -191,11 +191,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 feedEventMessage);
     }
     /**
-     * 发送商品动态操作MQ消息（降价/重新上架等）
+     * 发送商品动态操作MQ消息（降价/重新上架/即将下架等）
      *
      * @param productId      商品ID
      * @param itemActionType 动作类型
      */
+    @Override
     public void sendProductActionMessageToMQ(Long productId, ItemActionType itemActionType){
         FeedEventMessage feedEventMessage= FeedEventMessage
                 .builder()

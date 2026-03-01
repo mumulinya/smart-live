@@ -36,6 +36,12 @@ public class RedisConstants {
      * 秒杀商品库存
      */
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";
+    /** 秒杀预热窗口：活动开始前多少小时进行预热 */
+    public static final long SECKILL_PRE_HEAT_WINDOW_HOURS = 2L;
+    /** 秒杀临期提醒窗口：活动结束前多少分钟触发通知 */
+    public static final long SECKILL_SOON_END_WINDOW_MINUTES = 30L;
+    /** 秒杀临期通知防重 Key 前缀 */
+    public static final String SECKILL_NOTIFY_KEY = "seckill:notify:";
     /**
      * 博客缓存
      */
