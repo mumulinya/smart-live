@@ -59,14 +59,18 @@
 | 用户认证/登录 | 首页聚合流 | 动态关注流 |
 |:---:|:---:|:---:|
 | ![login](docs/screenshots/login-page.png) | ![homepage](docs/screenshots/homepage.png) | ![feed](docs/screenshots/feed-flow.png) |
-| **全文检索结果** | **搜索历史/热榜** | **用户行为数据** |
-| ![search](docs/screenshots/search-results.png) | ![hot](docs/screenshots/hot-ranking.png) | ![user-search](docs/screenshots/user-search.png) |
+| **全文检索结果** | **首页热门榜单** | **地图找店(LBS)** |
+| ![search](docs/screenshots/search-results.png) | ![hot](docs/screenshots/hot-ranking.png) | ![map](docs/screenshots/map-view.png) |
 | **店铺分类列表** | **店铺详情页** | **商品详情页** |
 | ![shop-list](docs/screenshots/shop-list.png) | ![shop](docs/screenshots/shop-detail.png) | ![product](docs/screenshots/product-detail.png) |
 | **限时秒杀专区** | **内容创作发布** | **互动评论/评价** |
 | ![seckill](docs/screenshots/seckill-page.png) | ![publish](docs/screenshots/publish-page.png) | ![comment](docs/screenshots/comment-section.png) |
-| **AI 智能助手** | **即时通讯聊天** | **个人中心** |
-| ![ai](docs/screenshots/ai-chat.png) | ![im](docs/screenshots/im-chat.png) | ![profile](docs/screenshots/profile-page.png) |
+| **消息交互中心** | **系统通知/违规过滤** | **即时通讯聊天** |
+| ![msg-center](docs/screenshots/message-center.png) | ![sys-notify](docs/screenshots/system-notification.png) | ![im](docs/screenshots/im-chat.png) |
+| **AI 智能助手** | **用户行为数据** | **个人中心** |
+| ![ai](docs/screenshots/ai-chat.png) | ![user-search](docs/screenshots/user-search.png) | ![profile](docs/screenshots/profile-page.png) |
+| **我的发布/笔记** | **草稿箱** | **我的收藏** |
+| ![user-posts](docs/screenshots/user-posts.png) | ![drafts](docs/screenshots/draft-box.png) | ![user-favorites](docs/screenshots/user-favorites.png) |
 | **关注/粉丝列表** | **我的订单** | **我的钱包** |
 | ![follow](docs/screenshots/follow-list.png) | ![order](docs/screenshots/order-page.png) | ![wallet](docs/screenshots/wallet-page.png) |
 | **积分中心** | **签到与抽奖** | |
