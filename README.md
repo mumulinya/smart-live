@@ -56,13 +56,15 @@
 
 ## 🎨 效果预览
 
-> 📷 截图占位 — 替换为实际项目截图后删除本行
-
 | 首页 | 店铺详情 | 商品详情 |
 |:---:|:---:|:---:|
 | ![homepage](docs/screenshots/homepage.png) | ![shop](docs/screenshots/shop-detail.png) | ![product](docs/screenshots/product-detail.png) |
-| **AI 智能助手** | **聊天消息** | **后台管理** |
-| ![ai-chat](docs/screenshots/ai-chat.png) | ![im-chat](docs/screenshots/im-chat.png) | ![admin](docs/screenshots/admin.png) |
+| **AI 智能助手** | **即时通讯/消息** | **双场景搜索** |
+| ![ai-chat](docs/screenshots/ai-chat.png) | ![im-chat](docs/screenshots/im-chat.png) | ![search](docs/screenshots/search-page.png) |
+| **内容创作/发布** | **个人中心** | **我的订单** |
+| ![publish](docs/screenshots/publish-page.png) | ![profile](docs/screenshots/profile-page.png) | ![order](docs/screenshots/order-page.png) |
+| **我的钱包** | **积分中心** | |
+| ![wallet](docs/screenshots/wallet-page.png) | ![points](docs/screenshots/points-page.png) | |
 
 ## 🏗️ 系统架构
 
