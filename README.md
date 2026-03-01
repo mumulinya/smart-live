@@ -37,7 +37,7 @@
 
 ---
 
-## 📖 项目简介
+## <a id="项目简介"></a>📖 项目简介
 
 **SmartLive（智评生活）** 是一个面向本地生活服务的多端智慧商户平台，旨在解决本地商户引流难、用户决策复杂等痛点。平台提供 **商户展示、AI 智能推荐、社交互动、即时通讯、营销下单、内容安全** 六大核心功能，采用微服务架构拆分 **18+ 业务模块**，支持高并发、实时通信与个性化用户体验。
 
@@ -54,19 +54,25 @@
 - 🏗️ **微服务架构** — Spring Cloud Alibaba 全家桶，Nacos + Gateway + Sentinel + Seata
 - 🐳 **一键部署** — 提供完整的 Docker Compose 编排，轻松启动全部服务
 
-## 🎨 效果预览
+## <a id="效果预览"></a>🎨 效果预览
 
-| 首页 | 店铺详情 | 商品详情 |
+| 用户认证/登录 | 首页聚合流 | 动态关注流 |
 |:---:|:---:|:---:|
-| ![homepage](docs/screenshots/homepage.png) | ![shop](docs/screenshots/shop-detail.png) | ![product](docs/screenshots/product-detail.png) |
-| **AI 智能助手** | **即时通讯/消息** | **双场景搜索** |
-| ![ai-chat](docs/screenshots/ai-chat.png) | ![im-chat](docs/screenshots/im-chat.png) | ![search](docs/screenshots/search-page.png) |
-| **内容创作/发布** | **个人中心** | **我的订单** |
-| ![publish](docs/screenshots/publish-page.png) | ![profile](docs/screenshots/profile-page.png) | ![order](docs/screenshots/order-page.png) |
-| **我的钱包** | **积分中心** | |
-| ![wallet](docs/screenshots/wallet-page.png) | ![points](docs/screenshots/points-page.png) | |
+| ![login](docs/screenshots/login-page.png) | ![homepage](docs/screenshots/homepage.png) | ![feed](docs/screenshots/feed-flow.png) |
+| **全文检索结果** | **搜索历史/热榜** | **用户行为数据** |
+| ![search](docs/screenshots/search-results.png) | ![hot](docs/screenshots/hot-ranking.png) | ![user-search](docs/screenshots/user-search.png) |
+| **店铺分类列表** | **店铺详情页** | **商品详情页** |
+| ![shop-list](docs/screenshots/shop-list.png) | ![shop](docs/screenshots/shop-detail.png) | ![product](docs/screenshots/product-detail.png) |
+| **限时秒杀专区** | **内容创作发布** | **互动评论/评价** |
+| ![seckill](docs/screenshots/seckill-page.png) | ![publish](docs/screenshots/publish-page.png) | ![comment](docs/screenshots/comment-section.png) |
+| **AI 智能助手** | **即时通讯聊天** | **个人中心** |
+| ![ai](docs/screenshots/ai-chat.png) | ![im](docs/screenshots/im-chat.png) | ![profile](docs/screenshots/profile-page.png) |
+| **关注/粉丝列表** | **我的订单** | **我的钱包** |
+| ![follow](docs/screenshots/follow-list.png) | ![order](docs/screenshots/order-page.png) | ![wallet](docs/screenshots/wallet-page.png) |
+| **积分中心** | **签到与抽奖** | |
+| ![points](docs/screenshots/points-page.png) | ![sign-in](docs/screenshots/sign-in.png) | |
 
-## 🏗️ 系统架构
+## <a id="系统架构"></a>🏗️ 系统架构
 
 ```
                                     ┌─────────────────┐
@@ -124,7 +130,7 @@
                    └────────────────────────────────────────────────────────┘
 ```
 
-## 📦 项目仓库
+## <a id="项目仓库"></a>📦 项目仓库
 
 | 仓库 | 说明 | 链接 |
 |:---:|:---:|:---:|
@@ -132,7 +138,7 @@
 | **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin) |
 | **smartLive-web** | 用户端前台（Vue 响应式，兼容移动端） | [GitHub](https://github.com/mumulinya/smartLive-web) |
 
-## 🔧 技术栈
+## <a id="技术栈"></a>🔧 技术栈
 
 ### 后端技术
 
@@ -167,7 +173,7 @@
 | Element UI | 后台管理 UI 组件库 |
 | UniApp | 多端前台用户端 |
 
-## 📁 项目结构
+## <a id="项目结构"></a>📁 项目结构
 
 ```
 com.smartLive
@@ -222,7 +228,7 @@ com.smartLive
 └── pom.xml                        // 父 POM
 ```
 
-## ✨ 功能特性
+## <a id="功能特性"></a>✨ 功能特性
 
 ### 🛍️ 业务功能
 
@@ -407,7 +413,7 @@ com.smartLive
 | 统一鉴权 | 请求身份验证 |
 | 跨域处理 | CORS跨域配置 |
 
-## 🚀 快速开始
+## <a id="快速开始"></a>🚀 快速开始
 
 ### 环境要求
 
@@ -492,7 +498,7 @@ bin/run-modules-file.bat   # 启动文件服务
 # ...
 ```
 
-## 🔗 服务端口速查
+## <a id="服务端口速查"></a>🔗 服务端口速查
 
 | 服务 | 模块 | 端口 |
 |:---|:---|:---:|
@@ -520,12 +526,12 @@ bin/run-modules-file.bat   # 启动文件服务
 | 积分服务 | smartLive-points | 9215 |
 | 钱包服务 | smartLive-wallet | 9216 |
 
-## 📚 项目文档
+## <a id="项目文档"></a>📚 项目文档
 
 - 📘 [在线文档](http://doc.smartLive.vip)
 - 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
 
-## 🤝 参与贡献
+## <a id="参与贡献"></a>🤝 参与贡献
 
 我们非常欢迎各种形式的贡献！无论是新功能、Bug 修复还是文档改进，都请随时提交。
 
@@ -551,11 +557,11 @@ bin/run-modules-file.bat   # 启动文件服务
 | `test` | 测试用例 |
 | `chore` | 构建/工具更新 |
 
-## 📄 开源协议
+## <a id="开源协议"></a>📄 开源协议
 
 本项目基于 [MIT License](LICENSE) 开源。
 
-## 📞 联系我们
+## <a id="联系我们"></a>📞 联系我们
 
 - **Issues**: [提交问题](https://gitee.com/mumulinya/smart-live/issues)
 - **Gitee**: [项目主页](https://gitee.com/mumulinya/smart-live)
