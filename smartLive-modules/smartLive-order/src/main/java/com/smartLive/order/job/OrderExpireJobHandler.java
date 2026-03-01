@@ -84,10 +84,10 @@ public class OrderExpireJobHandler {
                 // 复用系统的内部通知结构发送MQ
                 MqMessageSendUtils.sendMqMessage(
                         rabbitTemplate,
-                        ChatMqConstants.SYSTEM_NOTICE_EXCHANGE_NAME,
+                        ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
                         ChatMqConstants.SYSTEM_NOTICE_ROUTING,
-                        order.getUserId(),  // toUserId
-                        content
+                        content,
+                        3
                 );
                 
                 notifiedCount++;

@@ -1,10 +1,9 @@
-﻿package com.smartLive.interaction.service.impl;
+package com.smartLive.interaction.service.impl;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,11 +12,11 @@ import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.CommentTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.RankRedisEnum;
-import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -388,7 +387,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         Long userId = comment.getUserId();
         if (userId == null) {
-            com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
+            AppLoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
                 comment.setUserId(userId);
@@ -645,7 +644,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         if (CollUtil.isEmpty(commentList)) {
             return;
         }
-        com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             commentList.forEach(comment -> {
                 if (comment != null) {
@@ -788,7 +787,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         Long userId = comment.getUserId();
         if (userId == null) {
-            com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
+            AppLoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
             }

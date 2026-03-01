@@ -1,11 +1,11 @@
-﻿package com.smartLive.interaction.service.impl;
+package com.smartLive.interaction.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.LoginUser;
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.enums.StarTypeEnum;
@@ -83,7 +83,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
 
     @Override
     public Boolean star(Star star) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             return false;
         }
@@ -136,7 +136,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
 
     @Override
     public Boolean isStar(Star star) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             return false;
         }
@@ -273,7 +273,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         }
 
         Long userId = null;
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user != null) {
             userId = user.getId();
         } else if (starDTO.getUserId() != null) {

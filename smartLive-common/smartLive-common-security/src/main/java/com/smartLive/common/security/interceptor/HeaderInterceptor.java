@@ -1,13 +1,13 @@
-﻿package com.smartLive.common.security.interceptor;
+package com.smartLive.common.security.interceptor;
 
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.system.api.model.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.LoginUser;
+import com.smartLive.common.core.domain.AppLoginUser;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.AsyncHandlerInterceptor;
 import com.smartLive.common.core.constant.SecurityConstants;
@@ -16,7 +16,7 @@ import com.smartLive.common.core.utils.ServletUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.security.auth.AuthUtil;
 import com.smartLive.common.security.utils.SecurityUtils;
-import com.smartLive.system.api.model.LoginUser;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -67,7 +67,7 @@ public class HeaderInterceptor implements AsyncHandlerInterceptor
             String userToken = ServletUtils.getHeader(request, SecurityConstants.DETAILS_USER_TOKEN);
             if (StringUtils.isNotEmpty(userId))
             {
-                UserDTO userDTO = new UserDTO(Long.valueOf(userId), userName, userIcon, userToken);
+                AppLoginUser userDTO = new AppLoginUser(Long.valueOf(userId), userName, userIcon, userToken);
                 //保存用户信息到ThreadLocal
                 UserContextHolder.saveUser(userDTO);
             }

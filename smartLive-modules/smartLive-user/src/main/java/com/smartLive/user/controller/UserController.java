@@ -1,11 +1,11 @@
-﻿package com.smartLive.user.controller;
+package com.smartLive.user.controller;
 
 import java.util.List;
 
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.security.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.LoginUser;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.service.IUserInfoService;
@@ -152,7 +152,7 @@ public class UserController extends BaseController
      */
     @GetMapping("/me")
     public Result me(){
-        UserDTO userDTO = UserContextHolder.getUser();
+        AppLoginUser userDTO = UserContextHolder.getUser();
         if (userDTO == null) {
             return Result.fail("未登录");
         }

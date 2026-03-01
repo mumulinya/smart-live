@@ -1,4 +1,4 @@
-﻿package com.smartLive.interaction.service.impl;
+package com.smartLive.interaction.service.impl;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.RankRedisEnum;
@@ -26,7 +27,6 @@ import com.smartLive.interaction.domain.BO.AuditReviewBO;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.Review;
 import com.smartLive.interaction.api.DTO.LikeDTO;
-import com.smartLive.interaction.domain.DTO.StarDTO;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.mapper.ReviewMapper;
 import com.smartLive.interaction.service.ILikeService;
@@ -428,7 +428,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         Long userId = review.getUserId();
         if (userId == null) {
-            com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
+            AppLoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
                 review.setUserId(userId);
@@ -654,7 +654,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (CollUtil.isEmpty(reviewList)) {
             return;
         }
-        com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             reviewList.forEach(review -> {
                 if (review != null) {
@@ -941,7 +941,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         Long userId = review.getUserId();
         if (userId == null) {
-            com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
+            AppLoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
             }

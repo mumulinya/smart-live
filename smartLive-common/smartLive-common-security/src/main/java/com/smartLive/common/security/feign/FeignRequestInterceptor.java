@@ -1,9 +1,10 @@
-﻿package com.smartLive.common.security.feign;
+package com.smartLive.common.security.feign;
 
 import java.util.Map;
+
+import com.smartLive.common.core.domain.AppLoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.LoginUser;
 import org.springframework.stereotype.Component;
 import com.smartLive.common.core.constant.SecurityConstants;
 import com.smartLive.common.core.utils.ServletUtils;
@@ -53,7 +54,7 @@ public class FeignRequestInterceptor implements RequestInterceptor
             requestTemplate.header(SecurityConstants.FROM_SOURCE, SecurityConstants.FROM_SOURCE_ADMIN);
         }
 
-        UserDTO userDto = UserContextHolder.getUser();
+        AppLoginUser userDto = UserContextHolder.getUser();
         if (StringUtils.isNotNull(userDto))
         {
             // 传递App用户信息到请求头

@@ -1,4 +1,4 @@
-﻿package com.smartLive.user.service.impl;
+package com.smartLive.user.service.impl;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
 
@@ -165,7 +166,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         int i = userMapper.updateUser(user);
         if(i>0){
             clearUserCache(user.getId());
-            com.smartLive.common.core.domain.LoginUser dto = UserContextHolder.getUser();
+            AppLoginUser dto = UserContextHolder.getUser();
             //更新用户缓存信息
             if(dto!=null){
                 String tokenKey = dto.getToken();
@@ -433,7 +434,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return followCount;
         });
         // 当前用户
-        com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         // 获取共同关注数
         Future<Integer> commonFollowCountFuture = executorService.submit(() -> {
             Integer commonFollowCount = 0;

@@ -1,4 +1,4 @@
-﻿package com.smartLive.interaction.service.impl;
+package com.smartLive.interaction.service.impl;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.constant.mq.ChatMqConstants;
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
@@ -215,7 +216,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      */
     @Override
     public Boolean isFollowed(Follow follow) {
-        com.smartLive.common.core.domain.LoginUser user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             return false;
         }

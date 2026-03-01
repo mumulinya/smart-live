@@ -1,10 +1,8 @@
-﻿package com.smartLive.user.service;
+package com.smartLive.user.service;
 
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.common.core.domain.R;
-import com.smartLive.common.core.domain.LoginUser;
 import com.smartLive.user.domain.Stats;
 import com.smartLive.user.domain.User;
 import com.smartLive.user.domain.VO.UserVO;

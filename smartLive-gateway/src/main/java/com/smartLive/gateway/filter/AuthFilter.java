@@ -1,9 +1,9 @@
-﻿package com.smartLive.gateway.filter;
+package com.smartLive.gateway.filter;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.smartLive.common.core.constant.*;
-import com.smartLive.common.core.domain.LoginUser;
+import com.smartLive.common.core.domain.AppLoginUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,7 +101,7 @@ public class AuthFilter implements GlobalFilter, Ordered
             //如果token存在，且用户信息存在
             if(StrUtil.isNotBlank(tokenKey)&&!userMap.isEmpty()){
                 //TODO 5 把hashMap对象转换为userDto对象
-                UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
+                AppLoginUser userDTO = BeanUtil.fillBeanWithMap(userMap, new AppLoginUser(), false);
                 userDTO.setToken(tokenKey);
                 //传递用户消息到下一个服务
                 // 设置用户信息到请求

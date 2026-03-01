@@ -1,11 +1,11 @@
-﻿package com.smartLive.interaction.service.impl;
+package com.smartLive.interaction.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.LoginUser;
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.core.enums.FollowTypeEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
@@ -55,7 +55,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
 
     @Override
     public Boolean likeOrCancelLike(Like like) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             return false;
         }
@@ -158,7 +158,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
 
         Long userId = like.getUserId();
         if (userId == null) {
-            UserDTO user = UserContextHolder.getUser();
+            AppLoginUser user = UserContextHolder.getUser();
             if (user != null) {
                 userId = user.getId();
                 like.setUserId(userId);
@@ -427,7 +427,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
 
     @Override
     public Boolean isLike(Like like) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             return false;
         }
@@ -468,7 +468,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
         }
 
         Long userId = null;
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user != null) {
             userId = user.getId();
         } else if (likeDTO.getUserId() != null) {

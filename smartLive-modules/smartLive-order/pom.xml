@@ -74,6 +74,11 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-rabbitmq</artifactId>
         </dependency>
+        <!--xxl-->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-xxl</artifactId>
+        </dependency>
         <!--hutool-->
         <dependency>
             <groupId>cn.hutool</groupId>

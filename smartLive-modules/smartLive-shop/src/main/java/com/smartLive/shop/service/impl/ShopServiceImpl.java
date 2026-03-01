@@ -1,4 +1,4 @@
-﻿package com.smartLive.shop.service.impl;
+package com.smartLive.shop.service.impl;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
@@ -23,7 +23,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.SecurityContextHolder;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.LoginUser;
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
@@ -293,7 +293,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @param shop 店铺实体（设置isStared属性）
      */
     private void isShopStared(Shop shop) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             //未登录,不用查询是否点赞
             shop.setIsStared(false);
@@ -315,7 +315,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @param shop 店铺实体（设置isFollowed属性）
      */
     private void isShopFollowed(Shop shop) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             //未登录,不用查询是否点赞
             shop.setIsFollowed(false);

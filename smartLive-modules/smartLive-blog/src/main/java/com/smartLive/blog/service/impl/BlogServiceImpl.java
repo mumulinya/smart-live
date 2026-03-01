@@ -1,4 +1,4 @@
-﻿package com.smartLive.blog.service.impl;
+package com.smartLive.blog.service.impl;
 import com.smartLive.common.core.constant.mq.InteractionMqConstants;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
@@ -13,12 +13,12 @@ import com.smartLive.blog.domain.Blog;
 import com.smartLive.blog.domain.VO.BlogVO;
 import com.smartLive.blog.mapper.BlogMapper;
 import com.smartLive.blog.service.IBlogService;
+import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.rabbitmq.domain.*;
 import org.springframework.beans.BeanUtils;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.FeedTypeEnum;
-import com.smartLive.common.core.domain.LoginUser;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
@@ -403,7 +403,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public List<BlogVO> queryMyBlog(Blog b,Integer current) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             throw new BusinessException("未登录");
         }
@@ -501,7 +501,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (CollUtil.isEmpty(blogList)) {
             return;
         }
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             blogList.forEach(blog -> {
                 if (blog != null) {
@@ -536,7 +536,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (CollUtil.isEmpty(blogList)) {
             return;
         }
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             blogList.forEach(blog -> {
                 if (blog != null) {
@@ -941,7 +941,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param blog
      */
     private void isBlogLiked(Blog blog) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             //未登录,不用查询是否点赞
             blog.setIsLike(false);
@@ -963,7 +963,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param blog
      */
     private void isBlogStared(Blog blog) {
-        UserDTO user = UserContextHolder.getUser();
+        AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             //未登录,不用查询是否点赞
             blog.setIsStared(false);
