@@ -9,9 +9,13 @@ import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.product.api.RemoteProductService;
+import com.smartLive.interaction.strategy.AbstractInteractionStrategy;
+import com.smartLive.common.core.constant.UserResourceActionTypeConstants;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.product.api.RemoteProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -19,10 +23,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class ProductFollowStrategy implements FollowStrategy {
+public class ProductFollowStrategy extends AbstractInteractionStrategy implements FollowStrategy {
 
     private final RemoteProductService remoteProductService;
-    private final RabbitTemplate rabbitTemplate;
 
     @Override
     public Integer getType() {
@@ -41,30 +44,19 @@ public class ProductFollowStrategy implements FollowStrategy {
         }
     }
 
-    /**
-     * 同步数据到ES
-     * 使用 default 关键字提供默认空实现
-     * 只有需要同步搜索的资源（如博客、店铺）才需要重写此方法
-     *
-     * @param
-     */
     @Override
-    public void syncUserResource(Long userId, Long sourceId) {
-        ProductDTO product = remoteProductService.getProductById(sourceId);
-        //文档id
-        String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_FOLLOW;
-        String  id = userId+"_"+actionType+"_"+GlobalBizTypeEnum.PRODUCT.getBizDomain()+"_"+product.getId().toString();
-        UserResourceMessage userResourceMessage = UserResourceMessage.builder()
-                .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
-                .id(id)
-                .userId(userId)
-                .sourceType(ResourceTypeEnum.PRODUCT_RESOURCE.getCode())
-                .sourceId(sourceId)
-                .actionType(actionType)
-                .data(product)
-                .build();
-        //发送消息
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, SearchMqConstants.ES_EXCHANGE,SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT, userResourceMessage);
+    protected Object getSourceData(Long sourceId) {
+        return remoteProductService.getProductById(sourceId);
+    }
+
+    @Override
+    protected String getBizDomain() {
+        return GlobalBizTypeEnum.PRODUCT.getBizDomain();
+    }
+
+    @Override
+    protected String getActionType() {
+        return UserResourceActionTypeConstants.USER_RESOURCE_ACTION_FOLLOW;
     }
 
     /**
