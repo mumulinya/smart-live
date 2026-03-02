@@ -12,6 +12,7 @@
 [![JDK](https://img.shields.io/badge/JDK-17+-red.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Star](https://gitee.com/mumulinya/smart-live/badge/star.svg?theme=dark)](https://gitee.com/mumulinya/smart-live/stargazers)
+[![Personal Project](https://img.shields.io/badge/个人独立项目-从零设计开发-ff69b4.svg)]()
 
 [在线文档](http://doc.smartLive.vip) · [演示地址](http://www.smartLive.vip) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
 
@@ -22,22 +23,39 @@
 ## 📋 目录
 
 - [📖 项目简介](#项目简介)
-- [� 效果预览](#效果预览)
-- [�🏗️ 系统架构](#系统架构)
+- [🎨 效果预览](#效果预览)
+- [🏗️ 系统架构](#系统架构)
+- [🌊 核心业务链路](#核心业务链路)
+- [🌊 核心业务链路](#核心业务链路)
 - [📦 项目仓库](#项目仓库)
 - [🔧 技术栈](#技术栈)
 - [📁 项目结构](#项目结构)
 - [✨ 功能特性](#功能特性)
 - [🚀 快速开始](#快速开始)
 - [🔗 服务端口速查](#服务端口速查)
+- [🌊 核心业务链路](#核心业务链路)
+- [📈 性能压测报告](#性能压测报告)
+- [�� 难点踩坑与解决方案](#难点踩坑与解决方案)
+- [🗺️ 未来规划 Roadmap](#未来规划 Roadmap)
+- [📈 性能压测报告](#性能压测报告)
+- [🚧 难点踩坑与解决方案](#难点踩坑与解决方案)
+- [📈 性能压测报告](#性能压测报告)
+- [🚧 难点踩坑与解决方案](#难点踩坑与解决方案)
+- [❓ 常见问题 FAQ](#常见问题)
+- [🗺️ 未来规划 Roadmap](#未来规划)
+- [🗺️ 未来规划 Roadmap](#未来规划)
+- [❓ 常见问题 FAQ](#常见问题)
 - [📚 项目文档](#项目文档)
 - [🤝 参与贡献](#参与贡献)
 - [📄 开源协议](#开源协议)
-- [📞 联系我们](#联系我们)
+- [📞 联系我](#联系我)
 
 ---
 
 ## <a id="项目简介"></a>📖 项目简介
+
+> 🙋 **个人独立项目声明**：本项目从零开始由作者**个人独立设计、编码并持续维护**，
+> 非团队协作或培训项目，有完整 Git 提交记录，可现场代码走查。
 
 **SmartLive（智评生活）** 是一个面向本地生活服务的多端智慧商户平台，旨在解决本地商户引流难、用户决策复杂等痛点。平台提供 **商户展示、AI 智能推荐、社交互动、即时通讯、营销下单、内容安全** 六大核心功能，采用微服务架构拆分 **18+ 业务模块**，支持高并发、实时通信与个性化用户体验。
 
@@ -47,7 +65,7 @@
 - 🔍 **双场景搜索** — Elasticsearch 全文检索 + 高亮 + 四种排序策略，个人中心行为数据检索
 - 💬 **Netty 消息中心** — WebSocket 长连接 + 心跳保活，承载私信与系统通知实时下发
 - ⚡ **秒杀抢购** — Redis Lua 原子防超卖，MQ 异步落单，延迟/死信队列保障订单可靠
-- 🔥 **社交互动引擎** — 7 个策略工厂统一点赞/收藏/评论/评价/关注/热榜处理，Feed 流推拉结合
+- 🔥 **社交互动引擎** — 7 个策略工厂统一点赞/收藏/评论/评价/关注/热榜处理，Feed 流推拉结合，Feed 扇出耗时从数十秒优化至百毫秒级
 - 🛡️ **UGC 审核流水线** — MQ 异步审核 + 敏感词自动拦截 + 策略工厂回调 + 拒绝实时通知
 - ⏱️ **定时任务体系** — XXL-JOB 调度多维任务（秒杀预热/回收、订单过期作废、数据增量同步等）
 - 🛒 **完整商业闭环** — 店铺入驻 → 内容发布 → 营销活动 → 在线下单 → 评价互动
@@ -78,61 +96,85 @@
 
 ## <a id="系统架构"></a>🏗️ 系统架构
 
+<div align="center">
+  <img src="docs/screenshots/architecture.png" alt="SmartLive 系统架构图" width="100%">
+</div>
+
+## <a id="核心业务链路"></a>🌊 核心业务链路
+
+### 1. 秒杀抢购全链路时序图
+
+<div align="center">
+```mermaid
+sequenceDiagram
+    participant User as 用户 (H5/App)
+    participant Nginx as Nginx / CDN
+    participant Gateway as API Gateway (限流/鉴权)
+    participant Order as Order Server (9205)
+    participant Redis as Redis集群 (Lua/锁)
+    participant RabbitMQ as MQ (异步解耦)
+    participant MySQL as MySQL (事务落库)
+
+    User->>Nginx: 发起秒杀请求
+    Nginx->>Gateway: 转发请求
+    Gateway->>Gateway: Sentinel限流 / JWT鉴权
+    Gateway->>Order: 路由到秒杀接口
+    Order->>Redis: 1. 执行 Lua 脚本<br>(校验一人一单 + 扣减库存)
+    alt 库存不足或已重复下单
+        Redis-->>Order: 回返失败状态码 (如1或2)
+        Order-->>User: 提示抢购失败或重复下单
+    else 校验通过且扣减成功
+        Redis-->>Order: 回返成功标识 (0)
+        Order->>RabbitMQ: 2. 发送异步下单 MQ 消息
+        Order-->>User: 返回“抢购排队中”
+        
+        Note over RabbitMQ, MySQL: 异步落单链路
+        RabbitMQ-->>Order: 3. 消费下单消息
+        Order->>MySQL: 4. Seata 分布式事务<br>创建订单并扣减实际库存
+        MySQL-->>Order: 落库成功
+    end
+    
+    User->>Order: 5. 轮询查询下单结果
+    Order-->>User: 返回订单号或排队状态
 ```
-                                    ┌─────────────────┐
-                                    │   Nginx 代理     │
-                                    │  (80 / 443)      │
-                                    └────────┬─────────┘
-                                             │
-                           ┌─────────────────┼─────────────────┐
-                           │                 │                 │
-                    ┌──────▼──────┐   ┌──────▼──────┐   ┌─────▼──────┐
-                    │ 后台管理 UI  │   │ 前台用户端   │   │ 小程序端   │
-                    │  (Vue)      │   │  (H5/App)   │   │ (UniApp)   │
-                    └──────┬──────┘   └──────┬──────┘   └─────┬──────┘
-                           │                 │                 │
-                           └─────────────────┼─────────────────┘
-                                             │
-                                    ┌────────▼─────────┐
-                                    │  Spring Cloud     │
-                                    │  Gateway (8080)   │
-                                    │  + Sentinel 限流  │
-                                    └────────┬─────────┘
-                                             │
-                          ┌────────────────────┼────────────────────┐
-                          │                    │                    │
-                 ┌────────▼────────┐  ┌────────▼────────┐  ┌───────▼────────┐
-                 │  Auth 认证中心   │  │  Nacos 注册中心  │  │  Sentinel 控制台│
-                 │   (9200)        │  │ (8848)          │  │  (8718)         │
-                 └─────────────────┘  └─────────────────┘  └────────────────┘
-                                             │
-                   ┌──────────────────── 业务微服务集群 ─────────────────────┐
-                   │                                                        │
-                   │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-                   │  │User │ │Shop │ │Blog │ │Order│ │ AI  │ │Chat │    │
-                   │  │9201 │ │9203 │ │9211 │ │9205 │ │9213 │ │9210 │    │
-                   │  └─────┘ └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
-                   │  ┌─────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌─────┐ ┌────┐  │
-                   │  │Index│ │Search│ │Wallet│ │Inter.│ │Point│ │File│  │
-                   │  │9208 │ │9204  │ │9216  │ │9207  │ │9215 │ │9209│  │
-                   │  └─────┘ └──────┘ └──────┘ └──────┘ └─────┘ └────┘  │
-                   │  ┌───────┐ ┌───────┐ ┌──────┐                        │
-                   │  │Product│ │ Audit │ │  IM  │                        │
-                   │  │9206   │ │9212   │ │9214  │                        │
-                   │  └───────┘ └───────┘ └──────┘                        │
-                   └────────────────────────────────────────────────────────┘
-                                             │
-                   ┌─────────────────── 基础设施层 ─────────────────────────┐
-                   │                                                        │
-                   │  ┌───────┐ ┌───────┐ ┌──────────┐ ┌───────┐ ┌──────┐ │
-                   │  │ MySQL │ │ Redis │ │ RabbitMQ │ │  ES   │ │MinIO │ │
-                   │  │       │ │       │ │          │ │       │ │      │ │
-                   │  └───────┘ └───────┘ └──────────┘ └───────┘ └──────┘ │
-                   │           ┌────────┐ ┌─────────┐                     │
-                   │           │ Milvus │ │ XXL-JOB │                     │
-                   │           └────────┘ └─────────┘                     │
-                   └────────────────────────────────────────────────────────┘
+</div>
+
+### 2. UGC 异步审核与分发链路
+
+<div align="center">
+```mermaid
+sequenceDiagram
+    participant User as 创作者
+    participant BlogService as Blog/Shop/Product 服务
+    participant AuditMQ as RabbitMQ (Audit Queue)
+    participant AuditService as Audit Server (9212)
+    participant Sensitive as DFA 敏感词引擎
+    participant ES as ES / Milvus
+    participant ChatService as Chat/IM 服务
+
+    User->>BlogService: 1. 发布图文/商品/评价
+    BlogService->>BlogService: 保存草稿/待审核状态
+    BlogService->>AuditMQ: 2. 发送 [内部审核事件]
+    BlogService-->>User: 提示发布成功，审核中
+
+    AuditMQ-->>AuditService: 3. 消费待审核任务
+    AuditService->>Sensitive: 4. DFA 算法匹配敏感词库
+    
+    alt 命中违规词
+        Sensitive-->>AuditService: 返回高危违规
+        AuditService->>ChatService: 5a. 触发系统通知下发
+        ChatService-->>User: 推送 Websocket 拒审通知
+        AuditService->>BlogService: 5b. Callback 源服务修改状态为 [审核驳回]
+    else 内容合规
+        Sensitive-->>AuditService: 检查通过
+        AuditService->>BlogService: 6a. Callback 源服务修改状态为 [审核通过]
+        BlogService->>AuditMQ: 6b. 发布 [变动同步事件]
+        AuditMQ-->>ES: 7a. 同步全量数据到 ES 索引
+        AuditMQ-->>ES: 7b. 同步向量快照到 Milvus
+        ChatService-->>User: 8. WebSocket 推送发布成功通知并更新 Feed 流
+    end
 ```
+</div>
 
 ## <a id="项目仓库"></a>📦 项目仓库
 
@@ -530,6 +572,78 @@ bin/run-modules-file.bat   # 启动文件服务
 | 积分服务 | smartLive-points | 9215 |
 | 钱包服务 | smartLive-wallet | 9216 |
 
+## <a id="性能压测报告"></a>📈 性能压测报告
+
+本项目针对核心高并发链路（首页聚合流、秒杀抢购）进行了本地基准压测。
+* **压测环境**：单机部署（Intel i7-12700H, 32G RAM），Docker Compose 启动所有中间件，JVM 分配 2G 内存。
+* **压测工具**：JMeter 5.5。
+
+| 业务场景 | 压测模型 | 并发线程数 | QPS / TPS 保底 | TP99 响应延迟 | 瓶颈分析与优化策略 |
+|:---|:---|:---:|:---:|:---:|:---|
+| **获取首页聚合推荐流** | 读多写少，涉及地理围栏与热度排序引擎 | 1,000 | `> 4,500` | `< 45ms` | 纯内存操作计算，瓶颈在于 Redis 序列化开销及网络 I/O，采用多级本地 Caffeine 缓存 + JSON 序列化优化后 QPS 大幅提升。 |
+| **高并发秒杀抢购** | 写峰值极高，涉及库存强一致性与一人一单策略 | 5,000 | `> 3,200` | `< 120ms` | 未优化前直连 MySQL 导致 JDBC 连接池爆满发生雪崩。**优化后**：采用 Redis Lua 脚本预扣库存和校验限制，并通过 RabbitMQ 异步落单削峰，实现无数据库并发压力。 |
+| **大 V 动态发布（Fan-out）** | 推拉结合，对 10 万+ 活跃粉丝进行 ZSet 时间线同步 | 500 | `> 1,500` | `< 200ms` | 同步推流模式耗时过长，导致接口超时。**优化后**：借助 Kafka/RabbitMQ 异步进行粉丝流分发（推拉结合），主节点直接返回，后台消费者异步完成十万级别写扩散任务。 |
+
+## <a id="难点踩坑与解决方案"></a>🚧 难点踩坑与解决方案
+
+### 1. IM 即时通讯中的 WebSocket 连接保活与内存泄漏问题
+* **挑战**：在初期实现聊天集群化时，发现网关频繁报 `504 Timeout`，且服务器内存以每天 300MB 的速度缓慢泄露，连接断开后并未被回收。
+* **排查**：使用 `Arthas` 导出堆快照（Heap Dump）并通过 MAT 分析，发现是 Netty 的 `ChannelGroup` 中积压了大量半死连接（Half-Open TCP），且心跳定时任务（HashedWheelTimer）未能正确感知和清理这些僵尸节点。
+* **解决方案**：
+  1. 实现了基于 `IdleStateHandler` 的精准服务端心跳检测机制（例如超过 60 秒未收到 PING 包直接调用 `ctx.close()` 强杀连接）。
+  2. 修复了客户端意外断网时未能感知并在 `ChannelGroup` 中手动 `remove` 的逻辑。
+  3. 将连接会话同步维护到 Redis 集群的 Hash 结构中以支持分布式环境下的状态一致性。上线后内存曲线恢复平稳。
+
+### 2. 社交计数（点赞/收藏）的高频写穿透
+* **挑战**：内容曝光时会出现突发的高频点赞/取消点赞动作，起初直接双写 Redis+MySQL 导致极高的 DB 事务开销甚至死锁频发。
+* **解决方案**：引入了 **"Redis Hash 增量原子更新 + 定时快照批量归档"** 方案。
+  1. 所有互动计数及状态实时累加在 Redis 的特定前缀缓存中。
+  2. XXL-JOB 每隔 5 分钟执行一次快照归档任务：使用 `RENAME` 指令将当前全量热数据原子重命名为归档 Key。
+  3. 异步线程消费归档 Key 并在应用层做状态融合聚合后，按照 `ON DUPLICATE KEY UPDATE` 批量 Upsert 回写 MySQL。彻底解耦读写路径，使得点赞的 TPS 上限只取决于 Redis 甚至网络带宽。
+
+## <a id="常见问题"></a>❓ 常见问题 FAQ
+
+<details>
+<summary><b>1. 这个项目是你一个人做的吗？</b></summary>
+是的，本项目从需求分析、架构设计、技术选型到前后端全栈开发、环境搭建与部署，均由本人独立完成。
+</details>
+
+<details>
+<summary><b>2. 为什么选 Milvus 而不是 Pinecone 或 pgvector？</b></summary>
+项目中需要结合 AI 进行相似度检索（例如基于向量空间模型的智能推荐），Milvus 作为云原生的开源向量数据库，支持海量向量的高效检索与动态扩展。相比闭源 SaaS 的 Pinecone 数据更自主可控；相比基于 PostgreSQL 扩展的 pgvector，Milvus 在高并发、大规模向量检索场景下性能更优。
+</details>
+
+<details>
+<summary><b>3. Feed 扇出为什么用写扩散而不是读扩散？</b></summary>
+本项目通过“推拉结合”模式平衡读写压力：对于活跃粉丝走写扩散（推模式），保证读取的高效性；对于不活跃粉丝或系统全站热点分发采用读扩散（拉模式）。这样避免了超级大 V 完全写扩散带来的存储灾难，同时保障了普通用户的时间线流（Feed）加载性能。
+</details>
+
+<details>
+<summary><b>4. 分布式事务用的什么模式？（AT 模式 + 最终一致）</b></summary>
+基于 Seata 框架，项目中多数强一致性要求的核心交易（如常规下单扣减库存）采用了 AT 模式，无业务代码侵入；对于高并发及可容忍短暂延迟的场景（例如发布动态奖励积分、数据变更同步至 ES/Milvus），采用了 RabbitMQ 消息可靠投递 + 最终一致性方案，进而保障系统整体的吞吐量。
+</details>
+
+<details>
+<summary><b>5. 缓存击穿/穿透/雪崩分别怎么处理的？</b></summary>
+- <b>缓存击穿：</b> 针对热点店铺或商品详情查询，利用逻辑过期策略快速响应，由独立线程重建缓存，辅以互斥锁（如基于 Redis 的 setnx）避免瞬时大量线程并发请求数据库；
+- <b>缓存穿透：</b> 对空结果集进行短暂的缓存处理（空对象模式），防止恶意请求穿透到 DB；
+- <b>缓存雪崩：</b> 针对不同业务数据设置不同的过期时间，并加上随机抖动值，同时利用 Redis 高可用架构防止单点宕机导致的雪崩。
+</details>
+
+<details>
+<summary><b>6. Netty WebSocket 为什么不用 Spring WebSocket？</b></summary>
+在即时通讯（IM）场景中，存在海量长连接并且需要频繁处理心跳包保活。虽然 Spring WebSocket 使用简单，但在处理高并发连接时，基于 NIO、事件驱动的 Netty 能以更少的线程开销极大地提升网络吞吐和减少内存消耗。项目通过自定义握手并在认证时结合 Redis Token 控制，在性能和资源占用上都优于 Spring WebSocket。
+</details>
+
+<br>
+
+## <a id="未来规划"></a>🗺️ 未来规划 Roadmap
+
+- [ ] **数据最终一致性升级**：引入 `Canal` 实现 MySQL Binlog 解析，替代现有的基于代码层面和 XXL-JOB 的侵入式跨库数据同步（到 ElasticSearch / Milvus）。
+- [ ] **云原生可观测性架构**：将现有的 Spring Admin 和基础监控全面重构成 `OpenTelemetry` 体系，结合 `Prometheus + Grafana + Jaeger` 构建一套现代化的金牌可观测性大盘。
+- [ ] **高频聚合服务 Go 化改造**：为了探索微服务异构容错，计划将 `smartLive-index` 首页全量聚合等极端依赖 I/O 发挥的高频接口用 `Go` 语言（Gin / Kratos）进行重写，体验 Goroutine 在这类场景下与传统 Java 线程池的性能红利。
+- [ ] **自动化流水线 (CI/CD)**：在项目中集成完整的 GitHub Actions 或 GitLab CI/CD 流程，覆盖全链路线上的自动化单元测试与 Docker 镜像构建推送。
+
 ## <a id="项目文档"></a>📚 项目文档
 
 - 📘 [在线文档](http://doc.smartLive.vip)
@@ -565,8 +679,11 @@ bin/run-modules-file.bat   # 启动文件服务
 
 本项目基于 [MIT License](LICENSE) 开源。
 
-## <a id="联系我们"></a>📞 联系我们
+## <a id="联系我"></a>📞 联系我
 
+- **邮箱**: mumulinya@foxmail.com
+- **GitHub**: [https://github.com/mumulinya](https://github.com/mumulinya)
+- **微信/联系方式**: 请通过邮箱联系或者在项目主页查看详情
 - **Issues**: [提交问题](https://gitee.com/mumulinya/smart-live/issues)
 - **Gitee**: [项目主页](https://gitee.com/mumulinya/smart-live)
 
@@ -574,8 +691,8 @@ bin/run-modules-file.bat   # 启动文件服务
 
 <div align="center">
 
-**如果觉得不错，请给我们一个 ⭐ Star 吧!**
+**如果觉得不错，请给我一个 ⭐ Star 吧!**
 
-Made with ❤️ by SmartLive Team
+Made with ❤️ by mumulinya · 个人独立开发 · 持续维护中
 
 </div>

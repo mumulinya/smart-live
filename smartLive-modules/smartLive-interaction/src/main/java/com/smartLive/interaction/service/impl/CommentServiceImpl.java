@@ -199,7 +199,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             log.info("从数据库中获取评论数据");
             var q = query()
                     .eq("source_id", comment.getSourceId())
-                    .ne("status", "2")
+                    .ne("status", 2)
+                    .ne("status",3)
                     .eq("source_type", comment.getSourceType());
             if ("latest".equals(comment.getSort())) {
                  q.orderByDesc("create_time");

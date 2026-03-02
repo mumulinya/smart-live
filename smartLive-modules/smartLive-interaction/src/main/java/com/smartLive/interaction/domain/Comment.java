@@ -73,7 +73,7 @@ public class Comment extends BaseEntity
 
     /** 状态，0：正常，1：被举报，2：禁止查看 */
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
-    private String status;
+    private Integer status;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

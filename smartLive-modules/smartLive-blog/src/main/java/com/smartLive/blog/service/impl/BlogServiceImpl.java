@@ -285,7 +285,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         } else {
             // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
             List<Blog> dbList = query()
-                    .eq("status", 0)
+                    .ne("status","2")
+                    .ne("status","3")
                     .orderByDesc("liked")
                     .orderByDesc("create_time")
                     .list();
@@ -410,7 +411,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         // 根据用户查询
         Page<Blog> page = query()
                 .eq("user_id", user.getId())
-                .eq("status",b.getStatus())
                 .orderByDesc("pin")
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
@@ -802,6 +802,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Page<Blog> page = query()
                 .select("images","liked","user_id","title","id")
                 .eq("type_id", typeId)
+                .ne("status","2")
+                .ne("status","3")
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据

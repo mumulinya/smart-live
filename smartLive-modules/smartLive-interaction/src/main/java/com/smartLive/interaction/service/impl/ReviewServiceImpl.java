@@ -217,6 +217,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             List<Review> dbList = query()
                     .eq("source_id", review.getSourceId())
                     .ne("status", 2)
+                    .ne("status",3)
                     .eq("source_type", review.getSourceType())
                     .orderByDesc("liked")
                     .orderByDesc("create_time")
@@ -459,7 +460,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             List<Review> dbList = query()
                     .eq("user_id", userId)
                     .eq(review.getSourceType() != null, "source_type", review.getSourceType())
-                    .eq(review.getStatus() != null, "status", review.getStatus())
                     .orderByDesc("liked")
                     .orderByDesc("create_time")
                     .list();
