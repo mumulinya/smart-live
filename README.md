@@ -321,10 +321,6 @@
 
 ## <a id="效果预览"></a>🎨 效果预览
 
-> 💡 **提示**：效果展示图由于正在录制/截图中，暂未上传至 `docs/screenshots/` 目录。
-> 完整的演示视频与项目截图正在补充中，您可以直接拉取代码在本地或访问线上演示地址查看实际效果。
-
-<!--
 | 用户认证/登录 | 首页聚合流 | 动态关注流 |
 |:---:|:---:|:---:|
 | ![login](docs/screenshots/login-page.png) | ![homepage](docs/screenshots/homepage.png) | ![feed](docs/screenshots/feed-flow.png) |
@@ -344,7 +340,6 @@
 | ![follow](docs/screenshots/follow-list.png) | ![order](docs/screenshots/order-page.png) | ![wallet](docs/screenshots/wallet-page.png) |
 | **积分中心** | **签到与抽奖** | |
 | ![points](docs/screenshots/points-page.png) | ![sign-in](docs/screenshots/sign-in.png) | |
--->
 
 
 ## <a id="技术栈"></a>🔧 技术栈
