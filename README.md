@@ -99,77 +99,58 @@
 ## <a id="核心业务链路"></a>🌊 核心业务链路
 
 ### 1. 秒杀抢购全链路时序图
-
 <div align="center">
-```mermaid
-sequenceDiagram
-    participant User as 用户 (H5/App)
-    participant Nginx as Nginx / CDN
-    participant Gateway as API Gateway (限流/鉴权)
-    participant Order as Order Server (9205)
-    participant Redis as Redis集群 (Lua/锁)
-    participant RabbitMQ as MQ (异步解耦)
-    participant MySQL as MySQL (事务落库)
-
-    User->>Nginx: 发起秒杀请求
-    Nginx->>Gateway: 转发请求
-    Gateway->>Gateway: Sentinel限流 / JWT鉴权
-    Gateway->>Order: 路由到秒杀接口
-    Order->>Redis: 1. 执行 Lua 脚本<br>(校验一人一单 + 扣减库存)
-    alt 库存不足或已重复下单
-        Redis-->>Order: 回返失败状态码 (如1或2)
-        Order-->>User: 提示抢购失败或重复下单
-    else 校验通过且扣减成功
-        Redis-->>Order: 回返成功标识 (0)
-        Order->>RabbitMQ: 2. 发送异步下单 MQ 消息
-        Order-->>User: 返回“抢购排队中”
-        
-        Note over RabbitMQ, MySQL: 异步落单链路
-        RabbitMQ-->>Order: 3. 消费下单消息
-        Order->>MySQL: 4. Seata 分布式事务<br>创建订单并扣减实际库存
-        MySQL-->>Order: 落库成功
-    end
-    
-    User->>Order: 5. 轮询查询下单结果
-    Order-->>User: 返回订单号或排队状态
-```
+  <img src="docs/diagrams/seckill-flow.png" alt="秒杀抢购全链路时序图" width="100%">
 </div>
 
 ### 2. UGC 异步审核与分发链路
-
 <div align="center">
-```mermaid
-sequenceDiagram
-    participant User as 创作者
-    participant BlogService as Blog/Shop/Product 服务
-    participant AuditMQ as RabbitMQ (Audit Queue)
-    participant AuditService as Audit Server (9212)
-    participant Sensitive as DFA 敏感词引擎
-    participant ES as ES / Milvus
-    participant ChatService as Chat/IM 服务
+  <img src="docs/diagrams/ugc-audit-flow.png" alt="UGC 异步审核与分发链路" width="100%">
+</div>
 
-    User->>BlogService: 1. 发布图文/商品/评价
-    BlogService->>BlogService: 保存草稿/待审核状态
-    BlogService->>AuditMQ: 2. 发送 [内部审核事件]
-    BlogService-->>User: 提示发布成功，审核中
+### 3. 统一支付全链路时序图
+<div align="center">
+  <img src="docs/diagrams/unified-payment-flow.png" alt="统一支付全链路时序图" width="100%">
+</div>
 
-    AuditMQ-->>AuditService: 3. 消费待审核任务
-    AuditService->>Sensitive: 4. DFA 算法匹配敏感词库
-    
-    alt 命中违规词
-        Sensitive-->>AuditService: 返回高危违规
-        AuditService->>ChatService: 5a. 触发系统通知下发
-        ChatService-->>User: 推送 Websocket 拒审通知
-        AuditService->>BlogService: 5b. Callback 源服务修改状态为 [审核驳回]
-    else 内容合规
-        Sensitive-->>AuditService: 检查通过
-        AuditService->>BlogService: 6a. Callback 源服务修改状态为 [审核通过]
-        BlogService->>AuditMQ: 6b. 发布 [变动同步事件]
-        AuditMQ-->>ES: 7a. 同步全量数据到 ES 索引
-        AuditMQ-->>ES: 7b. 同步向量快照到 Milvus
-        ChatService-->>User: 8. WebSocket 推送发布成功通知并更新 Feed 流
-    end
-```
+### 4. 每日签到积分链路
+<div align="center">
+  <img src="docs/diagrams/sign-in-points-flow.png" alt="每日签到积分链路" width="100%">
+</div>
+
+### 5. 积分抽奖链路
+<div align="center">
+  <img src="docs/diagrams/points-lottery-flow.png" alt="积分抽奖链路" width="100%">
+</div>
+
+### 6. IM 私聊消息可靠投递链路
+<div align="center">
+  <img src="docs/diagrams/im-private-chat-flow.png" alt="IM 私聊消息可靠投递链路" width="100%">
+</div>
+
+### 7. Feed 动态扇出链路
+<div align="center">
+  <img src="docs/diagrams/feed-fanout-flow.png" alt="Feed 动态扇出链路" width="100%">
+</div>
+
+### 8. 互动数据"双轨同步"链路
+<div align="center">
+  <img src="docs/diagrams/dual-sync-interact-flow.png" alt="互动数据双轨同步链路" width="100%">
+</div>
+
+### 9. 搜索与向量库同步链路 (ES + Milvus)
+<div align="center">
+  <img src="docs/diagrams/search-vector-sync-flow.png" alt="搜索与向量库同步链路" width="100%">
+</div>
+
+### 10. 普通下单链路 (非秒杀)
+<div align="center">
+  <img src="docs/diagrams/normal-order-flow.png" alt="普通下单链路" width="100%">
+</div>
+
+### 11. AI 对话链路 (SSE + 意图路由 + 卡片事件)
+<div align="center">
+  <img src="docs/diagrams/ai-chat-sse-flow.png" alt="AI 对话链路" width="100%">
 </div>
 
 ## <a id="项目仓库"></a>📦 项目仓库
