@@ -23,7 +23,9 @@
 ## 📋 目录
 
 - [📖 项目简介](#项目简介)
+- [📦 项目仓库](#项目仓库)
 - [🏗️ 系统架构](#系统架构)
+- [📁 项目结构](#项目结构)
 - [🌊 核心业务链路](#核心业务链路)
 - [✨ 功能特性](#功能特性)
 - [🎨 效果预览](#效果预览)
@@ -32,10 +34,8 @@
 - [📈 性能压测报告](#性能压测报告)
 - [🚧 难点踩坑与解决方案](#难点踩坑与解决方案)
 - [❓ 常见问题 FAQ](#常见问题)
-- [📁 项目结构](#项目结构)
-- [🗺️ 未来规划 Roadmap](#未来规划)
-- [📦 项目仓库](#项目仓库)
-- [📚 项目文档](#项目文档)
+- [️ 未来规划 Roadmap](#未来规划)
+- [ 项目文档](#项目文档)
 - [🤝 参与贡献](#参与贡献)
 - [📄 开源协议](#开源协议)
 - [📞 联系我](#联系我)
@@ -65,7 +65,16 @@
 - **Gateway 全局安全屏障**：在 Spring Cloud Gateway 层手写 `AuthFilter`（无状态鉴权）、`XssFilter`（防跨站脚本）与 `BlackListUrlFilter`（非法拦截），在流量最前线构筑严密的安全防线。
 - **严苛的资源隔离与同步**：采用自定义受控的 `ThreadPoolExecutor` 实现核心链路的线程舱壁隔离；在极端高并发及定时调度场景中，引入 **Redisson 看门狗机制** 构建高可用分布式锁。
 - **分布式 IM 与 6 维审核链**：基于 **Netty** 实现 WebSocket 长连接集群与分布式 Session；采用 **责任链工厂模式** 搭配 DFA 敏感词引擎构建覆盖 6 大业务线的异步审核流水线。
-- **跨库数据最终一致性**：组合应用 **Seata AT 模式**、MQ 消息可靠投递以及 XXL-JOB 定时对账任务，犹如“塔防”般确保 MySQL、Elasticsearch、Redis 与 Milvus 四端数据的绝对一致。
+- **跨库数据异步一致性**：组合应用 **RabbitMQ** 消息可靠投递以及 **XXL-JOB** 定时对账批量落库任务，如同“塔防”般保障 MySQL、Elasticsearch、Redis 与 Milvus 四端数据的最终形态一致。
+
+
+## <a id="项目仓库"></a>📦 项目仓库
+
+| 仓库 | 说明 | 链接 |
+|:---:|:---:|:---:|
+| **smartLive-Cloud** | 后端微服务（本仓库） | [GitHub](https://github.com/mumulinya/smart-live) |
+| **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin) |
+| **smartLive-web** | 用户端前台（Vue 响应式，兼容移动端） | [GitHub](https://github.com/mumulinya/smartLive-web) |
 
 
 ## <a id="系统架构"></a>🏗️ 系统架构
@@ -73,6 +82,62 @@
 <div align="center">
   <img src="docs/screenshots/architecture.png" alt="SmartLive 系统架构图" width="100%">
 </div>
+
+
+## <a id="项目结构"></a>📁 项目结构
+
+```
+com.smartLive
+├── smartLive-gateway              // 网关模块 [8080]
+├── smartLive-auth                 // 认证中心 [9200]
+├── smartLive-api                  // 接口模块（Feign 客户端、DTO、VO）
+│       ├── smartLive-api-blog                     // 博客接口
+│       ├── smartLive-api-chat                     // 聊天接口
+│       ├── smartLive-api-interaction              // 互动接口
+│       ├── smartLive-api-order                    // 订单接口
+│       ├── smartLive-api-points                   // 积分接口
+│       ├── smartLive-api-product                  // 商品接口
+│       ├── smartLive-api-shop                     // 店铺接口
+│       ├── smartLive-api-system                   // 系统接口
+│       └── smartLive-api-user                     // 用户接口
+├── smartLive-common               // 通用模块
+│       ├── smartLive-common-core                  // 核心工具
+│       ├── smartLive-common-datascope             // 数据权限
+│       ├── smartLive-common-datasource            // 多数据源
+│       ├── smartLive-common-log                   // 日志记录
+│       ├── smartLive-common-redis                 // 缓存服务
+│       ├── smartLive-common-rabbitmq              // 消息队列
+│       ├── smartLive-common-seata                 // 分布式事务
+│       ├── smartLive-common-security              // 安全认证
+│       ├── smartLive-common-sensitive             // 数据脱敏
+│       ├── smartLive-common-swagger               // API 文档
+│       └── smartLive-common-xxl                   // XXL-JOB 定时任务
+├── smartLive-modules              // 业务模块
+│       ├── smartLive-ai                           // AI 智能模块 [9213]
+│       ├── smartLive-audit                        // 审核模块
+│       ├── smartLive-blog                         // 博客笔记 [9211]
+│       ├── smartLive-chat                         // 即时通讯 [9210]
+│       ├── smartLive-file                         // 文件服务 [9209]
+│       ├── smartLive-im                           // IM 消息 [9214]
+│       ├── smartLive-index                        // 首页聚合 [9208]
+│       ├── smartLive-interaction                  // 社交互动 [9207]
+│       ├── smartLive-order                        // 订单管理 [9205]
+│       ├── smartLive-product                      // 商品管理 [9206]
+│       ├── smartLive-points                       // 积分管理 [9215]
+│       ├── smartLive-search                       // 搜索引擎 [9204]
+│       ├── smartLive-shop                         // 店铺管理 [9203]
+│       ├── smartLive-system                       // 系统管理 [9202]
+│       ├── smartLive-user                         // 用户中心 [9201]
+│       └── smartLive-wallet                       // 钱包支付 [9216]
+├── smartLive-visual               // 图形化管理
+│       └── smartLive-visual-monitor               // 监控中心 [9100]
+├── smartLive-sentinel             // 限流控制台 [8718]
+├── smartLive-seata-server         // 分布式事务服务端 [7091]
+├── docker                         // Docker 编排
+├── sql                            // 数据库脚本
+├── bin                            // 启动脚本
+└── pom.xml                        // 父 POM
+```
 
 
 ## <a id="核心业务链路"></a>🌊 核心业务链路
@@ -501,8 +566,8 @@ bin/run-modules-file.bat   # 启动文件服务
 | 业务场景 | 压测模型 | 并发线程数 | QPS / TPS 保底 | TP99 响应延迟 | 瓶颈分析与优化策略 |
 |:---|:---|:---:|:---:|:---:|:---|
 | **获取首页聚合推荐流** | 读多写少，涉及地理围栏与热度排序引擎 | 1,000 | `> 4,500` | `< 45ms` | 纯内存操作计算，瓶颈在于 Redis 序列化开销及网络 I/O，采用多级本地 Caffeine 缓存 + JSON 序列化优化后 QPS 大幅提升。 |
-| **高并发秒杀抢购** | 写峰值极高，涉及库存强一致性与一人一单策略 | 5,000 | `> 3,200` | `< 120ms` | 未优化前直连 MySQL 导致 JDBC 连接池爆满发生雪崩。**优化后**：采用 Redis Lua 脚本预扣库存和校验限制，并通过 RabbitMQ 异步落单削峰，实现无数据库并发压力。 |
-| **大 V 动态发布（Fan-out）** | 推拉结合，对 10 万+ 活跃粉丝进行 ZSet 时间线同步 | 500 | `> 1,500` | `< 200ms` | 同步推流模式耗时过长，导致接口超时。**优化后**：借助 Kafka/RabbitMQ 异步进行粉丝流分发（推拉结合），主节点直接返回，后台消费者异步完成十万级别写扩散任务。 |
+| **高并发秒杀抢购** | 写峰值极高，涉及库存最终一致性与一人一单策略 | 5,000 | `> 3,200` | `< 120ms` | 未优化前直连 MySQL 导致 JDBC 连接池爆满发生雪崩。**优化后**：采用 Redis Lua 脚本预扣库存和校验限制，并通过 RabbitMQ 异步落单削峰，实现无数据库并发压力。 |
+| **大 V 动态发布（Fan-out）** | 社交流高频写入，对十万活跃粉丝进行 ZSet 单向推送 | 500 | `> 1,500` | `< 200ms` | 未优化同步写扩散耗时过长，导致接口超时。**优化后**：借助 RabbitMQ 异步进行粉丝流分发，主业务线直接返回成功，后台工作微服务消费者池异步全速流转扩散任务。 |
 
 
 ## <a id="难点踩坑与解决方案"></a>🚧 难点踩坑与解决方案
@@ -522,6 +587,27 @@ bin/run-modules-file.bat   # 启动文件服务
   2. XXL-JOB 每隔 5 分钟执行一次快照归档任务：使用 `RENAME` 指令将当前全量热数据原子重命名为归档 Key。
   3. 异步线程消费归档 Key 并在应用层做状态融合聚合后，按照 `ON DUPLICATE KEY UPDATE` 批量 Upsert 回写 MySQL。彻底解耦读写路径，使得点赞的 TPS 上限只取决于 Redis 甚至网络带宽。
 
+### 3. 高并发秒杀场景下的“超卖”与“少卖”治理
+* **挑战**：在秒杀场景初期，单靠数据库行锁扣减库存导致 CPU 飙升、连接池爆满；改为 Redis 缓存单边预扣后，又在极端网络抖动或 JVM 宕机时，出现了用户重复抢购，以及订单生成后超时未支付导致的“少卖”现象（即库存锁定但未成交，导致其他真实用户无法抢购）。
+* **解决方案**：引入了 **"Redis Lua 原子校验预扣 + RabbitMQ 延迟队列闭环"** 方案。
+  1. 使用 Lua 脚本将“一人一单校验”与“预扣减库存”封装为原子操作并在 Redis 中执行，将 99% 的无效或者恶意流量直接阻拦在缓存层。
+  2. Lua 扣减成功后立即通过 MQ 发送异步消息，后端工作服务异步消费消息完成真实订单的落库，实现极致削峰。
+  3. 针对超时不支付情况，投递含订单 ID 的 TTL 延迟死信消息（例如 15 分钟）。消费者收到后核实实际支付状态，若未支付则自动调用内部逆向接口：关单、回滚 MySQL 真实库存、并通过重新执行对应 Lua 脚本补偿 Redis 的库存容量表，形成完美的库存状态闭环。
+
+### 4. 社交动态 Feed 流中的传统分页“数据偏移”问题
+* **挑战**：在用户浏览主页的粉丝动态或热榜 Feed 流时，由于系统无时无刻不在产生新的内容，传统基于数据库 `LIMIT offset, size` 的拉链式翻页操作体验极差——用户翻到下一页时，常常会看见上一页已经看过的重复数据（由于顶部新动态不断插入，底部数据被整体向下挤压导致了偏移）。
+* **解决方案**：摒弃传统分页机制，自研实现 **"基于 Redis ZSet 的滚动分页（Scroll Pagination）"**。
+  1. 业务层面：在动态发布时，将产生互动的业务数据 ID 与时间戳（作为 Score）写入到用户的聚合流（Redis ZSet）中。
+  2. 交互层面：前端获取数据不仅携带 `pageSize`，还必须带上当前页最后一条记录的时间戳 `maxScore` 和偏移值 `offset`。
+  3. 数据召回层面：后端利用 Redis 的 `ZREVRANGEBYSCORE key maxScore 0 LIMIT offset pageSize` 命令，以用户屏幕底部的最后一条记录的准确时间戳作为绝对锚点进行查阅。彻底解决了动态高频写入场景下分页查询的内容错位痛点。
+
+### 5. 异构 UGC 内容的审核堆积与链路阻塞（责任链模式）
+* **挑战**：平台有 6 条不同的核心内容生产线（博客、商品、店铺、评论、评价、用户资料），需要经过文本违规过滤、AI 情绪倾向判定、人工抽检等多个审核流程。如果全部同步调用或在各业务代码里手写复杂的校验逻辑，会导致接口耗时达到秒级以上，且任何审核节点的变更都会引发所有业务线的回归测试。
+* **解决方案**：构建 **"策略工厂化路由 + 异步审核责任链（Chain of Responsibility）"** 安全防线平台。
+  1. 流量削峰与解耦：所有业务线的内容提交后，先存为“待审核”状态。系统仅投递一条标准的 `AuditMessage` 凭证至 RabbitMQ 队列，让用户侧接口极速返回“发布成功，等待审核”。
+  2. 审核中枢处理器：独立的 `smartLive-audit` 微服务统一消费消息。通过 `AuditStrategyFactory`，动态拉取不同业务场景（如：`BlogAuditStrategy`）进行上下文数据转换和组装。
+  3. 责任传递模型：设计了标准的 `AuditProcessChain` 责任链，依据 Spring `@Order` 将具体校验节点串联顺次检查。只要有一环抛出异常凭证，即中止并记录违规，通过 `RabbitMQ` 异步反向通知 `Chat` 模块下发站内信告知用户被拒绝原因；通过则回调改变源数据状态为“已发布”。系统更具备完善的链路异常兜底能力（自动转人工待审），极大地解耦了业务线与安全防线。
+
 
 ## <a id="常见问题"></a>❓ 常见问题 FAQ
 
@@ -536,20 +622,22 @@ bin/run-modules-file.bat   # 启动文件服务
 </details>
 
 <details>
-<summary><b>3. Feed 扇出为什么用写扩散而不是读扩散？</b></summary>
-本项目通过“推拉结合”模式平衡读写压力：对于活跃粉丝走写扩散（推模式），保证读取的高效性；对于不活跃粉丝或系统全站热点分发采用读扩散（拉模式）。这样避免了超级大 V 完全写扩散带来的存储灾难，同时保障了普通用户的时间线流（Feed）加载性能。
+<summary><b>3. Feed 流查询为什么需要采用特殊的滚动分页？</b></summary>
+在具有强社交属性的 Feed 瀑布流中，数据写入频率极高。如果采用传统的 `LIMIT offset, size`，当用户翻页时，若有新动态插入头部，会导致整体数据向后位移，用户将在下一页看到重复数据。本项目采用基于 Redis ZSet 的 `ZREVRANGEBYSCORE` 命令，每次查询以上一次最后一条记录的时间戳作为 Score 锚点向下偏移，从而从物理存储结构上彻底规避了“数据错位”的深分页死区。
 </details>
 
 <details>
-<summary><b>4. 分布式事务用的什么模式？（AT 模式 + 最终一致）</b></summary>
-基于 Seata 框架，项目中多数强一致性要求的核心交易（如常规下单扣减库存）采用了 AT 模式，无业务代码侵入；对于高并发及可容忍短暂延迟的场景（例如发布动态奖励积分、数据变更同步至 ES/Milvus），采用了 RabbitMQ 消息可靠投递 + 最终一致性方案，进而保障系统整体的吞吐量。
+<summary><b>4. 分布式环境下的数据一致性是怎么保证的？</b></summary>
+针对高并发及可容忍短暂延迟的场景（例如下单成功后发布动态、奖励签到积分、审核系统状态回写以及数据同步至 ES/Milvus 等），本项目核心采用**“RabbitMQ 消息可靠投递 + 最终一致性”**方案。通过投递消息到 MQ 来解耦强关联业务，并搭配死信队列记录处理失败的异常单据（如 15 分钟未支付订单的超时释放等）进行自动补偿，极大地保障了微服务集群整体的吞吐量。
 </details>
 
 <details>
-<summary><b>5. 缓存击穿/穿透/雪崩分别怎么处理的？</b></summary>
-- <b>缓存击穿：</b> 针对热点店铺或商品详情查询，利用逻辑过期策略快速响应，由独立线程重建缓存，辅以互斥锁（如基于 Redis 的 setnx）避免瞬时大量线程并发请求数据库；
-- <b>缓存穿透：</b> 对空结果集进行短暂的缓存处理（空对象模式），防止恶意请求穿透到 DB；
-- <b>缓存雪崩：</b> 针对不同业务数据设置不同的过期时间，并加上随机抖动值，同时利用 Redis 高可用架构防止单点宕机导致的雪崩。
+<summary><b>5. 各种缓存并发与提单安全问题是怎么处理的？</b></summary>
+项目中统一定义了 `CacheClient` 工具类进行标准化处理，并在核心链路引入了 **Redisson**：
+- <b>缓存击穿：</b> 针对热点店铺或热门博客的详情查阅，利用**逻辑过期（Logical Expiration）策略**快速响应。当判断缓存逻辑过期时，直接先返回旧数据，然后提交异步线程池去数据库抓取新数据并重建缓存，以此实现高并发下访问数据库的无感削峰；
+- <b>缓存穿透：</b> 对数据库本身不存在的空结果集（如恶意请求伪造的 ID），采用**缓存空对象（Null Object 模式）**短暂存入 Redis（并附带极短的 TTL），有效防止流量直接穿透到底层 DB 导致瘫痪；
+- <b>缓存雪崩：</b> 针对大批量的业务数据缓存，在基础过期时间上增加随机抖动值（Random TTL），有效避免大量 Key 在同一时刻集体失效而冲垮后端数据库；
+- <b>并发防重与一人一单：</b> 针对用户并发提单（非秒杀场景，如普通支付订单），后端通过 `RedissonClient.getLock("order:" + userId)` 获取分布式锁并执行 `tryLock()` 阻挡恶意并发点击，保障订单网关层的无状态防重。
 </details>
 
 <details>
@@ -560,77 +648,10 @@ bin/run-modules-file.bat   # 启动文件服务
 <br>
 
 
-## <a id="项目结构"></a>📁 项目结构
-
-```
-com.smartLive
-├── smartLive-gateway              // 网关模块 [8080]
-├── smartLive-auth                 // 认证中心 [9200]
-├── smartLive-api                  // 接口模块（Feign 客户端、DTO、VO）
-│       ├── smartLive-api-blog                     // 博客接口
-│       ├── smartLive-api-chat                     // 聊天接口
-│       ├── smartLive-api-interaction              // 互动接口
-│       ├── smartLive-api-order                    // 订单接口
-│       ├── smartLive-api-points                   // 积分接口
-│       ├── smartLive-api-product                  // 商品接口
-│       ├── smartLive-api-shop                     // 店铺接口
-│       ├── smartLive-api-system                   // 系统接口
-│       └── smartLive-api-user                     // 用户接口
-├── smartLive-common               // 通用模块
-│       ├── smartLive-common-core                  // 核心工具
-│       ├── smartLive-common-datascope             // 数据权限
-│       ├── smartLive-common-datasource            // 多数据源
-│       ├── smartLive-common-log                   // 日志记录
-│       ├── smartLive-common-redis                 // 缓存服务
-│       ├── smartLive-common-rabbitmq              // 消息队列
-│       ├── smartLive-common-seata                 // 分布式事务
-│       ├── smartLive-common-security              // 安全认证
-│       ├── smartLive-common-sensitive             // 数据脱敏
-│       ├── smartLive-common-swagger               // API 文档
-│       └── smartLive-common-xxl                   // XXL-JOB 定时任务
-├── smartLive-modules              // 业务模块
-│       ├── smartLive-ai                           // AI 智能模块 [9213]
-│       ├── smartLive-audit                        // 审核模块
-│       ├── smartLive-blog                         // 博客笔记 [9211]
-│       ├── smartLive-chat                         // 即时通讯 [9210]
-│       ├── smartLive-file                         // 文件服务 [9209]
-│       ├── smartLive-im                           // IM 消息 [9214]
-│       ├── smartLive-index                        // 首页聚合 [9208]
-│       ├── smartLive-interaction                  // 社交互动 [9207]
-│       ├── smartLive-order                        // 订单管理 [9205]
-│       ├── smartLive-product                      // 商品管理 [9206]
-│       ├── smartLive-points                       // 积分管理 [9215]
-│       ├── smartLive-search                       // 搜索引擎 [9204]
-│       ├── smartLive-shop                         // 店铺管理 [9203]
-│       ├── smartLive-system                       // 系统管理 [9202]
-│       ├── smartLive-user                         // 用户中心 [9201]
-│       └── smartLive-wallet                       // 钱包支付 [9216]
-├── smartLive-visual               // 图形化管理
-│       └── smartLive-visual-monitor               // 监控中心 [9100]
-├── smartLive-sentinel             // 限流控制台 [8718]
-├── smartLive-seata-server         // 分布式事务服务端 [7091]
-├── docker                         // Docker 编排
-├── sql                            // 数据库脚本
-├── bin                            // 启动脚本
-└── pom.xml                        // 父 POM
-```
-
-
 ## <a id="未来规划"></a>🗺️ 未来规划 Roadmap
 
-- [ ] **数据最终一致性升级**：引入 `Canal` 实现 MySQL Binlog 解析，替代现有的基于代码层面和 XXL-JOB 的侵入式跨库数据同步（到 ElasticSearch / Milvus）。
-- [ ] **云原生可观测性架构**：将现有的 Spring Admin 和基础监控全面重构成 `OpenTelemetry` 体系，结合 `Prometheus + Grafana + Jaeger` 构建一套现代化的金牌可观测性大盘。
-- [ ] **高频聚合服务 Go 化改造**：为了探索微服务异构容错，计划将 `smartLive-index` 首页全量聚合等极端依赖 I/O 发挥的高频接口用 `Go` 语言（Gin / Kratos）进行重写，体验 Goroutine 在这类场景下与传统 Java 线程池的性能红利。
+- [ ] **性能监控体系闭环**：进一步将现有的监控体系集成 `Prometheus + Grafana`，打造全视角的系统资源消耗监控大盘。
 - [ ] **自动化流水线 (CI/CD)**：在项目中集成完整的 GitHub Actions 或 GitLab CI/CD 流程，覆盖全链路线上的自动化单元测试与 Docker 镜像构建推送。
-
-
-## <a id="项目仓库"></a>📦 项目仓库
-
-| 仓库 | 说明 | 链接 |
-|:---:|:---:|:---:|
-| **smartLive-Cloud** | 后端微服务（本仓库） | [GitHub](https://github.com/mumulinya/smart-live) |
-| **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin) |
-| **smartLive-web** | 用户端前台（Vue 响应式，兼容移动端） | [GitHub](https://github.com/mumulinya/smartLive-web) |
 
 
 ## <a id="项目文档"></a>📚 项目文档
