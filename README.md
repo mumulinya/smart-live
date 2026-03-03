@@ -23,19 +23,19 @@
 ## 📋 目录
 
 - [📖 项目简介](#项目简介)
-- [📦 项目仓库](#项目仓库)
+- [🎨 效果预览](#效果预览)
+- [✨ 功能特性](#功能特性)
+- [🔧 技术栈](#技术栈)
 - [🏗️ 系统架构](#系统架构)
 - [📁 项目结构](#项目结构)
 - [🌊 核心业务链路](#核心业务链路)
-- [✨ 功能特性](#功能特性)
-- [🎨 效果预览](#效果预览)
-- [🔧 技术栈](#技术栈)
 - [🚀 快速开始](#快速开始)
 - [📈 性能压测报告](#性能压测报告)
 - [🚧 难点踩坑与解决方案](#难点踩坑与解决方案)
 - [❓ 常见问题 FAQ](#常见问题)
-- [️ 未来规划 Roadmap](#未来规划)
-- [ 项目文档](#项目文档)
+- [🚧 未来规划 Roadmap](#未来规划)
+- [📦 项目仓库](#项目仓库)
+- [📄 项目文档](#项目文档)
 - [🤝 参与贡献](#参与贡献)
 - [📄 开源协议](#开源协议)
 - [📞 联系我](#联系我)
@@ -68,134 +68,27 @@
 - **跨库数据异步一致性**：组合应用 **RabbitMQ** 消息可靠投递以及 **XXL-JOB** 定时对账批量落库任务，如同“塔防”般保障 MySQL、Elasticsearch、Redis 与 Milvus 四端数据的最终形态一致。
 
 
-## <a id="项目仓库"></a>📦 项目仓库
+## <a id="效果预览"></a>🎨 效果预览
 
-| 仓库 | 说明 | 链接 |
+| 用户认证/登录 | 首页聚合流 | 动态关注流 |
 |:---:|:---:|:---:|
-| **smartLive-Cloud** | 后端微服务（本仓库） | [GitHub](https://github.com/mumulinya/smart-live) |
-| **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin) |
-| **smartLive-web** | 用户端前台（Vue 响应式，兼容移动端） | [GitHub](https://github.com/mumulinya/smartLive-web) |
-
-
-## <a id="系统架构"></a>🏗️ 系统架构
-
-<div align="center">
-  <img src="docs/screenshots/architecture.png" alt="SmartLive 系统架构图" width="100%">
-</div>
-
-
-## <a id="项目结构"></a>📁 项目结构
-
-```
-com.smartLive
-├── smartLive-gateway              // 网关模块 [8080]
-├── smartLive-auth                 // 认证中心 [9200]
-├── smartLive-api                  // 接口模块（Feign 客户端、DTO、VO）
-│       ├── smartLive-api-blog                     // 博客接口
-│       ├── smartLive-api-chat                     // 聊天接口
-│       ├── smartLive-api-interaction              // 互动接口
-│       ├── smartLive-api-order                    // 订单接口
-│       ├── smartLive-api-points                   // 积分接口
-│       ├── smartLive-api-product                  // 商品接口
-│       ├── smartLive-api-shop                     // 店铺接口
-│       ├── smartLive-api-system                   // 系统接口
-│       └── smartLive-api-user                     // 用户接口
-├── smartLive-common               // 通用模块
-│       ├── smartLive-common-core                  // 核心工具
-│       ├── smartLive-common-datascope             // 数据权限
-│       ├── smartLive-common-datasource            // 多数据源
-│       ├── smartLive-common-log                   // 日志记录
-│       ├── smartLive-common-redis                 // 缓存服务
-│       ├── smartLive-common-rabbitmq              // 消息队列
-│       ├── smartLive-common-seata                 // 分布式事务
-│       ├── smartLive-common-security              // 安全认证
-│       ├── smartLive-common-sensitive             // 数据脱敏
-│       ├── smartLive-common-swagger               // API 文档
-│       └── smartLive-common-xxl                   // XXL-JOB 定时任务
-├── smartLive-modules              // 业务模块
-│       ├── smartLive-ai                           // AI 智能模块 [9213]
-│       ├── smartLive-audit                        // 审核模块
-│       ├── smartLive-blog                         // 博客笔记 [9211]
-│       ├── smartLive-chat                         // 即时通讯 [9210]
-│       ├── smartLive-file                         // 文件服务 [9209]
-│       ├── smartLive-im                           // IM 消息 [9214]
-│       ├── smartLive-index                        // 首页聚合 [9208]
-│       ├── smartLive-interaction                  // 社交互动 [9207]
-│       ├── smartLive-order                        // 订单管理 [9205]
-│       ├── smartLive-product                      // 商品管理 [9206]
-│       ├── smartLive-points                       // 积分管理 [9215]
-│       ├── smartLive-search                       // 搜索引擎 [9204]
-│       ├── smartLive-shop                         // 店铺管理 [9203]
-│       ├── smartLive-system                       // 系统管理 [9202]
-│       ├── smartLive-user                         // 用户中心 [9201]
-│       └── smartLive-wallet                       // 钱包支付 [9216]
-├── smartLive-visual               // 图形化管理
-│       └── smartLive-visual-monitor               // 监控中心 [9100]
-├── smartLive-sentinel             // 限流控制台 [8718]
-├── smartLive-seata-server         // 分布式事务服务端 [7091]
-├── docker                         // Docker 编排
-├── sql                            // 数据库脚本
-├── bin                            // 启动脚本
-└── pom.xml                        // 父 POM
-```
-
-
-## <a id="核心业务链路"></a>🌊 核心业务链路
-
-### 1. 秒杀抢购全链路时序图
-<div align="center">
-  <img src="docs/diagrams/seckill-flow.png" alt="秒杀抢购全链路时序图" width="100%">
-</div>
-
-### 2. UGC 异步审核与分发链路
-<div align="center">
-  <img src="docs/diagrams/ugc-audit-flow.png" alt="UGC 异步审核与分发链路" width="100%">
-</div>
-
-### 3. 统一支付全链路时序图
-<div align="center">
-  <img src="docs/diagrams/unified-pay-sequence.png" alt="统一支付全链路时序图" width="100%">
-</div>
-
-### 4. 每日签到积分链路
-<div align="center">
-  <img src="docs/diagrams/daily-signin-points-sequence.png" alt="每日签到积分链路" width="100%">
-</div>
-
-### 5. 积分抽奖链路
-<div align="center">
-  <img src="docs/diagrams/points-lottery-draw-sequence.png" alt="积分抽奖链路" width="100%">
-</div>
-
-### 6. IM 私聊消息可靠投递链路
-<div align="center">
-  <img src="docs/diagrams/im-private-message-reliable-delivery-sequence.png" alt="IM 私聊消息可靠投递链路" width="100%">
-</div>
-
-### 7. Feed 动态扇出链路
-<div align="center">
-  <img src="docs/diagrams/feed-fanout-sequence.png" alt="Feed 动态扇出链路" width="100%">
-</div>
-
-### 8. 互动数据"双轨同步"链路
-<div align="center">
-  <img src="docs/diagrams/interaction-dual-track-sync-sequence.png" alt="互动数据双轨同步链路" width="100%">
-</div>
-
-### 9. 搜索与向量库同步链路 (ES + Milvus)
-<div align="center">
-  <img src="docs/diagrams/search-es-milvus-sync-sequence.png" alt="搜索与向量库同步链路" width="100%">
-</div>
-
-### 10. 普通下单链路 (非秒杀)
-<div align="center">
-  <img src="docs/diagrams/normal-order-sequence.png" alt="普通下单链路" width="100%">
-</div>
-
-### 11. AI 对话链路 (SSE + 意图路由 + 卡片事件)
-<div align="center">
-  <img src="docs/diagrams/ai-chat-sse-intent-routing-sequence.png" alt="AI 对话链路" width="100%">
-</div>
+| ![login](docs/screenshots/login-page.png) | ![homepage](docs/screenshots/homepage.png) | ![feed](docs/screenshots/feed-flow.png) |
+| **全文检索结果** | **首页热门榜单** | **地图找店(LBS)** |
+| ![search](docs/screenshots/search-results.png) | ![hot](docs/screenshots/hot-ranking.png) | ![map](docs/screenshots/map-view.png) |
+| **店铺分类列表** | **店铺详情页** | **商品详情页** |
+| ![shop-list](docs/screenshots/shop-list.png) | ![shop](docs/screenshots/shop-detail.png) | ![product](docs/screenshots/product-detail.png) |
+| **限时秒杀专区** | **内容创作发布** | **互动评论/评价** |
+| ![seckill](docs/screenshots/seckill-page.png) | ![publish](docs/screenshots/publish-page.png) | ![comment](docs/screenshots/comment-section.png) |
+| **消息交互中心** | **系统通知/违规过滤** | **即时通讯聊天** |
+| ![msg-center](docs/screenshots/message-center.png) | ![sys-notify](docs/screenshots/system-notification.png) | ![im](docs/screenshots/im-chat.png) |
+| **AI 智能助手** | **用户行为数据** | **个人中心** |
+| ![ai](docs/screenshots/ai-chat.png) | ![user-search](docs/screenshots/user-search.png) | ![profile](docs/screenshots/profile-page.png) |
+| **我的发布/笔记** | **草稿箱** | **我的收藏** |
+| ![user-posts](docs/screenshots/user-posts.png) | ![drafts](docs/screenshots/draft-box.png) | ![user-favorites](docs/screenshots/user-favorites.png) |
+| **关注/粉丝列表** | **我的订单** | **我的钱包** |
+| ![follow](docs/screenshots/follow-list.png) | ![order](docs/screenshots/order-page.png) | ![wallet](docs/screenshots/wallet-page.png) |
+| **积分中心** | **签到与抽奖** | |
+| ![points](docs/screenshots/points-page.png) | ![sign-in](docs/screenshots/sign-in.png) | |
 
 
 ## <a id="功能特性"></a>✨ 功能特性
@@ -384,29 +277,6 @@ com.smartLive
 | 跨域处理 | CORS跨域配置 |
 
 
-## <a id="效果预览"></a>🎨 效果预览
-
-| 用户认证/登录 | 首页聚合流 | 动态关注流 |
-|:---:|:---:|:---:|
-| ![login](docs/screenshots/login-page.png) | ![homepage](docs/screenshots/homepage.png) | ![feed](docs/screenshots/feed-flow.png) |
-| **全文检索结果** | **首页热门榜单** | **地图找店(LBS)** |
-| ![search](docs/screenshots/search-results.png) | ![hot](docs/screenshots/hot-ranking.png) | ![map](docs/screenshots/map-view.png) |
-| **店铺分类列表** | **店铺详情页** | **商品详情页** |
-| ![shop-list](docs/screenshots/shop-list.png) | ![shop](docs/screenshots/shop-detail.png) | ![product](docs/screenshots/product-detail.png) |
-| **限时秒杀专区** | **内容创作发布** | **互动评论/评价** |
-| ![seckill](docs/screenshots/seckill-page.png) | ![publish](docs/screenshots/publish-page.png) | ![comment](docs/screenshots/comment-section.png) |
-| **消息交互中心** | **系统通知/违规过滤** | **即时通讯聊天** |
-| ![msg-center](docs/screenshots/message-center.png) | ![sys-notify](docs/screenshots/system-notification.png) | ![im](docs/screenshots/im-chat.png) |
-| **AI 智能助手** | **用户行为数据** | **个人中心** |
-| ![ai](docs/screenshots/ai-chat.png) | ![user-search](docs/screenshots/user-search.png) | ![profile](docs/screenshots/profile-page.png) |
-| **我的发布/笔记** | **草稿箱** | **我的收藏** |
-| ![user-posts](docs/screenshots/user-posts.png) | ![drafts](docs/screenshots/draft-box.png) | ![user-favorites](docs/screenshots/user-favorites.png) |
-| **关注/粉丝列表** | **我的订单** | **我的钱包** |
-| ![follow](docs/screenshots/follow-list.png) | ![order](docs/screenshots/order-page.png) | ![wallet](docs/screenshots/wallet-page.png) |
-| **积分中心** | **签到与抽奖** | |
-| ![points](docs/screenshots/points-page.png) | ![sign-in](docs/screenshots/sign-in.png) | |
-
-
 ## <a id="技术栈"></a>🔧 技术栈
 
 ### 后端技术
@@ -441,6 +311,127 @@ com.smartLive
 | Vue.js | 前端框架 |
 | Element UI | 后台管理 UI 组件库 |
 | UniApp | 多端前台用户端 |
+
+
+## <a id="系统架构"></a>🏗️ 系统架构
+
+<div align="center">
+  <img src="docs/screenshots/architecture.png" alt="SmartLive 系统架构图" width="100%">
+</div>
+
+
+## <a id="项目结构"></a>📁 项目结构
+
+```
+com.smartLive
+├── smartLive-gateway              // 网关模块 [8080]
+├── smartLive-auth                 // 认证中心 [9200]
+├── smartLive-api                  // 接口模块（Feign 客户端、DTO、VO）
+│       ├── smartLive-api-blog                     // 博客接口
+│       ├── smartLive-api-chat                     // 聊天接口
+│       ├── smartLive-api-interaction              // 互动接口
+│       ├── smartLive-api-order                    // 订单接口
+│       ├── smartLive-api-points                   // 积分接口
+│       ├── smartLive-api-product                  // 商品接口
+│       ├── smartLive-api-shop                     // 店铺接口
+│       ├── smartLive-api-system                   // 系统接口
+│       └── smartLive-api-user                     // 用户接口
+├── smartLive-common               // 通用模块
+│       ├── smartLive-common-core                  // 核心工具
+│       ├── smartLive-common-datascope             // 数据权限
+│       ├── smartLive-common-datasource            // 多数据源
+│       ├── smartLive-common-log                   // 日志记录
+│       ├── smartLive-common-redis                 // 缓存服务
+│       ├── smartLive-common-rabbitmq              // 消息队列
+│       ├── smartLive-common-seata                 // 分布式事务
+│       ├── smartLive-common-security              // 安全认证
+│       ├── smartLive-common-sensitive             // 数据脱敏
+│       ├── smartLive-common-swagger               // API 文档
+│       └── smartLive-common-xxl                   // XXL-JOB 定时任务
+├── smartLive-modules              // 业务模块
+│       ├── smartLive-ai                           // AI 智能模块 [9213]
+│       ├── smartLive-audit                        // 审核模块
+│       ├── smartLive-blog                         // 博客笔记 [9211]
+│       ├── smartLive-chat                         // 即时通讯 [9210]
+│       ├── smartLive-file                         // 文件服务 [9209]
+│       ├── smartLive-im                           // IM 消息 [9214]
+│       ├── smartLive-index                        // 首页聚合 [9208]
+│       ├── smartLive-interaction                  // 社交互动 [9207]
+│       ├── smartLive-order                        // 订单管理 [9205]
+│       ├── smartLive-product                      // 商品管理 [9206]
+│       ├── smartLive-points                       // 积分管理 [9215]
+│       ├── smartLive-search                       // 搜索引擎 [9204]
+│       ├── smartLive-shop                         // 店铺管理 [9203]
+│       ├── smartLive-system                       // 系统管理 [9202]
+│       ├── smartLive-user                         // 用户中心 [9201]
+│       └── smartLive-wallet                       // 钱包支付 [9216]
+├── smartLive-visual               // 图形化管理
+│       └── smartLive-visual-monitor               // 监控中心 [9100]
+├── smartLive-sentinel             // 限流控制台 [8718]
+├── smartLive-seata-server         // 分布式事务服务端 [7091]
+├── docker                         // Docker 编排
+├── sql                            // 数据库脚本
+├── bin                            // 启动脚本
+└── pom.xml                        // 父 POM
+```
+
+
+## <a id="核心业务链路"></a>🌊 核心业务链路
+
+### 1. 秒杀抢购全链路时序图
+<div align="center">
+  <img src="docs/diagrams/seckill-flow.png" alt="秒杀抢购全链路时序图" width="100%">
+</div>
+
+### 2. UGC 异步审核与分发链路
+<div align="center">
+  <img src="docs/diagrams/ugc-audit-flow.png" alt="UGC 异步审核与分发链路" width="100%">
+</div>
+
+### 3. 统一支付全链路时序图
+<div align="center">
+  <img src="docs/diagrams/unified-pay-sequence.png" alt="统一支付全链路时序图" width="100%">
+</div>
+
+### 4. 每日签到积分链路
+<div align="center">
+  <img src="docs/diagrams/daily-signin-points-sequence.png" alt="每日签到积分链路" width="100%">
+</div>
+
+### 5. 积分抽奖链路
+<div align="center">
+  <img src="docs/diagrams/points-lottery-draw-sequence.png" alt="积分抽奖链路" width="100%">
+</div>
+
+### 6. IM 私聊消息可靠投递链路
+<div align="center">
+  <img src="docs/diagrams/im-private-message-reliable-delivery-sequence.png" alt="IM 私聊消息可靠投递链路" width="100%">
+</div>
+
+### 7. Feed 动态扇出链路
+<div align="center">
+  <img src="docs/diagrams/feed-fanout-sequence.png" alt="Feed 动态扇出链路" width="100%">
+</div>
+
+### 8. 互动数据"双轨同步"链路
+<div align="center">
+  <img src="docs/diagrams/interaction-dual-track-sync-sequence.png" alt="互动数据双轨同步链路" width="100%">
+</div>
+
+### 9. 搜索与向量库同步链路 (ES + Milvus)
+<div align="center">
+  <img src="docs/diagrams/search-es-milvus-sync-sequence.png" alt="搜索与向量库同步链路" width="100%">
+</div>
+
+### 10. 普通下单链路 (非秒杀)
+<div align="center">
+  <img src="docs/diagrams/normal-order-sequence.png" alt="普通下单链路" width="100%">
+</div>
+
+### 11. AI 对话链路 (SSE + 意图路由 + 卡片事件)
+<div align="center">
+  <img src="docs/diagrams/ai-chat-sse-intent-routing-sequence.png" alt="AI 对话链路" width="100%">
+</div>
 
 
 ## <a id="快速开始"></a>🚀 快速开始
@@ -527,35 +518,6 @@ bin/run-modules-system.bat # 启动系统模块
 bin/run-modules-file.bat   # 启动文件服务
 # ...
 ```
-
-## <a id="服务端口速查"></a>🔗 服务端口速查
-
-| 服务 | 模块 | 端口 |
-|:---|:---|:---:|
-| API 网关 | smartLive-gateway | 8080 |
-| 前台用户端 | smartLive-html | 8081 |
-| Seata 服务端 | smartLive-seata-server | 7091 |
-| Nacos 注册中心 | - | 8848 |
-| Sentinel 控制台 | smartLive-sentinel | 8718 |
-| 监控中心 | smartLive-visual-monitor | 9100 |
-| 认证中心 | smartLive-auth | 9200 |
-| 用户服务 | smartLive-user | 9201 |
-| 系统服务 | smartLive-system | 9202 |
-| 店铺服务 | smartLive-shop | 9203 |
-| 搜索服务 | smartLive-search | 9204 |
-| 订单服务 | smartLive-order | 9205 |
-| 商品服务 | smartLive-product | 9206 |
-| 互动服务 | smartLive-interaction | 9207 |
-| 首页服务 | smartLive-index | 9208 |
-| 文件服务 | smartLive-file | 9209 |
-| 聊天服务 | smartLive-chat | 9210 |
-| 博客服务 | smartLive-blog | 9211 |
-| 审核服务 | smartLive-audit | 9212 |
-| AI 服务 | smartLive-ai | 9213 |
-| IM 服务 | smartLive-im | 9214 / 8888 (Netty) |
-| 积分服务 | smartLive-points | 9215 |
-| 钱包服务 | smartLive-wallet | 9216 |
-
 
 ## <a id="性能压测报告"></a>📈 性能压测报告
 
@@ -652,6 +614,15 @@ bin/run-modules-file.bat   # 启动文件服务
 
 - [ ] **性能监控体系闭环**：进一步将现有的监控体系集成 `Prometheus + Grafana`，打造全视角的系统资源消耗监控大盘。
 - [ ] **自动化流水线 (CI/CD)**：在项目中集成完整的 GitHub Actions 或 GitLab CI/CD 流程，覆盖全链路线上的自动化单元测试与 Docker 镜像构建推送。
+
+
+## <a id="项目仓库"></a>📦 项目仓库
+
+| 仓库 | 说明 | 链接 |
+|:---:|:---:|:---:|
+| **smartLive-Cloud** | 后端微服务（本仓库） | [GitHub](https://github.com/mumulinya/smart-live) |
+| **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin) |
+| **smartLive-web** | 用户端前台（Vue 响应式，兼容移动端） | [GitHub](https://github.com/mumulinya/smartLive-web) |
 
 
 ## <a id="项目文档"></a>📚 项目文档
