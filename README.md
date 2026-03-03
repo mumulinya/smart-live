@@ -11,10 +11,10 @@
 [![Spring Cloud Alibaba](https://img.shields.io/badge/Spring%20Cloud%20Alibaba-2023.0.1.0-orange.svg)](https://github.com/alibaba/spring-cloud-alibaba)
 [![JDK](https://img.shields.io/badge/JDK-17+-red.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Star](https://gitee.com/mumulinya/smart-live/badge/star.svg?theme=dark)](https://gitee.com/mumulinya/smart-live/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/mumulinya/smart-live?style=social)](https://github.com/mumulinya/smart-live/stargazers)
 [![Personal Project](https://img.shields.io/badge/个人独立项目-从零设计开发-ff69b4.svg)]()
 
-[在线文档](http://doc.smartLive.vip) · [演示地址](http://www.smartLive.vip) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
+[在线文档](http://doc.smartLive.vip) · [演示地址](http://www.smartLive.vip) · [提交 Issue](https://github.com/mumulinya/smart-live/issues)
 
 ---
 
@@ -31,11 +31,12 @@
 - [🎨 效果预览](#效果预览)
 - [🔧 技术栈](#技术栈)
 - [🚀 快速开始](#快速开始)
+- [🔗 服务端口速查](#服务端口速查)
+- [📚 项目文档](#项目文档)
 - [📈 性能压测报告](#性能压测报告)
 - [🚧 难点踩坑与解决方案](#难点踩坑与解决方案)
 - [❓ 常见问题 FAQ](#常见问题)
-- [️ 未来规划 Roadmap](#未来规划)
-- [ 项目文档](#项目文档)
+- [🗺️ 未来规划 Roadmap](#未来规划)
 - [🤝 参与贡献](#参与贡献)
 - [📄 开源协议](#开源协议)
 - [📞 联系我](#联系我)
@@ -222,7 +223,7 @@ com.smartLive
 | 流量控制 | Sentinel 限流保护热点接口 |
 | 数据同步 | MQ 异步同步店铺数据至 ES / Milvus |
 
-#### � 搜索引擎 (smartLive-search) [9204]
+#### 🔍 搜索引擎 (smartLive-search) [9204]
 | 功能 | 说明 |
 |:---|:---|
 | 全文搜索 | 基于 Elasticsearch 的 multi_match 全局检索 + 关键词高亮 |
@@ -232,7 +233,7 @@ com.smartLive
 | 热词排行 | Redis ZSet ZINCRBY 统计热门搜索关键词 |
 | 索引同步 | MQ 异步将商品/店铺/博客/用户行为变更同步至 ES |
 
-#### �🛒 订单管理 (smartLive-order) [9205]
+#### 🛒 订单管理 (smartLive-order) [9205]
 | 功能 | 说明 |
 |:---|:---|
 | 统一下单 | 普通购买 + 秒杀下单，策略模式路由 |
@@ -255,7 +256,7 @@ com.smartLive
 | 内容审核 | 商品发布自动触发 MQ 异步审核流程 |
 | Feed 推送 | 上新/降价/补货/上下架事件推送至粉丝动态 |
 
-#### � 社交互动 (smartLive-interaction) [9207]
+#### 🤝 社交互动 (smartLive-interaction) [9207]
 | 功能 | 说明 |
 |:---|:---|
 | 策略工厂 | 7 个策略工厂统一点赞/收藏/评论/评价/关注/热榜/资源处理流程 |
@@ -460,7 +461,7 @@ com.smartLive
 
 ```bash
 # 1. 克隆项目
-git clone https://gitee.com/mumulinya/smart-live.git
+git clone https://github.com/mumulinya/smart-live.git
 cd smart-live
 
 # 2. 构建所有服务
@@ -480,7 +481,7 @@ docker-compose ps
 
 ```bash
 # 1. 克隆项目
-git clone https://gitee.com/mumulinya/smart-live.git
+git clone https://github.com/mumulinya/smart-live.git
 cd smart-live
 
 # 2. 初始化数据库
@@ -555,6 +556,16 @@ bin/run-modules-file.bat   # 启动文件服务
 | IM 服务 | smartLive-im | 9214 / 8888 (Netty) |
 | 积分服务 | smartLive-points | 9215 |
 | 钱包服务 | smartLive-wallet | 9216 |
+
+
+## <a id="项目文档"></a>📚 项目文档
+
+- 📘 [在线文档](http://doc.smartLive.vip)
+- 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
+- 📄 [贡献指南](./CONTRIBUTING.md)
+- 🤝 [行为准则](./CODE_OF_CONDUCT.md)
+- 🔐 [安全策略](./SECURITY.md)
+
 
 
 ## <a id="性能压测报告"></a>📈 性能压测报告
@@ -654,12 +665,6 @@ bin/run-modules-file.bat   # 启动文件服务
 - [ ] **自动化流水线 (CI/CD)**：在项目中集成完整的 GitHub Actions 或 GitLab CI/CD 流程，覆盖全链路线上的自动化单元测试与 Docker 镜像构建推送。
 
 
-## <a id="项目文档"></a>📚 项目文档
-
-- 📘 [在线文档](http://doc.smartLive.vip)
-- 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
-
-
 ## <a id="参与贡献"></a>🤝 参与贡献
 
 我非常欢迎各种形式的贡献！无论是新功能、Bug 修复还是文档改进，都请随时提交。
@@ -697,8 +702,8 @@ bin/run-modules-file.bat   # 启动文件服务
 - **邮箱**: mumulinya@foxmail.com
 - **GitHub**: [https://github.com/mumulinya](https://github.com/mumulinya)
 - **微信/联系方式**: 请通过邮箱联系或者在项目主页查看详情
-- **Issues**: [提交问题](https://gitee.com/mumulinya/smart-live/issues)
-- **Gitee**: [项目主页](https://gitee.com/mumulinya/smart-live)
+- **Issues**: [提交问题](https://github.com/mumulinya/smart-live/issues)
+- **项目主页**: [https://github.com/mumulinya/smart-live](https://github.com/mumulinya/smart-live)
 
 
 ---
