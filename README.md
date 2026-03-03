@@ -31,11 +31,12 @@
 - [🎨 效果预览](#效果预览)
 - [🔧 技术栈](#技术栈)
 - [🚀 快速开始](#快速开始)
+- [🔗 服务端口速查](#服务端口速查)
+- [📚 项目文档](#项目文档)
 - [📈 性能压测报告](#性能压测报告)
 - [🚧 难点踩坑与解决方案](#难点踩坑与解决方案)
 - [❓ 常见问题 FAQ](#常见问题)
-- [️ 未来规划 Roadmap](#未来规划)
-- [ 项目文档](#项目文档)
+- [🗺️ 未来规划 Roadmap](#未来规划)
 - [🤝 参与贡献](#参与贡献)
 - [📄 开源协议](#开源协议)
 - [📞 联系我](#联系我)
@@ -557,6 +558,16 @@ bin/run-modules-file.bat   # 启动文件服务
 | 钱包服务 | smartLive-wallet | 9216 |
 
 
+## <a id="项目文档"></a>📚 项目文档
+
+- 📘 [在线文档](http://doc.smartLive.vip)
+- 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
+- 📄 [贡献指南](./CONTRIBUTING.md)
+- 🤝 [行为准则](./CODE_OF_CONDUCT.md)
+- 🔐 [安全策略](./SECURITY.md)
+
+
+
 ## <a id="性能压测报告"></a>📈 性能压测报告
 
 本项目针对核心高并发链路（首页聚合流、秒杀抢购）进行了本地基准压测。
@@ -652,12 +663,6 @@ bin/run-modules-file.bat   # 启动文件服务
 
 - [ ] **性能监控体系闭环**：进一步将现有的监控体系集成 `Prometheus + Grafana`，打造全视角的系统资源消耗监控大盘。
 - [ ] **自动化流水线 (CI/CD)**：在项目中集成完整的 GitHub Actions 或 GitLab CI/CD 流程，覆盖全链路线上的自动化单元测试与 Docker 镜像构建推送。
-
-
-## <a id="项目文档"></a>📚 项目文档
-
-- 📘 [在线文档](http://doc.smartLive.vip)
-- 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
 
 
 ## <a id="参与贡献"></a>🤝 参与贡献
