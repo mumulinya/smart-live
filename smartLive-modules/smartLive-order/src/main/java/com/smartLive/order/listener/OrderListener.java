@@ -1,5 +1,6 @@
 package com.smartLive.order.listener;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
+import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
 
 import com.rabbitmq.client.Channel;
 import com.smartLive.common.core.constant.OrderStatusConstants;
@@ -22,13 +23,12 @@ public class OrderListener {
     @Autowired
     private OrderServiceImpl orderService;
 
-    
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
 
     @Autowired
     private RedisService redisService;
-    
+
     //秒杀订单监听
     @RabbitListener(bindings=@QueueBinding(
             value = @Queue(name = OrderMqConstants.ORDER_SECKILL_QUEUE,
@@ -45,17 +45,31 @@ public class OrderListener {
             key = OrderMqConstants.ORDER_SECKILL_ROUTING
     ))
     public void handleSeckillOrder(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        if (order == null || order.getId() == null) {
+            log.warn("秒杀订单消息为空或无ID");
+            channel.basicAck(deliveryTag, false);
+            return;
+        }
+        String idempotentKey = RedisMqIdempotentConstants.ORDER_PREFIX + "seckill:" + order.getId();
+
         try {
-            //判断当前订单是否重复创建
+            if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
+                log.info("[MQ幂等] 重复消息，已跳过，key={}", idempotentKey);
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
+
+            //DB 兜底：判断当前订单是否重复创建
             if (orderService.getById(order.getId()) != null) {
-                log.error("订单已存在");
+                log.info("[MQ幂等] 订单已存在（DB兜底），orderId={}", order.getId());
                 channel.basicAck(deliveryTag, false);
                 return;
             }
             orderService.handleOrder(order);
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("处理秒杀订单失败, orderId={}", order == null ? null : order.getId(), e);
+            log.error("[MQ幂等] 处理秒杀订单失败, orderId={}, key={}", order.getId(), idempotentKey, e);
             channel.basicNack(deliveryTag, false, false);
         }
     }
@@ -74,11 +88,25 @@ public class OrderListener {
             key = OrderMqConstants.ORDER_BUY_ROUTING
     ))
     public void handleBuyOrder(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        if (order == null || order.getId() == null) {
+            log.warn("普通订单消息为空或无ID");
+            channel.basicAck(deliveryTag, false);
+            return;
+        }
+        String idempotentKey = RedisMqIdempotentConstants.ORDER_PREFIX + "buy:" + order.getId();
+
         try {
+            if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
+                log.info("[MQ幂等] 重复消息，已跳过，key={}", idempotentKey);
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
+
             log.info("开始处理订单信息: {}", order);
-            //判断当前订单是否重复创建
+            //DB 兜底：判断当前订单是否重复创建
             if (orderService.getById(order.getId()) != null) {
-                log.error("订单已存在");
+                log.info("[MQ幂等] 订单已存在（DB兜底），orderId={}", order.getId());
                 channel.basicAck(deliveryTag, false);
                 return;
             }
@@ -97,7 +125,7 @@ public class OrderListener {
             mqMessageSendUtils.sendMqMessage(OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME, OrderMqConstants.ORDER_DELAY_ROUTING, order.getId(), (OrderMqConstants.DELAY_TIME));
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("处理普通订单失败, orderId={}", order == null ? null : order.getId(), e);
+            log.error("[MQ幂等] 处理普通订单失败, orderId={}, key={}", order.getId(), idempotentKey, e);
             channel.basicNack(deliveryTag, false, false);
         }
     }
@@ -113,7 +141,20 @@ public class OrderListener {
             key = OrderMqConstants.ORDER_DELAY_ROUTING
     ))
     public void handlePayOrder(Long id, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        if (id == null) {
+            channel.basicAck(deliveryTag, false);
+            return;
+        }
+        String idempotentKey = RedisMqIdempotentConstants.ORDER_PREFIX + "delay:" + id;
+
         try {
+            if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
+                log.info("[MQ幂等] 重复消息，已跳过，key={}", idempotentKey);
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
+
             Order order = orderService.getById(id);
             //检测订单状态，判断订单是否支付
             if (order == null || order.getStatus() == OrderStatusConstants.PAID) {
@@ -129,11 +170,11 @@ public class OrderListener {
             }
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("处理支付延迟订单失败, orderId={}", id, e);
+            log.error("[MQ幂等] 处理支付延迟订单失败, orderId={}, key={}", id, idempotentKey, e);
             channel.basicNack(deliveryTag, false, false);
         }
     }
-    
+
     /**
      * 监听死信队列
      */

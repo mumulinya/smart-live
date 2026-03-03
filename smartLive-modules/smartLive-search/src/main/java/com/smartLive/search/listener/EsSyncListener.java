@@ -1,9 +1,12 @@
 package com.smartLive.search.listener;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
+import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
 
+import com.rabbitmq.client.Channel;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.search.strategy.esSync.EsSyncStrategy;
 import com.smartLive.search.strategy.factory.EsSyncStrategyFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +15,15 @@ import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.springframework.util.DigestUtils;
 
 @Component
 @Slf4j
@@ -24,6 +31,9 @@ public class EsSyncListener {
 
     @Autowired
     private EsSyncStrategyFactory esSyncStrategyFactory;
+
+    @Autowired
+    private RedisService redisService;
 
     /**
      * Handle single insert.
@@ -38,19 +48,34 @@ public class EsSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_INSERT)
     })
-    public void handleSingleInsert(ContentSyncMessage request) throws IOException {
-        log.info("ES receive single insert request: {}", request);
-        EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
-        if (isDefaultStrategy(strategy)) {
-            log.error("ES single insert failed, strategy not found for type={}", request.getType());
+    public void handleSingleInsert(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        if (request == null || request.getId() == null) {
+            channel.basicAck(deliveryTag, false);
             return;
         }
+        String bizKey = request.getType() + ":" + request.getIndexName() + ":" + request.getId() + ":insert";
+        String idempotentKey = RedisMqIdempotentConstants.SEARCH_PREFIX + bizKey;
+
         try {
+            if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
+                log.info("[MQ幂等] 重复消息，已跳过，key={}", idempotentKey);
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
+
+            EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
+            if (isDefaultStrategy(strategy)) {
+                log.error("ES single insert failed, strategy not found for type={}", request.getType());
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
             boolean success = strategy.insertOrUpdate(request.getIndexName(), request.getId().toString(), request.getData());
             log.info("ES single insert result: {}, type={}", success, request.getType());
+            channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("ES single insert exception", e);
-            throw e;
+            log.error("[MQ幂等] ES single insert 失败，key={}", idempotentKey, e);
+            channel.basicNack(deliveryTag, false, false);
         }
     }
 
@@ -67,19 +92,36 @@ public class EsSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_BATCH_INSERT)
     })
-    public void handleBatchInsert(ContentBatchSyncMessage request) throws IOException {
-        log.info("ES receive batch insert request: {}", request);
-        EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
-        if (isDefaultStrategy(strategy)) {
-            log.error("ES batch insert failed, strategy not found for type={}", request.getType());
+    public void handleBatchInsert(ContentBatchSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        if (request == null || request.getData() == null) {
+            channel.basicAck(deliveryTag, false);
             return;
         }
+        String dataHash = DigestUtils.md5DigestAsHex(request.getData().toString().getBytes(StandardCharsets.UTF_8));
+        String bizKey = request.getType() + ":" + request.getIndexName() + ":batch:" + dataHash;
+        String idempotentKey = RedisMqIdempotentConstants.SEARCH_PREFIX + bizKey;
+
         try {
+            if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
+                log.info("[MQ幂等] 重复消息，已跳过，key={}", idempotentKey);
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
+
+            EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
+            if (isDefaultStrategy(strategy)) {
+                log.error("ES batch insert failed, strategy not found for type={}", request.getType());
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            @SuppressWarnings("unchecked")
             boolean success = strategy.batchInsert(request.getIndexName(), (List<Object>) request.getData());
             log.info("ES batch insert result: {}, type={}", success, request.getType());
+            channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("ES batch insert exception", e);
-            throw e;
+            log.error("[MQ幂等] ES batch insert 失败，key={}", idempotentKey, e);
+            channel.basicNack(deliveryTag, false, false);
         }
     }
 
@@ -96,19 +138,34 @@ public class EsSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_DELETE)
     })
-    public void handleDelete(ContentSyncMessage request) throws IOException {
-        log.info("ES receive delete request, id={}", request.getId());
-        EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
-        if (isDefaultStrategy(strategy)) {
-            log.error("ES delete failed, strategy not found for type={}", request.getType());
+    public void handleDelete(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        if (request == null || request.getId() == null) {
+            channel.basicAck(deliveryTag, false);
             return;
         }
+        String bizKey = request.getType() + ":" + request.getIndexName() + ":" + request.getId() + ":delete";
+        String idempotentKey = RedisMqIdempotentConstants.SEARCH_PREFIX + bizKey;
+
         try {
+            if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
+                log.info("[MQ幂等] 重复消息，已跳过，key={}", idempotentKey);
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
+
+            EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
+            if (isDefaultStrategy(strategy)) {
+                log.error("ES delete failed, strategy not found for type={}", request.getType());
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
             boolean success = strategy.delete(request.getIndexName(), request.getId().toString());
             log.info("ES delete result: {}", success);
+            channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("ES delete exception", e);
-            throw e;
+            log.error("[MQ幂等] ES delete 失败，key={}", idempotentKey, e);
+            channel.basicNack(deliveryTag, false, false);
         }
     }
 
@@ -124,19 +181,34 @@ public class EsSyncListener {
                             SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT,
                     })
     })
-    public void handleUserResourceInsert(UserResourceMessage request) throws IOException {
-        log.info("ES receive user resource insert request: {}", request);
-        EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getSourceType());
-        if (isDefaultStrategy(strategy)) {
-            log.error("ES user resource insert failed, strategy not found for type={}", request.getSourceType());
+    public void handleUserResourceInsert(UserResourceMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        if (request == null) {
+            channel.basicAck(deliveryTag, false);
             return;
         }
+        String bizKey = "ur:" + request.getSourceType() + ":" + request.getUserId() + ":" + request.getSourceId() + ":" + request.getActionType();
+        String idempotentKey = RedisMqIdempotentConstants.SEARCH_PREFIX + bizKey;
+
         try {
+            if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
+                log.info("[MQ幂等] 重复消息，已跳过，key={}", idempotentKey);
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
+
+            EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getSourceType());
+            if (isDefaultStrategy(strategy)) {
+                log.error("ES user resource insert failed, strategy not found for type={}", request.getSourceType());
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
             boolean success = strategy.insertUserResource(request);
             log.info("ES user resource insert result: {}, type={}", success, request.getSourceType());
+            channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("ES user resource insert exception", e);
-            throw e;
+            log.error("[MQ幂等] ES user resource insert 失败，key={}", idempotentKey, e);
+            channel.basicNack(deliveryTag, false, false);
         }
     }
 

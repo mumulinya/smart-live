@@ -628,6 +628,20 @@ public class RedisService
         // 使用 stringRedisTemplate 执行，确保参数和结果都作为 String 处理 (或根据 Script 定义自动转换)
         return (T) stringRedisTemplate.execute(script, keys, args);
     }
+
+    /**
+     * MQ 消费幂等：尝试标记为已消费（原子 SETNX + TTL）
+     * 如果 key 不存在则设置成功，返回 true（首次消费）；
+     * 如果 key 已存在，返回 false（重复消费）。
+     *
+     * @param key        幂等 key（建议格式：mq:idempotent:模块:业务键）
+     * @param ttlSeconds 过期时间（秒）
+     * @return true=首次消费；false=重复消费
+     */
+    public boolean tryConsumeOnce(final String key, final long ttlSeconds) {
+        return setCacheObjectIfAbsent(key, "1", ttlSeconds, TimeUnit.SECONDS);
+    }
+
     /**
      * 获得缓存的基本对象列表
      *

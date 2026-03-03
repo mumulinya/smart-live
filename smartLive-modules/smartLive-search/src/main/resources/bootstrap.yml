@@ -24,6 +24,9 @@ spring:
     host: 192.168.182.20
     virtual-host: smart-live
     port: 5672
+    listener:
+      simple:
+        acknowledge-mode: manual   #none：关闭ack  manual：手动ack  auto：自动ack
   profiles:
     # 环境配置
     active: dev
