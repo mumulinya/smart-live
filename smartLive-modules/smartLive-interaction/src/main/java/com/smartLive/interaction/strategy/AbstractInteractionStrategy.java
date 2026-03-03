@@ -13,8 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public abstract class AbstractInteractionStrategy {
 
+    
     @Autowired
-    protected RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     /**
      * 同步搜索资源数据到 ES（模板方法）
@@ -50,8 +51,7 @@ public abstract class AbstractInteractionStrategy {
                 .build();
 
         // 5. 统一下发到 RabbitMQ
-        MqMessageSendUtils.sendMqMessage(
-                rabbitTemplate,
+        mqMessageSendUtils.sendMqMessage(
                 SearchMqConstants.ES_EXCHANGE,
                 SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT,
                 userResourceMessage

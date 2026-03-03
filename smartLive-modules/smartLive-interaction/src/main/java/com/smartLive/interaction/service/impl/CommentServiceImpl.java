@@ -70,8 +70,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private RemoteBlogService remoteBlogService;
     @Autowired
     private RemoteShopService remoteShopService;
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
     private RedisService redisService;
     @Autowired
@@ -330,7 +331,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .auditContent(BeanUtil.beanToMap(auditCommentBO))
                 .createTime(comment.getCreateTime())
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, AiAuditMqConstants.AUDIT_EXCHANGE_NAME, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
 
     /**
@@ -556,7 +557,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                         entry.getValue()
                 ))
                 .collect(Collectors.toList());
-        rabbitTemplate.convertAndSend(AiAuditMqConstants.AI_EXCHANGE_NAME, AiAuditMqConstants.AI_COMMENT_ROUTING, list);
+        mqMessageSendUtils.sendMqMessage(AiAuditMqConstants.AI_EXCHANGE_NAME, AiAuditMqConstants.AI_COMMENT_ROUTING, list);
     }
 
     /**

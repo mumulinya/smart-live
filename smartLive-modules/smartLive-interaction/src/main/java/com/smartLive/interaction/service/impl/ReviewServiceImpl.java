@@ -82,8 +82,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private IStarService starService;
     @Autowired
     private RemoteOrderService remoteOrderService;
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
     private RedisMultiCacheManager redisMultiCacheManager;
     @Autowired
@@ -361,7 +362,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .auditContent(BeanUtil.beanToMap(auditReviewBO))
                 .createTime(review.getCreateTime())
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, AiAuditMqConstants.AUDIT_EXCHANGE_NAME, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
 
     /**

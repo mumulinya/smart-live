@@ -79,8 +79,9 @@ public class PayServiceImpl implements IPayService {
     @Autowired(required = false)
     private NotificationParser notificationParser;
 
+    
     @Autowired
-    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     @Autowired
     private RemoteOrderService remoteOrderService;
@@ -126,7 +127,7 @@ public class PayServiceImpl implements IPayService {
                 paySn, userId, dto.getBizType(), dto.getBizId(), payAmount, record.getPayMethod());
 
         // 5. 发送延迟消息，超时自动取消支付
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+        mqMessageSendUtils.sendMqMessage(
                 OrderMqConstants.PAY_DELAY_EXCHANGE_NAME,
                 OrderMqConstants.PAY_DELAY_ROUTING,
                 record.getId(),

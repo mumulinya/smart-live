@@ -46,8 +46,9 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
 
     @Autowired
     private RedisService redisService;
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     public static final ChannelGroup allChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private static final Map<Long, Channel> userChannels = new ConcurrentHashMap<>();
@@ -211,14 +212,11 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
 
             String routingKey = ChatMqConstants.CHAT_MESSAGE_ROUTING + sessionId;
 
-            MqMessageSendUtils.sendMqMessage(
-                rabbitTemplate,
+            mqMessageSendUtils.sendMqMessage(
                 ChatMqConstants.CHAT_EXCHANGE_NAME,
                 routingKey,
                     messageEvent, // 发送 JSON 字符串
-                AiAuditMqConstants.DEAD_LETTER_EXCHANGE_NAME,
-                AiAuditMqConstants.DEAD_LETTER_ROUTING,
-                3
+                 3
             );
         } else {
             sendErrorMessage(channel, "消息保存失败");

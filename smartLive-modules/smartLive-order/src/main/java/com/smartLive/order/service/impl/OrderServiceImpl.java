@@ -45,8 +45,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private OrderMapper orderMapper;
 
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
     private RemoteProductService remoteProductService;
 
@@ -233,7 +234,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             // 创建成功，删除 Redis 占位符
             redisService.deleteObject("order:status:" + order.getId());
             //发送延迟消息，检测订单支付状态
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate, OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
+            mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
         }
     }
 

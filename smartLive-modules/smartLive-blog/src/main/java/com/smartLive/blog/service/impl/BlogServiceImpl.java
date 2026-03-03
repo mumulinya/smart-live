@@ -59,8 +59,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Autowired
     private BlogMapper blogMapper;
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
     private RedisService redisService;
 
@@ -199,7 +200,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
                contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
                 //发起rabbitMq信息删除
-               MqMessageSendUtils.sendMqMessage(rabbitTemplate,SearchMqConstants.ES_EXCHANGE,SearchMqConstants.ES_ROUTING_DELETE, contentSyncMessage);
+               mqMessageSendUtils.sendMqMessage(SearchMqConstants.ES_EXCHANGE,SearchMqConstants.ES_ROUTING_DELETE, contentSyncMessage);
                //更新redis缓存
                flashRedisBlogCache(id);
                latch.countDown();
@@ -234,7 +235,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
             contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
             //发起rabbitMq信息删除
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate,SearchMqConstants.ES_EXCHANGE,SearchMqConstants.ES_ROUTING_DELETE, contentSyncMessage);
+            mqMessageSendUtils.sendMqMessage(SearchMqConstants.ES_EXCHANGE,SearchMqConstants.ES_ROUTING_DELETE, contentSyncMessage);
             //更新redis缓存
             flashRedisBlogCache(id);
             flashRedisBlogListCache();
@@ -355,7 +356,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .bizId(blog.getId())
                 .publishTime(blog.getCreateTime())
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate,InteractionMqConstants.INTERACT_FEED_EXCHANGE_NAME, InteractionMqConstants.INTERACT_FEED_ROUTING, feedEventMessage);
+        mqMessageSendUtils.sendMqMessage(InteractionMqConstants.INTERACT_FEED_EXCHANGE_NAME, InteractionMqConstants.INTERACT_FEED_ROUTING, feedEventMessage);
         //添加es数据
         publish(new String[]{blog.getId().toString()});
         //添加用户es数据
@@ -373,7 +374,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .actionType(actionType)
                 .data(blog)
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, SearchMqConstants.ES_EXCHANGE,SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT, userResourceMessage);
+        mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_EXCHANGE,SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT, userResourceMessage);
         //更新redis缓存
         redisService.deleteObject(RedisConstants.CACHE_HOT_BLOG_KEY+blog.getTypeId());
         //返回id
@@ -392,7 +393,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .auditContent(BeanUtil.beanToMap(blog))
                 .createTime(blog.getCreateTime())
                 .build();
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate, AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
 
     /**
@@ -908,7 +909,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         request.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
         request.setData(blogs);
         request.setType(GlobalBizTypeEnum.BLOG.getCode());
-        MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+        mqMessageSendUtils.sendMqMessage(
                 SearchMqConstants.ES_EXCHANGE,
                 SearchMqConstants.ES_ROUTING_BATCH_INSERT,
                 request);

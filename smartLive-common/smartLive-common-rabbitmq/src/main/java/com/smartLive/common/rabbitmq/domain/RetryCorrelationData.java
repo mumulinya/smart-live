@@ -54,44 +54,6 @@ public class RetryCorrelationData extends CorrelationData {
         this.delayTime = delayTime;
         this.maxRetries = maxRetries;
     }
-    /**
-     * 普通交换机构造方法+死信交换机构造方法
-     * @param id
-     * @param message
-     * @param exchange
-     * @param routingKey
-     * @param deadExchange
-     * @param deadRoutingKey
-     */
-    public RetryCorrelationData(String id, Object message, String exchange, String routingKey, String deadExchange, String deadRoutingKey, int maxRetries) {
-        super(id);
-        this.message = message;
-        this.exchange = exchange;
-        this.routingKey = routingKey;
-        this.deadExchange = deadExchange;
-        this.deadRoutingKey = deadRoutingKey;
-        this.maxRetries = maxRetries;
-    }
-    /**
-     * 延迟交换机构造方法+死信交换机构造方法
-     * @param id
-     * @param message
-     * @param exchange
-     * @param routingKey
-     * @param delayTime
-     * @param deadExchange
-     * @param deadRoutingKey
-     */
-    public RetryCorrelationData(String id, Object message, String exchange, String routingKey, Integer delayTime, String deadExchange, String deadRoutingKey, int maxRetries) {
-        super(id);
-        this.message = message;
-        this.exchange = exchange;
-        this.routingKey = routingKey;
-        this.delayTime = delayTime;
-        this.deadExchange = deadExchange;
-        this.deadRoutingKey = deadRoutingKey;
-        this.maxRetries = maxRetries;
-    }
 
     @Override
     public String toString() {

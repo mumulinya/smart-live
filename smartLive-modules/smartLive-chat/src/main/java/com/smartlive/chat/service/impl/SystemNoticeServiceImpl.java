@@ -1,4 +1,5 @@
 package com.smartlive.chat.service.impl;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -39,8 +40,9 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
     @Autowired
     private ObjectMapper objectMapper;
 
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     @Override
     public List<SystemNoticeVO> queryNoticePage(Long userId, Integer current) {
@@ -162,7 +164,7 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
                     "userId", userId,
                     "json", json
             );
-            rabbitTemplate.convertAndSend(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMap);
+            mqMessageSendUtils.sendMqMessage(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMap);
         } catch (Exception e) {
             log.error("push system notice failed, userId: {}, noticeId: {}", userId, noticeVO.getNoticeId(), e);
         }

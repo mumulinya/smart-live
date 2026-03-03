@@ -32,8 +32,9 @@ public class SeckillPurchaseStrategy implements PurchaseStrategy {
     @Autowired
     private RedisIdWorker redisIdWorker;
 
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     @Autowired
     private ExecutorService executorService;
@@ -87,12 +88,10 @@ public class SeckillPurchaseStrategy implements PurchaseStrategy {
         try {
             executorService.submit(() -> {
                 log.info("线程{}创建秒杀订单id为：{}", Thread.currentThread().getName(), orderId);
-                MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+                mqMessageSendUtils.sendMqMessage(
                         OrderMqConstants.ORDER_EXCHANGE_NAME,
                         OrderMqConstants.ORDER_SECKILL_ROUTING,
                         voucherOrder,
-                        OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME,
-                        OrderMqConstants.ORDER_DEAD_LETTER_ROUTING,
                         3);
             });
         } catch (Exception e) {

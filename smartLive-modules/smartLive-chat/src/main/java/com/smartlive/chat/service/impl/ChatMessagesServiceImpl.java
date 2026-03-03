@@ -1,4 +1,5 @@
 package com.smartlive.chat.service.impl;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.core.constant.mq.ChatMqConstants;
 
 import java.util.*;
@@ -38,8 +39,9 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
     @Autowired
     private RedisService redisService;
 
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -168,7 +170,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
                     "json", jsonString
             );
 
-            rabbitTemplate.convertAndSend(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMsg);
+            mqMessageSendUtils.sendMqMessage(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMsg);
 
         } catch (Exception e) {
             log.error("发送MQ推送失败", e);

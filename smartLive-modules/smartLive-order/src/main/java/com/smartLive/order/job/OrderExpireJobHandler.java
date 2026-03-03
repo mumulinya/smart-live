@@ -35,8 +35,9 @@ public class OrderExpireJobHandler {
     @Autowired
     private RemoteProductService remoteProductService;
 
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     /** 订单临期提醒窗口：过期前多少天触发通知 (默认3天) */
     private static final int EXPIRE_NOTIFY_DAYS = 3;
@@ -82,8 +83,7 @@ public class OrderExpireJobHandler {
                                              order.getId(), EXPIRE_NOTIFY_DAYS);
                 
                 // 复用系统的内部通知结构发送MQ
-                MqMessageSendUtils.sendMqMessage(
-                        rabbitTemplate,
+                mqMessageSendUtils.sendMqMessage(
                         ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
                         ChatMqConstants.SYSTEM_NOTICE_ROUTING,
                         content,

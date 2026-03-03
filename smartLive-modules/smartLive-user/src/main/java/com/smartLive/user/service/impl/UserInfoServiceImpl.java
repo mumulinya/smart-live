@@ -38,8 +38,9 @@ import java.util.stream.Collectors;
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> implements IUserInfoService {
 
     private IUserService userService;
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     //使用懒加载，避免循环引用
     public UserInfoServiceImpl(@Lazy IUserService userService) {
@@ -139,7 +140,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
                     .auditContent(BeanUtil.beanToMap(userVO))
                     .createTime(userById.getCreateTime())
                     .build();
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate, AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+            mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
         }
         return update;
     }

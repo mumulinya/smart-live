@@ -18,32 +18,40 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 public class MqMessageSendUtils {
-
-    private static ScheduledExecutorService scheduledExecutorService;
-
+    private final ScheduledExecutorService scheduledExecutorService;
+    private final RabbitTemplate rabbitTemplate;
     @Autowired
-    public void setScheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+    public MqMessageSendUtils(ScheduledExecutorService scheduledExecutorService, RabbitTemplate rabbitTemplate) {
         this.scheduledExecutorService = scheduledExecutorService;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     /**
      * 普通交换机
      */
-    public static void sendMqMessage(RabbitTemplate rabbitTemplate,
-                                     String exchange,
-                                     String routingKey,
-                                     Object messageEvent) {
-        sendMqMessage(rabbitTemplate, exchange, routingKey, messageEvent, null);
+    public void sendMqMessage(
+            String exchange,
+            String routingKey,
+            Object messageEvent)
+    {
+        RetryCorrelationData cd = new RetryCorrelationData(
+                UUID.randomUUID().toString(),
+                messageEvent,
+                exchange,
+                routingKey,
+                3
+        );
+        sendWithRetry(cd);
     }
 
     /**
      * 延迟交换机
      */
-    public static void sendMqMessage(RabbitTemplate rabbitTemplate,
-                                     String exchange,
-                                     String routingKey,
-                                     Object messageEvent,
-                                     Integer delayTime) {
+    public void sendMqMessage(
+            String exchange,
+            String routingKey,
+            Object messageEvent,
+            Integer delayTime) {
         RetryCorrelationData cd = new RetryCorrelationData(
                 UUID.randomUUID().toString(),
                 messageEvent,
@@ -52,60 +60,24 @@ public class MqMessageSendUtils {
                 delayTime,
                 3
         );
-        sendWithRetry(rabbitTemplate, cd);
-    }
-
-    /**
-     * 普通交换机支持死信交换机回调
-     */
-    public static void sendMqMessage(RabbitTemplate rabbitTemplate,
-                                     String exchange,
-                                     String routingKey,
-                                     Object messageEvent,
-                                     String deadExchange,
-                                     String deadRoutingKey,
-                                     Integer maxRetries
-    ) {
-        sendMqMessage(rabbitTemplate, exchange, routingKey, messageEvent, null, deadExchange, deadRoutingKey, maxRetries);
-    }
-
-    /**
-     * 延迟交换机支持死信交换机回调
-     */
-    public static void sendMqMessage(RabbitTemplate rabbitTemplate,
-                                     String exchange,
-                                     String routingKey,
-                                     Object messageEvent,
-                                     Integer delayTime,
-                                     String deadExchange,
-                                     String deadRoutingKey,
-                                     Integer maxRetries
-    ) {
-        RetryCorrelationData cd = new RetryCorrelationData(
-                UUID.randomUUID().toString(),
-                messageEvent,
-                exchange,
-                routingKey,
-                delayTime,
-                deadExchange,
-                deadRoutingKey,
-                maxRetries
-        );
-        sendWithRetry(rabbitTemplate, cd);
+        sendWithRetry(cd);
     }
 
     /**
      * 发送消息并绑定消息回调 (核心修改方法)
      */
-    private static void sendWithRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
-        // ⭐ [核心修改] Spring Boot 3 使用 CompletableFuture
-        // 使用 whenComplete 替代原来的 addCallback
+    private void sendWithRetry(RetryCorrelationData cd) {
+        /**
+         * 绑定消息回调
+         * 1. 发送消息成功，消息acked
+         * 2. 发送消息失败，消息nacked
+         */
         cd.getFuture().whenComplete((confirm, throwable) -> {
             if (throwable != null) {
                 // 对应原来的 onFailure
                 log.error("❌ 发送异常: {}", throwable.getMessage());
                 // 进行消息重发
-                handleRetry(rabbitTemplate, cd);
+                handleRetry(cd);
             } else {
                 // 对应原来的 onSuccess
                 if (confirm.isAck()) {
@@ -113,7 +85,7 @@ public class MqMessageSendUtils {
                 } else {
                     log.error("收到ConfirmCallback ack 消息发送失败！reason：{}", confirm.getReason());
                     // 进行消息重发
-                    handleRetry(rabbitTemplate, cd);
+                    handleRetry(cd);
                 }
             }
         });
@@ -123,7 +95,7 @@ public class MqMessageSendUtils {
         Integer delayTime = cd.getDelayTime();
         if (delayTime != null && delayTime > 0) {
             // 有延迟 → 延迟队列消息
-            rabbitTemplate.convertAndSend(
+            this.rabbitTemplate.convertAndSend(
                     cd.getExchange(),
                     cd.getRoutingKey(),
                     cd.getMessage(),
@@ -135,7 +107,7 @@ public class MqMessageSendUtils {
             );
         } else {
             // 无延迟 → 普通队列消息
-            rabbitTemplate.convertAndSend(
+            this.rabbitTemplate.convertAndSend(
                     cd.getExchange(),
                     cd.getRoutingKey(),
                     cd.getMessage(),
@@ -145,14 +117,14 @@ public class MqMessageSendUtils {
     }
 
     // 重试处理逻辑
-    private static void handleRetry(RabbitTemplate rabbitTemplate, RetryCorrelationData cd) {
+    private  void handleRetry(RetryCorrelationData cd) {
         if (cd.getRetryCount() < cd.getMaxRetries()) {
             cd.setRetryCount(cd.getRetryCount() + 1);
-            log.info("scheduledExecutorService为{}", scheduledExecutorService);
+            log.info("scheduledExecutorService为{}", this.scheduledExecutorService);
             // 延迟 2 秒后执行重发
             scheduledExecutorService.schedule(() -> {
                 log.info("🔄 执行第 {} 次重试发送...", cd.getRetryCount());
-                sendWithRetry(rabbitTemplate, cd);
+                sendWithRetry(cd);
             }, 2, TimeUnit.SECONDS);
 
         } else {

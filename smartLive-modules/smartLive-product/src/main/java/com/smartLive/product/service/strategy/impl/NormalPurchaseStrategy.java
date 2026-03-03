@@ -27,8 +27,9 @@ public class NormalPurchaseStrategy implements PurchaseStrategy {
     @Autowired
     private RedisIdWorker redisIdWorker;
 
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     @Autowired
     private ExecutorService executorService;
@@ -52,12 +53,10 @@ public class NormalPurchaseStrategy implements PurchaseStrategy {
         // 发送消息创建订单
         executorService.submit(() -> {
             log.info("线程{}创建普通订单id为：{}", Thread.currentThread().getName(), orderId);
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+            mqMessageSendUtils.sendMqMessage(
                     OrderMqConstants.ORDER_EXCHANGE_NAME,
                     OrderMqConstants.ORDER_BUY_ROUTING,
                     voucherOrder,
-                    OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME,
-                    OrderMqConstants.ORDER_DEAD_LETTER_ROUTING,
                     3);
         });
 

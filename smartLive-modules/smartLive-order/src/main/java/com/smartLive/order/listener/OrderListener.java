@@ -23,8 +23,9 @@ public class OrderListener {
     @Autowired
     private OrderServiceImpl orderService;
 
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
 
     @Autowired
     private RedisService redisService;
@@ -85,7 +86,7 @@ public class OrderListener {
             redisService.deleteObject("order:status:" + order.getId());
             
             //发送延迟消息，检测订单支付状态
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate, OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
+            mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
         }
     }
 

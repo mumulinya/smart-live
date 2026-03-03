@@ -37,8 +37,9 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
 
     @Autowired
     private AuditStrategyFactory auditStrategyFactory;
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
     private AuditProcessChain auditProcessChain;
 
@@ -142,7 +143,7 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
             createDTO.setExtraData(task.getAuditContent());
             createDTO.setRejectReason(StringUtils.isNotBlank(reason) ? reason : "");
             // 通过 MQ 异步发送审核拒绝的系统通知，解耦 audit 模块与 chat 模块
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+            mqMessageSendUtils.sendMqMessage(
                     ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
                     ChatMqConstants.SYSTEM_NOTICE_ROUTING,
                     createDTO);

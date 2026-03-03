@@ -61,8 +61,9 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     private ZSetIdManager zSetIdManager;
     @Autowired
     private RedisService redisService;
+    
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MqMessageSendUtils mqMessageSendUtils;
     /**
      * 查询关注
      * 
@@ -403,7 +404,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             createDTO.setTitle(globalBizTypeEnum.getDesc()+desc);
             createDTO.setExtraData(map);
             // 通过 MQ 异步发送系统通知，解耦 interaction 模块与 chat 模块，避免同步 RPC 流量放大
-            MqMessageSendUtils.sendMqMessage(rabbitTemplate,
+            mqMessageSendUtils.sendMqMessage(
                     ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
                     ChatMqConstants.SYSTEM_NOTICE_ROUTING,
                     createDTO);
