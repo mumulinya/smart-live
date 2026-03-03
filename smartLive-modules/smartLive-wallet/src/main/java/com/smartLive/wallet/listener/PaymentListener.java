@@ -28,7 +28,12 @@ public class PaymentListener {
      * 监听支付超时延迟消息
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = OrderMqConstants.PAY_DELAY_QUEUE),
+            value = @Queue(name = OrderMqConstants.PAY_DELAY_QUEUE,
+                    arguments = {
+                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.PAY_DEAD_LETTER_EXCHANGE_NAME),
+                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.PAY_DEAD_LETTER_ROUTING)
+                    }
+            ),
             exchange = @Exchange(name = OrderMqConstants.PAY_DELAY_EXCHANGE_NAME,
                     type = "x-delayed-message",
                     durable = "true",
@@ -64,5 +69,13 @@ public class PaymentListener {
         } else {
             log.info("支付记录非待支付状态，无需处理, paySn={}, status={}", record.getPaySn(), record.getStatus());
         }
+    }
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = OrderMqConstants.PAY_DEAD_LETTER_QUEUE, durable = "true"),
+            exchange = @Exchange(value = OrderMqConstants.PAY_DEAD_LETTER_EXCHANGE_NAME),
+            key = OrderMqConstants.PAY_DEAD_LETTER_ROUTING
+    ))
+    public void handlePayDeadLetter(org.springframework.amqp.core.Message message) {
+        log.error("pay dead letter received: {}", new String(message.getBody(), java.nio.charset.StandardCharsets.UTF_8));
     }
 }

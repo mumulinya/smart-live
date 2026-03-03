@@ -7,6 +7,7 @@ import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.search.strategy.esSync.EsSyncStrategy;
 import com.smartLive.search.strategy.factory.EsSyncStrategyFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.Argument;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -14,8 +15,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 @Component
 @Slf4j
@@ -23,109 +24,132 @@ public class EsSyncListener {
 
     @Autowired
     private EsSyncStrategyFactory esSyncStrategyFactory;
-    @Autowired
-    private ExecutorService executorService;
 
     /**
      * Handle single insert.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_INSERT_QUEUE, declare = "true"),
+            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_INSERT_QUEUE, declare = "true",
+                    arguments = {
+                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
+                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING)
+                    }
+            ),
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_INSERT)
     })
-    public void handleSingleInsert(ContentSyncMessage request) {
-        executorService.submit(() -> {
-            log.info("ES receive single insert request: {}", request);
-            EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
-            if (isDefaultStrategy(strategy)) {
-                log.error("ES single insert failed, strategy not found for type={}", request.getType());
-                return;
-            }
-            try {
-                boolean success = strategy.insertOrUpdate(request.getIndexName(), request.getId().toString(), request.getData());
-                log.info("ES single insert result: {}, type={}", success, request.getType());
-            } catch (Exception e) {
-                log.error("ES single insert exception", e);
-            }
-        });
+    public void handleSingleInsert(ContentSyncMessage request) throws IOException {
+        log.info("ES receive single insert request: {}", request);
+        EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
+        if (isDefaultStrategy(strategy)) {
+            log.error("ES single insert failed, strategy not found for type={}", request.getType());
+            return;
+        }
+        try {
+            boolean success = strategy.insertOrUpdate(request.getIndexName(), request.getId().toString(), request.getData());
+            log.info("ES single insert result: {}, type={}", success, request.getType());
+        } catch (Exception e) {
+            log.error("ES single insert exception", e);
+            throw e;
+        }
     }
 
     /**
      * Handle batch insert.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_BATCH_INSERT_QUEUE, declare = "true"),
+            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_BATCH_INSERT_QUEUE, declare = "true",
+                    arguments = {
+                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
+                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING)
+                    }
+            ),
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_BATCH_INSERT)
     })
-    public void handleBatchInsert(ContentBatchSyncMessage request) {
-        executorService.submit(() -> {
-            log.info("ES receive batch insert request: {}", request);
-            EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
-            if (isDefaultStrategy(strategy)) {
-                log.error("ES batch insert failed, strategy not found for type={}", request.getType());
-                return;
-            }
-            try {
-                boolean success = strategy.batchInsert(request.getIndexName(), (List<Object>) request.getData());
-                log.info("ES batch insert result: {}, type={}", success, request.getType());
-            } catch (Exception e) {
-                log.error("ES batch insert exception", e);
-            }
-        });
+    public void handleBatchInsert(ContentBatchSyncMessage request) throws IOException {
+        log.info("ES receive batch insert request: {}", request);
+        EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
+        if (isDefaultStrategy(strategy)) {
+            log.error("ES batch insert failed, strategy not found for type={}", request.getType());
+            return;
+        }
+        try {
+            boolean success = strategy.batchInsert(request.getIndexName(), (List<Object>) request.getData());
+            log.info("ES batch insert result: {}, type={}", success, request.getType());
+        } catch (Exception e) {
+            log.error("ES batch insert exception", e);
+            throw e;
+        }
     }
 
     /**
      * Handle delete.
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_DELETE_QUEUE, declare = "true"),
+            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_DELETE_QUEUE, declare = "true",
+                    arguments = {
+                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
+                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING)
+                    }
+            ),
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_DELETE)
     })
-    public void handleDelete(ContentSyncMessage request) {
-        executorService.submit(() -> {
-            log.info("ES receive delete request, id={}", request.getId());
-            EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
-            if (isDefaultStrategy(strategy)) {
-                log.error("ES delete failed, strategy not found for type={}", request.getType());
-                return;
-            }
-            try {
-                boolean success = strategy.delete(request.getIndexName(), request.getId().toString());
-                log.info("ES delete result: {}", success);
-            } catch (Exception e) {
-                log.error("ES delete exception", e);
-            }
-        });
+    public void handleDelete(ContentSyncMessage request) throws IOException {
+        log.info("ES receive delete request, id={}", request.getId());
+        EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getType());
+        if (isDefaultStrategy(strategy)) {
+            log.error("ES delete failed, strategy not found for type={}", request.getType());
+            return;
+        }
+        try {
+            boolean success = strategy.delete(request.getIndexName(), request.getId().toString());
+            log.info("ES delete result: {}", success);
+        } catch (Exception e) {
+            log.error("ES delete exception", e);
+            throw e;
+        }
     }
 
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_USER_RESOURCE_QUEUE, declare = "true"),
+            @QueueBinding(value = @Queue(name = SearchMqConstants.ES_USER_RESOURCE_QUEUE, declare = "true",
+                    arguments = {
+                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
+                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING)
+                    }
+            ),
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = {
                             SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT,
                     })
     })
-    public void handleUserResourceInsert(UserResourceMessage request) {
-        executorService.submit(() -> {
-            log.info("ES receive user resource insert request: {}", request);
-            EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getSourceType());
-            if (isDefaultStrategy(strategy)) {
-                log.error("ES user resource insert failed, strategy not found for type={}", request.getSourceType());
-                return;
-            }
-            try {
-                boolean success = strategy.insertUserResource(request);
-                log.info("ES user resource insert result: {}, type={}", success, request.getSourceType());
-            } catch (Exception e) {
-                log.error("ES user resource insert exception", e);
-            }
-        });
+    public void handleUserResourceInsert(UserResourceMessage request) throws IOException {
+        log.info("ES receive user resource insert request: {}", request);
+        EsSyncStrategy strategy = esSyncStrategyFactory.getStrategy(request.getSourceType());
+        if (isDefaultStrategy(strategy)) {
+            log.error("ES user resource insert failed, strategy not found for type={}", request.getSourceType());
+            return;
+        }
+        try {
+            boolean success = strategy.insertUserResource(request);
+            log.info("ES user resource insert result: {}, type={}", success, request.getSourceType());
+        } catch (Exception e) {
+            log.error("ES user resource insert exception", e);
+            throw e;
+        }
     }
 
     private boolean isDefaultStrategy(EsSyncStrategy strategy) {
         return strategy == null || Integer.valueOf(-1).equals(strategy.getType());
+    }
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = SearchMqConstants.SEARCH_DEAD_LETTER_QUEUE, durable = "true"),
+            exchange = @Exchange(value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
+            key = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING
+    ))
+    public void handleSearchDeadLetter(org.springframework.amqp.core.Message message) {
+        log.error("search dead letter received: {}", new String(message.getBody(), java.nio.charset.StandardCharsets.UTF_8));
     }
 }

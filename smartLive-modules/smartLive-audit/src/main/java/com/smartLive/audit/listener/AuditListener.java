@@ -6,10 +6,7 @@ import com.smartLive.audit.service.IAuditService;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.annotation.*;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
@@ -18,7 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 /**
- * 审核模块监听器
+ * Audit listener
  */
 @Component
 @Slf4j
@@ -28,7 +25,12 @@ public class AuditListener {
     private IAuditService auditService;
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = AiAuditMqConstants.AUDIT_QUEUE, declare = "true"),
+            value = @Queue(name = AiAuditMqConstants.AUDIT_QUEUE, declare = "true",
+                    arguments = {
+                            @Argument(name = "x-dead-letter-exchange", value = AiAuditMqConstants.AUDIT_DEAD_LETTER_EXCHANGE_NAME),
+                            @Argument(name = "x-dead-letter-routing-key", value = AiAuditMqConstants.AUDIT_DEAD_LETTER_ROUTING)
+                    }
+            ),
             exchange = @Exchange(name = AiAuditMqConstants.AUDIT_EXCHANGE_NAME, type = ExchangeTypes.TOPIC),
             key = AiAuditMqConstants.AUDIT_ROUTING_KEY
     ))
@@ -47,5 +49,15 @@ public class AuditListener {
                 log.error("消息确认失败", ex);
             }
         }
+    }
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = AiAuditMqConstants.AUDIT_DEAD_LETTER_QUEUE, durable = "true"),
+            exchange = @Exchange(value = AiAuditMqConstants.AUDIT_DEAD_LETTER_EXCHANGE_NAME),
+            key = AiAuditMqConstants.AUDIT_DEAD_LETTER_ROUTING
+    ))
+    public void handleAuditDeadLetter(AuditMessage auditMessage, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        log.error("audit dead letter received: {}", auditMessage);
+        channel.basicAck(deliveryTag, false);
     }
 }

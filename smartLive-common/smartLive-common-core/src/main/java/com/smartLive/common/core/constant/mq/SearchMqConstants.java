@@ -36,4 +36,8 @@ public interface SearchMqConstants {
     String MILVUS_ROUTING_INSERT = "milvus.insert";
     String MILVUS_ROUTING_DELETE = "milvus.delete";
     String MILVUS_ROUTING_BATCH_INSERT = "milvus.batch.insert";
+
+    String SEARCH_DEAD_LETTER_EXCHANGE_NAME = "search.dead.letter.direct";
+    String SEARCH_DEAD_LETTER_QUEUE = "search.dead.letter.queue";
+    String SEARCH_DEAD_LETTER_ROUTING = "search.dead.letter.routing";
 }

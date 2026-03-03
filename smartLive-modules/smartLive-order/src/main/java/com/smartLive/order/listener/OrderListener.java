@@ -9,7 +9,6 @@ import com.smartLive.order.domain.Order;
 import com.smartLive.order.service.impl.OrderServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.*;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
@@ -45,13 +44,20 @@ public class OrderListener {
             exchange = @Exchange(name = OrderMqConstants.ORDER_EXCHANGE_NAME),
             key = OrderMqConstants.ORDER_SECKILL_ROUTING
     ))
-    public void handleSeckillOrder(Order order) {
-        //判断当前订单是否重复创建
-        if(orderService.getById(order.getId())!=null){
-            log.error("订单已存在");
-            return;
+    public void handleSeckillOrder(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        try {
+            //判断当前订单是否重复创建
+            if (orderService.getById(order.getId()) != null) {
+                log.error("订单已存在");
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            orderService.handleOrder(order);
+            channel.basicAck(deliveryTag, false);
+        } catch (Exception e) {
+            log.error("处理秒杀订单失败, orderId={}", order == null ? null : order.getId(), e);
+            channel.basicNack(deliveryTag, false, false);
         }
-        orderService.handleOrder(order);
     }
 
     //普通订单监听
@@ -67,26 +73,32 @@ public class OrderListener {
             exchange = @Exchange(name = OrderMqConstants.ORDER_EXCHANGE_NAME),
             key = OrderMqConstants.ORDER_BUY_ROUTING
     ))
-    public void handleBuyOrder(Order order){
-        log.info("开始处理订单信息: {}", order);
-        //判断当前订单是否重复创建
-        if(orderService.getById(order.getId())!=null){
-            log.error("订单已存在");
-            return;
-        }
-        //创建订单
-        boolean save = orderService.save(order);
-        // 模拟业务逻辑...
-//        int i = 1 / 0; // 模拟异常
-        if(!save){
-            //创建失败
-            log.error("创建订单失败");
-        }else{
+    public void handleBuyOrder(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        try {
+            log.info("开始处理订单信息: {}", order);
+            //判断当前订单是否重复创建
+            if (orderService.getById(order.getId()) != null) {
+                log.error("订单已存在");
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            //创建订单
+            boolean save = orderService.save(order);
+            if (!save) {
+                log.error("创建订单失败");
+                channel.basicNack(deliveryTag, false, false);
+                return;
+            }
+
             // 创建成功，删除 Redis 占位符
             redisService.deleteObject("order:status:" + order.getId());
-            
+
             //发送延迟消息，检测订单支付状态
-            mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
+            mqMessageSendUtils.sendMqMessage(OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME, OrderMqConstants.ORDER_DELAY_ROUTING, order.getId(), (OrderMqConstants.DELAY_TIME));
+            channel.basicAck(deliveryTag, false);
+        } catch (Exception e) {
+            log.error("处理普通订单失败, orderId={}", order == null ? null : order.getId(), e);
+            channel.basicNack(deliveryTag, false, false);
         }
     }
 
@@ -100,19 +112,25 @@ public class OrderListener {
                     ),
             key = OrderMqConstants.ORDER_DELAY_ROUTING
     ))
-    public void handlePayOrder(Long id){
-        Order order = orderService.getById(id);
-        //检测订单状态，判断订单是否支付
-        if(order.getStatus()== OrderStatusConstants.PAID||order==null){
-            log.info("订单不存在或者订单已经支付");
-           //订单不存在或者订单已经支付
-            return;
-        }
-        //订单未支付
-        if(order.getStatus()== OrderStatusConstants.UNPAID){
-            log.info("订单未支付，取消订单");
-            //取消订单,恢复库存
-            orderService.cancel(id);
+    public void handlePayOrder(Long id, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+        try {
+            Order order = orderService.getById(id);
+            //检测订单状态，判断订单是否支付
+            if (order == null || order.getStatus() == OrderStatusConstants.PAID) {
+                log.info("订单不存在或者订单已经支付");
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            //订单未支付
+            if (order.getStatus() == OrderStatusConstants.UNPAID) {
+                log.info("订单未支付，取消订单");
+                //取消订单,恢复库存
+                orderService.cancel(id);
+            }
+            channel.basicAck(deliveryTag, false);
+        } catch (Exception e) {
+            log.error("处理支付延迟订单失败, orderId={}", id, e);
+            channel.basicNack(deliveryTag, false, false);
         }
     }
     

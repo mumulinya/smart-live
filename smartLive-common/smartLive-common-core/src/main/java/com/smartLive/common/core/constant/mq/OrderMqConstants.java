@@ -26,5 +26,8 @@ public interface OrderMqConstants {
     String PAY_DELAY_EXCHANGE_NAME = "pay.delay.direct";
     String PAY_DELAY_QUEUE = "pay.delay.queue";
     String PAY_DELAY_ROUTING = "pay.delay.routing";
+    String PAY_DEAD_LETTER_EXCHANGE_NAME = "pay.dead.letter.direct";
+    String PAY_DEAD_LETTER_QUEUE = "pay.dead.letter.queue";
+    String PAY_DEAD_LETTER_ROUTING = "pay.dead.letter.routing";
     Integer PAY_DELAY_TIME = 15 * 60000; // 15分钟
 }
