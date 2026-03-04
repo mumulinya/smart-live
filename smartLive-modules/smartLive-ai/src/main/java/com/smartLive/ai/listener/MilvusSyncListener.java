@@ -35,7 +35,7 @@ public class MilvusSyncListener {
     private RedisService redisService;
 
     /**
-     * Milvus single insert.
+     * 监听单条数据插入或更新请求，同步到 Milvus 向量数据库
      */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_INSERT_QUEUE, declare = "true",
@@ -47,13 +47,21 @@ public class MilvusSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
                     key = SearchMqConstants.MILVUS_ROUTING_INSERT)
     })
-    public void handleSingleInsert(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleSingleInsert(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getId() == null) {
             channel.basicAck(deliveryTag, false);
             return;
         }
-        String bizKey = request.getType() + ":" + request.getId() + ":insert";
+
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] Milvus同步消息缺失 messageId，拒绝消费. dataId={}", request.getId());
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+
+        String bizKey = "insert:messageId:" + messageId;
         String idempotentKey = RedisMqIdempotentConstants.MILVUS_PREFIX + bizKey;
+
 
         try {
             if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
@@ -73,13 +81,14 @@ public class MilvusSyncListener {
             log.info("Milvus single insert result: {}, type={}", success, request.getType());
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] Milvus single insert 失败，key={}", idempotentKey, e);
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] Milvus单条同步异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("Milvus单条同步异常，触发本地重试", e);
         }
     }
 
     /**
-     * Milvus batch insert.
+     * 监听批量数据插入请求，批量同步到 Milvus 向量数据库
      */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_BATCH_INSERT_QUEUE, declare = "true",
@@ -91,14 +100,21 @@ public class MilvusSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
                     key = SearchMqConstants.MILVUS_ROUTING_BATCH_INSERT)
     })
-    public void handleBatchInsert(ContentBatchSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleBatchInsert(ContentBatchSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getData() == null) {
             channel.basicAck(deliveryTag, false);
             return;
         }
-        String dataHash = DigestUtils.md5DigestAsHex(request.getData().toString().getBytes(StandardCharsets.UTF_8));
-        String bizKey = request.getType() + ":batch:" + dataHash;
+
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] Milvus批量同步消息缺失 messageId，拒绝消费");
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+
+        String bizKey = "batch:messageId:" + messageId;
         String idempotentKey = RedisMqIdempotentConstants.MILVUS_PREFIX + bizKey;
+
 
         try {
             if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
@@ -119,13 +135,14 @@ public class MilvusSyncListener {
             log.info("Milvus batch insert result: {}, type={}", success, request.getType());
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] Milvus batch insert 失败，key={}", idempotentKey, e);
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] Milvus批量同步异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("Milvus批量同步异常，触发本地重试", e);
         }
     }
 
     /**
-     * Milvus delete.
+     * 监听数据删除请求，从 Milvus 向量数据库中删除对应的数据
      */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_DELETE_QUEUE, declare = "true",
@@ -137,13 +154,21 @@ public class MilvusSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
                     key = SearchMqConstants.MILVUS_ROUTING_DELETE)
     })
-    public void handleDelete(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleDelete(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getId() == null) {
             channel.basicAck(deliveryTag, false);
             return;
         }
-        String bizKey = request.getType() + ":" + request.getId() + ":delete";
+
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] Milvus删除消息缺失 messageId，拒绝消费. dataId={}", request.getId());
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+
+        String bizKey = "delete:messageId:" + messageId;
         String idempotentKey = RedisMqIdempotentConstants.MILVUS_PREFIX + bizKey;
+
 
         try {
             if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
@@ -163,8 +188,9 @@ public class MilvusSyncListener {
             log.info("Milvus delete result: {}", success);
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] Milvus delete 失败，key={}", idempotentKey, e);
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] Milvus删除处理异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("Milvus删除处理异常，触发本地重试", e);
         }
     }
 
@@ -172,6 +198,9 @@ public class MilvusSyncListener {
         return strategy == null || Integer.valueOf(-1).equals(strategy.getType());
     }
 
+    /**
+     * 监听由于 Milvus 同步异常等原因进入的死信队列
+     */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = SearchMqConstants.SEARCH_DEAD_LETTER_QUEUE, durable = "true"),
             exchange = @Exchange(value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),

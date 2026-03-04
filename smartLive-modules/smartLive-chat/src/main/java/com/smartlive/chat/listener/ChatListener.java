@@ -14,6 +14,8 @@ import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
+import com.smartLive.common.redis.service.RedisService;
 
 import java.io.IOException;
 
@@ -26,6 +28,9 @@ public class ChatListener {
 
     @Autowired
     private ISystemNoticeService systemNoticeService;
+
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 监听所有会话队列
@@ -47,8 +52,22 @@ public class ChatListener {
                     key = ChatMqConstants.CHAT_MESSAGE_ROUTING + "*"
             )
     )
-    public void consumeAllSessionMessages(ChatMessageEvent messageEvent, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void consumeAllSessionMessages(ChatMessageEvent messageEvent, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         Long sessionId = messageEvent.getSessionId();
+        if (messageId == null) {
+            log.error("[MQ幂等] consumeAllSessionMessages消息缺失 messageId，拒绝消费");
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+        
+        String idempotentKey = RedisMqIdempotentConstants.CHAT_PREFIX + "messageId:" + messageId;
+        boolean isFirst = redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS);
+        if (!isFirst) {
+            log.info("[MQ幂等] 重复的消息，直接确认: {}", messageId);
+            channel.basicAck(deliveryTag, false);
+            return;
+        }
+
         try {
             log.info("收到会话消息: sessionId={}", sessionId);
             // 执行业务逻辑
@@ -56,9 +75,9 @@ public class ChatListener {
             // 成功：手动 ACK
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("消息SessionId: {}消费失败，即将进入死信队列,报错消息为{} ", sessionId, e.getMessage());
-            // 失败：手动 NACK，不重回原队列，进入死信队列
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] 消息SessionId: {}消费异常，清理幂等锁并触发重试，key={}, 报错消息为{}", sessionId, idempotentKey, e.getMessage());
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("会话消息消费异常，触发本地重试", e);
         }
     }
 
@@ -85,7 +104,21 @@ public class ChatListener {
                     key = ChatMqConstants.SYSTEM_NOTICE_ROUTING
             )
     )
-    public void consumeSystemNotice(SystemNoticeCreateDTO createDTO, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void consumeSystemNotice(SystemNoticeCreateDTO createDTO, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
+        if (messageId == null) {
+            log.error("[MQ幂等] consumeSystemNotice消息缺失 messageId，拒绝消费");
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+
+        String idempotentKey = RedisMqIdempotentConstants.CHAT_PREFIX + "messageId:" + messageId;
+        boolean isFirst = redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS);
+        if (!isFirst) {
+            log.info("[MQ幂等] 重复的系统通知消息，直接确认: {}", messageId);
+            channel.basicAck(deliveryTag, false);
+            return;
+        }
+
         try {
             log.info("收到系统通知消息: userId={}, action={}", createDTO.getUserId(), createDTO.getAction());
             // 调用已有的服务方法：插入 DB + WebSocket 实时推送
@@ -93,14 +126,14 @@ public class ChatListener {
             // 消费成功：手动 ACK
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("系统通知消费失败，即将进入死信队列, userId={}, error={}", createDTO.getUserId(), e.getMessage());
-            // 消费失败：NACK 并拒绝重回原队列，进入死信队列兜底
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] 系统通知消费异常，清理幂等锁并触发重试，key={}, userId={}, error={}", idempotentKey, createDTO.getUserId(), e.getMessage());
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("系统通知消费异常，触发本地重试", e);
         }
     }
 
     /**
-     * 监听死信队列
+     * 监听会话/系统通知等处理失败产生的死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = AiAuditMqConstants.DEAD_LETTER_QUEUE, durable = "true"),

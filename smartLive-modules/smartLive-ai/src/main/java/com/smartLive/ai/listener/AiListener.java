@@ -32,6 +32,9 @@ public class AiListener {
     @Autowired
     private RedisService redisService;
 
+    /**
+     * 监听AI创建评论队列，处理AI生成评论任务
+     */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(name = AiAuditMqConstants.AI_COMMENT_QUEUE, declare = "true",
                     arguments = {
@@ -42,13 +45,18 @@ public class AiListener {
             exchange = @Exchange(name = AiAuditMqConstants.AI_EXCHANGE_NAME),
             key = AiAuditMqConstants.AI_COMMENT_ROUTING
     ))
-    public void handleAiCreateComment(List<AIGenerateRequest> list, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleAiCreateComment(List<AIGenerateRequest> list, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (list == null || list.isEmpty()) {
             channel.basicAck(deliveryTag, false);
             return;
         }
-        // bizKey: 使用请求列表内容的 MD5 哈希作为唯一标识，替代原有的 hashCode 以防冲突
-        String bizKey = "comment:" + DigestUtils.md5DigestAsHex(list.toString().getBytes(StandardCharsets.UTF_8));
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] 消息缺失 messageId，拒绝消费. list size={}", list.size());
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+        
+        String bizKey = "messageId:" + messageId;
         String idempotentKey = RedisMqIdempotentConstants.AI_PREFIX + bizKey;
 
         try {
@@ -68,12 +76,17 @@ public class AiListener {
             commentHandler.aiCreateComment(list);
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] AI 评论生成失败，key={}", idempotentKey, e);
-            // 发生异常时不再删除 idempotentKey，防止重试时重复执行非幂等操作
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] AI生成评论处理异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            // 抛出异常以触发 Spring Retry 机制。当重试次数耗尽后，
+            // 默认的 RejectAndDontRequeueRecoverer 会将消息投入死信队列（若配置了死信交换机）
+            throw new RuntimeException("AI生成评论处理异常，触发本地重试", e);
         }
     }
 
+    /**
+     * 监听AI执行异常后的死信队列
+     */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = AiAuditMqConstants.AI_DEAD_LETTER_QUEUE, durable = "true"),
             exchange = @Exchange(value = AiAuditMqConstants.AI_DEAD_LETTER_EXCHANGE_NAME),

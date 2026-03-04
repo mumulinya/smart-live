@@ -31,6 +31,15 @@ public class RedisMqIdempotentConstants {
     /** 订单模块前缀 */
     public static final String ORDER_PREFIX = MQ_IDEMPOTENT_PREFIX + "order:";
 
+    /** 私聊模块前缀 */
+    public static final String CHAT_PREFIX = MQ_IDEMPOTENT_PREFIX + "chat:";
+
+    /** IM 推送模块前缀 */
+    public static final String IM_PREFIX = MQ_IDEMPOTENT_PREFIX + "im:";
+
+    /** 商品模块前缀 */
+    public static final String PRODUCT_PREFIX = MQ_IDEMPOTENT_PREFIX + "product:";
+
     /** 默认幂等 key 过期时间（秒）：24小时 */
     public static final long DEFAULT_TTL_SECONDS = 86400L;
 

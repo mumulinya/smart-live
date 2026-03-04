@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service;
 import com.smartLive.order.mapper.OrderMapper;
 import com.smartLive.order.domain.Order;
 import com.smartLive.order.service.IOrderService;
+import com.smartLive.common.rabbitmq.domain.StockDeductMessage;
+import com.smartLive.common.core.constant.mq.ProductMqConstants;
 
 import jakarta.annotation.Resource;
 
@@ -180,6 +182,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if(!isLock){
             //获取锁失败,返回错误信息
             log.error("不允许重复下单");
+            return;
         }
         try {
             proxy.createOrder(order);
@@ -217,23 +220,35 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
         }
 
-        //6.扣减库存
-        Boolean success = remoteProductService.deductStock(order.getSourceId());
-        if(!success){
-            //扣减失败
-            log.error("库存不足");
-            return;
-        }
-        //7.创建订单
+        // 6.扣减库存（已转为异步批量 MQ 处理，原有的 Feign 同步强拦截已移除）
+        // 物理超售防护由商品侧 Listener 和 DB CAS (stock >= count) 承担
+        // Redis 原子的超售预拦截保留在此前网关或 Controller 层
+
+        // 7.创建订单
         boolean save = save(order);
         if(!save){
             //创建失败
             log.error("创建订单失败");
             return;
         }else{
+            log.info("订单已创建，ID={}，数量={}，发送 MQ 异步扣库指令...", order.getId(), order.getAmount());
+            
+            // 构建并发送异步库存扣减消息给商品模块
+            StockDeductMessage msg = new StockDeductMessage();
+            msg.setProductId(order.getSourceId());
+            msg.setOrderId(order.getId());
+            msg.setCount(order.getAmount() != null ? order.getAmount() : 1); // 扣减实际购买数量
+            
+            mqMessageSendUtils.sendMqMessage(
+                ProductMqConstants.DEDUCT_STOCK_EXCHANGE,
+                ProductMqConstants.DEDUCT_STOCK_ROUTING,
+                msg,
+                0
+            );
+
             // 创建成功，删除 Redis 占位符
             redisService.deleteObject("order:status:" + order.getId());
-            //发送延迟消息，检测订单支付状态
+            // 发送延迟消息，检测订单支付状态
             mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
         }
     }

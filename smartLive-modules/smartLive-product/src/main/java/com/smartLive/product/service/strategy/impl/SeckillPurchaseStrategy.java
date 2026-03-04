@@ -10,7 +10,6 @@ import com.smartLive.product.domain.Product;
 import com.smartLive.product.service.strategy.PurchaseStrategy;
 import com.smartLive.product.utils.RedisIdWorker;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.script.DefaultRedisScript;

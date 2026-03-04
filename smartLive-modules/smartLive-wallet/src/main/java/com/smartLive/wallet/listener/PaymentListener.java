@@ -50,8 +50,15 @@ public class PaymentListener {
             ),
             key = OrderMqConstants.PAY_DELAY_ROUTING
     ))
-    public void handlePayTimeout(Long recordId, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
-        String idempotentKey = RedisMqIdempotentConstants.PAY_PREFIX + recordId;
+    public void handlePayTimeout(Long recordId, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] 支付超时延迟消息缺失 messageId，拒绝消费. recordId={}", recordId);
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+        
+        String bizKey = "messageId:" + messageId;
+        String idempotentKey = RedisMqIdempotentConstants.PAY_PREFIX + bizKey;
 
         try {
             if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
@@ -89,11 +96,15 @@ public class PaymentListener {
             }
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] 支付超时处理失败，key={}", idempotentKey, e);
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] 支付超时处理异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("支付超时处理异常，触发本地重试", e);
         }
     }
 
+    /**
+     * 监听支付处理死信队列
+     */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = OrderMqConstants.PAY_DEAD_LETTER_QUEUE, durable = "true"),
             exchange = @Exchange(value = OrderMqConstants.PAY_DEAD_LETTER_EXCHANGE_NAME),

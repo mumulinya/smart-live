@@ -24,6 +24,18 @@ spring:
     host: 192.168.182.20
     virtual-host: smart-live
     port: 5672
+    listener:
+      simple:
+        consumer-batch-enabled: true
+        batch-size: 100
+        # 让它最多等 1000 毫秒，到了 1 秒没满 100 个也立即出列交由监听器执行
+        receive-timeout: 1000ms 
+        # 为了让批量收集威力最大化，prefetch 预取数量需至少等于 batch-size
+        prefetch: 100 
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
   profiles:
     # 环境配置
     active: dev

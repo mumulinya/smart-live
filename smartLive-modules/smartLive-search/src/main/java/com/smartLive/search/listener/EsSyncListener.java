@@ -36,7 +36,7 @@ public class EsSyncListener {
     private RedisService redisService;
 
     /**
-     * Handle single insert.
+     * 监听单条数据插入或更新请求，同步到 ES 搜索引擎
      */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = SearchMqConstants.ES_INSERT_QUEUE, declare = "true",
@@ -48,12 +48,19 @@ public class EsSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_INSERT)
     })
-    public void handleSingleInsert(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleSingleInsert(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getId() == null) {
             channel.basicAck(deliveryTag, false);
             return;
         }
-        String bizKey = request.getType() + ":" + request.getIndexName() + ":" + request.getId() + ":insert";
+
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] ES同步消息缺失 messageId，拒绝消费. dataId={}", request.getId());
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+
+        String bizKey = "insert:messageId:" + messageId;
         String idempotentKey = RedisMqIdempotentConstants.SEARCH_PREFIX + bizKey;
 
         try {
@@ -71,16 +78,17 @@ public class EsSyncListener {
                 return;
             }
             boolean success = strategy.insertOrUpdate(request.getIndexName(), request.getId().toString(), request.getData());
-            log.info("ES single insert result: {}, type={}", success, request.getType());
+            log.info("ES single insert result: {}, index: {}, id: {}", success, request.getIndexName(), request.getId());
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] ES single insert 失败，key={}", idempotentKey, e);
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] ES单条同步异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("ES单条同步异常，触发本地重试", e);
         }
     }
 
     /**
-     * Handle batch insert.
+     * 监听批量数据插入请求，批量同步到 ES 搜索引擎
      */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = SearchMqConstants.ES_BATCH_INSERT_QUEUE, declare = "true",
@@ -92,14 +100,21 @@ public class EsSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_BATCH_INSERT)
     })
-    public void handleBatchInsert(ContentBatchSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleBatchInsert(ContentBatchSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getData() == null) {
             channel.basicAck(deliveryTag, false);
             return;
         }
-        String dataHash = DigestUtils.md5DigestAsHex(request.getData().toString().getBytes(StandardCharsets.UTF_8));
-        String bizKey = request.getType() + ":" + request.getIndexName() + ":batch:" + dataHash;
+
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] ES批量同步消息缺失 messageId，拒绝消费");
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+
+        String bizKey = "batch:messageId:" + messageId;
         String idempotentKey = RedisMqIdempotentConstants.SEARCH_PREFIX + bizKey;
+
 
         try {
             if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
@@ -117,16 +132,17 @@ public class EsSyncListener {
             }
             @SuppressWarnings("unchecked")
             boolean success = strategy.batchInsert(request.getIndexName(), (List<Object>) request.getData());
-            log.info("ES batch insert result: {}, type={}", success, request.getType());
+            log.info("ES batch insert result: {}, index: {}", success, request.getIndexName());
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] ES batch insert 失败，key={}", idempotentKey, e);
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] ES批量同步异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("ES批量同步异常，触发本地重试", e);
         }
     }
 
     /**
-     * Handle delete.
+     * 监听数据删除请求，从 ES 搜索引擎中删除对应文档
      */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = SearchMqConstants.ES_DELETE_QUEUE, declare = "true",
@@ -138,13 +154,21 @@ public class EsSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.ES_EXCHANGE),
                     key = SearchMqConstants.ES_ROUTING_DELETE)
     })
-    public void handleDelete(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleDelete(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getId() == null) {
             channel.basicAck(deliveryTag, false);
             return;
         }
-        String bizKey = request.getType() + ":" + request.getIndexName() + ":" + request.getId() + ":delete";
+
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] ES删除消息缺失 messageId，拒绝消费. dataId={}", request.getId());
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+
+        String bizKey = "delete:messageId:" + messageId;
         String idempotentKey = RedisMqIdempotentConstants.SEARCH_PREFIX + bizKey;
+
 
         try {
             if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
@@ -161,14 +185,18 @@ public class EsSyncListener {
                 return;
             }
             boolean success = strategy.delete(request.getIndexName(), request.getId().toString());
-            log.info("ES delete result: {}", success);
+            log.info("ES delete result: {}, index: {}, id: {}", success, request.getIndexName(), request.getId());
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] ES delete 失败，key={}", idempotentKey, e);
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] ES删除处理异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("ES删除处理异常，触发本地重试", e);
         }
     }
 
+    /**
+     * 监听用户资源插入请求（如文章、视频发布），将关键信息推送到 ES
+     */
     @RabbitListener(bindings = {
             @QueueBinding(value = @Queue(name = SearchMqConstants.ES_USER_RESOURCE_QUEUE, declare = "true",
                     arguments = {
@@ -181,13 +209,21 @@ public class EsSyncListener {
                             SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT,
                     })
     })
-    public void handleUserResourceInsert(UserResourceMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
+    public void handleUserResourceInsert(UserResourceMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null) {
             channel.basicAck(deliveryTag, false);
             return;
         }
-        String bizKey = "ur:" + request.getSourceType() + ":" + request.getUserId() + ":" + request.getSourceId() + ":" + request.getActionType();
+
+        if (messageId == null || messageId.isEmpty()) {
+            log.error("[MQ幂等] ES用户资源消息缺失 messageId，拒绝消费");
+            channel.basicNack(deliveryTag, false, false);
+            return;
+        }
+
+        String bizKey = "ur:messageId:" + messageId;
         String idempotentKey = RedisMqIdempotentConstants.SEARCH_PREFIX + bizKey;
+
 
         try {
             if (!redisService.tryConsumeOnce(idempotentKey, RedisMqIdempotentConstants.DEFAULT_TTL_SECONDS)) {
@@ -204,11 +240,12 @@ public class EsSyncListener {
                 return;
             }
             boolean success = strategy.insertUserResource(request);
-            log.info("ES user resource insert result: {}, type={}", success, request.getSourceType());
+            log.info("ES user resource insert result: {}, sourceId: {}", success, request.getSourceId());
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("[MQ幂等] ES user resource insert 失败，key={}", idempotentKey, e);
-            channel.basicNack(deliveryTag, false, false);
+            log.error("[MQ幂等] ES用户资源同步异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
+            redisService.deleteObject(idempotentKey);
+            throw new RuntimeException("ES用户资源同步异常，触发本地重试", e);
         }
     }
 
@@ -216,6 +253,9 @@ public class EsSyncListener {
         return strategy == null || Integer.valueOf(-1).equals(strategy.getType());
     }
 
+    /**
+     * 监听 ES 同步异常导致的死信队列
+     */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = SearchMqConstants.SEARCH_DEAD_LETTER_QUEUE, durable = "true"),
             exchange = @Exchange(value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),

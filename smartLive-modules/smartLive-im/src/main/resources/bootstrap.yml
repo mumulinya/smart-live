@@ -19,6 +19,13 @@ spring:
       retry:
         enabled: true # 开启重试
         multiplier: 2 # 重试乘数
+    listener:
+      simple:
+        acknowledge-mode: manual
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
 
   profiles:
     active: dev

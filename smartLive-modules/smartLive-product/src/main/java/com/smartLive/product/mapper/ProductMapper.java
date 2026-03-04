@@ -120,4 +120,14 @@ public interface ProductMapper extends BaseMapper<Product>
             "  </foreach>" +
             "</script>")
     void updateFansCountBatch(@Param("map") Map<Long, Integer> batchMap);
+
+    /**
+     * 扣减单个商品库存，带防超扣校验
+     * @param productId 商品ID
+     * @param count 数量
+     * @return 影响行数
+     */
+    @Update("UPDATE product SET stock = stock - #{count} WHERE id = #{productId} AND stock >= #{count}")
+    int deductStock(@Param("productId") Long productId, @Param("count") Integer count);
 }
+

@@ -101,6 +101,7 @@ public class MqMessageSendUtils {
                     cd.getMessage(),
                     message -> {
                         message.getMessageProperties().setDelay(delayTime);
+                        message.getMessageProperties().setMessageId(cd.getId());
                         return message;
                     },
                     cd  // 带上 CorrelationData 用于 confirm 回调
@@ -111,6 +112,10 @@ public class MqMessageSendUtils {
                     cd.getExchange(),
                     cd.getRoutingKey(),
                     cd.getMessage(),
+                    message -> {
+                        message.getMessageProperties().setMessageId(cd.getId());
+                        return message;
+                    },
                     cd
             );
         }
