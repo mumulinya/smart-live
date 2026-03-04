@@ -26,6 +26,15 @@ public interface ResourceStrategy<T> {
     * @return
     */
    Long getResourceId(T data);
+
+   /**
+    * 获取资源的作者的用户ID
+    * @param data 资源对象
+    * @return 作者的用户ID
+    */
+   default Long getAuthorId(T data) {
+       return null;
+   }
    /**
     * 获取资源内容
     */

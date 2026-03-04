@@ -2,6 +2,7 @@ package com.smartLive.user.domain.VO;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.smartLive.common.core.annotation.Excel;
 import lombok.Data;
 import java.io.Serializable;
 
@@ -45,6 +46,9 @@ public class UserVO implements Serializable
 
     /** 关注数量 */
     private Integer followee;
+
+    /** 关注的人的数量 */
+    private Integer liked;
     
     /** 是否有密码 */
     private Boolean hasPassword;

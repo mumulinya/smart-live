@@ -52,8 +52,8 @@ public abstract class AbstractInteractionStrategy {
 
         // 5. 统一下发到 RabbitMQ
         mqMessageSendUtils.sendMqMessage(
-                SearchMqConstants.ES_EXCHANGE,
-                SearchMqConstants.ES_ROUTING_USER_RESOURCE_INSERT,
+                SearchMqConstants.ES_SYNC_EXCHANGE,
+                SearchMqConstants.ES_SYNC_USER_RESOURCE_INSERT_ROUTING_KEY,
                 userResourceMessage
         );
     }

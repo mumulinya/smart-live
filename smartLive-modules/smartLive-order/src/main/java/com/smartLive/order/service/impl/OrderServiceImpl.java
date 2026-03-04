@@ -240,8 +240,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             msg.setCount(order.getAmount() != null ? order.getAmount() : 1); // 扣减实际购买数量
             
             mqMessageSendUtils.sendMqMessage(
-                ProductMqConstants.DEDUCT_STOCK_EXCHANGE,
-                ProductMqConstants.DEDUCT_STOCK_ROUTING,
+                ProductMqConstants.PRODUCT_STOCK_EXCHANGE,
+                ProductMqConstants.PRODUCT_STOCK_DEDUCT_ROUTING_KEY,
                 msg,
                 0
             );
@@ -249,7 +249,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             // 创建成功，删除 Redis 占位符
             redisService.deleteObject("order:status:" + order.getId());
             // 发送延迟消息，检测订单支付状态
-            mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,OrderMqConstants.ORDER_DELAY_ROUTING,order.getId(),(OrderMqConstants.DELAY_TIME));
+            mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE,OrderMqConstants.ORDER_DELAY_ROUTING_KEY,order.getId(),(OrderMqConstants.DELAY_TIME));
         }
     }
 

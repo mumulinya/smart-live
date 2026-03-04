@@ -97,6 +97,18 @@ public class RemoteAppUserFallbackFactory implements FallbackFactory<RemoteAppUs
                 log.error("Batch update user followee count failed: {}", throwable.getMessage());
                 return false;
             }
+
+            @Override
+            public Boolean updateUserLikedBatch(Map<Long, Integer> updateMap) {
+                log.error("Batch update user liked count failed: {}", throwable.getMessage());
+                return false;
+            }
+
+            @Override
+            public Integer getUserLikedCount(Long userId) {
+                log.error("Get user liked count failed: {}", throwable.getMessage());
+                return 0;
+            }
         };
     }
 }

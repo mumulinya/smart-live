@@ -98,4 +98,21 @@ public interface UserInfoMapper extends BaseMapper<UserInfo>
             "  </foreach>" +
             "</script>")
     void updateFolloweeCountBatch(@Param("map") Map<Long, Integer> updateMap);
+
+    /**
+     * Batch update user liked count.
+     */
+    @Update("<script>" +
+            "UPDATE user_info " +
+            "SET liked = CASE user_id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE user_id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateUserLikedBatch(@Param("map") Map<Long, Integer> updateMap);
 }

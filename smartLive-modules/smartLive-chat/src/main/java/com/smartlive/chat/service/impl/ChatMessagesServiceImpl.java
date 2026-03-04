@@ -170,7 +170,7 @@ public class ChatMessagesServiceImpl extends ServiceImpl<ChatMessagesMapper,Chat
                     "json", jsonString
             );
 
-            mqMessageSendUtils.sendMqMessage(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMsg);
+            mqMessageSendUtils.sendMqMessage(ChatMqConstants.CHAT_DIRECT_EXCHANGE, "im.push.user", mqMsg);
 
         } catch (Exception e) {
             log.error("发送MQ推送失败", e);

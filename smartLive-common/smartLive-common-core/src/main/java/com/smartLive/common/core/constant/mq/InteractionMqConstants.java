@@ -5,13 +5,13 @@ package com.smartLive.common.core.constant.mq;
  */
 public interface InteractionMqConstants {
     // 推送数据交换机
-    String INTERACT_FEED_EXCHANGE_NAME = "interact.feed.topic";
+    String INTERACT_FEED_EXCHANGE = "interact.feed.topic.exchange";
     // 普通数据推送队列
     String INTERACT_FEED_QUEUE = "interact.feed.queue";
     // 数据推送路由
-    String INTERACT_FEED_ROUTING = "interact.feed";
+    String INTERACT_FEED_ROUTING_KEY = "interact.feed";
 
-    String INTERACTION_DEAD_LETTER_EXCHANGE_NAME = "interaction.dead.letter.direct";
-    String INTERACTION_DEAD_LETTER_QUEUE = "interaction.dead.letter.queue";
-    String INTERACTION_DEAD_LETTER_ROUTING = "interaction.dead.letter.routing";
+    String INTERACTION_DLX_EXCHANGE = "interaction.dlx.direct.exchange";
+    String INTERACTION_DLQ_QUEUE = "interaction.dlq.queue";
+    String INTERACTION_DLQ_ROUTING_KEY = "interaction.dlq";
 }

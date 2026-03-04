@@ -362,7 +362,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .auditContent(BeanUtil.beanToMap(auditReviewBO))
                 .createTime(review.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
 
     /**
@@ -480,8 +480,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             list = dbList.subList(start, end);
             queryReviewListIsLike(list);
             queryReviewListUserMessage(list);
+            queryReviewListShopMessage(list);
         }
-        queryReviewListShopMessage(list);
         return list;
     }
 
@@ -568,8 +568,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             return Collections.emptyList();
         }
         queryReviewListUserMessage(orderedList);
+        queryReviewListShopMessage(list);
         queryReviewListIsLike(orderedList);
-
         return orderedList;
     }
 
@@ -591,18 +591,18 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             return;
         }
 
-        List<ShopDTO> userList = remoteShopService.getShopList(shopIds);
-        if (CollUtil.isEmpty(userList)) {
+        List<ShopDTO> shopList = remoteShopService.getShopList(shopIds);
+        if (CollUtil.isEmpty(shopList)) {
             return;
         }
 
-        Map<Long, ShopDTO> userMap = userList.stream().collect(Collectors.toMap(
+        Map<Long, ShopDTO> shopMap = shopList.stream().collect(Collectors.toMap(
                 ShopDTO::getId,
                 Function.identity(),
                 (v1, v2) -> v1
         ));
         reviewList.forEach(review -> {
-            ShopDTO shopDTO = userMap.get(review.getUserId());
+            ShopDTO shopDTO = shopMap.get(review.getShopId());
             if (shopDTO != null) {
                 review.setShopLogo(shopDTO.getShopLogo());
                 review.setShopName((shopDTO.getName()));

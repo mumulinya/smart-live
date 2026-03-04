@@ -38,6 +38,15 @@ public enum LikeTypeEnum {
             InteractionRedisKeyConstants.Like.USER_LIKED_REVIEW,
             InteractionRedisKeyConstants.Like.REVIEW_LIKED_COUNT,
             InteractionRedisKeyConstants.Like.REVIEW_LIKED_DIRTY
+    ),
+    USER_LIKE(
+            GlobalBizTypeEnum.USER.getCode(),
+            "用户获赞总数",
+            GlobalBizTypeEnum.USER.getBizDomain(),
+            InteractionRedisKeyConstants.Like.USER_LIKED,
+            null,
+            InteractionRedisKeyConstants.Like.USER_LIKED_COUNT,
+            InteractionRedisKeyConstants.Like.USER_LIKED_DIRTY
     );
 
     private final Integer code;

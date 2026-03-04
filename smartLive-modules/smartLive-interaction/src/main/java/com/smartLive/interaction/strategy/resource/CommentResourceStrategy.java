@@ -69,8 +69,13 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
     public HashMap<String,String> getResourceContentById(Long sourceId) {
         Comment comment = commentService.getCommentById(sourceId);
         HashMap<String, String> map = new HashMap<>();
-        map.put("title", comment.getContent());
-        map.put("images", comment.getImages());
+        if (comment != null && comment.getContent() != null) {
+            String content = comment.getContent();
+            map.put("title", content.length() > 20 ? content.substring(0, 20) : content);
+        }
+        if (comment != null) {
+            map.put("images", comment.getImages());
+        }
         return map;
     }
 }

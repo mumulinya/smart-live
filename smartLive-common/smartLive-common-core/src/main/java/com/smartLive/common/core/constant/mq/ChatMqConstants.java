@@ -5,7 +5,7 @@ package com.smartLive.common.core.constant.mq;
  */
 public interface ChatMqConstants {
     // Private Chat Exchange
-    String CHAT_EXCHANGE_NAME = "chat.topic";
+    String CHAT_DIRECT_EXCHANGE = "chat.direct.exchange";
     String CHAT_MESSAGE_QUEUE = "chat.message.queue";
     String CHAT_MESSAGE_ROUTING = "chat.session.";
 

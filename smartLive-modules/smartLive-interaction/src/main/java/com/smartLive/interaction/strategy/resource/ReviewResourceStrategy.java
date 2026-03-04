@@ -62,6 +62,14 @@ public class ReviewResourceStrategy implements ResourceStrategy<Review> {
     }
 
     /**
+     * 获取资源作者id
+     */
+    @Override
+    public Long getAuthorId(Review data) {
+        return data.getUserId();
+    }
+
+    /**
      * 获取资源内容
      *
      * @param sourceId
@@ -70,8 +78,13 @@ public class ReviewResourceStrategy implements ResourceStrategy<Review> {
     public HashMap<String, String> getResourceContentById(Long sourceId) {
         Review review = reviewService.getReviewById(sourceId);
         HashMap<String, String> map = new HashMap<>();
-        map.put("title", review.getContent());
-        map.put("images", review.getImages());
+        if (review != null && review.getContent() != null) {
+            String content = review.getContent();
+            map.put("title", content.length() > 20 ? content.substring(0, 20) : content);
+        }
+        if (review != null) {
+            map.put("images", review.getImages());
+        }
         return map; // Return the content of the comment
     }
 }

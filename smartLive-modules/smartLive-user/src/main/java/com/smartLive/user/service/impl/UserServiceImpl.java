@@ -41,6 +41,7 @@ import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartLive.user.domain.Stats;
+import com.smartLive.user.domain.UserInfo;
 import com.smartLive.user.domain.VO.UserInfoVO;
 import com.smartLive.user.domain.VO.UserVO;
 import com.smartLive.user.service.IUserInfoService;
@@ -210,7 +211,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .auditContent(BeanUtil.beanToMap(userVO))
                 .createTime(user.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
     /**
      * 批量删除用户
@@ -235,7 +236,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     contentSyncMessage.setIndexName(EsIndexNameConstants.USER_INDEX_NAME);
                     contentSyncMessage.setType(GlobalBizTypeEnum.USER.getCode());
                     //发起rabbitMq信息删除
-                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_EXCHANGE, SearchMqConstants.ES_ROUTING_DELETE, contentSyncMessage);
+                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
                 });
             }
         }
@@ -282,6 +283,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setPhone(phone);
         user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
         save(user);
+
+        // 初始化对应的 UserInfo
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId(user.getId());
+        userInfo.setFans(0);
+        userInfo.setFollowee(0);
+        userInfo.setLiked(0);
+        userInfo.setCreateTime(DateUtils.getNowDate());
+        userInfoService.save(userInfo);
+
         return user;
     }
 
@@ -413,27 +424,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Stats getStats(Long userId) {
         //使用线程池＋future来实现
-        CountDownLatch countDownLatch = new CountDownLatch(7);
-        //获取粉丝数
-        Future<Integer> fanCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询粉丝数",Thread.currentThread().getName());
-            FollowDTO followDTO=new FollowDTO();
-            followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
-            followDTO.setSourceId(userId);
-            Integer fanCount = remoteFollowService.getFanCount(followDTO);
-            countDownLatch.countDown();
-            return fanCount;
-        });
-        //获取关注数
-        Future<Integer> followCountFuture = executorService.submit(() -> {
-            log.info("线程：{}开始查询关注数",Thread.currentThread().getName());
-            FollowDTO followDTO=new FollowDTO();
-            followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
-            followDTO.setUserId(userId);
-            Integer followCount = remoteFollowService.getFollowCount(followDTO);
-            countDownLatch.countDown();
-            return followCount;
-        });
+        CountDownLatch countDownLatch = new CountDownLatch(5);
         // 当前用户
         AppLoginUser user = UserContextHolder.getUser();
         // 获取共同关注数
@@ -466,32 +457,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             countDownLatch.countDown();
             return likeCount;
         });
-//        //获取发表评论数量
-//        Future<Integer> commentCountFuture = executorService.submit(() -> {
-//            log.info("线程：{}开始查询发表评论数",Thread.currentThread().getName());
-//            CommentDTO commentDTO = new CommentDTO();
-//            commentDTO.setUserId(userId);
-//            Integer commentCount = remoteCommentService.getCommentCount(commentDTO);
-//            countDownLatch.countDown();
-//            return commentCount;
-//        });
-//        //获取订单数量
-//        Future<Integer> orderCountFuture = executorService.submit(() -> {
-//            log.info("线程：{}开始查询订单数",Thread.currentThread().getName());
-//            Integer orderCount =  remoteOrderService.getOrderCount(userId);
-//            countDownLatch.countDown();
-//            return orderCount;
-//        });
-//        //获取关注店铺数量
-//        Future<Integer> followShopCountFuture = executorService.submit(() -> {
-//            log.info("线程：{}开始查询收藏数",Thread.currentThread().getName());
-//            FollowDTO followDTO=new FollowDTO();
-//            followDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
-//            followDTO.setUserId(userId);
-//            Integer collectCount = remoteFollowService.getFollowCount(followDTO);
-//            countDownLatch.countDown();
-//            return collectCount;
-//        });
         //获取用户点赞博客数
         Future<Integer> blogLikeCountFuture = executorService.submit(() -> {
             LikeDTO likeDTO=new LikeDTO();
@@ -514,19 +479,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             log.info("开始获取用户统计信息");
             countDownLatch.await();
             log.info("获取用户统计信息结束");
-            Stats stats= Stats.builder()
+            return Stats.builder()
                     .blogCount(blogCountFuture.get())
-                    .followCount(66)
                     .commonFollowCount(commonFollowCountFuture.get())
-                    .fansCount(10000000)
                     .likeCount(likeCountFuture.get())
-//                    .commentCount(commentCountFuture.get())
-//                    .orderCount(orderCountFuture.get())
-//                    .followShopCount(followShopCountFuture.get())
                     .blogLikeCount(blogLikeCountFuture.get())
                     .blogStarCount(blogStarCountFuture.get())
                     .build();
-            return stats;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -660,7 +619,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         request.setType(GlobalBizTypeEnum.USER.getCode());
         
         // 发送rabbitmq消息数据插入es
-        mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_EXCHANGE, SearchMqConstants.ES_ROUTING_BATCH_INSERT, request);
+        mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_BATCH_INSERT_ROUTING_KEY, request);
     }
 
     /**

@@ -46,14 +46,14 @@ public class ProductListener {
      */
     @RabbitListener(
             bindings = @QueueBinding(
-                    value = @Queue(name = ProductMqConstants.DEDUCT_STOCK_QUEUE, declare = "true",
+                    value = @Queue(name = ProductMqConstants.PRODUCT_STOCK_DEDUCT_QUEUE, declare = "true",
                             arguments = {
-                                    @Argument(name = "x-dead-letter-exchange", value = ProductMqConstants.PRODUCT_DEAD_LETTER_EXCHANGE_NAME),
-                                    @Argument(name = "x-dead-letter-routing-key", value = ProductMqConstants.PRODUCT_DEAD_LETTER_ROUTING)
+                                    @Argument(name = "x-dead-letter-exchange", value = ProductMqConstants.PRODUCT_DLX_EXCHANGE),
+                                    @Argument(name = "x-dead-letter-routing-key", value = ProductMqConstants.PRODUCT_DLQ_ROUTING_KEY)
                             }
                     ),
-                    exchange = @Exchange(name = ProductMqConstants.DEDUCT_STOCK_EXCHANGE, type = ExchangeTypes.DIRECT),
-                    key = ProductMqConstants.DEDUCT_STOCK_ROUTING
+                    exchange = @Exchange(name = ProductMqConstants.PRODUCT_STOCK_EXCHANGE, type = ExchangeTypes.DIRECT),
+                    key = ProductMqConstants.PRODUCT_STOCK_DEDUCT_ROUTING_KEY
             ),
             containerFactory = "rabbitListenerContainerFactory" 
             // 依赖于 bootstrap.yml 中的 batch-enabled: true
@@ -119,8 +119,8 @@ public class ProductListener {
                     for (Long failedOrderId : failedOrderIds) {
                         log.warn("发送恢复订单请求。 订单：{}", failedOrderId);
                         mqMessageSendUtils.sendMqMessage(
-                                OrderMqConstants.ORDER_CANCEL_EXCHANGE_NAME,
-                                OrderMqConstants.ORDER_CANCEL_ROUTING,
+                                OrderMqConstants.ORDER_CANCEL_EXCHANGE,
+                                OrderMqConstants.ORDER_CANCEL_ROUTING_KEY,
                                 failedOrderId,
                                 0
                         );
@@ -143,9 +143,9 @@ public class ProductListener {
      * 监听处理商品各种原因导致的死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = ProductMqConstants.PRODUCT_DEAD_LETTER_QUEUE, durable = "true"),
-            exchange = @Exchange(value = ProductMqConstants.PRODUCT_DEAD_LETTER_EXCHANGE_NAME),
-            key = ProductMqConstants.PRODUCT_DEAD_LETTER_ROUTING
+            value = @Queue(value = ProductMqConstants.PRODUCT_DLQ_QUEUE, durable = "true"),
+            exchange = @Exchange(value = ProductMqConstants.PRODUCT_DLX_EXCHANGE),
+            key = ProductMqConstants.PRODUCT_DLQ_ROUTING_KEY
     ))
     public void handleDeadLetter(Message message, Channel channel, @org.springframework.messaging.handler.annotation.Header(org.springframework.amqp.support.AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         log.error("商品死信队列收到无法处理的消息体，可能是重试耗尽");

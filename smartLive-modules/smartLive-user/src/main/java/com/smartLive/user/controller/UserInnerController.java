@@ -92,4 +92,20 @@ public class UserInnerController extends BaseController
     Boolean updateFolloweeCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return userInfoService.updateFolloweeCountBatch(updateMap);
     }
+
+    /**
+     * 批量更新用户被点赞数
+     */
+    @PostMapping("/updateUserLikedBatch")
+    Boolean updateUserLikedBatch(@RequestBody Map<Long, Integer> updateMap){
+        return userInfoService.updateUserLikedBatch(updateMap);
+    }
+
+    /**
+     * 获取用户被点赞数
+     */
+    @GetMapping("/getUserLikedCount")
+    Integer getUserLikedCount(@RequestParam("userId") Long userId){
+        return userInfoService.getUserLikedCount(userId);
+    }
 }

@@ -78,4 +78,14 @@ public interface IUserInfoService extends IService<UserInfo> {
      * Batch update user followee count.
      */
     Boolean updateFolloweeCountBatch(Map<Long, Integer> updateMap);
+
+    /**
+     * 批量更新用户被点赞数
+     */
+    Boolean updateUserLikedBatch(Map<Long, Integer> updateMap);
+
+    /**
+     * 获取用户被点赞数
+     */
+    Integer getUserLikedCount(Long userId);
 }

@@ -533,7 +533,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             FollowStrategy strategy = followStrategyFactory.getStrategy(follow.getSourceType());
             followCount = strategy.getFollowCount(follow.getUserId());
             // 3. 源表也查不到，fallback 到 follow 表 COUNT
-            if (followCount == null) {
+            if (followCount == null||followCount == 0) {
                 followCount = query().eq("source_type", follow.getSourceType()).eq("user_id", follow.getUserId()).count().intValue();
             }
             // 回写 Redis 缓存
@@ -560,7 +560,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             FollowStrategy strategy = followStrategyFactory.getStrategy(follow.getSourceType());
             fansCount = strategy.getFanCount(follow.getSourceId());
             // 3. 源表也查不到，fallback 到 follow 表 COUNT
-            if (fansCount == null) {
+            if (fansCount == null||fansCount == 0) {
                 fansCount = query().eq("source_type", follow.getSourceType()).eq("source_id", follow.getSourceId()).count().intValue();
             }
             // 回写 Redis 缓存

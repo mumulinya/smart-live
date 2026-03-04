@@ -132,7 +132,7 @@ public class SessionChatConsumer {
 
             // 3. 直接发送 Map 对象，由 MessageConverter 处理序列化
             // 不要手动序列化 mqMap，否则会导致双重序列化，接收端解析失败
-            mqMessageSendUtils.sendMqMessage(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMap);
+            mqMessageSendUtils.sendMqMessage(ChatMqConstants.CHAT_DIRECT_EXCHANGE, "im.push.user", mqMap);
 
         } catch (Exception e) {
             log.error("发送MQ推送失败", e);

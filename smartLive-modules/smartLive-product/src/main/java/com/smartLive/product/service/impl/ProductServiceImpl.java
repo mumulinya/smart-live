@@ -187,8 +187,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .action(ItemActionType.NEW_ITEM.getCode())
                 .build();
         mqMessageSendUtils.sendMqMessage(
-                InteractionMqConstants.INTERACT_FEED_EXCHANGE_NAME,
-                InteractionMqConstants.INTERACT_FEED_ROUTING,
+                InteractionMqConstants.INTERACT_FEED_EXCHANGE,
+                InteractionMqConstants.INTERACT_FEED_ROUTING_KEY,
                 feedEventMessage);
     }
     /**
@@ -210,8 +210,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .action(itemActionType.getCode())
                 .build();
         mqMessageSendUtils.sendMqMessage(
-                InteractionMqConstants.INTERACT_FEED_EXCHANGE_NAME,
-                InteractionMqConstants.INTERACT_FEED_ROUTING,
+                InteractionMqConstants.INTERACT_FEED_EXCHANGE,
+                InteractionMqConstants.INTERACT_FEED_ROUTING_KEY,
                 feedEventMessage);
     }
 
@@ -296,9 +296,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                     contentSyncMessage.setIndexName(EsIndexNameConstants.PRODUCT_INDEX_NAME); // KEEP VOUCHER INDEX
                     contentSyncMessage.setType(GlobalBizTypeEnum.PRODUCT.getCode()); // KEEP VOUCHER
                     // 发起rabbitMq信息删除es数据
-                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_EXCHANGE, SearchMqConstants.ES_ROUTING_DELETE, contentSyncMessage);
+                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
                     // 发起rabbitmq信息删除milvus数据
-                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_EXCHANGE, SearchMqConstants.MILVUS_ROUTING_DELETE, contentSyncMessage);
+                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
                 });
             }
         }
@@ -385,7 +385,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .auditContent(BeanUtil.beanToMap(product))
                 .createTime(product.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
 
     /**
@@ -747,9 +747,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         request.setType(GlobalBizTypeEnum.PRODUCT.getCode());
         
         // 发送rabbitmq消息数据插入es
-        mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_EXCHANGE, SearchMqConstants.ES_ROUTING_BATCH_INSERT, request);
+        mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_BATCH_INSERT_ROUTING_KEY, request);
         // 发送rabbitmq消息数据插入Milvus
-        mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_EXCHANGE, SearchMqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
+        mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_BATCH_INSERT_ROUTING_KEY, request);
     }
 
     /**

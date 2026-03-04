@@ -135,7 +135,7 @@ public class MqMessageSendUtils {
         } else {
             log.error("❌ 消息发送彻底失败，执行本地补偿和持久化。ID: {}", cd.getId());
             // TODO: 判断这个消息是否是秒杀订单消息
-            if (cd.getRoutingKey().equals(OrderMqConstants.ORDER_SECKILL_ROUTING)) {
+            if (cd.getRoutingKey().equals(OrderMqConstants.ORDER_SECKILL_ROUTING_KEY)) {
                 log.error("订单消息发送失败");
             }
         }

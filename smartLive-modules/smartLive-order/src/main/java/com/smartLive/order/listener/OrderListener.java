@@ -37,14 +37,14 @@ public class OrderListener {
                     declare = "true",
                     //配置死信交换机和死信路由键
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.ORDER_DEAD_LETTER_ROUTING),
+                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.ORDER_DLX_EXCHANGE),
+                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.ORDER_DLQ_ROUTING_KEY),
                             //设置惰性队列
                             @Argument(name = "x-queue-mode", value = "lazy")
                     }
             ),
-            exchange = @Exchange(name = OrderMqConstants.ORDER_EXCHANGE_NAME),
-            key = OrderMqConstants.ORDER_SECKILL_ROUTING
+            exchange = @Exchange(name = OrderMqConstants.ORDER_DIRECT_EXCHANGE),
+            key = OrderMqConstants.ORDER_SECKILL_ROUTING_KEY
     ))
     public void handleSeckillOrder(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (order == null || order.getId() == null) {
@@ -93,12 +93,12 @@ public class OrderListener {
                     declare = "true",
                     //配置死信交换机和死信路由键
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.ORDER_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.ORDER_DLX_EXCHANGE),
+                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.ORDER_DLQ_ROUTING_KEY)
                     }
             ),
-            exchange = @Exchange(name = OrderMqConstants.ORDER_EXCHANGE_NAME),
-            key = OrderMqConstants.ORDER_BUY_ROUTING
+            exchange = @Exchange(name = OrderMqConstants.ORDER_DIRECT_EXCHANGE),
+            key = OrderMqConstants.ORDER_BUY_ROUTING_KEY
     ))
     public void handleBuyOrder(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (order == null || order.getId() == null) {
@@ -144,7 +144,7 @@ public class OrderListener {
             redisService.deleteObject("order:status:" + order.getId());
 
             //发送延迟消息，检测订单支付状态
-            mqMessageSendUtils.sendMqMessage(OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME, OrderMqConstants.ORDER_DELAY_ROUTING, order.getId(), (OrderMqConstants.DELAY_TIME));
+            mqMessageSendUtils.sendMqMessage(OrderMqConstants.ORDER_DELAY_EXCHANGE, OrderMqConstants.ORDER_DELAY_ROUTING_KEY, order.getId(), (OrderMqConstants.DELAY_TIME));
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
             log.error("[MQ幂等] 普通订单处理异常，清理幂等锁并触发重试, orderId={}, key={}", order.getId(), idempotentKey, e);
@@ -158,12 +158,12 @@ public class OrderListener {
      */
     @RabbitListener(bindings=@QueueBinding(
             value = @Queue(name = OrderMqConstants.ORDER_DELAY_QUEUE),
-            exchange = @Exchange(name = OrderMqConstants.ORDER_DELAY_EXCHANGE_NAME,
+            exchange = @Exchange(name = OrderMqConstants.ORDER_DELAY_EXCHANGE,
                     type = "x-delayed-message", // 使用 x-delayed-message 类型交换机
                     durable = "true",
                     arguments = @Argument(name = "x-delayed-type", value = "direct") // 指定路由类型
                     ),
-            key = OrderMqConstants.ORDER_DELAY_ROUTING
+            key = OrderMqConstants.ORDER_DELAY_ROUTING_KEY
     ))
     public void handlePayOrder(Long id, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (id == null) {
@@ -216,12 +216,12 @@ public class OrderListener {
     @RabbitListener(bindings=@QueueBinding(
             value = @Queue(name = OrderMqConstants.ORDER_CANCEL_QUEUE, declare = "true",
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.ORDER_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-exchange", value = OrderMqConstants.ORDER_DLX_EXCHANGE),
+                            @Argument(name = "x-dead-letter-routing-key", value = OrderMqConstants.ORDER_DLQ_ROUTING_KEY)
                     }
             ),
-            exchange = @Exchange(name = OrderMqConstants.ORDER_CANCEL_EXCHANGE_NAME),
-            key = OrderMqConstants.ORDER_CANCEL_ROUTING
+            exchange = @Exchange(name = OrderMqConstants.ORDER_CANCEL_EXCHANGE),
+            key = OrderMqConstants.ORDER_CANCEL_ROUTING_KEY
     ))
     public void handleCancelOrder(Long orderId, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (orderId == null) {
@@ -268,9 +268,9 @@ public class OrderListener {
      * 监听死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = OrderMqConstants.ORDER_DEAD_LETTER_QUEUE, durable = "true"), // 死信队列名
-            exchange = @Exchange(value = OrderMqConstants.ORDER_DEAD_LETTER_EXCHANGE_NAME),
-            key = OrderMqConstants.ORDER_DEAD_LETTER_ROUTING
+            value = @Queue(value = OrderMqConstants.ORDER_DLQ_QUEUE, durable = "true"), // 死信队列名
+            exchange = @Exchange(value = OrderMqConstants.ORDER_DLX_EXCHANGE),
+            key = OrderMqConstants.ORDER_DLQ_ROUTING_KEY
     ))
     public void handleDeadLetter(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         log.error("死信队列收到订单信息为: {}", order);

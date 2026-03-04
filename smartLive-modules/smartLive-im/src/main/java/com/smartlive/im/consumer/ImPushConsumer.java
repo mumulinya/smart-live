@@ -46,7 +46,7 @@ public class ImPushConsumer {
                             @Argument(name = "x-dead-letter-routing-key", value = AiAuditMqConstants.DEAD_LETTER_ROUTING)
                     }
             ),
-            exchange = @Exchange(name = ChatMqConstants.CHAT_EXCHANGE_NAME, type = "topic"),
+            exchange = @Exchange(name = ChatMqConstants.CHAT_DIRECT_EXCHANGE, type = "topic"),
             key = "im.push.user"
     ))
     public void handlePushMessage(Map<String, Object> map, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {

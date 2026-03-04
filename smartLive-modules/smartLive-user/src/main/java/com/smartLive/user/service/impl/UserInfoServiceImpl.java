@@ -140,7 +140,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
                     .auditContent(BeanUtil.beanToMap(userVO))
                     .createTime(userById.getCreateTime())
                     .build();
-            mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+            mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
         }
         return update;
     }
@@ -294,7 +294,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         if (updateMap == null || updateMap.isEmpty()) {
             return false;
         }
-        batchUpdate(updateMap, true);
+        batchUpdate(updateMap, "fans");
         updateMap.keySet().forEach(userService::clearUserCache);
         return true;
     }
@@ -304,22 +304,40 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         if (updateMap == null || updateMap.isEmpty()) {
             return false;
         }
-        batchUpdate(updateMap, false);
+        batchUpdate(updateMap, "followee");
         updateMap.keySet().forEach(userService::clearUserCache);
         return true;
     }
 
-    private void batchUpdate(Map<Long, Integer> updateMap, boolean fans) {
+    @Override
+    public Boolean updateUserLikedBatch(Map<Long, Integer> updateMap) {
+        if (updateMap == null || updateMap.isEmpty()) {
+            return false;
+        }
+        batchUpdate(updateMap, "liked");
+        updateMap.keySet().forEach(userService::clearUserCache);
+        return true;
+    }
+
+    @Override
+    public Integer getUserLikedCount(Long userId) {
+        UserInfoVO userInfo = getByUserId(userId);
+        return userInfo != null && userInfo.getLiked() != null ? userInfo.getLiked() : 0;
+    }
+
+    private void batchUpdate(Map<Long, Integer> updateMap, String type) {
         List<Long> keys = new ArrayList<>(updateMap.keySet());
         int batchSize = 500;
         for (int i = 0; i < keys.size(); i += batchSize) {
             int end = Math.min(i + batchSize, keys.size());
             Map<Long, Integer> batchMap = keys.subList(i, end).stream()
                     .collect(Collectors.toMap(k -> k, updateMap::get));
-            if (fans) {
+            if ("fans".equals(type)) {
                 baseMapper.updateFansCountBatch(batchMap);
-            } else {
+            } else if ("followee".equals(type)) {
                 baseMapper.updateFolloweeCountBatch(batchMap);
+            } else if ("liked".equals(type)) {
+                baseMapper.updateUserLikedBatch(batchMap);
             }
         }
     }

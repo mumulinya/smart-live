@@ -38,14 +38,14 @@ public class MilvusSyncListener {
      * 监听单条数据插入或更新请求，同步到 Milvus 向量数据库
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_INSERT_QUEUE, declare = "true",
+            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_SYNC_INSERT_QUEUE, declare = "true",
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DLX_EXCHANGE),
+                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DLQ_ROUTING_KEY)
                     }
             ),
-                    exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
-                    key = SearchMqConstants.MILVUS_ROUTING_INSERT)
+                    exchange = @Exchange(name = SearchMqConstants.MILVUS_SYNC_EXCHANGE),
+                    key = SearchMqConstants.MILVUS_SYNC_INSERT_ROUTING_KEY)
     })
     public void handleSingleInsert(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getId() == null) {
@@ -91,14 +91,14 @@ public class MilvusSyncListener {
      * 监听批量数据插入请求，批量同步到 Milvus 向量数据库
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_BATCH_INSERT_QUEUE, declare = "true",
+            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_SYNC_BATCH_INSERT_QUEUE, declare = "true",
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DLX_EXCHANGE),
+                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DLQ_ROUTING_KEY)
                     }
             ),
-                    exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
-                    key = SearchMqConstants.MILVUS_ROUTING_BATCH_INSERT)
+                    exchange = @Exchange(name = SearchMqConstants.MILVUS_SYNC_EXCHANGE),
+                    key = SearchMqConstants.MILVUS_SYNC_BATCH_INSERT_ROUTING_KEY)
     })
     public void handleBatchInsert(ContentBatchSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getData() == null) {
@@ -145,14 +145,14 @@ public class MilvusSyncListener {
      * 监听数据删除请求，从 Milvus 向量数据库中删除对应的数据
      */
     @RabbitListener(bindings = {
-            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_DELETE_QUEUE, declare = "true",
+            @QueueBinding(value = @Queue(name = SearchMqConstants.MILVUS_SYNC_DELETE_QUEUE, declare = "true",
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-exchange", value = SearchMqConstants.SEARCH_DLX_EXCHANGE),
+                            @Argument(name = "x-dead-letter-routing-key", value = SearchMqConstants.SEARCH_DLQ_ROUTING_KEY)
                     }
             ),
-                    exchange = @Exchange(name = SearchMqConstants.MILVUS_EXCHANGE),
-                    key = SearchMqConstants.MILVUS_ROUTING_DELETE)
+                    exchange = @Exchange(name = SearchMqConstants.MILVUS_SYNC_EXCHANGE),
+                    key = SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY)
     })
     public void handleDelete(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getId() == null) {
@@ -202,9 +202,9 @@ public class MilvusSyncListener {
      * 监听由于 Milvus 同步异常等原因进入的死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = SearchMqConstants.SEARCH_DEAD_LETTER_QUEUE, durable = "true"),
-            exchange = @Exchange(value = SearchMqConstants.SEARCH_DEAD_LETTER_EXCHANGE_NAME),
-            key = SearchMqConstants.SEARCH_DEAD_LETTER_ROUTING
+            value = @Queue(value = SearchMqConstants.SEARCH_DLQ_QUEUE, durable = "true"),
+            exchange = @Exchange(value = SearchMqConstants.SEARCH_DLX_EXCHANGE),
+            key = SearchMqConstants.SEARCH_DLQ_ROUTING_KEY
     ))
     public void handleMilvusDeadLetter(org.springframework.amqp.core.Message message) {
         log.error("milvus dead letter received: {}", new String(message.getBody(), java.nio.charset.StandardCharsets.UTF_8));

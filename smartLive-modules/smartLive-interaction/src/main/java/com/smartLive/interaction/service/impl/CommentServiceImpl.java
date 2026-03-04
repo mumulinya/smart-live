@@ -66,11 +66,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private CommentMapper commentMapper;
     @Autowired
     private RemoteAppUserService remoteAppUserService;
-    @Autowired
-    private RemoteBlogService remoteBlogService;
-    @Autowired
-    private RemoteShopService remoteShopService;
-    
+
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
@@ -331,7 +327,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .auditContent(BeanUtil.beanToMap(auditCommentBO))
                 .createTime(comment.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
 
     /**
@@ -459,16 +455,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 c.setNickName(owner.getNickName());
                 c.setUserIcon(owner.getIcon());
             }
-            if (GlobalBizTypeEnum.BLOG.getCode().equals(c.getSourceType())) {
-                BlogDTO blog = remoteBlogService.getBlogById(c.getSourceId());
-                if (blog != null) {
-                    c.setSourceName(blog.getTitle());
-                }
-            } else if (GlobalBizTypeEnum.SHOP.getCode().equals(c.getSourceType())) {
-                ShopDTO shop = remoteShopService.getShopById(c.getSourceId());
-                if (shop != null) {
-                    c.setSourceName(shop.getName());
-                    c.setShopImages(shop.getImages());
+
+            ResourceStrategy strategy = resourceStrategyFactory.getStrategy(c.getSourceType());
+            if (strategy != null) {
+                HashMap<String, String> content = strategy.getResourceContentById(c.getSourceId());
+                if (content != null) {
+                    c.setSourceName(content.get("title"));
+                    c.setShopImages(content.get("images"));
                 }
             }
         }
@@ -481,14 +474,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public List<Comment> getCommentList() {
         List<Comment> list = query().list();
         list.stream().forEach(c -> {
-            if (c.getSourceType() == 1) {
-                BlogDTO blog = remoteBlogService.getBlogById(c.getSourceId());
-                if ((blog.getTitle() != null))
-                    c.setSourceName(blog.getTitle());
-            } else if (c.getSourceType() == 2) {
-                ShopDTO shop = remoteShopService.getShopById(c.getSourceId());
-                if ((shop != null))
-                    c.setSourceName(shop.getName());
+            ResourceStrategy strategy = resourceStrategyFactory.getStrategy(c.getSourceType());
+            if (strategy != null) {
+                HashMap<String, String> content = strategy.getResourceContentById(c.getSourceId());
+                if (content != null) {
+                    c.setSourceName(content.get("title"));
+                    c.setShopImages(content.get("images"));
+                }
             }
         });
         return list;
@@ -592,6 +584,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         for (Long id : sourceIdList) {
             Comment comment = commentMap.get(id);
             if (comment != null) {
+                ResourceStrategy strategy = resourceStrategyFactory.getStrategy(comment.getSourceType());
+                if (strategy != null) {
+                    HashMap<String, String> content = strategy.getResourceContentById(comment.getSourceId());
+                    if (content != null) {
+                        comment.setSourceName(content.get("title"));
+                    }
+                }
                 orderedList.add(comment);
             }
         }
@@ -733,11 +732,15 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public Comment getCommentById(Long id) {
         Comment comment = getById(id);
         if (comment != null) {
-            ShopDTO shop = remoteShopService.getShopById(comment.getSourceId());
-            if (shop != null) {
-                comment.setSourceName(shop.getName());
-                comment.setShopImages(shop.getImages());
+            ResourceStrategy strategy = resourceStrategyFactory.getStrategy(comment.getSourceType());
+            if (strategy != null) {
+                HashMap<String, String> content = strategy.getResourceContentById(comment.getSourceId());
+                if (content != null) {
+                    comment.setSourceName(content.get("title"));
+                    comment.setShopImages(content.get("images"));
+                }
             }
+
             UserDTO userDTO = remoteAppUserService.queryUserById(comment.getUserId());
             if (userDTO != null) {
                 comment.setNickName(userDTO.getNickName());

@@ -57,6 +57,10 @@ public interface InteractionRedisKeyConstants {
         String REVIEW_LIKED_COUNT = "review:liked:count:";
         String REVIEW_LIKED_DIRTY = "review:liked:dirty:";
 
+        String USER_LIKED = "user:liked:";
+        String USER_LIKED_COUNT = "user:liked:count:";
+        String USER_LIKED_DIRTY = "user:liked:dirty:";
+
         // --- 反向索引 (用户个人的点赞历史) ---
         String USER_LIKED_BLOG = "user:liked:blog:";
         String USER_LIKED_COMMENT = "user:liked:comment:";

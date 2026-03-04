@@ -88,8 +88,8 @@ public class SeckillPurchaseStrategy implements PurchaseStrategy {
             executorService.submit(() -> {
                 log.info("线程{}创建秒杀订单id为：{}", Thread.currentThread().getName(), orderId);
                 mqMessageSendUtils.sendMqMessage(
-                        OrderMqConstants.ORDER_EXCHANGE_NAME,
-                        OrderMqConstants.ORDER_SECKILL_ROUTING,
+                        OrderMqConstants.ORDER_DIRECT_EXCHANGE,
+                        OrderMqConstants.ORDER_SECKILL_ROUTING_KEY,
                         voucherOrder,
                         3);
             });

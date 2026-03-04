@@ -43,6 +43,10 @@ public class UserInfo extends BaseEntity implements Serializable
     @Excel(name = "关注的人的数量")
     private Integer followee;
 
+    /** 关注的人的数量 */
+    @Excel(name = "点赞数")
+    private Integer liked;
+
     /** 性别，0：男，1：女 */
     @Excel(name = "性别，0：男，1：女")
     private Integer gender;

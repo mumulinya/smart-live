@@ -252,7 +252,7 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
             // 2. 计数器不存在，从源数据表获取（如 blog.stared、shop.star）
             starCount = starStrategyFactory.getStrategy(star.getSourceType()).getStarCount(star.getSourceId());
             // 3. 源表也查不到，fallback 到 star 表 COUNT
-            if (starCount == null) {
+            if (starCount == null||starCount == 0) {
                 starCount = query().eq("source_type", star.getSourceType()).eq("source_id", star.getSourceId()).count().intValue();
             }
             // 回写 Redis 缓存

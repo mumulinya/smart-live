@@ -7,6 +7,7 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.core.enums.FollowTypeEnum;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.LikeTypeEnum;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
@@ -105,6 +106,8 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                 redisService.removeCacheZSetObject(userLikeKey, like.getSourceId().toString());
                 redisService.decrementCacheValue(likeCountKey);
                 redisService.setCacheSet(likeDirtyKey, like.getSourceId().toString());
+                
+                updateAuthorLikeCount(like, false);
             }
         } else {
             like.setUserId(userId);
@@ -116,10 +119,57 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
                 redisService.incrementCacheValue(likeCountKey);
                 redisService.setCacheSet(likeDirtyKey, like.getSourceId().toString());
                 likeStrategy.syncUserResource(userId, like.getSourceId());
+                
+                updateAuthorLikeCount(like, true);
             }
         }
         return true;
     }
+
+    private void updateAuthorLikeCount(Like like, boolean isIncrement) {
+        // 如果是评论被点赞，这里不计入用户的总点赞数
+        if (GlobalBizTypeEnum.COMMENT.getCode().equals(like.getSourceType())) {
+            return;
+        }
+
+        ResourceTypeEnum resourceTypeEnum = ResourceTypeEnum.getByCode(like.getSourceType());
+        if (resourceTypeEnum == null) return;
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(resourceTypeEnum.getCode());
+        if (resourceStrategy == null) return;
+        Object resource = resourceStrategy.getResourceById(like.getSourceId());
+        if (resource == null) return;
+        Long authorId = resourceStrategy.getAuthorId(resource);
+        if (authorId == null) return;
+
+        // 确保 Redis 中有基础值
+        queryUserLikeCount(authorId);
+
+        String userLikedCountKey = LikeTypeEnum.USER_LIKE.getLikedCountKeyPrefix() + authorId;
+        String userLikedDirtyKey = LikeTypeEnum.USER_LIKE.getLikeDirtyKeyPrefix();
+        if (isIncrement) {
+            redisService.incrementCacheValue(userLikedCountKey);
+        } else {
+            redisService.decrementCacheValue(userLikedCountKey);
+        }
+        redisService.setCacheSet(userLikedDirtyKey, authorId.toString());
+    }
+
+    private Integer queryUserLikeCount(Long authorId) {
+        String userLikedCountKey = LikeTypeEnum.USER_LIKE.getLikedCountKeyPrefix() + authorId;
+        Integer likeCount = redisService.getCacheObject(userLikedCountKey);
+        if (likeCount == null) {
+            LikeStrategy userLikeStrategy = likeStrategyFactory.getStrategy(LikeTypeEnum.USER_LIKE.getCode());
+            if (userLikeStrategy != null) {
+                likeCount = userLikeStrategy.getLikeCount(authorId);
+            }
+            if (likeCount == null) {
+                likeCount = 0;
+            }
+            redisService.setCacheObject(userLikedCountKey, likeCount);
+        }
+        return likeCount;
+    }
+
     /**
      * 获取点赞数
      * 优先级: Redis 独立计数器 → 源数据表(策略) → like 表 COUNT
@@ -134,7 +184,7 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
             // 2. 计数器不存在，从源数据表获取（如 blog.liked）
             likeCount = likeStrategyFactory.getStrategy(like.getSourceType()).getLikeCount(like.getSourceId());
             // 3. 源表也查不到，fallback 到 like 表 COUNT
-            if (likeCount == null) {
+            if (likeCount == null|| likeCount == 0) {
                 likeCount = query().eq("source_type", like.getSourceType()).eq("source_id", like.getSourceId()).count().intValue();
             }
             // 回写 Redis 缓存

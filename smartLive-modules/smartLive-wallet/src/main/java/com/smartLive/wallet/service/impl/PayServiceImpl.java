@@ -128,8 +128,8 @@ public class PayServiceImpl implements IPayService {
 
         // 5. 发送延迟消息，超时自动取消支付
         mqMessageSendUtils.sendMqMessage(
-                OrderMqConstants.PAY_DELAY_EXCHANGE_NAME,
-                OrderMqConstants.PAY_DELAY_ROUTING,
+                OrderMqConstants.PAY_DELAY_EXCHANGE,
+                OrderMqConstants.PAY_DELAY_ROUTING_KEY,
                 record.getId(),
                 OrderMqConstants.PAY_DELAY_TIME);
         log.info("已发送支付超时延迟消息, paySn={}, recordId={}, delay={}ms", paySn, record.getId(), OrderMqConstants.PAY_DELAY_TIME);

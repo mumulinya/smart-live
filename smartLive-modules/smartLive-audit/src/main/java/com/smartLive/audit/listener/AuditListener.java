@@ -1,4 +1,4 @@
-﻿package com.smartLive.audit.listener;
+package com.smartLive.audit.listener;
 
 import com.rabbitmq.client.Channel;
 import com.smartLive.audit.service.IAuditService;
@@ -36,11 +36,11 @@ public class AuditListener {
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(name = AiAuditMqConstants.AUDIT_QUEUE, declare = "true",
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = AiAuditMqConstants.AUDIT_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = AiAuditMqConstants.AUDIT_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-exchange", value = AiAuditMqConstants.AUDIT_DLX_EXCHANGE),
+                            @Argument(name = "x-dead-letter-routing-key", value = AiAuditMqConstants.AUDIT_DLQ_ROUTING_KEY)
                     }
             ),
-            exchange = @Exchange(name = AiAuditMqConstants.AUDIT_EXCHANGE_NAME, type = ExchangeTypes.TOPIC),
+            exchange = @Exchange(name = AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE, type = ExchangeTypes.TOPIC),
             key = AiAuditMqConstants.AUDIT_ROUTING_KEY
     ))
     public void handleAuditCreate(
@@ -82,9 +82,9 @@ public class AuditListener {
      * 监听审核机制异常导致的死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = AiAuditMqConstants.AUDIT_DEAD_LETTER_QUEUE, durable = "true"),
-            exchange = @Exchange(value = AiAuditMqConstants.AUDIT_DEAD_LETTER_EXCHANGE_NAME),
-            key = AiAuditMqConstants.AUDIT_DEAD_LETTER_ROUTING
+            value = @Queue(value = AiAuditMqConstants.AUDIT_DLQ_QUEUE, durable = "true"),
+            exchange = @Exchange(value = AiAuditMqConstants.AUDIT_DLX_EXCHANGE),
+            key = AiAuditMqConstants.AUDIT_DLQ_ROUTING_KEY
     ))
     public void handleAuditDeadLetter(AuditMessage auditMessage, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         log.error("audit dead letter received: {}", auditMessage);

@@ -35,6 +35,9 @@ public class UserInfoVO implements Serializable
     /** 关注的人的数量 */
     private Integer followee;
 
+    /** 获赞数量 */
+    private Integer liked;
+
     /** 性别，0：男，1：女 */
     private Integer gender;
 

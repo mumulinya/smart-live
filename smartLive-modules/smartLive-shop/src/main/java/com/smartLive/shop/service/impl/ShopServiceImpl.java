@@ -209,9 +209,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                     contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
                     contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
                     //发起rabbitMq信息删除es数据
-                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_EXCHANGE, SearchMqConstants.ES_ROUTING_DELETE, contentSyncMessage);
+                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
                     //发起rabbitmq信息删除milvus数据
-                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_EXCHANGE, SearchMqConstants.MILVUS_ROUTING_DELETE, contentSyncMessage);
+                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
                 });
             }
             Arrays.stream(ids).forEach(shopId -> {
@@ -655,7 +655,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 .auditContent(BeanUtil.beanToMap(shop))
                 .createTime(shop.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_EXCHANGE_NAME,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
     }
     /**
      * 清空指定分类的店铺列表缓存
@@ -756,9 +756,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         request.setType(GlobalBizTypeEnum.SHOP.getCode());
         
         // 发送rabbitmq消息数据插入es
-        mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_EXCHANGE, SearchMqConstants.ES_ROUTING_BATCH_INSERT, request);
+        mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_BATCH_INSERT_ROUTING_KEY, request);
         // 发送rabbitmq消息数据插入Milvus
-        mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_EXCHANGE, SearchMqConstants.MILVUS_ROUTING_BATCH_INSERT, request);
+        mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_BATCH_INSERT_ROUTING_KEY, request);
     }
 
     /**

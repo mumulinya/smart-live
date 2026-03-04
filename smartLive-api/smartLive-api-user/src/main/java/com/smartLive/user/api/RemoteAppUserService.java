@@ -65,4 +65,16 @@ public interface RemoteAppUserService {
      */
     @PostMapping("/inner/user/updateFolloweeCountBatch")
     Boolean updateFolloweeCountBatch(@RequestBody Map<Long, Integer> updateMap);
+
+    /**
+     * Batch update user liked count.
+     */
+    @PostMapping("/inner/user/updateUserLikedBatch")
+    Boolean updateUserLikedBatch(@RequestBody Map<Long, Integer> updateMap);
+
+    /**
+     * Get user liked count.
+     */
+    @GetMapping("/inner/user/getUserLikedCount")
+    Integer getUserLikedCount(@RequestParam("userId") Long userId);
 }

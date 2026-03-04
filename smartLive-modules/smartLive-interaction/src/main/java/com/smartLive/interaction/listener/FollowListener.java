@@ -1,4 +1,4 @@
-﻿package com.smartLive.interaction.listener;
+package com.smartLive.interaction.listener;
 
 import com.rabbitmq.client.Channel;
 import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
@@ -36,12 +36,12 @@ public class FollowListener {
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(name = InteractionMqConstants.INTERACT_FEED_QUEUE, declare = "true",
                     arguments = {
-                            @Argument(name = "x-dead-letter-exchange", value = InteractionMqConstants.INTERACTION_DEAD_LETTER_EXCHANGE_NAME),
-                            @Argument(name = "x-dead-letter-routing-key", value = InteractionMqConstants.INTERACTION_DEAD_LETTER_ROUTING)
+                            @Argument(name = "x-dead-letter-exchange", value = InteractionMqConstants.INTERACTION_DLX_EXCHANGE),
+                            @Argument(name = "x-dead-letter-routing-key", value = InteractionMqConstants.INTERACTION_DLQ_ROUTING_KEY)
                     }
             ),
-            exchange = @Exchange(name = InteractionMqConstants.INTERACT_FEED_EXCHANGE_NAME, type = ExchangeTypes.TOPIC),
-            key = InteractionMqConstants.INTERACT_FEED_ROUTING
+            exchange = @Exchange(name = InteractionMqConstants.INTERACT_FEED_EXCHANGE, type = ExchangeTypes.TOPIC),
+            key = InteractionMqConstants.INTERACT_FEED_ROUTING_KEY
     ))
     public void handleSendNormalToFollowers(
             FeedEventMessage feedEventMessage,
@@ -82,9 +82,9 @@ public class FollowListener {
      * 监听因为信箱推送等互动异常导致的死信队列
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = InteractionMqConstants.INTERACTION_DEAD_LETTER_QUEUE, durable = "true"),
-            exchange = @Exchange(value = InteractionMqConstants.INTERACTION_DEAD_LETTER_EXCHANGE_NAME, type = ExchangeTypes.DIRECT),
-            key = InteractionMqConstants.INTERACTION_DEAD_LETTER_ROUTING
+            value = @Queue(value = InteractionMqConstants.INTERACTION_DLQ_QUEUE, durable = "true"),
+            exchange = @Exchange(value = InteractionMqConstants.INTERACTION_DLX_EXCHANGE, type = ExchangeTypes.DIRECT),
+            key = InteractionMqConstants.INTERACTION_DLQ_ROUTING_KEY
     ))
     public void handleInteractionDeadLetter(org.springframework.amqp.core.Message message) {
         log.error("interaction dead letter received: {}", new String(message.getBody(), java.nio.charset.StandardCharsets.UTF_8));

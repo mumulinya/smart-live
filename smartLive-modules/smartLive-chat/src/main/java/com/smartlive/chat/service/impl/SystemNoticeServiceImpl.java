@@ -164,7 +164,7 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
                     "userId", userId,
                     "json", json
             );
-            mqMessageSendUtils.sendMqMessage(ChatMqConstants.CHAT_EXCHANGE_NAME, "im.push.user", mqMap);
+            mqMessageSendUtils.sendMqMessage(ChatMqConstants.CHAT_DIRECT_EXCHANGE, "im.push.user", mqMap);
         } catch (Exception e) {
             log.error("push system notice failed, userId: {}, noticeId: {}", userId, noticeVO.getNoticeId(), e);
         }

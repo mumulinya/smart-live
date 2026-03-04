@@ -213,7 +213,7 @@ public class NettyChatHandler extends SimpleChannelInboundHandler<TextWebSocketF
             String routingKey = ChatMqConstants.CHAT_MESSAGE_ROUTING + sessionId;
 
             mqMessageSendUtils.sendMqMessage(
-                ChatMqConstants.CHAT_EXCHANGE_NAME,
+                ChatMqConstants.CHAT_DIRECT_EXCHANGE,
                 routingKey,
                     messageEvent, // 发送 JSON 字符串
                  3

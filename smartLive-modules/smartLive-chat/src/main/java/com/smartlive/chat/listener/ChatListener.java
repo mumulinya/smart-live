@@ -46,7 +46,7 @@ public class ChatListener {
                             }
                     ),
                     exchange = @Exchange(
-                            value = ChatMqConstants.CHAT_EXCHANGE_NAME,
+                            value = ChatMqConstants.CHAT_DIRECT_EXCHANGE,
                             type = ExchangeTypes.TOPIC
                     ),
                     key = ChatMqConstants.CHAT_MESSAGE_ROUTING + "*"

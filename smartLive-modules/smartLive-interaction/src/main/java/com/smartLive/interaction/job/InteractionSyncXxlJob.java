@@ -1,4 +1,4 @@
-package com.smartLive.interaction.task;
+package com.smartLive.interaction.job;
 
 import com.smartLive.interaction.service.ISyncDataService;
 import com.xxl.job.core.biz.model.ReturnT;

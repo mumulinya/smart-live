@@ -1,4 +1,4 @@
-package com.smartLive.interaction.task;
+package com.smartLive.interaction.job;
 
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.interaction.service.IHotRankService;

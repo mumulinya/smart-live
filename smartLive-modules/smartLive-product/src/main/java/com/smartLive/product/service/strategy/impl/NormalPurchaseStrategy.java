@@ -54,8 +54,8 @@ public class NormalPurchaseStrategy implements PurchaseStrategy {
         executorService.submit(() -> {
             log.info("线程{}创建普通订单id为：{}", Thread.currentThread().getName(), orderId);
             mqMessageSendUtils.sendMqMessage(
-                    OrderMqConstants.ORDER_EXCHANGE_NAME,
-                    OrderMqConstants.ORDER_BUY_ROUTING,
+                    OrderMqConstants.ORDER_DIRECT_EXCHANGE,
+                    OrderMqConstants.ORDER_BUY_ROUTING_KEY,
                     voucherOrder,
                     3);
         });
