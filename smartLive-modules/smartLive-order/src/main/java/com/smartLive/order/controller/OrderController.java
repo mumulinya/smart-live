@@ -136,11 +136,11 @@ public class OrderController extends BaseController
     }
 
     /**
-     * 使用订单
+     * 使用订单 (核销)
      */
     @PostMapping("/use/{id}")
-    public Result use(@PathVariable("id") Long id) {
-        Integer use = orderService.use(id);
+    public Result use(@PathVariable("id") Long id, @RequestParam(value = "useShopId", required = false) Long useShopId) {
+        Integer use = orderService.use(id, useShopId);
         if(use>0){
             return Result.ok("使用成功");
         }

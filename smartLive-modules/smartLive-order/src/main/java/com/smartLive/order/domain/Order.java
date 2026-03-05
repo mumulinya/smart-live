@@ -92,6 +92,10 @@ public class Order extends BaseEntity implements Serializable
     @Excel(name = "核销时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date useTime;
 
+    /** 核销门店ID */
+    @Excel(name = "核销门店ID")
+    private Long useShopId;
+
     /** 退款时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "退款时间", width = 30, dateFormat = "yyyy-MM-dd")

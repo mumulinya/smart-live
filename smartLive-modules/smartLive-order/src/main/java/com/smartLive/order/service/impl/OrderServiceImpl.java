@@ -379,20 +379,23 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 使用订单
+     * 使用订单 (核销)
      *
-     * @param id
-     * @param
-     * @return
+     * @param id 订单ID
+     * @param useShopId 核销的门店ID
+     * @return 影响行数
      */
     @Override
-    public Integer use(Long id) {
+    public Integer use(Long id, Long useShopId) {
         Order order = getById(id);
         if(order==null){
             throw new BusinessException("订单不存在");
         }
         order.setUseTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.VERIFIED);
+        if (useShopId != null) {
+            order.setUseShopId(useShopId);
+        }
         int i = updateOrder(order);
         if (i > 0) {
             // 订单使用成功，奖励积分

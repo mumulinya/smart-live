@@ -25,8 +25,8 @@ public class AuditController extends BaseController {
     /**
      * 查询审核任务列表
      */
-    @PostMapping("/list")
-    public TableDataInfo list(@RequestBody AuditTask auditTask) {
+    @GetMapping("/list")
+    public TableDataInfo list(AuditTask auditTask) {
         startPage(); // 会从请求参数(pageNum, pageSize)中获取分页信息
         List<AuditTaskVO> list = auditService.selectAuditList(auditTask);
         return getDataTable(list);

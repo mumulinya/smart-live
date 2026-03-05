@@ -100,12 +100,12 @@ public interface IOrderService  extends IService<Order>
     Integer refund(Long id);
 
     /**
-     * 使用订单
-     * @param id
-     * @param
-     * @return
+     * 使用订单 (核销)
+     * @param id 订单ID
+     * @param useShopId 核销的门店ID
+     * @return 影响行数
      */
-    Integer use(Long id);
+    Integer use(Long id, Long useShopId);
 
     /**
      * 获取订单数量

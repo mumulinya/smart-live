@@ -102,6 +102,9 @@ public class OrderVO extends BaseEntity implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date useTime;
 
+    /** 核销门店ID */
+    private Long useShopId;
+
     /** 退款时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date refundTime;

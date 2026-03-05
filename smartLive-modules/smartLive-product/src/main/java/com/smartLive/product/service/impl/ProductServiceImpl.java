@@ -367,7 +367,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (products.isEmpty()) {
             return null;
         }
-        queryProductListShopMessage(products);
         return convertToProductVOList(products);
     }
 
@@ -480,47 +479,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 RedisConstants.CACHE_PRODUCT_TTL,
                 TimeUnit.MINUTES
         );
-        queryProductListShopMessage(productList);
         return productList;
     }
-    /**
-     * 批量查询商品列表的店铺信息
-     *
-     * @param productList 商品列表
-     */
-    private void queryProductListShopMessage(List<Product> productList) {
-        // 获取所有店铺的 ID (取第一个)
-        List<Long> distinctShopIds = productList.stream()
-                .map(Product::getShopId)
-                .filter(id -> id != null && !id.isEmpty())
-                .map(id -> Long.valueOf(id.split(",")[0]))
-                .distinct() // 核心：过滤掉重复的 shopId
-                .toList();
-        List<ShopDTO> shopList = remoteShopService.getShopList(distinctShopIds);
-        if (CollectionUtils.isEmpty(shopList)) {
-            log.error("店铺列表为空");
-            return;
-        }
-        // 将 shopList 转换成 Map，Key: shopId，Value: ShopDTO
-        Map<Long, ShopDTO> shopMap = shopList.stream()
-                .collect(Collectors.toMap(
-                        ShopDTO::getId,   // Key: 取店铺的 ID
-                        shop -> shop,     // Value: 取店铺对象本身 (也可以写成 Function.identity())
-                        (oldVal, newVal) -> oldVal // 兜底策略：如果万一有重复的 ID，保留第一个 (防止报错)
-                ));
-        if (!shopMap.isEmpty()) {
-            productList.forEach(product -> {
-                if (product.getShopId() != null && !product.getShopId().isEmpty()) {
-                    Long firstShopId = Long.valueOf(product.getShopId().split(",")[0]);
-                    ShopDTO shopDTO = shopMap.get(firstShopId);
-                    if (shopDTO != null) {
-                        product.setShopName(shopDTO.getName());
-                        product.setShopLogo(shopDTO.getShopLogo());
-                    }
-                }
-            });
-        }
-    }
+
 
     /**
      * 获取商品
@@ -624,7 +585,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             if (start >= finalDbList.size()) return Collections.emptyList();
 
             List<Product> pageList = finalDbList.subList(start, end);
-            queryProductListShopMessage(pageList);
             resultList = convertToProductVOList(pageList);
             
             // 此处走兜底，无实际 score，假分数
@@ -634,18 +594,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             return resultList;
         }
 
-        // 4. 有缓存的情况：拿到 ID 列表去获取详情
-        List<Product> productList = getProductListByIds(productIdList);
-        
-        // 5. 将获取到的 productList 重新按照 ZSet 中 ID 的排序进行恢复
-        Map<Long, Product> productMap = productList.stream()
-                .collect(Collectors.toMap(Product::getId, p -> p, (oldVal, newVal) -> oldVal));
-        List<Product> sortedList = productIdList.stream()
-                .map(productMap::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        // 6. 分批查询数据库，并按 ZSet 的热度分数顺序进行排序重组
+        List<Product> products = new ArrayList<>();
+        if (CollUtil.isNotEmpty(productIdList)) {
+            List<Product> unsortedProducts = query().in("id", productIdList).list();
+            // 按照 pageIds 的顺序重组
+            Map<Long, Product> productMap = unsortedProducts.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+            for (Long id : productIdList) {
+                Product p = productMap.get(id);
+                if (p != null) {
+                    products.add(p);
+                }
+            }
+        }
 
-        resultList = convertToProductVOList(sortedList);
+        // 7. 转换为 VO
+        resultList = convertToProductVOList(products);
 
         // 6. 附加快照缓存的 Score 数据给外部前端用作热度值展示
         try {
@@ -699,7 +664,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             int finalPage = page;
             executorService.submit(()->{
                 log.info("线程：{}开始发布的商品{}页", Thread.currentThread().getName(), finalPage);
-                queryProductListShopMessage(products);
                 // 发送批量消息
                 sendProductBatchMessage(products);
                 log.info("发送第 {} 页，{} 条数据", finalPage, products.size());
@@ -731,8 +695,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             // Batch query
             List<Product> products = query().in("id", idList).list();
             if (CollUtil.isNotEmpty(products)) {
-                // Batch populate shop info
-                queryProductListShopMessage(products);
                 // Batch send message
                 sendProductBatchMessage(products);
             }
