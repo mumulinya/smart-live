@@ -74,6 +74,9 @@ public class ProductVO implements Serializable {
     /** 动态有效期：领取后多少天有效 */
     private Integer validDays;
 
+    /** 封面图片 */
+    private String coverImg;
+
     /** 秒杀开始时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date beginTime;

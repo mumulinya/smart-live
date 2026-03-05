@@ -225,6 +225,7 @@ public class ProductEsSyncStrategy implements EsSyncStrategy {
         if (product.getRulesJson() != null) params.put("rulesJson", product.getRulesJson());
         if (product.getActivityType() != null) params.put("activityType", product.getActivityType()); // 0普通 1秒杀
         if (product.getStatus() != null) params.put("status", product.getStatus());
+        if (product.getCoverImg() != null) params.put("coverImg", product.getCoverImg());
 
         // 时间相关 (用于排序或判断过期)
         if (product.getBeginTime() != null) params.put("beginTime", product.getBeginTime());

@@ -23,6 +23,7 @@
         <result property="useStartTime" column="use_start_time"    />
         <result property="useEndTime"   column="use_end_time"    />
         <result property="validDays"    column="valid_days"    />
+        <result property="coverImg"     column="cover_img"    />
         <result property="beginTime"    column="begin_time"    />
         <result property="endTime"      column="end_time"    />
         <result property="createTime"   column="create_time"    />
@@ -33,7 +34,7 @@
 
     <sql id="selectProductVo">
         select id, shop_id, name, sub_title, category, activity_type, rules_json, price, original_price, stock,
-               sold, reviews, fans, stars, validity_type, use_start_time, use_end_time, valid_days,
+               sold, reviews, fans, stars, validity_type, use_start_time, use_end_time, valid_days, cover_img,
                begin_time, end_time, create_time, update_time, create_by, update_by
         from product
     </sql>
@@ -71,6 +72,7 @@
             <if test="useStartTime != null">use_start_time,</if>
             <if test="useEndTime != null">use_end_time,</if>
             <if test="validDays != null">valid_days,</if>
+            <if test="coverImg != null">cover_img,</if>
             <if test="beginTime != null">begin_time,</if>
             <if test="endTime != null">end_time,</if>
             <if test="sold != null">sold,</if>
@@ -96,6 +98,7 @@
             <if test="useStartTime != null">#{useStartTime},</if>
             <if test="useEndTime != null">#{useEndTime},</if>
             <if test="validDays != null">#{validDays},</if>
+            <if test="coverImg != null">#{coverImg},</if>
             <if test="beginTime != null">#{beginTime},</if>
             <if test="endTime != null">#{endTime},</if>
             <if test="sold != null">#{sold},</if>
@@ -125,6 +128,7 @@
             <if test="useStartTime != null">use_start_time = #{useStartTime},</if>
             <if test="useEndTime != null">use_end_time = #{useEndTime},</if>
             <if test="validDays != null">valid_days = #{validDays},</if>
+            <if test="coverImg != null">cover_img = #{coverImg},</if>
             <if test="beginTime != null">begin_time = #{beginTime},</if>
             <if test="endTime != null">end_time = #{endTime},</if>
             <if test="sold != null">sold = #{sold},</if>

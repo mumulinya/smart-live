@@ -76,6 +76,9 @@ public class ProductVO {
     /** 动态有效期 */
     private Integer validDays;
 
+    /** 封面图片 */
+    private String coverImg;
+
     /** 秒杀开始时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date beginTime;
