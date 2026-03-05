@@ -329,8 +329,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public Long saveBlog(Blog blog) {
         blog.setUserId(UserContextHolder.getUser().getId());
         blog.setCreateTime(DateUtils.getNowDate());
-       if (blog.getShopId() != null) {
-           ShopDTO shopDTO = remoteShopService.getShopById(blog.getShopId());
+       if (blog.getShopId() != null && !blog.getShopId().toString().isEmpty()) {
+           String firstShopIdStr = blog.getShopId().toString().split(",")[0];
+           Long firstShopId = Long.valueOf(firstShopIdStr);
+           ShopDTO shopDTO = remoteShopService.getShopById(firstShopId);
            if(shopDTO!= null){
                blog.setTypeId(shopDTO.getTypeId());
            }

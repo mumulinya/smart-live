@@ -24,7 +24,7 @@ public class ProductTools {
     @Tool(name = "listProduct",description = "列出某类商铺或特定店铺的可用商品/优惠。示例：'星巴克有什么优惠？'")
     public List<ProductVO> listProduct(
             @ToolParam( description = "商户类型, 1:美食, 2:KTV, 3:丽人...") Long typeId,
-            @ToolParam( description = "店铺ID") Long shopId,
+            @ToolParam( description = "店铺ID") String shopId,
             @ToolParam( description = "当前页码") Integer current,
             @ToolParam( description = "店铺名称") String shopName,
             @ToolParam( description = "优惠券类型，0普通券，1秒杀券") Integer type

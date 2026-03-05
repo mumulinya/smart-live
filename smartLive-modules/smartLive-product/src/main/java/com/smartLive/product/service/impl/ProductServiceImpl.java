@@ -180,7 +180,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .builder()
                 .feedType(FeedTypeEnum.SHOP_FEED.getCode())
                 .sourceType(GlobalBizTypeEnum.SHOP.getCode())
-                .sourceId(product.getShopId())
+                .sourceId(Long.valueOf(product.getShopId().split(",")[0]))
                 .bizType(GlobalBizTypeEnum.PRODUCT.getCode()) // KEEP VOUCHER TYPE FOR NOW
                 .bizId(product.getId())
                 .publishTime(DateUtils.getNowDate())
@@ -360,7 +360,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public List<ProductVO> queryProductOfShop(Product product) {
         List<Product> products = query()
-                .eq("shop_id", product.getShopId())
+                .apply("FIND_IN_SET({0}, shop_id)", product.getShopId())
                 .eq("category", product.getCategory())
                 .orderByAsc("create_time")
                 .list();
@@ -381,7 +381,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         AuditMessage auditMessage = AuditMessage.builder()
                 .bizId(product.getId())
                 .bizType(GlobalBizTypeEnum.PRODUCT.getCode()) // KEEP VOUCHER
-                .submitterId(product.getShopId())
+                .submitterId(Long.valueOf(product.getShopId().split(",")[0]))
                 .auditContent(BeanUtil.beanToMap(product))
                 .createTime(product.getCreateTime())
                 .build();
@@ -406,11 +406,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * @param product 商品实体
      */
     void queryProductShopMessage(Product product){
-        ShopDTO shopDTO = remoteShopService.getShopById(product.getShopId());
-        if(shopDTO != null){
-            product.setShopName(shopDTO.getName());
-            product.setTypeId(shopDTO.getTypeId());
-            product.setShopLogo(shopDTO.getShopLogo());
+        if (product.getShopId() != null && !product.getShopId().isEmpty()) {
+            String firstShopId = product.getShopId().split(",")[0];
+            ShopDTO shopDTO = remoteShopService.getShopById(Long.valueOf(firstShopId));
+            if(shopDTO != null){
+                product.setShopName(shopDTO.getName());
+                product.setTypeId(shopDTO.getTypeId());
+                product.setShopLogo(shopDTO.getShopLogo());
+            }
         }
     }
 
@@ -486,9 +489,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * @param productList 商品列表
      */
     private void queryProductListShopMessage(List<Product> productList) {
-        // 获取所有店铺的 ID
+        // 获取所有店铺的 ID (取第一个)
         List<Long> distinctShopIds = productList.stream()
                 .map(Product::getShopId)
+                .filter(id -> id != null && !id.isEmpty())
+                .map(id -> Long.valueOf(id.split(",")[0]))
                 .distinct() // 核心：过滤掉重复的 shopId
                 .toList();
         List<ShopDTO> shopList = remoteShopService.getShopList(distinctShopIds);
@@ -505,10 +510,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 ));
         if (!shopMap.isEmpty()) {
             productList.forEach(product -> {
-                ShopDTO shopDTO = shopMap.get(product.getShopId());
-                if (shopDTO != null) {
-                    product.setShopName(shopDTO.getName());
-                    product.setShopLogo(shopDTO.getShopLogo());
+                if (product.getShopId() != null && !product.getShopId().isEmpty()) {
+                    Long firstShopId = Long.valueOf(product.getShopId().split(",")[0]);
+                    ShopDTO shopDTO = shopMap.get(firstShopId);
+                    if (shopDTO != null) {
+                        product.setShopName(shopDTO.getName());
+                        product.setShopLogo(shopDTO.getShopLogo());
+                    }
                 }
             });
         }

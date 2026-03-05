@@ -84,7 +84,11 @@ public class EsTool {
         } else if (data instanceof ProductDoc) {
             ProductDoc product = (ProductDoc) data;
             jsonMap.put("id", product.getId());
-            jsonMap.put("shopId", product.getShopId());
+            if (product.getShopId() != null && !product.getShopId().isEmpty()) {
+                jsonMap.put("shopId", Long.valueOf(product.getShopId().split(",")[0]));
+            } else {
+                jsonMap.put("shopId", null);
+            }
             jsonMap.put("name", product.getName());
             jsonMap.put("subTitle", product.getSubTitle());
             jsonMap.put("rulesJson", product.getRulesJson());

@@ -31,7 +31,7 @@ public class ProductDTO extends BaseEntity implements Serializable {
 
     /** 商铺id */
     @Excel(name = "商铺id")
-    private Long shopId;
+    private String shopId;
 
     /** 商品名称 */
     @Excel(name = "商品名称")

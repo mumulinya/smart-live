@@ -82,7 +82,9 @@ public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
         // 构建元数据
         Map<String, Object> metadata = new HashMap<>();
         putIfNotNull(metadata, "id", product.getId());
-        putIfNotNull(metadata, "shopId", product.getShopId());
+        if (product.getShopId() != null && !product.getShopId().isEmpty()) {
+            putIfNotNull(metadata, "shopId", Long.valueOf(product.getShopId().split(",")[0]));
+        }
         putIfNotNull(metadata, "typeId", product.getTypeId());
         putIfNotNull(metadata, "shopName", product.getShopName());
         putIfNotNull(metadata, "name", product.getName());

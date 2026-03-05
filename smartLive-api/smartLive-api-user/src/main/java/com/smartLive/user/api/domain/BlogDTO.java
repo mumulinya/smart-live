@@ -22,7 +22,7 @@ public class BlogDTO extends BaseEntity implements Serializable
 
     /** 商户id */
     @Excel(name = "商户id")
-    private Long shopId;
+    private String shopId;
 
     /** 用户id */
     @Excel(name = "用户id")
@@ -98,12 +98,12 @@ public class BlogDTO extends BaseEntity implements Serializable
         return id;
     }
 
-    public void setShopId(Long shopId) 
+    public void setShopId(String shopId) 
     {
         this.shopId = shopId;
     }
 
-    public Long getShopId() 
+    public String getShopId() 
     {
         return shopId;
     }

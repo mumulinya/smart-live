@@ -110,8 +110,8 @@ public class ProductRagService implements IProductRagService {
             if (productVO.getId() != null) {
                 filters.add("id == " + productVO.getId());
             }
-            if (productVO.getShopId() != null) {
-                filters.add("shopId == " + productVO.getShopId());
+            if (productVO.getShopId() != null && !productVO.getShopId().isEmpty()) {
+                filters.add("shopId == " + productVO.getShopId().split(",")[0]);
             }
         }
         return String.join(" && ", filters);
@@ -137,7 +137,9 @@ public class ProductRagService implements IProductRagService {
             ProductVO product = new ProductVO();
 
             product.setId(toLong(metadata.get("id")));
-            product.setShopId(toLong(metadata.get("shopId")));
+            if (metadata.get("shopId") != null) {
+                product.setShopId(metadata.get("shopId").toString());
+            }
             product.setShopName(toStringValue(metadata.get("shopName")));
             product.setTypeId(toLong(metadata.get("typeId")));
             product.setName(toStringValue(metadata.get("name"))); // Updated to name

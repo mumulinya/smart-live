@@ -39,7 +39,7 @@ public class ProductDoc extends BaseEntity implements Serializable
     private Long id;
 
     /** 商铺id */
-    private Long shopId;
+    private String shopId;
 
     /** 商品名称 */
     private String name;

@@ -602,10 +602,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 (v1, v2) -> v1
         ));
         reviewList.forEach(review -> {
-            ShopDTO shopDTO = shopMap.get(review.getShopId());
-            if (shopDTO != null) {
-                review.setShopLogo(shopDTO.getShopLogo());
-                review.setShopName((shopDTO.getName()));
+            if (review.getShopId() != null && !review.getShopId().toString().isEmpty()) {
+                Long firstShopId = Long.valueOf(review.getShopId().toString().split(",")[0]);
+                ShopDTO shopDTO = shopMap.get(firstShopId);
+                if (shopDTO != null) {
+                    review.setShopLogo(shopDTO.getShopLogo());
+                    review.setShopName((shopDTO.getName()));
+                }
             }
         });
     }
@@ -803,10 +806,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             star.setSourceId(review.getId());
             review.setIsStared(starService.isStar(star));
 
-            ShopDTO shop = remoteShopService.getShopById(review.getShopId());
-            if(shop!=null){
-                review.setShopName(shop.getName());
-                review.setShopLogo(shop.getImages());
+            if (review.getShopId() != null && !review.getShopId().toString().isEmpty()) {
+                Long firstShopId = Long.valueOf(review.getShopId().toString().split(",")[0]);
+                ShopDTO shop = remoteShopService.getShopById(firstShopId);
+                if(shop!=null){
+                    review.setShopName(shop.getName());
+                    review.setShopLogo(shop.getImages());
+                }
             }
             UserDTO userDTO = remoteAppUserService.queryUserById(review.getUserId());
             if(userDTO!=null){

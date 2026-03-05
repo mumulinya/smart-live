@@ -13,7 +13,7 @@ import java.util.Date;
 @JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
 public class ProductDoc implements Serializable {
     private Long id;
-    private Long shopId;
+    private String shopId;
     private Long typeId;
     private String shopName;
     private String name; 

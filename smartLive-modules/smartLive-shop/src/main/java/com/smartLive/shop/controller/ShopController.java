@@ -176,4 +176,24 @@ public class ShopController extends BaseController {
         }
         return Result.ok(shop);
     }
+
+    /**
+     * 根据多个店铺id查询店铺列表
+     *
+     * @param ids 逗号分隔的店铺id列表
+     * @return 店铺详情数据列表
+     */
+    @GetMapping("/listByIds")
+    public Result queryShopByIds(@RequestParam("ids") String ids) {
+        if (StrUtil.isBlank(ids)) {
+            return Result.ok(new java.util.ArrayList<>());
+        }
+        java.util.List<Long> idList = java.util.Arrays.stream(ids.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Long::valueOf)
+                .collect(java.util.stream.Collectors.toList());
+        java.util.List<ShopVO> shops = shopService.getShopList(idList);
+        return Result.ok(shops == null ? new java.util.ArrayList<>() : shops);
+    }
 }

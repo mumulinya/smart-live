@@ -32,9 +32,9 @@ public class Product extends BaseEntity implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /** 商铺id */
+    /** 商铺id (多个店铺用逗号分隔) */
     @Excel(name = "商铺id")
-    private Long shopId;
+    private String shopId;
 
     /** 商品名称 */
     @Excel(name = "商品名称")

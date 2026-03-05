@@ -42,7 +42,7 @@
     <select id="selectProductList" parameterType="com.smartLive.product.domain.Product" resultMap="ProductResult">
         <include refid="selectProductVo"/>
         <where>
-            <if test="shopId != null "> and shop_id = #{shopId}</if>
+            <if test="shopId != null and shopId != ''"> and FIND_IN_SET(#{shopId}, shop_id)</if>
             <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
             <if test="subTitle != null  and subTitle != ''"> and sub_title like concat('%', #{subTitle}, '%')</if>
             <if test="category != null "> and category = #{category}</if>

@@ -87,8 +87,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Order order = orderMapper.selectOrderById(id);
         if (order!=null) {
             ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
-            if(productDTO!=null) {
-                order.setShopId(productDTO.getShopId());
+            if(productDTO!=null && productDTO.getShopId() != null && !productDTO.getShopId().isEmpty()) {
+                order.setShopId(Long.valueOf(productDTO.getShopId().split(",")[0]));
             }
         }
         return order;
@@ -106,8 +106,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         List<Order> orderList = orderMapper.selectOrderList(order);
         orderList.forEach(v -> {
             ProductDTO product  = remoteProductService.getProductById(v.getSourceId());
-            if(product!=null) {
-                v.setShopId(product.getShopId());
+            if(product!=null && product.getShopId() != null && !product.getShopId().isEmpty()) {
+                v.setShopId(Long.valueOf(product.getShopId().split(",")[0]));
             }
         });
         return orderList;
@@ -274,7 +274,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             BeanUtils.copyProperties(v, orderVO);;
             ProductDTO product  = remoteProductService.getProductById(v.getSourceId());
             if(product!=null) {
-                orderVO.setShopId(product.getShopId());
+                if (product.getShopId() != null && !product.getShopId().isEmpty()) {
+                    orderVO.setShopId(Long.valueOf(product.getShopId().split(",")[0]));
+                }
                 orderVO.setShopName(product.getShopName());
                 orderVO.setRules(product.getRulesJson()); // Mapped rulesJson to rules
                 orderVO.setPayValue(product.getPrice());      // Mapped price to payValue
@@ -439,7 +441,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             BeanUtils.copyProperties(order, orderVO);;
             ProductDTO product  = remoteProductService.getProductById(order.getSourceId());
             if(product!=null) {
-                orderVO.setShopId(product.getShopId());
+                if (product.getShopId() != null && !product.getShopId().isEmpty()) {
+                    orderVO.setShopId(Long.valueOf(product.getShopId().split(",")[0]));
+                }
                 orderVO.setShopName(product.getShopName());
                 orderVO.setRules(product.getRulesJson());
                 orderVO.setPayValue(product.getPrice());
