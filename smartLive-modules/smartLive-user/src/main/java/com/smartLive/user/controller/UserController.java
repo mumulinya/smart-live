@@ -7,7 +7,9 @@ import com.smartLive.common.security.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.user.DTO.PasswordDTO;
 import com.smartLive.user.domain.UserInfo;
+import com.smartLive.user.domain.VO.UserInfoVO;
 import com.smartLive.user.service.IUserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -132,20 +134,19 @@ public class UserController extends BaseController
     @GetMapping("/info/{id}")
     public Result info(@PathVariable("id") Long userId){
         // 查询详情
-        UserInfo info = userInfoService.getById(userId);
-        if (info == null) {
+        UserInfoVO infoVO = userInfoService.getByUserId(userId);
+        if (infoVO == null) {
             // 没有详情，应该是第一次查看详情
             return Result.ok();
         }
         User byId = userService.getById(userId);
         if (byId.getPassword() == null|| "".equals(byId.getPassword())) {
-            info.setHasPassword(false);
+            infoVO.setHasPassword(false);
+        } else {
+            infoVO.setHasPassword(true);
         }
-        info.setHasPassword(true);
-        info.setCreateTime(null);
-        info.setUpdateTime(null);
         // 返回
-        return Result.ok(info);
+        return Result.ok(infoVO);
     }
     /**
      * 获取当前用户信息
@@ -181,10 +182,9 @@ public class UserController extends BaseController
      * 修改用户密码
      */
     @PostMapping("/updatePassword")
-    Result updateUserPassWord(@RequestBody User user){
+    Result updateUserPassWord(@RequestBody PasswordDTO passwordDTO){
         Long userId = UserContextHolder.getUser().getId();
-        user.setId(userId);
-        return Result.ok(userService.updateUserPassWord(user));
+        return Result.ok(userService.updateUserPassWord(userId, passwordDTO));
     }
     /**
      * 设置用户密码

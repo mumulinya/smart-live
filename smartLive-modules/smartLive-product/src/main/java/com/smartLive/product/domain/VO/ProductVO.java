@@ -62,6 +62,9 @@ public class ProductVO implements Serializable {
     private Integer stars;
     private Integer status;
 
+    /** 审核拒绝原因 */
+    private String rejectReason;
+
     /** 有效期类型：1-固定日期，2-动态有效期 */
     private Integer validityType;
 

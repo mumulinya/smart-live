@@ -282,55 +282,56 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         if (shop == null) {
             return null;
         }
+        ShopVO shopVO = convertToShopVO(shop);
         //是否收藏
-        isShopStared(shop);
+        isShopStared(shopVO);
         //是否关注
-        isShopFollowed(shop);
-        return convertToShopVO(shop);
+        isShopFollowed(shopVO);
+        return shopVO;
     }
 
     /**
      * 判断当前用户是否已经收藏店铺
      *
-     * @param shop 店铺实体（设置isStared属性）
+     * @param shopVO 店铺VO（设置isStared属性）
      */
-    private void isShopStared(Shop shop) {
+    private void isShopStared(ShopVO shopVO) {
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
-            //未登录,不用查询是否点赞
-            shop.setIsStared(false);
+            //未登录,不用查询是否收藏
+            shopVO.setIsStared(false);
             return;
         }
         //获取当前登录用户
         Long userId = user.getId();
         StarDTO starDTO = new StarDTO();
         starDTO.setUserId(userId);
-        starDTO.setSourceId(shop.getId());
+        starDTO.setSourceId(shopVO.getId());
         starDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
         //判断当前用户是否已经收藏
         Boolean isStared = remoteStarService.isStar(starDTO);
-        shop.setIsStared(isStared);
+        shopVO.setIsStared(isStared);
     }
     /**
      * 判断当前用户是否已经关注店铺
      *
-     * @param shop 店铺实体（设置isFollowed属性）
+     * @param shopVO 店铺VO（设置isFollowed属性）
      */
-    private void isShopFollowed(Shop shop) {
+    private void isShopFollowed(ShopVO shopVO) {
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
-            //未登录,不用查询是否点赞
-            shop.setIsFollowed(false);
+            //未登录,不用查询是否关注
+            shopVO.setIsFollowed(false);
             return;
         }
         //获取当前登录用户
         Long userId = user.getId();
         FollowDTO followDTO = new FollowDTO();
         followDTO.setUserId(userId);
-        followDTO.setSourceId(shop.getId());
+        followDTO.setSourceId(shopVO.getId());
         followDTO.setSourceType(GlobalBizTypeEnum.SHOP.getCode());
         Boolean isFollowed = remoteFollowService.isFollowed(followDTO);
-        shop.setIsFollowed(isFollowed);
+        shopVO.setIsFollowed(isFollowed);
     }
     /**
      * 缓存穿透解决方案：查询店铺并缓存空值防止穿透
@@ -697,13 +698,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             int finalPage = page;
             //使用多线程来处理
             executorService.submit(()->{
-                shops.forEach(
-                        shop -> {
-                            shop.setLocation(shop.getY() + "," + shop.getX());
-                        }
-                );
+                List<ShopVO> voList = convertToShopVOList(shops);
+                voList.forEach(vo -> vo.setLocation(vo.getY() + "," + vo.getX()));
                 // 发送批量消息
-                sendShopBatchMessage(shops);
+                sendShopBatchMessage(voList);
                 log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, shops.size());
             });
             page++;
@@ -733,10 +731,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             // Batch query
             List<Shop> shops = query().in("id", idList).list();
             if (CollUtil.isNotEmpty(shops)) {
+                List<ShopVO> voList = convertToShopVOList(shops);
                 // Set location
-                shops.forEach(shop -> shop.setLocation(shop.getY() + "," + shop.getX()));
+                voList.forEach(vo -> vo.setLocation(vo.getY() + "," + vo.getX()));
                 // Batch send message
-                sendShopBatchMessage(shops);
+                sendShopBatchMessage(voList);
             }
         });
         return "发布成功";
@@ -747,7 +746,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      *
      * @param shops 店铺列表
      */
-    private void sendShopBatchMessage(List<Shop> shops) {
+    private void sendShopBatchMessage(List<?> shops) {
         if (CollUtil.isEmpty(shops)) {
             return;
         }

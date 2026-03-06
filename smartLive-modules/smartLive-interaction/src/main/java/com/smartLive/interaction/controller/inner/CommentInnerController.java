@@ -3,6 +3,7 @@ package com.smartLive.interaction.controller.inner;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.VO.CommentVO;
 import com.smartLive.interaction.service.ICommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class CommentInnerController extends BaseController
      * @return 评论列表
      */
     @GetMapping("/list")
-    List<Comment> getCommentList(){
+    List<CommentVO> getCommentList(){
         return commentService.getCommentList();
     }
 

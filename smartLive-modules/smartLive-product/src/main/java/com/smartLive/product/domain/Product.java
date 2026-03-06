@@ -1,7 +1,6 @@
 package com.smartLive.product.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -123,22 +122,4 @@ public class Product extends BaseEntity implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-    // --- Transient / Join Fields ---
-
-    //店铺名称
-    @TableField(exist = false)
-    private String shopName;
-    //店铺类型
-    @TableField(exist = false)
-    private Long typeId;
-    //店铺logo
-    @TableField(exist = false)
-    private String shopLogo;
-    //是否收藏
-    @TableField(exist = false)
-    private Boolean isStar;
-    //是否关注
-    @TableField(exist = false)
-    private Boolean IsFollow;
-    @TableField(exist = false)
-    private double hotScore;}
+}

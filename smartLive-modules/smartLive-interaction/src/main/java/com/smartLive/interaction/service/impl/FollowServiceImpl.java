@@ -146,14 +146,14 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @return
      */
     @Override
-    public Boolean follow(Follow follow) {
+    public Boolean follow(FollowDTO followDTO) {
         if(UserContextHolder.getUser()==null){
             return false;
         }
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
         // 1. 获取对应的枚举策略
-        FollowTypeEnum followType = FollowTypeEnum.getByCode(follow.getSourceType());
+        FollowTypeEnum followType = FollowTypeEnum.getByCode(followDTO.getSourceType());
         if (followType == null) {
             return false;
         }
@@ -161,47 +161,54 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         String myFollowKey = followType.getFollowKeyPrefix() + userId;
 
         // 3. 对方的粉丝列表
-        String targetFansKey = followType.getFansKeyPrefix() + follow.getSourceId();
+        String targetFansKey = followType.getFansKeyPrefix() + followDTO.getSourceId();
         String followDirtyKey = followType.getFollowDirtyKeyPrefix();
         String fansDirtyKey = followType.getFansDirtyKeyPrefix();
         // 4. 独立计数器 key
         String followCountKey = followType.getFollowCountKeyPrefix() + userId;
-        String fansCountKey = followType.getFansCountKeyPrefix() + follow.getSourceId();
+        String fansCountKey = followType.getFansCountKeyPrefix() + followDTO.getSourceId();
+
+        // 用于 getFollowCount / getFanCount 查询
+        Follow countQuery = new Follow(followDTO.getSourceType(), followDTO.getSourceId());
+
         //判断是关注还是取关
-        if(Boolean.TRUE.equals(follow.getIsFollow())){
+        if(Boolean.TRUE.equals(followDTO.getIsFollow())){
             //关注
+            Follow follow = new Follow();
             follow.setUserId(userId);
+            follow.setSourceType(followDTO.getSourceType());
+            follow.setSourceId(followDTO.getSourceId());
             follow.setCreateTime(DateUtils.getNowDate());
             boolean save = save(follow);
             if (save) {
                 //关注成功，添加关注到redis ZSet
-                redisService.setCacheZSet(myFollowKey, follow.getSourceId().toString(), System.currentTimeMillis());
+                redisService.setCacheZSet(myFollowKey, followDTO.getSourceId().toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(targetFansKey, userId.toString(), System.currentTimeMillis());
                 //标记脏数据
                 redisService.setCacheSet(followDirtyKey, userId.toString());
-                redisService.setCacheSet(fansDirtyKey, follow.getSourceId().toString());
+                redisService.setCacheSet(fansDirtyKey, followDTO.getSourceId().toString());
                 //确保 Redis 计数器已初始化，再递增独立计数器
-                getFollowCount(follow);
-                getFanCount(follow);
+                getFollowCount(countQuery);
+                getFanCount(countQuery);
                 redisService.incrementCacheValue(followCountKey);
                 redisService.incrementCacheValue(fansCountKey);
                 //同步个人资源到es
-                followStrategyFactory.getStrategy(follow.getSourceType()).syncUserResource(userId, follow.getSourceId());
+                followStrategyFactory.getStrategy(followDTO.getSourceType()).syncUserResource(userId, followDTO.getSourceId());
             }
             return save;
         }else{
             //取关
-            boolean remove = remove(new QueryWrapper<Follow>().eq("user_id", userId).eq("source_type",follow.getSourceType()).eq("source_id", follow.getSourceId()));
+            boolean remove = remove(new QueryWrapper<Follow>().eq("user_id", userId).eq("source_type",followDTO.getSourceType()).eq("source_id", followDTO.getSourceId()));
             if (remove) {
                 //取关成功，从redis ZSet中删除
-                redisService.removeCacheZSetObject(myFollowKey, follow.getSourceId().toString());
+                redisService.removeCacheZSetObject(myFollowKey, followDTO.getSourceId().toString());
                 redisService.removeCacheZSetObject(targetFansKey, userId.toString());
                 //标记脏数据
                 redisService.setCacheSet(followDirtyKey, userId.toString());
-                redisService.setCacheSet(fansDirtyKey, follow.getSourceId().toString());
+                redisService.setCacheSet(fansDirtyKey, followDTO.getSourceId().toString());
                 //确保 Redis 计数器已初始化，再递减独立计数器
-                getFollowCount(follow);
-                getFanCount(follow);
+                getFollowCount(countQuery);
+                getFanCount(countQuery);
                 redisService.decrementCacheValue(followCountKey);
                 redisService.decrementCacheValue(fansCountKey);
             }

@@ -1,7 +1,6 @@
 package com.smartLive.shop.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -96,21 +95,4 @@ public class Shop extends BaseEntity implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-    @TableField(exist = false)
-    private Double distance;
-    @TableField(exist = false)
-    private String location;
-    /** 是否收藏 */
-    @TableField(exist = false)
-    private Boolean isStared;
-
-    /** 是否关注 */
-    @TableField(exist = false)
-    private Boolean isFollowed;
-
-    private void updateLocation() {
-        if (this.y != null && this.x != null) {
-            this.location = this.y + "," + this.x;
-        }
-    }
 }

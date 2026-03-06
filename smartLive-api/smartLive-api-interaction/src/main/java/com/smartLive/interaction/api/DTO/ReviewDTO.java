@@ -1,9 +1,7 @@
 package com.smartLive.interaction.api.DTO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
@@ -44,7 +42,6 @@ public class ReviewDTO extends BaseEntity
     @Excel(name = "来源类型  1", readConverterExp = "店=铺")
     private Integer sourceType;
 
-    @TableField(exist = false)
     private String sourceName;
 
     /** 来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。 */
@@ -92,27 +89,21 @@ public class ReviewDTO extends BaseEntity
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
     /** 用户昵称 */
-    @TableField(exist = false)
     private String nickName;
     /** 用户头像 */
-    @TableField(exist = false)
     private String userIcon;
-    @TableField(exist = false)
     private String shopImages;
     /**
      * 是否点赞过了
      */
-    @TableField(exist = false)
     private Boolean isLike;
     /**
      * 是否收藏过了
      */
-    @TableField(exist = false)
     private Boolean isStared;
 
     /**
      * 是否AI生成
      */
-    @TableField(exist = false)
     private Boolean isAIGenerated;
 }

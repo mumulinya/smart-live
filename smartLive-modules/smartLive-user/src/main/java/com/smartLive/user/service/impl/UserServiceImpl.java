@@ -369,43 +369,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     /**
-     * 查询用户info信息
-     *
-     * @param user 用户
-     */
-    private void  queryUserInfo(User user){
-        UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
-        if (userInfo != null){
-            user.setIntroduce(userInfo.getIntroduce());
-            user.setCity(userInfo.getCity());
-        }
-    }
-
-    /**
      * 修改用户密码
      *
-     * @param user
+     * @param userId 用户id
+     * @param passwordDTO 密码DTO
      * @return
      */
     @Override
-    public Boolean updateUserPassWord(User user) {
-        User byId = getById(user.getId());
+    public Boolean updateUserPassWord(Long userId, com.smartLive.user.DTO.PasswordDTO passwordDTO) {
+        User byId = getById(userId);
         if (byId != null){
             if(byId.getPassword() == null){
                 throw new BusinessException("用户密码不能为空");
             }
             String rawPassword = byId.getPassword();
-            if(user.getNewPassword() == null){
+            if(passwordDTO.getNewPassword() == null){
                 throw new BusinessException("新密码不能为空");
             }
-            if(user.getOldPassword()== null){
+            if(passwordDTO.getOldPassword()== null){
                 throw new BusinessException("旧密码不能为空");
             }
-            String oldPassword = user.getOldPassword();
+            String oldPassword = passwordDTO.getOldPassword();
             if(SecurityUtils.matchesPassword(rawPassword,oldPassword)){
                 throw new BusinessException("旧密码输入错误");
             }
-            byId.setPassword(SecurityUtils.encryptPassword(user.getNewPassword()));
+            byId.setPassword(SecurityUtils.encryptPassword(passwordDTO.getNewPassword()));
             boolean updated = updateById(byId);
             if (updated) {
                 clearUserCache(byId.getId());
@@ -547,17 +535,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
                 List<UserInfoVO> userInfos = userInfoService.listByUserIds(userIds);
                 Map<Long,UserInfoVO> userInfoMap= userInfos.stream().collect(Collectors.toMap(UserInfoVO::getUserId, userInfo -> userInfo));
-                users.forEach(
-                        user -> {
-                            UserInfoVO userInfo = userInfoMap.get(user.getId());
+                List<UserVO> userVOList = convertToUserVOList(users);
+                userVOList.forEach(
+                        userVO -> {
+                            UserInfoVO userInfo = userInfoMap.get(userVO.getId());
                             if(userInfo != null){
-                                user.setIntroduce(userInfo.getIntroduce());
-                                user.setCity(userInfo.getCity());
+                                userVO.setIntroduce(userInfo.getIntroduce());
+                                userVO.setCity(userInfo.getCity());
                             }
                         }
                 );
                 // 发送批量消息
-                sendUserBatchMessage(users);
+                sendUserBatchMessage(userVOList);
                 log.info("发送第 {} 页，{} 条数据", finalPage, users.size());
             });
             page++;
@@ -590,16 +579,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 // Batch populate user info
                 List<UserInfoVO> userInfos = userInfoService.listByUserIds(idList);
                 Map<Long,UserInfoVO> userInfoMap= userInfos.stream().collect(Collectors.toMap(UserInfoVO::getUserId, userInfo -> userInfo));
-                users.forEach(user -> {
-                    UserInfoVO userInfo = userInfoMap.get(user.getId());
+                List<UserVO> userVOList = convertToUserVOList(users);
+                userVOList.forEach(userVO -> {
+                    UserInfoVO userInfo = userInfoMap.get(userVO.getId());
                     if(userInfo != null){
-                        user.setIntroduce(userInfo.getIntroduce());
-                        user.setCity(userInfo.getCity());
+                        userVO.setIntroduce(userInfo.getIntroduce());
+                        userVO.setCity(userInfo.getCity());
                     }
                 });
                 
                 // Batch send message
-                sendUserBatchMessage(users);
+                sendUserBatchMessage(userVOList);
             }
         });
         return "发布成功";
@@ -609,7 +599,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 批量发送ES同步消息
      * @param users
      */
-    private void sendUserBatchMessage(List<User> users) {
+    private void sendUserBatchMessage(List<?> users) {
         if (CollUtil.isEmpty(users)) {
             return;
         }
@@ -624,18 +614,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 判断用户是否被当前用户关注
-     * @param user
-     */
-    private void isFollow(User user){
-        FollowDTO followDTO=new FollowDTO();
-        followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
-        followDTO.setSourceId(user.getId());
-        Boolean isFollow = remoteFollowService.isFollowed(followDTO);
-        user.setIsFollow(isFollow);
-    }
-
-    /**
-     * 判断用户是否被当前用户关注 (UserVO version)
      * @param userVO
      */
     private void isFollow(UserVO userVO){

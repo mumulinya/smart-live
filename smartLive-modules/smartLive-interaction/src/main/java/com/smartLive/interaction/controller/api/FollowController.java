@@ -19,12 +19,12 @@ public class FollowController {
     private IFollowService followServiceImpl;
     /**
      * 关注或取关
-     * @param follow 关注实体
+     * @param followDTO 关注DTO（包含isFollow标识）
      * @return 操作结果
      */
     @PutMapping()
-    public Result follow(@RequestBody Follow follow) {
-        Boolean f = followServiceImpl.follow(follow);
+    public Result follow(@RequestBody FollowDTO followDTO) {
+        Boolean f = followServiceImpl.follow(followDTO);
         if (f) {
             return Result.ok("操作成功");
         }

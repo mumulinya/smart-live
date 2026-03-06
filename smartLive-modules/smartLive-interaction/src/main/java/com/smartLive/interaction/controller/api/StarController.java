@@ -22,12 +22,12 @@ public class StarController {
     private IStarService starService;
     /**
      * 收藏或取消收藏
-     * @param star 收藏实体
+     * @param starDTO 收藏DTO（包含isStar标识）
      * @return 操作结果
      */
     @PutMapping()
-    public Result star(@RequestBody Star star) {
-        Boolean start = starService.star(star);
+    public Result star(@RequestBody StarDTO starDTO) {
+        Boolean start = starService.star(starDTO);
         if (start) {
             return Result.ok("操作成功");
         }

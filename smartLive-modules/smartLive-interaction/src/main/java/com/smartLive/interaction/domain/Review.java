@@ -1,7 +1,6 @@
 package com.smartLive.interaction.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -11,7 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -45,9 +43,6 @@ public class Review extends BaseEntity
     /** 来源类型  1（店铺）, 2（文章）, 3（团购）等。 */
     @Excel(name = "来源类型  1", readConverterExp = "店=铺")
     private Integer sourceType;
-
-    @TableField(exist = false)
-    private String sourceName;
 
     /** 来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。 */
     @Excel(name = "来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。")
@@ -96,44 +91,4 @@ public class Review extends BaseEntity
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-    /** 用户昵称 */
-    @TableField(exist = false)
-    private String nickName;
-    /** 用户头像 */
-    @TableField(exist = false)
-    private String userIcon;
-    
-    /** 排序字段：latest(最新), hot(最热) */
-    @TableField(exist = false)
-    private String sort;
-    @TableField(exist = false)
-    private String shopLogo;
-    @TableField(exist = false)
-    private String shopName;
-    /**
-     * 是否点赞过了
-     */
-    @TableField(exist = false)
-    private Boolean isLike;
-    /**
-     * 是否收藏过了
-     */
-    @TableField(exist = false)
-    private Boolean isStared;
-
-    /**
-     * 是否AI生成
-     */
-    @TableField(exist = false)
-    private Boolean isAIGenerated;
-
-    /** 商品标题 */
-    @TableField(exist = false)
-    private String productName;
-    /** 商品背景图 */
-    @TableField(exist = false)
-    private String productCoverImg;
-    /** 商品价格 */
-    @TableField(exist = false)
-    private BigDecimal productPrice;
 }

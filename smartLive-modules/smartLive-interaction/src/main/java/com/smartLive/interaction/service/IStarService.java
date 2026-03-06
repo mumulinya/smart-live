@@ -66,10 +66,10 @@ public interface IStarService extends IService<Star>
     /**
      * 收藏或取消收藏
      *
-     * @param star 收藏实体
+     * @param starDTO 收藏DTO（包含isStar标识）
      * @return 操作结果
      */
-    Boolean star(Star star);
+    Boolean star(StarDTO starDTO);
 
     /**
      * 判断是否已收藏

@@ -114,10 +114,11 @@ public interface IUserService extends IService<User>
 
     /**
      * 修改用户密码
-     * @param user
+     * @param userId 用户id
+     * @param passwordDTO 密码DTO
      * @return
      */
-    Boolean updateUserPassWord(User user);
+    Boolean updateUserPassWord(Long userId, com.smartLive.user.DTO.PasswordDTO passwordDTO);
     /**
      * 根据用户id获取用户名称
      * @param userId

@@ -26,8 +26,10 @@ import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.domain.BO.AuditReviewBO;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.Review;
+import com.smartLive.interaction.domain.VO.ReviewVO;
 import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.Star;
+import org.springframework.beans.BeanUtils;
 import com.smartLive.interaction.mapper.ReviewMapper;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.service.IReviewService;
@@ -100,6 +102,34 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         this.likeService = likeService;
         this.starService = starService;
         this.resourceStrategyFactory = resourceStrategyFactory;
+    }
+
+    /**
+     * 将Review实体转换为ReviewVO
+     * @param review Review实体
+     * @return ReviewVO对象
+     */
+    private ReviewVO convertToReviewVO(Review review) {
+        if (review == null) {
+            return null;
+        }
+        ReviewVO reviewVO = new ReviewVO();
+        BeanUtils.copyProperties(review, reviewVO);
+        return reviewVO;
+    }
+
+    /**
+     * 将Review列表转换为ReviewVO列表
+     * @param reviewList Review实体列表
+     * @return ReviewVO列表
+     */
+    private List<ReviewVO> convertToReviewVOList(List<Review> reviewList) {
+        if (CollUtil.isEmpty(reviewList)) {
+            return new ArrayList<>();
+        }
+        return reviewList.stream()
+                .map(this::convertToReviewVO)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -196,7 +226,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 组装好的评价视图列表
      */
     @Override
-    public List<Review> listReview(Review review, Integer current) {
+    public List<ReviewVO> listReview(Review review, Integer current, String sort) {
         ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
         if (reviewType == null) {
             log.error("参数错误：未知的评价类型");
@@ -205,7 +235,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", reviewType.getCode());
         String reviewKeyPrefix = "";
         if (hotRankRedisEnum != null) {
-            if ("latest".equalsIgnoreCase(review.getSort())) {
+            if ("latest".equalsIgnoreCase(sort)) {
                 reviewKeyPrefix = hotRankRedisEnum.getNewRankKeyPrefix();
             } else {
                 reviewKeyPrefix = hotRankRedisEnum.getHotRankKeyPrefix();
@@ -277,19 +307,20 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             return Collections.emptyList();
         }
 
-        // 3. 第三步：组装动态的交互状态（是否点赞）与外部用户信息、商品信息
-        queryReviewListIsLike(list);
-        queryReviewListUserMessage(list);
-        queryReviewListProductMessage(list);
+        // 3. 第三步：转换为VO，组装动态的交互状态（是否点赞）与外部用户信息、商品信息
+        List<ReviewVO> voList = convertToReviewVOList(list);
+        queryReviewListIsLike(voList);
+        queryReviewListUserMessage(voList);
+        queryReviewListProductMessage(voList);
 
         // 挂载 AI 自动评价（如果存在）
         String key = RedisConstants.CACHE_AI_REVIEW_KEY + review.getSourceType() + ":" + review.getSourceId();
         String JsonStr = redisService.getCacheObject(key);
         if (JsonStr != null) {
-            Review reviewDTO = JSON.parseObject(JsonStr, Review.class);
-            list.add(reviewDTO);
+            ReviewVO aiReview = JSON.parseObject(JsonStr, ReviewVO.class);
+            voList.add(aiReview);
         }
-        return list;
+        return voList;
     }
 
     /**
@@ -429,7 +460,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 用户的评价历史列表
      */
     @Override
-    public List<Review> getReviewOfUser(Review review, Integer current) {
+    public List<ReviewVO> getReviewOfUser(Review review, Integer current) {
         if (review == null) {
             return Collections.emptyList();
         }
@@ -448,7 +479,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         int pageNo = current == null || current < 1 ? 1 : current;
         int pageSize = SystemConstants.MAX_PAGE_SIZE;
         ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
-        List<Review> list = Collections.emptyList();
+        List<ReviewVO> voList = Collections.emptyList();
         int redisSourceCount = 0;
 
         if (reviewType != null) {
@@ -456,13 +487,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             List<Long> sourceIdList = idPage.getRecords();
             redisSourceCount = CollUtil.isEmpty(sourceIdList) ? 0 : sourceIdList.size();
             if (CollUtil.isNotEmpty(sourceIdList)) {
-                list = getReviewListByIds(sourceIdList);
+                voList = getReviewListByIds(sourceIdList);
             }
         }
-        if (redisSourceCount > 0 && list.size() < redisSourceCount) {
-            list = Collections.emptyList();
+        if (redisSourceCount > 0 && voList.size() < redisSourceCount) {
+            voList = Collections.emptyList();
         }
-        if (CollUtil.isEmpty(list)) {
+        if (CollUtil.isEmpty(voList)) {
             List<Review> dbList = query()
                     .eq("user_id", userId)
                     .eq(review.getSourceType() != null, "source_type", review.getSourceType())
@@ -482,13 +513,14 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 return Collections.emptyList();
             }
             int end = Math.min(start + pageSize, dbList.size());
-            list = dbList.subList(start, end);
-            queryReviewListIsLike(list);
-            queryReviewListUserMessage(list);
-            queryReviewListShopMessage(list);
-            queryReviewListProductMessage(list);
+            List<Review> pageList = dbList.subList(start, end);
+            voList = convertToReviewVOList(pageList);
+            queryReviewListIsLike(voList);
+            queryReviewListUserMessage(voList);
+            queryReviewListShopMessage(voList);
+            queryReviewListProductMessage(voList);
         }
-        return list;
+        return voList;
     }
 
     /**
@@ -542,7 +574,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 对应的评价实体列表
      */
     @Override
-    public List<Review> getReviewListByIds(List<Long> sourceIdList) {
+    public List<ReviewVO> getReviewListByIds(List<Long> sourceIdList) {
         if (CollUtil.isEmpty(sourceIdList)) {
             return Collections.emptyList();
         }
@@ -573,11 +605,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (CollUtil.isEmpty(orderedList)) {
             return Collections.emptyList();
         }
-        queryReviewListUserMessage(orderedList);
-        queryReviewListShopMessage(list);
-        queryReviewListProductMessage(orderedList);
-        queryReviewListIsLike(orderedList);
-        return orderedList;
+        List<ReviewVO> voList = convertToReviewVOList(orderedList);
+        queryReviewListUserMessage(voList);
+        queryReviewListShopMessage(voList);
+        queryReviewListProductMessage(voList);
+        queryReviewListIsLike(voList);
+        return voList;
     }
 
     /**
@@ -585,12 +618,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      *
      * @param reviewList 待挂载店铺信息的评价列表
      */
-    private void queryReviewListShopMessage(List<Review> reviewList) {
+    private void queryReviewListShopMessage(List<ReviewVO> reviewList) {
         if (CollUtil.isEmpty(reviewList)) {
             return;
         }
         List<Long> shopIds = reviewList.stream()
-                .map(Review::getShopId)
+                .map(ReviewVO::getShopId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -608,12 +641,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 Function.identity(),
                 (v1, v2) -> v1
         ));
-        reviewList.forEach(review -> {
-            if (review.getShopId() != null && !review.getShopId().toString().isEmpty()) {
-                ShopDTO shopDTO = shopMap.get(review.getShopId());
+        reviewList.forEach(vo -> {
+            if (vo.getShopId() != null && !vo.getShopId().toString().isEmpty()) {
+                ShopDTO shopDTO = shopMap.get(vo.getShopId());
                 if (shopDTO != null) {
-                    review.setShopLogo(shopDTO.getShopLogo());
-                    review.setShopName((shopDTO.getName()));
+                    vo.setShopLogo(shopDTO.getShopLogo());
+                    vo.setShopName(shopDTO.getName());
                 }
             }
         });
@@ -624,7 +657,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      *
      * @param reviewList 待挂载商品信息的评价列表
      */
-    private void queryReviewListProductMessage(List<Review> reviewList) {
+    private void queryReviewListProductMessage(List<ReviewVO> reviewList) {
         if (CollUtil.isEmpty(reviewList)) {
             return;
         }
@@ -632,7 +665,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         Integer productCode = GlobalBizTypeEnum.PRODUCT.getCode();
         List<Long> productIds = reviewList.stream()
                 .filter(r -> productCode.equals(r.getSourceType()) && r.getSourceId() != null)
-                .map(Review::getSourceId)
+                .map(ReviewVO::getSourceId)
                 .distinct()
                 .collect(Collectors.toList());
         if (CollUtil.isEmpty(productIds)) {
@@ -649,13 +682,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 Function.identity(),
                 (v1, v2) -> v1
         ));
-        reviewList.forEach(review -> {
-            if (productCode.equals(review.getSourceType()) && review.getSourceId() != null) {
-                ProductDTO productDTO = productMap.get(review.getSourceId());
+        reviewList.forEach(vo -> {
+            if (productCode.equals(vo.getSourceType()) && vo.getSourceId() != null) {
+                ProductDTO productDTO = productMap.get(vo.getSourceId());
                 if (productDTO != null) {
-                    review.setProductName(productDTO.getName());
-                    review.setProductCoverImg(productDTO.getCoverImg());
-                    review.setProductPrice(productDTO.getPrice());
+                    vo.setProductName(productDTO.getName());
+                    vo.setProductCoverImg(productDTO.getCoverImg());
+                    vo.setProductPrice(productDTO.getPrice());
                 }
             }
         });
@@ -666,12 +699,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      *
      * @param reviewList 待挂载用户信息的评价列表
      */
-    private void queryReviewListUserMessage(List<Review> reviewList) {
+    private void queryReviewListUserMessage(List<ReviewVO> reviewList) {
         if (CollUtil.isEmpty(reviewList)) {
             return;
         }
         List<Long> userIds = reviewList.stream()
-                .map(Review::getUserId)
+                .map(ReviewVO::getUserId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -689,11 +722,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 Function.identity(),
                 (v1, v2) -> v1
         ));
-        reviewList.forEach(review -> {
-            com.smartLive.user.api.domain.UserDTO user = userMap.get(review.getUserId());
+        reviewList.forEach(vo -> {
+            com.smartLive.user.api.domain.UserDTO user = userMap.get(vo.getUserId());
             if (user != null) {
-                review.setNickName(user.getNickName());
-                review.setUserIcon(user.getIcon());
+                vo.setNickName(user.getNickName());
+                vo.setUserIcon(user.getIcon());
             }
         });
     }
@@ -702,31 +735,31 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      *
      * @param reviewList 待校验点赞状态的评价列表
      */
-    private void queryReviewListIsLike(List<Review> reviewList) {
+    private void queryReviewListIsLike(List<ReviewVO> reviewList) {
         if (CollUtil.isEmpty(reviewList)) {
             return;
         }
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
-            reviewList.forEach(review -> {
-                if (review != null) {
-                    review.setIsLike(false);
+            reviewList.forEach(vo -> {
+                if (vo != null) {
+                    vo.setIsLike(false);
                 }
             });
             return;
         }
 
         List<Long> reviewIds = reviewList.stream()
-                .map(Review::getId)
+                .map(ReviewVO::getId)
                 .collect(Collectors.toList());
         LikeDTO likeDTO = new LikeDTO();
         likeDTO.setUserId(user.getId());
         likeDTO.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
         Map<Long, Boolean> likeMap = likeService.isLikeBatch(likeDTO, reviewIds);
 
-        reviewList.forEach(review -> {
-            if (review != null) {
-                review.setIsLike(likeMap.getOrDefault(review.getId(), false));
+        reviewList.forEach(vo -> {
+            if (vo != null) {
+                vo.setIsLike(likeMap.getOrDefault(vo.getId(), false));
             }
         });
     }
@@ -835,7 +868,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 完整数据封装实体
      */
     @Override
-    public Review getReviewById(Long id) {
+    public ReviewVO getReviewById(Long id) {
         Review review = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_REVIEW_KEY,
                 id,
@@ -844,40 +877,43 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 RedisConstants.CACHE_REVIEW_TTL,
                 java.util.concurrent.TimeUnit.MINUTES
         );
-        if (review != null) {
-            Like like = new Like();
-            like.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
-            like.setSourceId(review.getId());
-            review.setIsLike(likeService.isLike(like));
-            Star star = new Star();
-            star.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
-            star.setSourceId(review.getId());
-            review.setIsStared(starService.isStar(star));
+        if (review == null) {
+            return null;
+        }
+        ReviewVO vo = convertToReviewVO(review);
 
-            if (review.getShopId() != null && !review.getShopId().toString().isEmpty()) {
-                ShopDTO shop = remoteShopService.getShopById(review.getShopId());
-                if(shop!=null){
-                    review.setShopName(shop.getName());
-                    review.setShopLogo(shop.getImages());
-                }
-            }
-            // 挂载商品信息（商品标题、背景图、价格）
-            Integer productCode = GlobalBizTypeEnum.PRODUCT.getCode();
-            if (productCode.equals(review.getSourceType()) && review.getSourceId() != null) {
-                ProductDTO productDTO = remoteProductService.getProductById(review.getSourceId());
-                if (productDTO != null) {
-                    review.setProductName(productDTO.getName());
-                    review.setProductCoverImg(productDTO.getCoverImg());
-                    review.setProductPrice(productDTO.getPrice());
-                }
-            }
-            UserDTO userDTO = remoteAppUserService.queryUserById(review.getUserId());
-            if(userDTO!=null){
-                review.setNickName(userDTO.getNickName());
-                review.setUserIcon(userDTO.getIcon());
+        Like like = new Like();
+        like.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
+        like.setSourceId(review.getId());
+        vo.setIsLike(likeService.isLike(like));
+        Star star = new Star();
+        star.setSourceType(GlobalBizTypeEnum.REVIEW.getCode());
+        star.setSourceId(review.getId());
+        vo.setIsStared(starService.isStar(star));
+
+        if (review.getShopId() != null && !review.getShopId().toString().isEmpty()) {
+            ShopDTO shop = remoteShopService.getShopById(review.getShopId());
+            if (shop != null) {
+                vo.setShopName(shop.getName());
+                vo.setShopLogo(shop.getImages());
             }
         }
-        return review;
+        // 挂载商品信息（商品标题、背景图、价格）
+        Integer productCode = GlobalBizTypeEnum.PRODUCT.getCode();
+        if (productCode.equals(review.getSourceType()) && review.getSourceId() != null) {
+            ProductDTO productDTO = remoteProductService.getProductById(review.getSourceId());
+            if (productDTO != null) {
+                vo.setProductName(productDTO.getName());
+                vo.setProductCoverImg(productDTO.getCoverImg());
+                vo.setProductPrice(productDTO.getPrice());
+            }
+        }
+        UserDTO userDTO = remoteAppUserService.queryUserById(review.getUserId());
+        if (userDTO != null) {
+            vo.setNickName(userDTO.getNickName());
+            vo.setUserIcon(userDTO.getIcon());
+        }
+        return vo;
     }
 
     /**

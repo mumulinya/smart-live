@@ -82,52 +82,61 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
     }
 
     @Override
-    public Boolean star(Star star) {
+    public Boolean star(StarDTO starDTO) {
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             return false;
         }
 
         Long userId = user.getId();
-        StarTypeEnum starType = StarTypeEnum.getByCode(star.getSourceType());
+        StarTypeEnum starType = StarTypeEnum.getByCode(starDTO.getSourceType());
         if (starType == null) {
             log.error("star type invalid");
             return false;
         }
 
-        StarStrategy starStrategy = starStrategyFactory.getStrategy(star.getSourceType());
+        StarStrategy starStrategy = starStrategyFactory.getStrategy(starDTO.getSourceType());
         String userStarKey = starType.getStarKeyPrefix() + userId;
-        String sourceStarKey = starType.getSourceStarKeyPrefix() + star.getSourceId();
-        String starCountKey = starType.getStarCountKeyPrefix() + star.getSourceId();
+        String sourceStarKey = starType.getSourceStarKeyPrefix() + starDTO.getSourceId();
+        String starCountKey = starType.getStarCountKeyPrefix() + starDTO.getSourceId();
         String starDirtyKey = starType.getStarDirtyKeyPrefix();
 
-        if (Boolean.TRUE.equals(star.getIsStar())) {
+        if (Boolean.TRUE.equals(starDTO.getIsStar())) {
+            Star star = new Star();
             star.setUserId(userId);
+            star.setSourceType(starDTO.getSourceType());
+            star.setSourceId(starDTO.getSourceId());
             star.setCreateTime(DateUtils.getNowDate());
             boolean saved = save(star);
 
             // 获取收藏数（复用统一的三级 fallback 逻辑）
-            Integer starCount = getStarCount(star);
+            Star countQuery = new Star();
+            countQuery.setSourceType(starDTO.getSourceType());
+            countQuery.setSourceId(starDTO.getSourceId());
+            Integer starCount = getStarCount(countQuery);
 
             if (saved) {
-                redisService.setCacheZSet(userStarKey, star.getSourceId().toString(), System.currentTimeMillis());
+                redisService.setCacheZSet(userStarKey, starDTO.getSourceId().toString(), System.currentTimeMillis());
                 redisService.setCacheZSet(sourceStarKey, userId.toString(), System.currentTimeMillis());
                 redisService.incrementCacheValue(starCountKey);
-                redisService.setCacheSet(starDirtyKey, star.getSourceId().toString());
-                starStrategy.syncUserResource(userId, star.getSourceId());
+                redisService.setCacheSet(starDirtyKey, starDTO.getSourceId().toString());
+                starStrategy.syncUserResource(userId, starDTO.getSourceId());
             }
         } else {
             boolean removed = remove(new QueryWrapper<Star>()
                     .eq("user_id", userId)
-                    .eq("source_type", star.getSourceType())
-                    .eq("source_id", star.getSourceId()));
+                    .eq("source_type", starDTO.getSourceType())
+                    .eq("source_id", starDTO.getSourceId()));
             if (removed) {
-                redisService.removeCacheZSetObject(userStarKey, star.getSourceId().toString());
+                redisService.removeCacheZSetObject(userStarKey, starDTO.getSourceId().toString());
                 redisService.removeCacheZSetObject(sourceStarKey, userId.toString());
                 // 确保 Redis 计数器已初始化，再递减
-                getStarCount(star);
+                Star countQuery = new Star();
+                countQuery.setSourceType(starDTO.getSourceType());
+                countQuery.setSourceId(starDTO.getSourceId());
+                getStarCount(countQuery);
                 redisService.decrementCacheValue(starCountKey);
-                redisService.setCacheSet(starDirtyKey, star.getSourceId().toString());
+                redisService.setCacheSet(starDirtyKey, starDTO.getSourceId().toString());
             }
         }
 

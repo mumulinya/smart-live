@@ -474,21 +474,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 RedisConstants.CACHE_PRODUCT_TTL,
                 TimeUnit.MINUTES
         );
-        if (product != null){
-            // 判断是否收藏
-            StarDTO starDTO=new StarDTO();
-            starDTO.setSourceType(GlobalBizTypeEnum.PRODUCT.getCode()); // KEEP
-            starDTO.setSourceId(id);
-            Boolean isStar = remoteStarService.isStar(starDTO);
-            product.setIsStar(isStar);
-            // 判断是否关注
-            FollowDTO followDTO=new FollowDTO();
-            followDTO.setSourceType(GlobalBizTypeEnum.PRODUCT.getCode()); // KEEP
-            followDTO.setSourceId(id);
-            Boolean isFollow = remoteFollowService.isFollowed(followDTO);
-            product.setIsFollow(isFollow);
+        if (product == null){
+            return null;
         }
-        return convertToProductVO(product);
+        ProductVO productVO = convertToProductVO(product);
+        // 判断是否收藏
+        StarDTO starDTO=new StarDTO();
+        starDTO.setSourceType(GlobalBizTypeEnum.PRODUCT.getCode()); // KEEP
+        starDTO.setSourceId(id);
+        Boolean isStar = remoteStarService.isStar(starDTO);
+        productVO.setIsStar(isStar);
+        // 判断是否关注
+        FollowDTO followDTO=new FollowDTO();
+        followDTO.setSourceType(GlobalBizTypeEnum.PRODUCT.getCode()); // KEEP
+        followDTO.setSourceId(id);
+        Boolean isFollow = remoteFollowService.isFollowed(followDTO);
+        productVO.setIsFollow(isFollow);
+        return productVO;
     }
 
     /**

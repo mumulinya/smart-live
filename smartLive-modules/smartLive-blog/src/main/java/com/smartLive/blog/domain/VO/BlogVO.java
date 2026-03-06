@@ -79,4 +79,7 @@ public class BlogVO implements Serializable
      * 是否收藏过了
      */
     private Boolean isStared;
+
+    /** 审核拒绝原因 */
+    private String rejectReason;
 }

@@ -27,6 +27,7 @@ import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.BO.AuditCommentBO;
 import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.VO.CommentVO;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.service.ILikeService;
@@ -35,6 +36,7 @@ import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
+import org.springframework.beans.BeanUtils;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -86,6 +88,30 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public CommentServiceImpl(@Lazy ILikeService iLikeService, @Lazy ResourceStrategyFactory resourceStrategyFactory) {
         this.likeService = iLikeService;
         this.resourceStrategyFactory = resourceStrategyFactory;
+    }
+
+    /**
+     * 将Comment实体转换为CommentVO
+     */
+    private CommentVO convertToCommentVO(Comment comment) {
+        if (comment == null) {
+            return null;
+        }
+        CommentVO commentVO = new CommentVO();
+        BeanUtils.copyProperties(comment, commentVO);
+        return commentVO;
+    }
+
+    /**
+     * 将Comment列表转换为CommentVO列表
+     */
+    private List<CommentVO> convertToCommentVOList(List<Comment> commentList) {
+        if (CollUtil.isEmpty(commentList)) {
+            return new ArrayList<>();
+        }
+        return commentList.stream()
+                .map(this::convertToCommentVO)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -165,7 +191,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return 评论视图列表
      */
     @Override
-    public List<Comment> listComment(Comment comment, Integer current) {
+    public List<CommentVO> listComment(Comment comment, Integer current, String sort) {
         CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
         if (commentType == null) {
             log.error("参数错误：未知的评论类型");
@@ -176,7 +202,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", commentType.getCode());
         String commentKeyPrefix = "";
         if (hotRankRedisEnum != null) {
-             if ("latest".equals(comment.getSort())) {
+             if ("latest".equals(sort)) {
                  commentKeyPrefix = hotRankRedisEnum.getNewRankKeyPrefix();
              } else {
                  commentKeyPrefix = hotRankRedisEnum.getHotRankKeyPrefix();
@@ -184,27 +210,27 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         Page<Long> longPage = zSetIdManager.pageIds(commentKeyPrefix, comment.getSourceId(), current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> commentIdList = longPage.getRecords();
-        List<Comment> list = new ArrayList<>();
+        List<CommentVO> voList = new ArrayList<>();
 
         if (commentIdList != null && !commentIdList.isEmpty()) {
             // 去统一详情池捞取具体数据
-            list = getCommentListByIds(commentIdList);
+            voList = getCommentListByIds(commentIdList);
         }
 
         // 兜底逻辑：缓存击穿时查库并重建 ZSet 榜单
-        if (list == null || list.isEmpty()) {
+        if (voList == null || voList.isEmpty()) {
             log.info("从数据库中获取评论数据");
             var q = query()
                     .eq("source_id", comment.getSourceId())
                     .ne("status", 2)
                     .ne("status",3)
                     .eq("source_type", comment.getSourceType());
-            if ("latest".equals(comment.getSort())) {
+            if ("latest".equals(sort)) {
                  q.orderByDesc("create_time");
             } else {
                  q.orderByDesc("liked").orderByDesc("create_time");
             }
-            list = q.list();
+            List<Comment> list = q.list();
             if (!list.isEmpty()) {
                 final List<Comment> finalList = list;
                 executorService.execute(() -> {
@@ -221,18 +247,18 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                     }
                 });
 
-                list = list.size() > SystemConstants.MAX_PAGE_SIZE ? list.subList((current - 1) * SystemConstants.MAX_PAGE_SIZE, (current - 1) * SystemConstants.MAX_PAGE_SIZE + SystemConstants.MAX_PAGE_SIZE) : list;
-                queryCommentListIsLike(list);
-                queryCommentListUserMessage(list);
+                List<Comment> pageList = list.size() > SystemConstants.MAX_PAGE_SIZE ? list.subList((current - 1) * SystemConstants.MAX_PAGE_SIZE, (current - 1) * SystemConstants.MAX_PAGE_SIZE + SystemConstants.MAX_PAGE_SIZE) : list;
+                voList = convertToCommentVOList(pageList);
+                queryCommentListIsLike(voList);
+                queryCommentListUserMessage(voList);
             }
         }
 
-        if (list == null) {
+        if (voList == null) {
             return Collections.emptyList();
         }
 
-
-        return list;
+        return voList;
     }
 
     /**
@@ -243,7 +269,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return 子评论列表
      */
     @Override
-    public List<Comment> listChildComment(Comment comment, Integer current) {
+    public List<CommentVO> listChildComment(Comment comment, Integer current) {
         List<Comment> commentList = query()
                 .eq("answer_id", comment.getId())
                 .ne("status", "2")
@@ -251,10 +277,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
                 .getRecords();
         if (commentList != null && !commentList.isEmpty()) {
-            queryCommentListIsLike(commentList);
-            queryCommentListUserMessage(commentList);
+            List<CommentVO> voList = convertToCommentVOList(commentList);
+            queryCommentListIsLike(voList);
+            queryCommentListUserMessage(voList);
+            return voList;
         }
-        return commentList;
+        return Collections.emptyList();
     }
 
     /**
@@ -379,7 +407,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return 评论历史列表
      */
     @Override
-    public List<Comment> getCommentOfUser(Comment comment, Integer current) {
+    public List<CommentVO> getCommentOfUser(Comment comment, Integer current) {
         if (comment == null) {
             return Collections.emptyList();
         }
@@ -398,7 +426,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         int pageNo = current == null || current < 1 ? 1 : current;
         int pageSize = SystemConstants.MAX_PAGE_SIZE;
         CommentTypeEnum commentType = CommentTypeEnum.getByCode(comment.getSourceType());
-        List<Comment> list = Collections.emptyList();
+        List<CommentVO> voList = Collections.emptyList();
         int redisSourceCount = 0;
 
         if (commentType != null) {
@@ -406,13 +434,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             List<Long> sourceIdList = idPage.getRecords();
             redisSourceCount = CollUtil.isEmpty(sourceIdList) ? 0 : sourceIdList.size();
             if (CollUtil.isNotEmpty(sourceIdList)) {
-                list = getCommentListByIds(sourceIdList);
+                voList = getCommentListByIds(sourceIdList);
             }
         }
-        if (redisSourceCount > 0 && list.size() < redisSourceCount) {
-            list = Collections.emptyList();
+        if (redisSourceCount > 0 && voList.size() < redisSourceCount) {
+            voList = Collections.emptyList();
         }
-        if (CollUtil.isEmpty(list)) {
+        if (CollUtil.isEmpty(voList)) {
             List<Comment> dbList = query()
                     .eq(comment.getSourceType() != null, "source_type", comment.getSourceType())
                     .eq("parent_id", 0)
@@ -433,10 +461,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 return Collections.emptyList();
             }
             int end = Math.min(start + pageSize, dbList.size());
-            list = dbList.subList(start, end);
+            List<Comment> pageList = dbList.subList(start, end);
+            voList = convertToCommentVOList(pageList);
         }
-        enrichUserCommentList(list, userId);
-        return list;
+        enrichUserCommentList(voList, userId);
+        return voList;
     }
 
     /**
@@ -445,12 +474,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @param list   基础评论列表
      * @param userId 目标用户ID
      */
-    private void enrichUserCommentList(List<Comment> list, Long userId) {
+    private void enrichUserCommentList(List<CommentVO> list, Long userId) {
         if (CollUtil.isEmpty(list)) {
             return;
         }
         UserDTO owner = remoteAppUserService.queryUserById(userId);
-        for (Comment c : list) {
+        for (CommentVO c : list) {
             if (owner != null) {
                 c.setNickName(owner.getNickName());
                 c.setUserIcon(owner.getIcon());
@@ -471,9 +500,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * 获取全量系统评论集合
      */
     @Override
-    public List<Comment> getCommentList() {
+    public List<CommentVO> getCommentList() {
         List<Comment> list = query().list();
-        list.stream().forEach(c -> {
+        List<CommentVO> voList = convertToCommentVOList(list);
+        voList.forEach(c -> {
             ResourceStrategy strategy = resourceStrategyFactory.getStrategy(c.getSourceType());
             if (strategy != null) {
                 HashMap<String, String> content = strategy.getResourceContentById(c.getSourceId());
@@ -483,7 +513,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 }
             }
         });
-        return list;
+        return voList;
     }
 
 
@@ -559,7 +589,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * @return 对应的评论实体
      */
     @Override
-    public List<Comment> getCommentListByIds(List<Long> sourceIdList) {
+    public List<CommentVO> getCommentListByIds(List<Long> sourceIdList) {
         if (CollUtil.isEmpty(sourceIdList)) {
             return Collections.emptyList();
         }
@@ -580,18 +610,19 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         Map<Long, Comment> commentMap = list.stream()
                 .filter(comment -> comment != null && comment.getId() != null)
                 .collect(Collectors.toMap(Comment::getId, comment -> comment, (v1, v2) -> v1));
-        List<Comment> orderedList = new ArrayList<>(sourceIdList.size());
+        List<CommentVO> orderedList = new ArrayList<>(sourceIdList.size());
         for (Long id : sourceIdList) {
             Comment comment = commentMap.get(id);
             if (comment != null) {
+                CommentVO vo = convertToCommentVO(comment);
                 ResourceStrategy strategy = resourceStrategyFactory.getStrategy(comment.getSourceType());
                 if (strategy != null) {
                     HashMap<String, String> content = strategy.getResourceContentById(comment.getSourceId());
                     if (content != null) {
-                        comment.setSourceName(content.get("title"));
+                        vo.setSourceName(content.get("title"));
                     }
                 }
-                orderedList.add(comment);
+                orderedList.add(vo);
             }
         }
         queryCommentListIsLike(orderedList);
@@ -604,12 +635,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      *
      * @param commentList 原始评论集合
      */
-    private void queryCommentListUserMessage(List<Comment> commentList) {
+    private void queryCommentListUserMessage(List<CommentVO> commentList) {
         if (CollUtil.isEmpty(commentList)) {
             return;
         }
         List<Long> userIds = commentList.stream()
-                .map(Comment::getUserId)
+                .map(CommentVO::getUserId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -627,11 +658,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 Function.identity(),
                 (v1, v2) -> v1
         ));
-        commentList.forEach(comment -> {
-            UserDTO user = userMap.get(comment.getUserId());
+        commentList.forEach(vo -> {
+            UserDTO user = userMap.get(vo.getUserId());
             if (user != null) {
-                comment.setNickName(user.getNickName());
-                comment.setUserIcon(user.getIcon());
+                vo.setNickName(user.getNickName());
+                vo.setUserIcon(user.getIcon());
             }
         });
     }
@@ -641,31 +672,31 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      *
      * @param commentList 原始评论集合
      */
-    private void queryCommentListIsLike(List<Comment> commentList) {
+    private void queryCommentListIsLike(List<CommentVO> commentList) {
         if (CollUtil.isEmpty(commentList)) {
             return;
         }
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
-            commentList.forEach(comment -> {
-                if (comment != null) {
-                    comment.setIsLike(false);
+            commentList.forEach(vo -> {
+                if (vo != null) {
+                    vo.setIsLike(false);
                 }
             });
             return;
         }
 
         List<Long> commentIds = commentList.stream()
-                .map(Comment::getId)
+                .map(CommentVO::getId)
                 .collect(Collectors.toList());
         LikeDTO likeDTO = new LikeDTO();
         likeDTO.setUserId(user.getId());
         likeDTO.setSourceType(GlobalBizTypeEnum.COMMENT.getCode());
         Map<Long, Boolean> likeMap = likeService.isLikeBatch(likeDTO, commentIds);
 
-        commentList.forEach(comment -> {
-            if (comment != null) {
-                comment.setIsLike(likeMap.getOrDefault(comment.getId(), false));
+        commentList.forEach(vo -> {
+            if (vo != null) {
+                vo.setIsLike(likeMap.getOrDefault(vo.getId(), false));
             }
         });
     }
@@ -729,25 +760,27 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * 获取单条评论的详细内容并挂载关联的外部冗余信息
      */
     @Override
-    public Comment getCommentById(Long id) {
+    public CommentVO getCommentById(Long id) {
         Comment comment = getById(id);
-        if (comment != null) {
-            ResourceStrategy strategy = resourceStrategyFactory.getStrategy(comment.getSourceType());
-            if (strategy != null) {
-                HashMap<String, String> content = strategy.getResourceContentById(comment.getSourceId());
-                if (content != null) {
-                    comment.setSourceName(content.get("title"));
-                    comment.setShopImages(content.get("images"));
-                }
-            }
-
-            UserDTO userDTO = remoteAppUserService.queryUserById(comment.getUserId());
-            if (userDTO != null) {
-                comment.setNickName(userDTO.getNickName());
-                comment.setUserIcon(userDTO.getIcon());
+        if (comment == null) {
+            return null;
+        }
+        CommentVO vo = convertToCommentVO(comment);
+        ResourceStrategy strategy = resourceStrategyFactory.getStrategy(comment.getSourceType());
+        if (strategy != null) {
+            HashMap<String, String> content = strategy.getResourceContentById(comment.getSourceId());
+            if (content != null) {
+                vo.setSourceName(content.get("title"));
+                vo.setShopImages(content.get("images"));
             }
         }
-        return comment;
+
+        UserDTO userDTO = remoteAppUserService.queryUserById(comment.getUserId());
+        if (userDTO != null) {
+            vo.setNickName(userDTO.getNickName());
+            vo.setUserIcon(userDTO.getIcon());
+        }
+        return vo;
     }
 
     /**

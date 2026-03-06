@@ -66,10 +66,10 @@ public interface IFollowService extends IService<Follow>
     /**
      * 关注或取关
      *
-     * @param follow 关注实体
+     * @param followDTO 关注DTO（包含isFollow标识）
      * @return 操作结果
      */
-    Boolean follow(Follow follow);
+    Boolean follow(FollowDTO followDTO);
 
     /**
      * 判断是否已关注

@@ -130,7 +130,7 @@ public interface IBlogService extends IService<Blog>
      * @param sourceIdList 博客ID列表
      * @return 博客列表
      */
-    List<Blog> getBlogListByIds(List<Long> sourceIdList);
+    List<BlogVO> getBlogListByIds(List<Long> sourceIdList);
     /**
      * 置顶/取消置顶博客
      *

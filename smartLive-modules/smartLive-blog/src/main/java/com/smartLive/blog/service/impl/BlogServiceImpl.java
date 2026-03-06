@@ -171,7 +171,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //更新es数据
             publish(new String[]{blog.getId().toString()});
             blog=getById(blog.getId());
-            queryBlogUser(blog);
             //发送审核消息
             sendAuditMessage(blog);
             flashRedisBlogCache(blog.getId());
@@ -263,10 +262,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (blog == null) {
             throw new BusinessException("数据不存在");
         }
-        queryBlogUser(blog);
-        isBlogLiked(blog);
-        isBlogStared(blog);
-        return convertToBlogVO(blog);
+        BlogVO blogVO = convertToBlogVO(blog);
+        queryBlogUser(blogVO);
+        isBlogLiked(blogVO);
+        isBlogStared(blogVO);
+        return blogVO;
     }
     /**
      * 查询最热博客列表
@@ -281,42 +281,43 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Page<Long> longPage = zSetIdManager.pageIds(RedisConstants.BLOG_HOT_RANK_KEY, null, current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> blogIdList = longPage.getRecords();
 
-        List<Blog> blogList = new ArrayList<>();
         if (CollUtil.isNotEmpty(blogIdList)) {
-            blogList = getBlogListByIds(blogIdList);
-        } else {
-            // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
-            List<Blog> dbList = query()
-                    .ne("status","2")
-                    .ne("status","3")
-                    .orderByDesc("liked")
-                    .orderByDesc("create_time")
-                    .list();
-
-            if (CollUtil.isNotEmpty(dbList)) {
-                final List<Blog> finalDbList = dbList;
-                executorService.execute(() -> {
-                    log.info("重建博客热榜 ZSet");
-                    zSetIdManager.saveToZSet(RedisConstants.BLOG_HOT_RANK_KEY, finalDbList, Blog::getId, Blog::getCreateTime);
-
-                    // 推进计算队列等候定时长函数处理真正的衰减和融合热度分
-                    if (RedisConstants.BLOG_CALC_QUEUE_KEY != null) {
-                        redisService.setCacheSet(RedisConstants.BLOG_CALC_QUEUE_KEY, finalDbList.stream().map(b -> String.valueOf(b.getId())).collect(Collectors.toSet()));
-                    }
-                });
-
-                // 手动分页截取当前页数据
-                int start = (current - 1) * SystemConstants.MAX_PAGE_SIZE;
-                int pageSize = SystemConstants.MAX_PAGE_SIZE;
-                if (dbList.size() > start) {
-                    blogList = dbList.subList(start, Math.min(start + pageSize, dbList.size()));
-                }
-            }
-
-            queryBlogListUserMessage(blogList);
-            queryBlogListIsLike(blogList);
+            return getBlogListByIds(blogIdList);
         }
-        return convertToBlogVOList(blogList);
+
+        // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
+        List<Blog> dbList = query()
+                .ne("status","2")
+                .ne("status","3")
+                .orderByDesc("liked")
+                .orderByDesc("create_time")
+                .list();
+
+        List<Blog> blogList = new ArrayList<>();
+        if (CollUtil.isNotEmpty(dbList)) {
+            final List<Blog> finalDbList = dbList;
+            executorService.execute(() -> {
+                log.info("重建博客热榜 ZSet");
+                zSetIdManager.saveToZSet(RedisConstants.BLOG_HOT_RANK_KEY, finalDbList, Blog::getId, Blog::getCreateTime);
+
+                // 推进计算队列等候定时长函数处理真正的衰减和融合热度分
+                if (RedisConstants.BLOG_CALC_QUEUE_KEY != null) {
+                    redisService.setCacheSet(RedisConstants.BLOG_CALC_QUEUE_KEY, finalDbList.stream().map(b -> String.valueOf(b.getId())).collect(Collectors.toSet()));
+                }
+            });
+
+            // 手动分页截取当前页数据
+            int start = (current - 1) * SystemConstants.MAX_PAGE_SIZE;
+            int pageSize = SystemConstants.MAX_PAGE_SIZE;
+            if (dbList.size() > start) {
+                blogList = dbList.subList(start, Math.min(start + pageSize, dbList.size()));
+            }
+        }
+
+        List<BlogVO> voList = convertToBlogVOList(blogList);
+        queryBlogListUserMessage(voList);
+        queryBlogListIsLike(voList);
+        return voList;
     }
 
 
@@ -364,7 +365,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         publish(new String[]{blog.getId().toString()});
         //添加用户es数据
         String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_PUBLISH;
-        queryBlogUser(blog);
         //发送审核消息
         sendAuditMessage(blog);
         String  id = blog.getUserId()+"_"+actionType+"_"+GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+blog.getId().toString();
@@ -420,9 +420,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
         List<Blog> blogList = page.getRecords();
-        queryBlogListUserMessage(blogList);
-        queryBlogListIsLike(blogList);
-        return convertToBlogVOList(blogList);
+        List<BlogVO> voList = convertToBlogVOList(blogList);
+        queryBlogListUserMessage(voList);
+        queryBlogListIsLike(voList);
+        return voList;
     }
     /**
      * 查询指定用户发布的博客列表
@@ -440,8 +441,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .orderByAsc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         List<Blog> records = page.getRecords();
-        queryBlogListIsLike(records);
-        return convertToBlogVOList(records);
+        List<BlogVO> voList = convertToBlogVOList(records);
+        queryBlogListIsLike(voList);
+        return voList;
     }
     /**
      * 查询博客详情（包含用户信息）
@@ -452,8 +454,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     @Override
     public BlogVO getBlogById(Long id) {
         Blog blog = query().eq("id", id).one();
-        queryBlogUser(blog);
-        return convertToBlogVO(blog);
+        BlogVO blogVO = convertToBlogVO(blog);
+        queryBlogUser(blogVO);
+        return blogVO;
     }
 
     /**
@@ -463,7 +466,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return 博客列表
      */
     @Override
-    public List<Blog> getBlogListByIds(List<Long> sourceIdList) {
+    public List<BlogVO> getBlogListByIds(List<Long> sourceIdList) {
         if (CollUtil.isEmpty(sourceIdList)) {
             return Collections.emptyList();
         }
@@ -492,31 +495,32 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (CollUtil.isEmpty(orderedBlogList)) {
             return Collections.emptyList();
         }
-        queryBlogListUserMessage(orderedBlogList);
-        queryBlogListIsLike(orderedBlogList);
-        return orderedBlogList;
+        List<BlogVO> voList = convertToBlogVOList(orderedBlogList);
+        queryBlogListUserMessage(voList);
+        queryBlogListIsLike(voList);
+        return voList;
     }
 
     /**
      * 批量查询博客是否被点赞
      * @param blogList
      */
-    private void queryBlogListIsLike(List<Blog> blogList) {
-        if (CollUtil.isEmpty(blogList)) {
+    private void queryBlogListIsLike(List<BlogVO> blogVOList) {
+        if (CollUtil.isEmpty(blogVOList)) {
             return;
         }
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
-            blogList.forEach(blog -> {
-                if (blog != null) {
-                    blog.setIsLike(false);
+            blogVOList.forEach(vo -> {
+                if (vo != null) {
+                    vo.setIsLike(false);
                 }
             });
             return;
         }
         // Extract IDs
-        List<Long> blogIds = blogList.stream()
-                .map(Blog::getId)
+        List<Long> blogIds = blogVOList.stream()
+                .map(BlogVO::getId)
                 .collect(Collectors.toList());
 
         // Batch check Likes
@@ -525,9 +529,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         likeDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
         Map<Long, Boolean> likeMap = remoteLikeService.getIsLikeBatch(likeDTO, blogIds);
         log.info("likeMap: {}", likeMap);
-        blogList.forEach(blog -> {
-            if (blog != null) {
-                blog.setIsLike(likeMap.getOrDefault(blog.getId(), false));
+        blogVOList.forEach(vo -> {
+            if (vo != null) {
+                vo.setIsLike(likeMap.getOrDefault(vo.getId(), false));
             }
         });
     }
@@ -536,22 +540,22 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * 批量查询博客是否被收藏
      * @param blogList
      */
-    private void queryBlogListIsStar(List<Blog> blogList) {
-        if (CollUtil.isEmpty(blogList)) {
+    private void queryBlogListIsStar(List<BlogVO> blogVOList) {
+        if (CollUtil.isEmpty(blogVOList)) {
             return;
         }
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
-            blogList.forEach(blog -> {
-                if (blog != null) {
-                    blog.setIsStared(false);
+            blogVOList.forEach(vo -> {
+                if (vo != null) {
+                    vo.setIsStared(false);
                 }
             });
             return;
         }
         // Extract IDs
-        List<Long> blogIds = blogList.stream()
-                .map(Blog::getId)
+        List<Long> blogIds = blogVOList.stream()
+                .map(BlogVO::getId)
                 .collect(Collectors.toList());
 
         // Batch check Stars
@@ -560,9 +564,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         starDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
         Map<Long, Boolean> starMap = remoteStarService.getIsStarBatch(starDTO, blogIds);
 
-        blogList.forEach(blog -> {
-            if (blog != null) {
-                blog.setIsStared(starMap.getOrDefault(blog.getId(), false));
+        blogVOList.forEach(vo -> {
+            if (vo != null) {
+                vo.setIsStared(starMap.getOrDefault(vo.getId(), false));
             }
         });
     }
@@ -571,13 +575,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * 批量查询博客有关的用户信息
      * @param blogList
      */
-    private void queryBlogListUserMessage(List<Blog> blogList) {
-        if (CollUtil.isEmpty(blogList)) {
+    private void queryBlogListUserMessage(List<BlogVO> blogVOList) {
+        if (CollUtil.isEmpty(blogVOList)) {
             return;
         }
         // Query userId list
-        List<Long> userIds = blogList.stream()
-                .map(Blog::getUserId)
+        List<Long> userIds = blogVOList.stream()
+                .map(BlogVO::getUserId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -599,11 +603,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 (v1, v2) -> v1
         ));
 
-        blogList.forEach(blog -> {
-            com.smartLive.user.api.domain.UserDTO user = userMap.get(blog.getUserId());
+        blogVOList.forEach(vo -> {
+            com.smartLive.user.api.domain.UserDTO user = userMap.get(vo.getUserId());
             if (user != null) {
-                blog.setName(user.getNickName());
-                blog.setIcon(user.getIcon());
+                vo.setName(user.getNickName());
+                vo.setIcon(user.getIcon());
             }
         });
     }
@@ -801,7 +805,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         String key= RedisConstants.CACHE_BLOG_TYPE_KEY + typeId+":"+ current;
         List<Long> blogIdList = getBlogIdListFromRedis(key, SystemConstants.MAX_PAGE_SIZE);
         if (CollUtil.isNotEmpty(blogIdList)) {
-            return convertToBlogVOList(getBlogListByIds(blogIdList));
+            return getBlogListByIds(blogIdList);
         }
         Page<Blog> page = query()
                 .select("images","liked","user_id","title","id")
@@ -812,15 +816,15 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
         List<Blog> blogList = page.getRecords();
+        List<BlogVO> voList = convertToBlogVOList(blogList);
         if(blogList!= null&&blogList.size()>0){
             // 查询blog有关的用户信息
-            // 查询blog有关的用户信息
-            queryBlogListUserMessage(blogList);
-            queryBlogListIsLike(blogList);
+            queryBlogListUserMessage(voList);
+            queryBlogListIsLike(voList);
             //把查询结果写入redis
             saveBlogIdListToRedis(key, blogList, RedisConstants.CACHE_HOT_BLOG_TTL, TimeUnit.DAYS);
         }
-        return convertToBlogVOList(blogList);
+        return voList;
     }
 
     /**
@@ -862,9 +866,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             //使用多线程批量插入
             int finalPage = page;
             executorService.execute(() -> {
-                queryBlogListUserMessage(blogs);
+                List<BlogVO> voList = convertToBlogVOList(blogs);
+                queryBlogListUserMessage(voList);
                 // 创建请求并发送
-                sendEsBatchMessage(blogs);
+                sendEsBatchMessage(voList);
                 log.info("线程{}，发送第 {} 页，{} 条数据",Thread.currentThread().getName(),finalPage, blogs.size());
             });
             page++;
@@ -893,10 +898,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             // Batch query
             List<Blog> blogs = query().in("id", idList).list();
             if (CollUtil.isNotEmpty(blogs)) {
+                List<BlogVO> voList = convertToBlogVOList(blogs);
                 // Batch populate user info
-                queryBlogListUserMessage(blogs);
+                queryBlogListUserMessage(voList);
                 // Batch send message
-                sendEsBatchMessage(blogs);
+                sendEsBatchMessage(voList);
             }
         });
         return "发布成功";
@@ -906,7 +912,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * 批量发送ES同步消息
      * @param blogs
      */
-    private void sendEsBatchMessage(List<Blog> blogs) {
+    private void sendEsBatchMessage(List<?> blogs) {
         if (CollUtil.isEmpty(blogs)) {
             return;
         }
@@ -933,59 +939,59 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
     /**
      * 查询blog有关的用户信息
-     * @param blog
+     * @param blogVO
      */
-    private void queryBlogUser(Blog blog){
-        Long userId = blog.getUserId();
+    private void queryBlogUser(BlogVO blogVO){
+        Long userId = blogVO.getUserId();
         //根据用户id获取用户信息
         com.smartLive.user.api.domain.UserDTO user= remoteAppUserService.queryUserById(userId);
         if (user != null) {
-            blog.setName(user.getNickName());
-            blog.setIcon(user.getIcon());
+            blogVO.setName(user.getNickName());
+            blogVO.setIcon(user.getIcon());
         }
     }
     /**
      * 判断当前用户是否已经点赞
      * @param blog
      */
-    private void isBlogLiked(Blog blog) {
+    private void isBlogLiked(BlogVO blogVO) {
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
             //未登录,不用查询是否点赞
-            blog.setIsLike(false);
+            blogVO.setIsLike(false);
             return;
         }
         //获取当前登录用户
         Long userId = user.getId();
         LikeDTO likeDTO = new LikeDTO();
         likeDTO.setUserId(userId);
-        likeDTO.setSourceId(blog.getId());
+        likeDTO.setSourceId(blogVO.getId());
         likeDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
         //判断当前用户是否已经点赞
         Boolean isLike = remoteLikeService.isLike(likeDTO);
-        blog.setIsLike(isLike);
+        blogVO.setIsLike(isLike);
     }
 
     /**
      * 判断当前用户是否已经收藏博客
      * @param blog
      */
-    private void isBlogStared(Blog blog) {
+    private void isBlogStared(BlogVO blogVO) {
         AppLoginUser user = UserContextHolder.getUser();
         if (user == null) {
-            //未登录,不用查询是否点赞
-            blog.setIsStared(false);
+            //未登录,不用查询是否收藏
+            blogVO.setIsStared(false);
             return;
         }
         //获取当前登录用户
         Long userId = user.getId();
         StarDTO starDTO = new StarDTO();
         starDTO.setUserId(userId);
-        starDTO.setSourceId(blog.getId());
+        starDTO.setSourceId(blogVO.getId());
         starDTO.setSourceType(GlobalBizTypeEnum.BLOG.getCode());
         //判断当前用户是否已经收藏
         Boolean isStared = remoteStarService.isStar(starDTO);
-        blog.setIsStared(isStared);
+        blogVO.setIsStared(isStared);
     }
     /**
      * 从 Redis ZSet 中获取博客ID列表

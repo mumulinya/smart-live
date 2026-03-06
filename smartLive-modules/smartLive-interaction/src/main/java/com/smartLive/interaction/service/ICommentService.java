@@ -69,7 +69,7 @@ public interface ICommentService extends IService<Comment> {
      * @param current 当前页码
      * @return 评论列表
      */
-    List<Comment> listComment(Comment comment, Integer current);
+    List<CommentVO> listComment(Comment comment, Integer current, String sort);
 
     /**
      * 用户新增评论
@@ -95,14 +95,14 @@ public interface ICommentService extends IService<Comment> {
      * @param current 当前页码
      * @return 用户评论列表
      */
-    List<Comment> getCommentOfUser(Comment comment, Integer current);
+    List<CommentVO> getCommentOfUser(Comment comment, Integer current);
 
     /**
      * 获取全部评论列表
      *
      * @return 评论列表
      */
-    List<Comment> getCommentList();
+    List<CommentVO> getCommentList();
 
 
     /**
@@ -131,7 +131,7 @@ public interface ICommentService extends IService<Comment> {
      * @param sourceIdList 评论ID列表
      * @return 评论列表
      */
-    List<Comment> getCommentListByIds(List<Long> sourceIdList);
+    List<CommentVO> getCommentListByIds(List<Long> sourceIdList);
 
     /**
      * 批量更新评论点赞数
@@ -160,7 +160,7 @@ public interface ICommentService extends IService<Comment> {
      * @param id 评论主键
      * @return 评论实体
      */
-    Comment getCommentById(Long id);
+    CommentVO getCommentById(Long id);
     /**
      * 获取子评论列表（分页）
      *
@@ -168,7 +168,7 @@ public interface ICommentService extends IService<Comment> {
      * @param current 当前页码
      * @return 子评论列表
      */
-    List<Comment> listChildComment(Comment comment, Integer current);
+    List<CommentVO> listChildComment(Comment comment, Integer current);
 
     /**
      * 更新评论状态（审核通过/拒绝）

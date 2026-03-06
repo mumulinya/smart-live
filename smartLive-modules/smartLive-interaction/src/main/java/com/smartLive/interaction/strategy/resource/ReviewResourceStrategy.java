@@ -1,9 +1,7 @@
 package com.smartLive.interaction.strategy.resource;
 
 import com.smartLive.common.core.enums.ResourceTypeEnum;
-import com.smartLive.interaction.domain.Comment;
-import com.smartLive.interaction.domain.Review;
-import com.smartLive.interaction.service.ICommentService;
+import com.smartLive.interaction.domain.VO.ReviewVO;
 import com.smartLive.interaction.service.IReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @Component
-public class ReviewResourceStrategy implements ResourceStrategy<Review> {
+public class ReviewResourceStrategy implements ResourceStrategy<ReviewVO> {
 
     @Autowired
     private IReviewService reviewService;
@@ -31,8 +29,8 @@ public class ReviewResourceStrategy implements ResourceStrategy<Review> {
      * @param sourceIdList
      */
     @Override
-    public List<Review> getResourceList(List<Long> sourceIdList) {
-        List<Review> reviewList = reviewService.getReviewListByIds(sourceIdList);
+    public List<ReviewVO> getResourceList(List<Long> sourceIdList) {
+        List<ReviewVO> reviewList = reviewService.getReviewListByIds(sourceIdList);
         if (reviewList.isEmpty()) {
             return null;
         }
@@ -45,8 +43,8 @@ public class ReviewResourceStrategy implements ResourceStrategy<Review> {
      * @param sourceId
      */
     @Override
-    public Review getResourceById(Long sourceId) {
-        Review review = reviewService.getReviewById(sourceId);
+    public ReviewVO getResourceById(Long sourceId) {
+        ReviewVO review = reviewService.getReviewById(sourceId);
         return review;
     }
 
@@ -57,7 +55,7 @@ public class ReviewResourceStrategy implements ResourceStrategy<Review> {
      * @return
      */
     @Override
-    public Long getResourceId(Review data) {
+    public Long getResourceId(ReviewVO data) {
         return data.getId();
     }
 
@@ -65,7 +63,7 @@ public class ReviewResourceStrategy implements ResourceStrategy<Review> {
      * 获取资源作者id
      */
     @Override
-    public Long getAuthorId(Review data) {
+    public Long getAuthorId(ReviewVO data) {
         return data.getUserId();
     }
 
@@ -76,7 +74,7 @@ public class ReviewResourceStrategy implements ResourceStrategy<Review> {
      */
     @Override
     public HashMap<String, String> getResourceContentById(Long sourceId) {
-        Review review = reviewService.getReviewById(sourceId);
+        ReviewVO review = reviewService.getReviewById(sourceId);
         HashMap<String, String> map = new HashMap<>();
         if (review != null && review.getContent() != null) {
             String content = review.getContent();

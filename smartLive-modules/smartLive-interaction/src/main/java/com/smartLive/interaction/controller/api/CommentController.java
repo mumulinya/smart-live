@@ -105,8 +105,9 @@ public class CommentController extends BaseController
      * 获取评论列表（分页）
      */
     @GetMapping("/listComment")
-    public Result listComment(Comment  comment,@RequestParam("current") Integer current){
-        return Result.ok(commentService.listComment(comment,current));
+    public Result listComment(Comment  comment,@RequestParam("current") Integer current,
+                              @RequestParam(value = "sort", required = false) String sort){
+        return Result.ok(commentService.listComment(comment,current,sort));
     }
     /**
      * 获取子评论列表（分页）

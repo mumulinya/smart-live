@@ -7,7 +7,6 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.user.api.RemoteAppUserService;
-import com.smartLive.user.api.domain.User;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartlive.chat.domain.UserSessions;
 import com.smartlive.chat.mapper.UserSessionsMapper;

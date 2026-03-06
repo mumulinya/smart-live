@@ -1,7 +1,6 @@
 package com.smartLive.user.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -11,11 +10,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 用户对象 tb_user
- * 
+ *
  * @author mumulin
  * @date 2025-09-21
  */
@@ -46,74 +44,6 @@ public class User extends BaseEntity
     /** 人物头像 */
     @Excel(name = "人物头像")
     private String icon;
-
-    @TableField(exist = false)
-    private Boolean isFollow;
-
-    /** 个性签名 */
-    @TableField(exist = false)
-    private String introduce;
-    /** 城市 */
-    @TableField(exist = false)
-    private String city;
-    /** 新密码 */
-    @TableField(exist = false)
-    private String newPassword;
-    /** 旧密码 */
-    @TableField(exist = false)
-    private String oldPassword;
-    /** 是否有密码 */
-    @TableField(exist = false)
-    private Boolean hasPassword;
-    public void setId(Long id) 
-    {
-        this.id = id;
-    }
-
-    public Long getId() 
-    {
-        return id;
-    }
-
-    public void setPhone(String phone) 
-    {
-        this.phone = phone;
-    }
-
-    public String getPhone() 
-    {
-        return phone;
-    }
-
-    public void setPassword(String password) 
-    {
-        this.password = password;
-    }
-
-    public String getPassword() 
-    {
-        return password;
-    }
-
-    public void setNickName(String nickName) 
-    {
-        this.nickName = nickName;
-    }
-
-    public String getNickName() 
-    {
-        return nickName;
-    }
-
-    public void setIcon(String icon) 
-    {
-        this.icon = icon;
-    }
-
-    public String getIcon() 
-    {
-        return icon;
-    }
 
     @Override
     public String toString() {

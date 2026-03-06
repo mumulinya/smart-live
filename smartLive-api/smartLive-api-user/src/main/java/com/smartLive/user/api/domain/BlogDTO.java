@@ -1,7 +1,5 @@
 package com.smartLive.user.api.domain;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -51,17 +49,14 @@ public class BlogDTO extends BaseEntity implements Serializable
     /**
      * 用户图标
      */
-    @TableField(exist = false)
     private String icon;
     /**
      * 用户姓名
      */
-    @TableField(exist = false)
     private String name;
     /**
      * 是否点赞过了
      */
-    @TableField(exist = false)
     private Boolean isLike;
 
     public String getIcon() {

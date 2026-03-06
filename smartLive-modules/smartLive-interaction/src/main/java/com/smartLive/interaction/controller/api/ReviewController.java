@@ -105,8 +105,8 @@ public class ReviewController extends BaseController
      * 获取评论列表
      */
     @GetMapping("/listReview")
-    public Result listReview(Review  review,@RequestParam("current") Integer current){
-        return Result.ok(reviewService.listReview(review,current));
+    public Result listReview(Review review, @RequestParam("current") Integer current, @RequestParam(value = "sort", required = false) String sort){
+        return Result.ok(reviewService.listReview(review, current, sort));
     }
     /**
      * 添加评论

@@ -1,7 +1,6 @@
 package com.smartLive.interaction.domain.VO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.annotation.Excel;
@@ -91,6 +90,5 @@ public class ProductVO {
     private String shopName;
     private String shopLogo; // ProductDTO has shopImages, ProductVO had shopLogo/shopImages.
     private Long typeId;
-    @TableField(exist = false)
     private Double hotSource;
 }

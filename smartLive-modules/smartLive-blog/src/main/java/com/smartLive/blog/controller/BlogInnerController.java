@@ -76,7 +76,7 @@ public class BlogInnerController extends BaseController
      * 获取博客列表
      */
     @GetMapping("/getBlogListByIds")
-    List<Blog> getBlogListByIds(@RequestParam("sourceIdList") List<Long> sourceIdList){
+    List<BlogVO> getBlogListByIds(@RequestParam("sourceIdList") List<Long> sourceIdList){
         return blogService.getBlogListByIds(sourceIdList);
     }
     /**

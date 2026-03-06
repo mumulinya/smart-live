@@ -1,8 +1,7 @@
 package com.smartLive.interaction.strategy.resource;
 
-import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.enums.ResourceTypeEnum;
-import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.VO.CommentVO;
 import com.smartLive.interaction.service.ICommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @Component
-public class CommentResourceStrategy implements ResourceStrategy<Comment> {
+public class CommentResourceStrategy implements ResourceStrategy<CommentVO> {
 
     @Autowired
     private ICommentService commentService;
@@ -30,8 +29,8 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
      * @param sourceIdList
      */
     @Override
-    public List<Comment> getResourceList(List<Long> sourceIdList) {
-        List<Comment> commentList = commentService.getCommentListByIds(sourceIdList);
+    public List<CommentVO> getResourceList(List<Long> sourceIdList) {
+        List<CommentVO> commentList = commentService.getCommentListByIds(sourceIdList);
         if (commentList.isEmpty()) {
             return null;
         }
@@ -44,9 +43,8 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
      * @param sourceId
      */
     @Override
-    public Comment getResourceById(Long sourceId) {
-        Comment comment = commentService.getCommentById(sourceId);
-        return comment;
+    public CommentVO getResourceById(Long sourceId) {
+        return commentService.getCommentById(sourceId);
     }
 
     /**
@@ -56,7 +54,7 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
      * @return
      */
     @Override
-    public Long getResourceId(Comment data) {
+    public Long getResourceId(CommentVO data) {
         return data.getId();
     }
 
@@ -67,7 +65,7 @@ public class CommentResourceStrategy implements ResourceStrategy<Comment> {
      */
     @Override
     public HashMap<String,String> getResourceContentById(Long sourceId) {
-        Comment comment = commentService.getCommentById(sourceId);
+        CommentVO comment = commentService.getCommentById(sourceId);
         HashMap<String, String> map = new HashMap<>();
         if (comment != null && comment.getContent() != null) {
             String content = comment.getContent();

@@ -2,6 +2,7 @@ package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.interaction.domain.Review;
+import com.smartLive.interaction.domain.VO.ReviewVO;
 
 import java.util.List;
 import java.util.Map;
@@ -66,9 +67,10 @@ public interface IReviewService extends IService<Review> {
      *
      * @param review  评价查询条件
      * @param current 当前页码
+     * @param sort    排序方式：latest(最新), hot(最热)
      * @return 评价列表
      */
-    List<Review> listReview(Review review, Integer current);
+    List<ReviewVO> listReview(Review review, Integer current, String sort);
 
     /**
      * 用户新增评价
@@ -94,7 +96,7 @@ public interface IReviewService extends IService<Review> {
      * @param current 当前页码
      * @return 用户评价列表
      */
-    List<Review> getReviewOfUser(Review review, Integer current);
+    List<ReviewVO> getReviewOfUser(Review review, Integer current);
 
     /**
      * 获取用户发表的评价数
@@ -117,7 +119,7 @@ public interface IReviewService extends IService<Review> {
      * @param sourceIdList 评价ID列表
      * @return 评价列表
      */
-    List<Review> getReviewListByIds(List<Long> sourceIdList);
+    List<ReviewVO> getReviewListByIds(List<Long> sourceIdList);
 
     /**
      * 批量更新评价点赞数
@@ -151,9 +153,9 @@ public interface IReviewService extends IService<Review> {
      * 根据ID获取评价详情
      *
      * @param id 评价主键
-     * @return 评价实体
+     * @return 评价VO
      */
-    Review getReviewById(Long id);
+    ReviewVO getReviewById(Long id);
     /**
      * 获取评价收藏数
      *

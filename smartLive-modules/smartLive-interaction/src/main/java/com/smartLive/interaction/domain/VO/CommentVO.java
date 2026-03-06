@@ -1,9 +1,5 @@
 package com.smartLive.interaction.domain.VO;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
@@ -14,7 +10,8 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 评论对象 tb_comments
+ * 评论返回对象 (View Object)
+ * 用于前端展示评论详情
  *
  * @author mumulin
  * @date 2025-10-02
@@ -36,10 +33,11 @@ public class CommentVO extends BaseEntity
     @Excel(name = "来源类型  1", readConverterExp = "店=铺")
     private Integer sourceType;
 
+    /** 来源名称 */
     private String sourceName;
 
-    /** 来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。 */
-    @Excel(name = "来源id  对应来源类型表的主键ID。例如：如果 source_type='shop'，则此字段存 shop_id；如果 source_type='article'，则此字段存 article_id。")
+    /** 来源id */
+    @Excel(name = "来源id")
     private Long sourceId;
 
     /** 关联的1级评论id，如果是一级评论，则值为0 */
@@ -62,23 +60,28 @@ public class CommentVO extends BaseEntity
     @Excel(name = "点赞数")
     private Integer liked;
 
+    /** 回复数 */
+    @Excel(name = "回复数")
+    private Integer replyCount;
+
     /** 状态，0：正常，1：被举报，2：禁止查看 */
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
-    private String status;
-
-    /** 评分 */
-    @Excel(name = "评分")
-    private Integer rating;
+    private Integer status;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
+
     /** 用户昵称 */
-    @TableField(exist = false)
     private String nickName;
     /** 用户头像 */
-    @TableField(exist = false)
     private String userIcon;
     /** 是否是AI生成的评论 */
-    @TableField(exist = false)
     private Boolean isAIGenerated;
+    /** 店铺图片 */
+    private String shopImages;
+    /** 是否点赞 */
+    private Boolean isLike;
+
+    /** 排序依据：如 latest 最新，hot 最热 */
+    private String sort;
 }

@@ -32,7 +32,7 @@ public class CacheClient {
         redisData.setData(value);
         redisData.setExpireTime(LocalDateTime.now().plusSeconds(unit.toSeconds(time)));
         //写入redis
-        redisService.setCacheObject(key, JSONUtil.toJsonStr(redisData), time, unit);
+        redisService.setCacheObject(key, JSONUtil.toJsonStr(redisData));
     }
 
 
