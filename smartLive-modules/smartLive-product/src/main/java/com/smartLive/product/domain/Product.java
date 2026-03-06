@@ -73,6 +73,9 @@ public class Product extends BaseEntity implements Serializable {
     /** 商品状态 0:正常, 1:下架, 2:删除 */
     private Integer status;
 
+    /** 审核拒绝原因 */
+    private String rejectReason;
+
     /** 评价数 */
     private Integer reviews;
 

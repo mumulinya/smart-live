@@ -20,6 +20,7 @@ import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
+import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -67,7 +68,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private RemoteStarService remoteStarService;
     @Autowired
     private RemoteFollowService remoteFollowService;
-    
+
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
@@ -91,10 +92,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public ProductVO selectProductById(Long id)
     {
         Product product = productMapper.selectProductById(id);
-        if (product != null){
-            queryProductShopMessage(product);
-             // View count / interactions check could be here
-        }
         return convertToProductVO(product);
     }
 
@@ -108,9 +105,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public Product selectProductEntityById(Long id)
     {
         Product product = productMapper.selectProductById(id);
-        if (product != null){
-            queryProductShopMessage(product);
-        }
         return product;
     }
 
@@ -153,7 +147,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public int insertProduct(Product product)
     {
         product.setCreateTime(DateUtils.getNowDate());
-        
+
         // 保存商品
         int i = productMapper.insertProduct(product);
         if(i > 0){
@@ -229,7 +223,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if(i > 0){
             // 发送审核消息
             sendAuditMessage(product);
-            
+
             // 如果是秒杀，更新Redis库存
             if(product.getActivityType() != null && product.getActivityType() == 1){
                 redisService.setCacheObject(RedisConstants.SECKILL_STOCK_KEY + product.getId(), product.getStock());
@@ -342,12 +336,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (product.getActivityType() != null && product.getActivityType() == 1) {
             strategyName = "SeckillPurchaseStrategy";
         }
-        
+
         PurchaseStrategy strategy = purchaseStrategyMap.get(strategyName);
         if (strategy == null) {
              throw new RuntimeException("未找到对应的购买策略: " + strategyName);
         }
-        
+
         return strategy.purchase(userId, product);
     }
 
@@ -394,26 +388,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public List<Product> listProduct( ) {
-        List<Product> list = query().list();
-        list.forEach(this::queryProductShopMessage);
-        return list;
-    }
-
-    /**
-     * 查询商品所属店铺信息（设置shopName/typeId/shopLogo）
-     *
-     * @param product 商品实体
-     */
-    void queryProductShopMessage(Product product){
-        if (product.getShopId() != null && !product.getShopId().isEmpty()) {
-            String firstShopId = product.getShopId().split(",")[0];
-            ShopDTO shopDTO = remoteShopService.getShopById(Long.valueOf(firstShopId));
-            if(shopDTO != null){
-                product.setShopName(shopDTO.getName());
-                product.setTypeId(shopDTO.getTypeId());
-                product.setShopLogo(shopDTO.getShopLogo());
-            }
-        }
+        return query().list();
     }
 
     /**
@@ -586,7 +561,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
             List<Product> pageList = finalDbList.subList(start, end);
             resultList = convertToProductVOList(pageList);
-            
+
             // 此处走兜底，无实际 score，假分数
             for (int i = 0; i < resultList.size(); i++) {
                 resultList.get(i).setHotScore(100.0 - i);
@@ -651,7 +626,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public String allPublish() {
         int page = PageConstants.PAGE_NUMBER;
-        int pageSize = PageConstants.ES_PAGE_SIZE; 
+        int pageSize = PageConstants.ES_PAGE_SIZE;
         while (true) {
             // 分页查询
             List<Product> products = query()
@@ -715,7 +690,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         request.setIndexName(EsIndexNameConstants.PRODUCT_INDEX_NAME);
         request.setData(products);
         request.setType(GlobalBizTypeEnum.PRODUCT.getCode());
-        
+
         // 发送rabbitmq消息数据插入es
         mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_BATCH_INSERT_ROUTING_KEY, request);
         // 发送rabbitmq消息数据插入Milvus
@@ -860,8 +835,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * @return 更新结果
      */
     @Override
-    public Boolean updateProductStatus(Long id, Integer status) {
-        boolean b = update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Product>().set("status", status).eq("id", id));
+    public Boolean updateProductStatus(Long id, Integer status, String reason) {
+        // 拒绝时写入拒绝原因，通过时清空拒绝原因
+        String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
+        boolean b = update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Product>().set("status", status).set("reject_reason", rejectReason).eq("id", id));
         if(b){
             publish(new String[]{id.toString()});
             clearProductCache(id);

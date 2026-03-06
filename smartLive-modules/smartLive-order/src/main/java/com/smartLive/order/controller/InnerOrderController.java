@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * 订单表Controller
- * 
+ *
  * @author mumulin
  * @date 2025-09-21
  */
@@ -41,7 +41,7 @@ public class InnerOrderController extends BaseController
     Integer getCommentCount(@PathVariable("userId")Long userId){
         return orderService.getOrderCount(userId);
     }
-    
+
     /**
      * 获取订单总数
      * @return
@@ -50,15 +50,19 @@ public class InnerOrderController extends BaseController
     Integer getOrderTotal(){
         return orderService.getOrderTotal();
     }
-    
+
     /**
      * 修改订单评论状态
      * @param orderId
+     * @param reviewId
+     * @param reviewTime
      * @return
      */
     @PutMapping("/updateOrderReviewStatus/{orderId}")
-    Integer updateOrderReviewStatus(@PathVariable("orderId") Long orderId) {
-        return orderService.updateOrderReviewStatus(orderId);
+    Integer updateOrderReviewStatus(@PathVariable("orderId") Long orderId,
+                                    @RequestParam(value = "reviewId", required = false) Long reviewId,
+                                    @RequestParam(value = "reviewTime", required = false) java.util.Date reviewTime) {
+        return orderService.updateOrderReviewStatus(orderId, reviewId, reviewTime);
     }
 
     /**
@@ -71,4 +75,5 @@ public class InnerOrderController extends BaseController
     Integer paySuccess(@PathVariable("orderId") Long orderId, @PathVariable("payType") Integer payType) {
         return orderService.paySuccess(orderId, payType);
     }
+
 }

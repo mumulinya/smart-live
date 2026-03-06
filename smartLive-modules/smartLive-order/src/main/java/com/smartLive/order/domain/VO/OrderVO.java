@@ -59,17 +59,17 @@ public class OrderVO extends BaseEntity implements Serializable
      * (新增：展示用户实际支付了多少钱)
      */
     private BigDecimal payAmount;
-
-    /** * 购买数量
-     * (新增：展示用户买了多少张)
-     */
-    private Integer amount;
-
+    /** * 订单封面图片 */
+    private String coverImg;
     /** * 评价状态
      * 0：未评价；1：已评价
      * (新增：用于前端判断显示"去评价"还是"查看评价"按钮)
      */
     private Integer reviewStatus;
+
+    /** * 评价ID */
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long reviewId;
 
     /** * 评价时间
      * (新增：展示评价日期)
@@ -103,7 +103,7 @@ public class OrderVO extends BaseEntity implements Serializable
     private Date useTime;
 
     /** 核销门店ID */
-    private Long useShopId;
+    private Long shopId;
 
     /** 退款时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -112,10 +112,4 @@ public class OrderVO extends BaseEntity implements Serializable
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-
-    /** 店铺id */
-    private Long shopId;
-
-    /** 店铺名称 */
-    private String shopName;
 }

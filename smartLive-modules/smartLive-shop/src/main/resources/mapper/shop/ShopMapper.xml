@@ -20,12 +20,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="fans"    column="fans"    />
         <result property="score"    column="score"    />
         <result property="openHours"    column="open_hours"    />
+        <result property="rejectReason"    column="reject_reason"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateTime"    column="update_time"    />
     </resultMap>
 
     <sql id="selectShopVo">
-        select id, name, type_id, shop_logo, images, area, address, x, y, avg_price, sold, reviews, fans, score, open_hours, create_time, update_time from shop
+        select id, name, type_id, shop_logo, images, area, address, x, y, avg_price, sold, reviews, fans, score, open_hours, reject_reason, create_time, update_time from shop
     </sql>
 
     <select id="selectShopList" parameterType="com.smartLive.shop.domain.Shop" resultMap="ShopResult">
@@ -70,6 +71,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="fans != null">fans,</if>
             <if test="score != null">score,</if>
             <if test="openHours != null">open_hours,</if>
+            <if test="rejectReason != null">reject_reason,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
          </trim>
@@ -88,6 +90,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="fans != null">#{fans},</if>
             <if test="score != null">#{score},</if>
             <if test="openHours != null">#{openHours},</if>
+            <if test="rejectReason != null">#{rejectReason},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
          </trim>
@@ -110,6 +113,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="fans != null">fans = #{fans},</if>
             <if test="score != null">score = #{score},</if>
             <if test="openHours != null">open_hours = #{openHours},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>

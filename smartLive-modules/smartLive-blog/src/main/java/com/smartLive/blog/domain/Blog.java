@@ -66,6 +66,9 @@ public class Blog extends BaseEntity implements Serializable
     /** 状态，0：正常，1：草稿，2：禁止查看 */
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
     private Short status;
+
+    /** 审核拒绝原因 */
+    private String rejectReason;
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

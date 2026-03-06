@@ -17,6 +17,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.order.domain.VO.OrderVO;
+import com.smartLive.shop.api.DTO.ShopDTO;
+import com.smartLive.shop.api.RemoteShopService;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -36,7 +38,7 @@ import jakarta.annotation.Resource;
 
 /**
  * 订单表Service业务层处理
- * 
+ *
  * @author mumulin
  * @date 2025-09-21
  */
@@ -47,7 +49,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private OrderMapper orderMapper;
 
-    
+
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
@@ -55,7 +57,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Autowired
     private RemotePointsService remotePointsService;
-
     @Resource
     private RedissonClient redissonClient;
 
@@ -76,7 +77,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 查询订单表
-     * 
+     *
      * @param id 订单表主键
      * @return 订单表
      */
@@ -96,7 +97,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 查询订单表列表
-     * 
+     *
      * @param order 订单表
      * @return 订单表
      */
@@ -115,7 +116,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 新增订单表
-     * 
+     *
      * @param order 订单表
      * @return 结果
      */
@@ -128,7 +129,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 修改订单表
-     * 
+     *
      * @param order 订单表
      * @return 结果
      */
@@ -141,7 +142,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 批量删除订单表
-     * 
+     *
      * @param ids 需要删除的订单表主键
      * @return 结果
      */
@@ -153,7 +154,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 删除订单表信息
-     * 
+     *
      * @param id 订单表主键
      * @return 结果
      */
@@ -232,13 +233,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return;
         }else{
             log.info("订单已创建，ID={}，数量={}，发送 MQ 异步扣库指令...", order.getId(), order.getAmount());
-            
+
             // 构建并发送异步库存扣减消息给商品模块
             StockDeductMessage msg = new StockDeductMessage();
             msg.setProductId(order.getSourceId());
             msg.setOrderId(order.getId());
             msg.setCount(order.getAmount() != null ? order.getAmount() : 1); // 扣减实际购买数量
-            
+
             mqMessageSendUtils.sendMqMessage(
                 ProductMqConstants.PRODUCT_STOCK_EXCHANGE,
                 ProductMqConstants.PRODUCT_STOCK_DEDUCT_ROUTING_KEY,
@@ -274,15 +275,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             BeanUtils.copyProperties(v, orderVO);;
             ProductDTO product  = remoteProductService.getProductById(v.getSourceId());
             if(product!=null) {
-                if (product.getShopId() != null && !product.getShopId().isEmpty()) {
-                    orderVO.setShopId(Long.valueOf(product.getShopId().split(",")[0]));
-                }
-                orderVO.setShopName(product.getShopName());
                 orderVO.setRules(product.getRulesJson()); // Mapped rulesJson to rules
                 orderVO.setPayValue(product.getPrice());      // Mapped price to payValue
                 orderVO.setActualValue(product.getOriginalPrice()); // Mapped originalPrice to actualValue
                 orderVO.setTitle(product.getName());          // Mapped name to title
                 orderVO.setSubTitle(product.getSubTitle());
+                orderVO.setCoverImg(product.getCoverImg());
             }
             orderVOList.add(orderVO);
         });
@@ -382,19 +380,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * 使用订单 (核销)
      *
      * @param id 订单ID
-     * @param useShopId 核销的门店ID
+     * @param shopId 核销的门店ID
      * @return 影响行数
      */
     @Override
-    public Integer use(Long id, Long useShopId) {
+    public Integer use(Long id, Long shopId) {
         Order order = getById(id);
         if(order==null){
             throw new BusinessException("订单不存在");
         }
         order.setUseTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.VERIFIED);
-        if (useShopId != null) {
-            order.setUseShopId(useShopId);
+        if (shopId != null) {
+            order.setShopId(shopId);
         }
         int i = updateOrder(order);
         if (i > 0) {
@@ -444,15 +442,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             BeanUtils.copyProperties(order, orderVO);;
             ProductDTO product  = remoteProductService.getProductById(order.getSourceId());
             if(product!=null) {
-                if (product.getShopId() != null && !product.getShopId().isEmpty()) {
-                    orderVO.setShopId(Long.valueOf(product.getShopId().split(",")[0]));
-                }
-                orderVO.setShopName(product.getShopName());
                 orderVO.setRules(product.getRulesJson());
                 orderVO.setPayValue(product.getPrice());
                 orderVO.setActualValue(product.getOriginalPrice());
                 orderVO.setTitle(product.getName());
                 orderVO.setSubTitle(product.getSubTitle());
+                orderVO.setCoverImg(product.getCoverImg());
             }
             return orderVO;
         }
@@ -463,12 +458,18 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * 修改订单评价状态
      *
      * @param orderId
+     * @param reviewId
+     * @param reviewTime
      * @return
      */
     @Override
-    public Integer updateOrderReviewStatus(Long orderId) {
-        boolean update = update().eq("id", orderId).set("review_status", 1).update();
-        return update==true?1:0;
+    public Integer updateOrderReviewStatus(Long orderId, Long reviewId, java.util.Date reviewTime) {
+        boolean update = update().eq("id", orderId)
+                .set("review_status", 1)
+                .set("review_id", reviewId)
+                .set("review_time", reviewTime)
+                .update();
+        return update ? 1 : 0;
     }
 
     @Autowired

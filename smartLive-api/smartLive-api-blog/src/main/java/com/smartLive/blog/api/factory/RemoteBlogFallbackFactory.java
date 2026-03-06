@@ -124,7 +124,7 @@ public class RemoteBlogFallbackFactory implements FallbackFactory<RemoteBlogServ
              * @param status
              */
             @Override
-            public Boolean updateBlogStatus(Long targetId, Integer status) {
+            public Boolean updateBlogStatus(Long targetId, Integer status, String reason) {
                 log.error("更新博客状态失败:{}", cause.getMessage());
                 return false;
             }

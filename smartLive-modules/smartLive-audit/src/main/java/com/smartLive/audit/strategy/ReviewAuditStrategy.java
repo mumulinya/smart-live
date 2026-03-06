@@ -31,7 +31,7 @@ public class ReviewAuditStrategy implements AuditStrategy {
     @Override
     public boolean handleAuditResult(Long targetId, Integer status, String reason) {
         // Call remote review service
-       return remoteReviewService.updateReviewStatus(targetId, status);
+       return remoteReviewService.updateReviewStatus(targetId, status, reason);
     }
     /**
      * Get submitter name

@@ -47,8 +47,7 @@ public class ProductAuditStrategy implements AuditStrategy {
 
     @Override
     public boolean handleAuditResult(Long targetId, Integer status, String reason) {
-        // Call remote service to update status
-        return remoteProductService.updateProductStatus(targetId, status);
+        return remoteProductService.updateProductStatus(targetId, status, reason);
     }
 
     private Double getDoubleValue(Map<String, Object> map, String... keys) {

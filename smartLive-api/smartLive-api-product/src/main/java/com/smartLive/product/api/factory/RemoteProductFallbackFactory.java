@@ -88,7 +88,7 @@ public class RemoteProductFallbackFactory implements FallbackFactory<RemoteProdu
             }
 
             @Override
-            public Boolean updateProductStatus(Long id, Integer status) {
+            public Boolean updateProductStatus(Long id, Integer status, String reason) {
                 return false;
             }
         };

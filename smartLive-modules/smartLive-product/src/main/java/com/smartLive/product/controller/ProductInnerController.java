@@ -116,7 +116,7 @@ public class ProductInnerController extends BaseController {
      * 更新商品状态。
      */
     @PostMapping("/updateProductStatus")
-    Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status) {
-        return productService.updateProductStatus(id, status);
+    Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason) {
+        return productService.updateProductStatus(id, status, reason);
     }
 }

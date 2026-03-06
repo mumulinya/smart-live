@@ -204,9 +204,10 @@ public interface IProductService extends IService<Product>
      *
      * @param id     商品ID
      * @param status 商品状态
+     * @param reason 拒绝原因（通过时为null）
      * @return 更新结果
      */
-    Boolean updateProductStatus(Long id, Integer status);
+    Boolean updateProductStatus(Long id, Integer status, String reason);
 
     /**
      * 获取热门商品排行榜

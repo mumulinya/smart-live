@@ -167,9 +167,10 @@ public interface IReviewService extends IService<Review> {
      *
      * @param id     评价ID
      * @param status 状态
+     * @param reason 拒绝原因（通过时为null）
      * @return 更新结果
      */
-    Boolean updateReviewStatus(Long id, Integer status);
+    Boolean updateReviewStatus(Long id, Integer status, String reason);
 
     /**
      * 判断当前用户是否评价过目标资源

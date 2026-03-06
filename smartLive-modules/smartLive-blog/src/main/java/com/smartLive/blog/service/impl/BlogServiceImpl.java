@@ -18,6 +18,7 @@ import com.smartLive.common.rabbitmq.domain.*;
 import org.springframework.beans.BeanUtils;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.FeedTypeEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
@@ -830,8 +831,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return 更新结果
      */
     @Override
-    public Boolean updateBlogStatus(Long targetId, Integer status) {
-        boolean updated = update(new UpdateWrapper<Blog>().set("status", status).eq("id", targetId));
+    public Boolean updateBlogStatus(Long targetId, Integer status, String reason) {
+        // 拒绝时写入拒绝原因，通过时清空拒绝原因
+        String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
+        boolean updated = update(new UpdateWrapper<Blog>().set("status", status).set("reject_reason", rejectReason).eq("id", targetId));
         if (updated) {
             flashRedisBlogCache(targetId);
             flashRedisBlogListCache();

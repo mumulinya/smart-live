@@ -89,6 +89,9 @@ public class Shop extends BaseEntity implements Serializable
     @Excel(name = "营业时间，例如 10:00-22:00")
     private String openHours;
 
+    /** 审核拒绝原因 */
+    private String rejectReason;
+
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

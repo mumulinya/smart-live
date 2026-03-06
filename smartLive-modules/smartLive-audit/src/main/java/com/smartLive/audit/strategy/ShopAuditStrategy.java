@@ -31,8 +31,7 @@ public class ShopAuditStrategy implements AuditStrategy {
 
     @Override
     public boolean handleAuditResult(Long targetId, Integer status, String reason) {
-        // Call remote service to update status
-        return remoteShopService.updateShopStatus(targetId, status);
+        return remoteShopService.updateShopStatus(targetId, status, reason);
     }
 
     /**

@@ -100,8 +100,8 @@ public class ShopInnerController extends BaseController {
      * 更新店铺状态
      */
     @PostMapping("/updateShopStatus")
-    Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status){
-        return shopService.updateShopStatus(id, status);
+    Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason){
+        return shopService.updateShopStatus(id, status, reason);
     }
 
     /**

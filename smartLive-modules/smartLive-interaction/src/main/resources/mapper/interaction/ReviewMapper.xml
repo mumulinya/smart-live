@@ -21,12 +21,13 @@
         <result property="tasteScore"    column="taste_score"    />
         <result property="envScore"    column="env_score"    />
         <result property="isAnonymous"    column="is_anonymous"    />
+        <result property="rejectReason"    column="reject_reason"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateTime"    column="update_time"    />
     </resultMap>
 
     <sql id="selectReviewVo">
-        select id, user_id, source_type, source_id, shop_id, order_id,score, service_score, taste_score, env_score, is_anonymous, images, content, liked, reply_count,status, rating, create_time, update_time from review
+        select id, user_id, source_type, source_id, shop_id, order_id,score, service_score, taste_score, env_score, is_anonymous, reject_reason, images, content, liked, reply_count,status, rating, create_time, update_time from review
     </sql>
 
     <select id="selectReviewList" parameterType="com.smartLive.interaction.domain.Review" resultMap="ReviewResult">
@@ -72,6 +73,7 @@
             <if test="tasteScore != null">taste_score,</if>
             <if test="envScore != null">env_score,</if>
             <if test="isAnonymous != null">is_anonymous,</if>
+            <if test="rejectReason != null">reject_reason,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
         </trim>
@@ -90,6 +92,7 @@
             <if test="tasteScore != null">#{tasteScore},</if>
             <if test="envScore != null">#{envScore},</if>
             <if test="isAnonymous != null">#{isAnonymous},</if>
+            <if test="rejectReason != null">#{rejectReason},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
         </trim>
@@ -112,6 +115,7 @@
             <if test="tasteScore != null">taste_score = #{tasteScore},</if>
             <if test="envScore != null">env_score = #{envScore},</if>
             <if test="isAnonymous != null">is_anonymous = #{isAnonymous},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>

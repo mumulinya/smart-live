@@ -35,6 +35,8 @@ import com.smartLive.interaction.service.IStarService;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
 import com.smartLive.order.api.RemoteOrderService;
+import com.smartLive.product.api.DTO.ProductDTO;
+import com.smartLive.product.api.RemoteProductService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.user.api.RemoteAppUserService;
@@ -82,7 +84,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private IStarService starService;
     @Autowired
     private RemoteOrderService remoteOrderService;
-    
+    @Autowired
+    private RemoteProductService remoteProductService;
+
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
@@ -273,9 +277,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             return Collections.emptyList();
         }
 
-        // 3. 第三步：组装动态的交互状态（是否点赞）与外部用户信息
+        // 3. 第三步：组装动态的交互状态（是否点赞）与外部用户信息、商品信息
         queryReviewListIsLike(list);
         queryReviewListUserMessage(list);
+        queryReviewListProductMessage(list);
 
         // 挂载 AI 自动评价（如果存在）
         String key = RedisConstants.CACHE_AI_REVIEW_KEY + review.getSourceType() + ":" + review.getSourceId();
@@ -306,7 +311,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             // 2. 更新订单维度的评价状态
             Long orderId = review.getOrderId();
             if (orderId != null) {
-                remoteOrderService.updateOrderReviewStatus(orderId);
+                remoteOrderService.updateOrderReviewStatus(orderId, review.getId(), review.getCreateTime());
             }
 
             ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
@@ -481,6 +486,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             queryReviewListIsLike(list);
             queryReviewListUserMessage(list);
             queryReviewListShopMessage(list);
+            queryReviewListProductMessage(list);
         }
         return list;
     }
@@ -569,6 +575,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         queryReviewListUserMessage(orderedList);
         queryReviewListShopMessage(list);
+        queryReviewListProductMessage(orderedList);
         queryReviewListIsLike(orderedList);
         return orderedList;
     }
@@ -603,11 +610,52 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         ));
         reviewList.forEach(review -> {
             if (review.getShopId() != null && !review.getShopId().toString().isEmpty()) {
-                Long firstShopId = Long.valueOf(review.getShopId().toString().split(",")[0]);
-                ShopDTO shopDTO = shopMap.get(firstShopId);
+                ShopDTO shopDTO = shopMap.get(review.getShopId());
                 if (shopDTO != null) {
                     review.setShopLogo(shopDTO.getShopLogo());
                     review.setShopName((shopDTO.getName()));
+                }
+            }
+        });
+    }
+
+    /**
+     * RPC 批量远程调用获取评价关联的商品详情（标题、背景图、价格）
+     *
+     * @param reviewList 待挂载商品信息的评价列表
+     */
+    private void queryReviewListProductMessage(List<Review> reviewList) {
+        if (CollUtil.isEmpty(reviewList)) {
+            return;
+        }
+        // 筛选出 sourceType 为商品类型的评价，收集其 sourceId 作为商品ID
+        Integer productCode = GlobalBizTypeEnum.PRODUCT.getCode();
+        List<Long> productIds = reviewList.stream()
+                .filter(r -> productCode.equals(r.getSourceType()) && r.getSourceId() != null)
+                .map(Review::getSourceId)
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(productIds)) {
+            return;
+        }
+
+        List<ProductDTO> productList = remoteProductService.getProductListByIds(productIds);
+        if (CollUtil.isEmpty(productList)) {
+            return;
+        }
+
+        Map<Long, ProductDTO> productMap = productList.stream().collect(Collectors.toMap(
+                ProductDTO::getId,
+                Function.identity(),
+                (v1, v2) -> v1
+        ));
+        reviewList.forEach(review -> {
+            if (productCode.equals(review.getSourceType()) && review.getSourceId() != null) {
+                ProductDTO productDTO = productMap.get(review.getSourceId());
+                if (productDTO != null) {
+                    review.setProductName(productDTO.getName());
+                    review.setProductCoverImg(productDTO.getCoverImg());
+                    review.setProductPrice(productDTO.getPrice());
                 }
             }
         });
@@ -807,11 +855,20 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             review.setIsStared(starService.isStar(star));
 
             if (review.getShopId() != null && !review.getShopId().toString().isEmpty()) {
-                Long firstShopId = Long.valueOf(review.getShopId().toString().split(",")[0]);
-                ShopDTO shop = remoteShopService.getShopById(firstShopId);
+                ShopDTO shop = remoteShopService.getShopById(review.getShopId());
                 if(shop!=null){
                     review.setShopName(shop.getName());
                     review.setShopLogo(shop.getImages());
+                }
+            }
+            // 挂载商品信息（商品标题、背景图、价格）
+            Integer productCode = GlobalBizTypeEnum.PRODUCT.getCode();
+            if (productCode.equals(review.getSourceType()) && review.getSourceId() != null) {
+                ProductDTO productDTO = remoteProductService.getProductById(review.getSourceId());
+                if (productDTO != null) {
+                    review.setProductName(productDTO.getName());
+                    review.setProductCoverImg(productDTO.getCoverImg());
+                    review.setProductPrice(productDTO.getPrice());
                 }
             }
             UserDTO userDTO = remoteAppUserService.queryUserById(review.getUserId());
@@ -900,9 +957,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 是否处理成功
      */
     @Override
-    public Boolean updateReviewStatus(Long id, Integer status) {
+    public Boolean updateReviewStatus(Long id, Integer status, String reason) {
+        // 拒绝时写入拒绝原因，通过时清空拒绝原因
+        String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
         boolean update = update(new UpdateWrapper<Review>()
                 .set("status", status)
+                .set("reject_reason", rejectReason)
                 .eq("id", id));
         if (update) {
             clearReviewCache(id);

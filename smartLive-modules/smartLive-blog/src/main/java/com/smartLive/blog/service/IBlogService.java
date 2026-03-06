@@ -219,7 +219,8 @@ public interface IBlogService extends IService<Blog>
      *
      * @param targetId 博客ID
      * @param status   博客状态
+     * @param reason   拒绝原因（通过时为null）
      * @return 更新结果
      */
-    Boolean updateBlogStatus(Long targetId, Integer status);
+    Boolean updateBlogStatus(Long targetId, Integer status, String reason);
 }

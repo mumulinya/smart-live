@@ -21,7 +21,7 @@ import com.smartLive.common.core.web.page.TableDataInfo;
 
 /**
  * 订单表Controller
- * 
+ *
  * @author mumulin
  * @date 2025-09-21
  */
@@ -122,7 +122,7 @@ public class OrderController extends BaseController
     public Result getOrderById(@PathVariable("id") Long id){
         return Result.ok(orderService.getOrderById(id));
     }
-    
+
     /**
      * 支付订单
      */
@@ -138,15 +138,17 @@ public class OrderController extends BaseController
     /**
      * 使用订单 (核销)
      */
-    @PostMapping("/use/{id}")
-    public Result use(@PathVariable("id") Long id, @RequestParam(value = "useShopId", required = false) Long useShopId) {
-        Integer use = orderService.use(id, useShopId);
+    @PostMapping("/use")
+    public Result use(@RequestBody Order order) {
+        Long id = order.getId();
+        Long shopId = order.getShopId();
+        Integer use = orderService.use(id, shopId);
         if(use>0){
             return Result.ok("使用成功");
         }
         return Result.fail("使用失败");
     }
-    
+
     /**
      * 取消订单
      */
@@ -158,7 +160,7 @@ public class OrderController extends BaseController
         }
         return Result.fail("取消失败");
     }
-    
+
     /**
      * 退款订单
      */

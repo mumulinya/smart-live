@@ -16,20 +16,21 @@
         <result property="amount"       column="amount"        />
         <result property="outTradeNo"   column="out_trade_no"  />
         <result property="reviewStatus" column="review_status" />
+        <result property="reviewId"     column="review_id" />
         <result property="reviewTime"   column="review_time"   />
         <result property="refundAmount" column="refund_amount" />
         <result property="createTime"   column="create_time"    />
         <result property="payTime"      column="pay_time"    />
         <result property="useTime"      column="use_time"    />
-        <result property="useShopId"    column="use_shop_id" />
+        <result property="shopId"       column="shop_id" />
         <result property="refundTime"   column="refund_time"    />
         <result property="updateTime"   column="update_time"    />
     </resultMap>
 
     <sql id="selectOrderVo">
         select id, user_id, source_id, source_type, pay_type, status,
-               pay_amount, amount, out_trade_no, review_status, review_time, refund_amount,
-               create_time, pay_time, use_time, use_shop_id, refund_time, update_time
+               pay_amount, amount, out_trade_no, review_status, review_id, review_time, refund_amount,
+               create_time, pay_time, use_time, shop_id, refund_time, update_time
         from `order`
     </sql>
 
@@ -43,10 +44,11 @@
             <if test="status != null  and status != ''"> and status = #{status}</if>
             <if test="payTime != null "> and pay_time = #{payTime}</if>
             <if test="useTime != null "> and use_time = #{useTime}</if>
-            <if test="useShopId != null "> and use_shop_id = #{useShopId}</if>
+            <if test="shopId != null "> and shop_id = #{shopId}</if>
             <if test="refundTime != null "> and refund_time = #{refundTime}</if>
             <if test="outTradeNo != null and outTradeNo != ''"> and out_trade_no = #{outTradeNo}</if>
             <if test="reviewStatus != null"> and review_status = #{reviewStatus}</if>
+            <if test="reviewId != null"> and review_id = #{reviewId}</if>
         </where>
     </select>
 
@@ -68,13 +70,14 @@
             <if test="amount != null">amount,</if>
             <if test="outTradeNo != null">out_trade_no,</if>
             <if test="reviewStatus != null">review_status,</if>
+            <if test="reviewId != null">review_id,</if>
             <if test="reviewTime != null">review_time,</if>
             <if test="refundAmount != null">refund_amount,</if>
 
             <if test="createTime != null">create_time,</if>
             <if test="payTime != null">pay_time,</if>
             <if test="useTime != null">use_time,</if>
-            <if test="useShopId != null">use_shop_id,</if>
+            <if test="shopId != null">shop_id,</if>
             <if test="refundTime != null">refund_time,</if>
             <if test="updateTime != null">update_time,</if>
         </trim>
@@ -89,13 +92,14 @@
             <if test="amount != null">#{amount},</if>
             <if test="outTradeNo != null">#{outTradeNo},</if>
             <if test="reviewStatus != null">#{reviewStatus},</if>
+            <if test="reviewId != null">#{reviewId},</if>
             <if test="reviewTime != null">#{reviewTime},</if>
             <if test="refundAmount != null">#{refundAmount},</if>
 
             <if test="createTime != null">#{createTime},</if>
             <if test="payTime != null">#{payTime},</if>
             <if test="useTime != null">#{useTime},</if>
-            <if test="useShopId != null">#{useShopId},</if>
+            <if test="shopId != null">#{shopId},</if>
             <if test="refundTime != null">#{refundTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
         </trim>
@@ -113,13 +117,14 @@
             <if test="amount != null">amount = #{amount},</if>
             <if test="outTradeNo != null">out_trade_no = #{outTradeNo},</if>
             <if test="reviewStatus != null">review_status = #{reviewStatus},</if>
+            <if test="reviewId != null">review_id = #{reviewId},</if>
             <if test="reviewTime != null">review_time = #{reviewTime},</if>
             <if test="refundAmount != null">refund_amount = #{refundAmount},</if>
 
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="payTime != null">pay_time = #{payTime},</if>
             <if test="useTime != null">use_time = #{useTime},</if>
-            <if test="useShopId != null">use_shop_id = #{useShopId},</if>
+            <if test="shopId != null">shop_id = #{shopId},</if>
             <if test="refundTime != null">refund_time = #{refundTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>

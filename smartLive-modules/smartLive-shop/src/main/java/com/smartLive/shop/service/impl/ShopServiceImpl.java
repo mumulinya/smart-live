@@ -27,6 +27,7 @@ import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
+import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
@@ -858,9 +859,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 结果
      */
     @Override
-    public Boolean updateShopStatus(Long id, Integer status) {
+    public Boolean updateShopStatus(Long id, Integer status, String reason) {
         Shop shop = getById(id);
-        boolean updated = update(new UpdateWrapper<Shop>().set("status", status).eq("id", id));
+        // 拒绝时写入拒绝原因，通过时清空拒绝原因
+        String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
+        boolean updated = update(new UpdateWrapper<Shop>().set("status", status).set("reject_reason", rejectReason).eq("id", id));
         if (updated) {
             flashShopRedisCache(id);
             if (shop != null && shop.getTypeId() != null) {

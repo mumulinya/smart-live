@@ -21,7 +21,7 @@ public class RemoteReviewFallbackFactory implements FallbackFactory<RemoteReview
             }
 
             @Override
-            public Boolean updateReviewStatus(Long id, Integer status) {
+            public Boolean updateReviewStatus(Long id, Integer status, String reason) {
                 log.error("评价服务调用失败:{}", throwable.getMessage());
                 return false;
             }

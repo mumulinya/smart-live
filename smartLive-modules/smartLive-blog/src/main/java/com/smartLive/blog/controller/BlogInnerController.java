@@ -35,8 +35,8 @@ public class BlogInnerController extends BaseController
      * 更新博客状态
      */
     @PostMapping("/updateBlogStatus")
-    Boolean updateBlogStatus(@RequestParam("targetId") Long targetId,@RequestParam("status") Integer status){
-        return blogService.updateBlogStatus(targetId,status);
+    Boolean updateBlogStatus(@RequestParam("targetId") Long targetId, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason){
+        return blogService.updateBlogStatus(targetId, status, reason);
     }
     /**
      * 获取博客详情

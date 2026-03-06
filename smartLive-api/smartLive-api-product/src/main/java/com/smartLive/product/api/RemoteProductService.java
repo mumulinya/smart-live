@@ -72,5 +72,5 @@ public interface RemoteProductService {
      * 更新商品状态
      */
     @PostMapping("/inner/product/updateProductStatus")
-    Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
+    Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason);
 }

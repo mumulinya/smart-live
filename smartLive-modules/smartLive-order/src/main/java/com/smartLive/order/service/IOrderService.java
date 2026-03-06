@@ -102,10 +102,10 @@ public interface IOrderService  extends IService<Order>
     /**
      * 使用订单 (核销)
      * @param id 订单ID
-     * @param useShopId 核销的门店ID
+     * @param shopId 核销的门店ID
      * @return 影响行数
      */
-    Integer use(Long id, Long useShopId);
+    Integer use(Long id, Long shopId);
 
     /**
      * 获取订单数量
@@ -130,9 +130,11 @@ public interface IOrderService  extends IService<Order>
     /**
      * 修改订单评价状态
      * @param orderId
+     * @param reviewId
+     * @param reviewTime
      * @return
      */
-    Integer updateOrderReviewStatus(Long orderId);
+    Integer updateOrderReviewStatus(Long orderId, Long reviewId, java.util.Date reviewTime);
 
     /**
      * 支付成功更新订单状态

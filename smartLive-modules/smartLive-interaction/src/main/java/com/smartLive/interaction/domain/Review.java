@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -90,6 +91,9 @@ public class Review extends BaseEntity
     @Excel(name = "是否匿名")
     private Boolean isAnonymous;
 
+    /** 审核拒绝原因 */
+    private String rejectReason;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
     /** 用户昵称 */
@@ -122,4 +126,14 @@ public class Review extends BaseEntity
      */
     @TableField(exist = false)
     private Boolean isAIGenerated;
+
+    /** 商品标题 */
+    @TableField(exist = false)
+    private String productName;
+    /** 商品背景图 */
+    @TableField(exist = false)
+    private String productCoverImg;
+    /** 商品价格 */
+    @TableField(exist = false)
+    private BigDecimal productPrice;
 }

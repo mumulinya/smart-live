@@ -155,9 +155,10 @@ public interface IShopService extends IService<Shop> {
      *
      * @param id 店铺ID
      * @param status 状态
+     * @param reason 拒绝原因（通过时为null）
      * @return 结果
      */
-    Boolean updateShopStatus(Long id, Integer status);
+    Boolean updateShopStatus(Long id, Integer status, String reason);
 
     /**
      * 获取热门店铺排行榜

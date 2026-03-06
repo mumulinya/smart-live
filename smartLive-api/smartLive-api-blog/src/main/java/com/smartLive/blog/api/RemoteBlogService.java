@@ -83,7 +83,7 @@ public interface RemoteBlogService {
      * 更新博客状态
      */
     @PostMapping("/inner/blog/updateBlogStatus")
-    Boolean updateBlogStatus(@RequestParam("targetId") Long targetId,@RequestParam("status") Integer status);
+    Boolean updateBlogStatus(@RequestParam("targetId") Long targetId, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason);
 
     /**
      * 获取全部博客ID列表

@@ -28,7 +28,7 @@ public interface RemoteReviewService {
      * 更新评价状态
      */
     @PostMapping("/inner/review/updateReviewStatus")
-    Boolean updateReviewStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
+    Boolean updateReviewStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason);
     /**
      * 保存AI创建的评价到Redis
      * @param reviews 评价列表

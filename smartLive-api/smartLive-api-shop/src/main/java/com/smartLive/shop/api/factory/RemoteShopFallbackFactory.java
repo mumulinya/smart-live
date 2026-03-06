@@ -124,7 +124,7 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
              * @param status
              */
             @Override
-            public Boolean updateShopStatus(Long id, Integer status) {
+            public Boolean updateShopStatus(Long id, Integer status, String reason) {
                 log.error("更新店铺状态失败:{}", cause.getMessage());
                 return false;
             }

@@ -6,6 +6,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Date;
 
 
 @FeignClient(contextId = "remoteOrderService", value = ServiceNameConstants.ORDER_SERVICE, fallbackFactory = RemoteOrderFallbackFactory.class)
@@ -16,21 +19,25 @@ public interface RemoteOrderService {
      * @param userId
      * @return
      */
-    @GetMapping("/inner/voucher-order/getOrderCount/{userId}")
+    @GetMapping("/inner/order/getOrderCount/{userId}")
     Integer getOrderCount( @PathVariable("userId")Long userId);
     /**
      * 获取订单总数
      * @return
      */
-    @GetMapping("/inner/voucher-order/getOrderTotal")
+    @GetMapping("/inner/order/getOrderTotal")
     Integer getOrderTotal();
     /**
      * 修改订单评论状态
      * @param orderId
+     * @param reviewId
+     * @param reviewTime
      * @return
      */
-    @PutMapping("/inner/voucher-order/updateOrderReviewStatus/{orderId}")
-    Integer updateOrderReviewStatus(@PathVariable("orderId") Long orderId);
+    @PutMapping("/inner/order/updateOrderReviewStatus/{orderId}")
+    Integer updateOrderReviewStatus(@PathVariable("orderId") Long orderId,
+                                    @RequestParam(value = "reviewId", required = false) Long reviewId,
+                                    @RequestParam(value = "reviewTime", required = false) Date reviewTime);
 
     /**
      * 支付成功更新订单状态

@@ -119,7 +119,7 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
         AuditStrategy strategy = auditStrategyFactory.getStrategy(task.getBizType());
         boolean updated = this.updateById(task);
         if (updated && strategy != null) {
-            strategy.handleAuditResult(task.getBizId(), AuditStatusEnum.MANUAL_REJECT.getCode(), reason);
+            strategy.handleAuditResult(task.getBizId(), status, reason);
         }
         if (updated && AuditStatusEnum.isRejected(status)) {
             createRejectSystemNotice(task, reason);

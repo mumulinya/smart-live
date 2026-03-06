@@ -110,8 +110,8 @@ public class ProductController extends BaseController {
      * 修改商品状态
      */
     @PostMapping("/updateProductStatus")
-    public Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status) {
-        return productService.updateProductStatus(id, status);
+    public Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason) {
+        return productService.updateProductStatus(id, status, reason);
     }
 
     /**

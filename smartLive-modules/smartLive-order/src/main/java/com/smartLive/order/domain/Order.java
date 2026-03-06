@@ -75,6 +75,11 @@ public class Order extends BaseEntity implements Serializable
     @Excel(name = "评价状态", readConverterExp = "0=未评价,1=已评价")
     private Integer reviewStatus;
 
+    /** 评价ID */
+    @Excel(name = "评价ID")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long reviewId;
+
     /** 评价时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "评价时间", width = 30, dateFormat = "yyyy-MM-dd")
@@ -94,7 +99,7 @@ public class Order extends BaseEntity implements Serializable
 
     /** 核销门店ID */
     @Excel(name = "核销门店ID")
-    private Long useShopId;
+    private Long shopId;
 
     /** 退款时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -114,10 +119,4 @@ public class Order extends BaseEntity implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "有效期截止时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date expireTime;
-
-    // ========== 非数据库字段 ==========
-
-    /** 店铺id (业务逻辑使用，不存入订单表) */
-    @TableField(exist = false)
-    private Long shopId;
 }

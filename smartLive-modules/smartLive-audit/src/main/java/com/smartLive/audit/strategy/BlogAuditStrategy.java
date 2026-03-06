@@ -32,8 +32,7 @@ public class BlogAuditStrategy implements AuditStrategy {
 
     @Override
     public boolean handleAuditResult(Long targetId, Integer status, String reason) {
-        // TODO: Call remote service to update status
-        return remoteBlogService.updateBlogStatus(targetId, status);
+        return remoteBlogService.updateBlogStatus(targetId, status, reason);
     }
     /**
      * Get submitter name

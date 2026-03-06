@@ -34,8 +34,8 @@ public class ReviewInnerController extends BaseController {
      * 更新评价状态
      */
     @PostMapping("/updateReviewStatus")
-    Boolean updateReviewStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status){
-        return reviewService.updateReviewStatus(id, status);
+    Boolean updateReviewStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason){
+        return reviewService.updateReviewStatus(id, status, reason);
     }
     /**
      * 保存AI创建的评价到Redis

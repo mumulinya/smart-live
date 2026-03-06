@@ -99,6 +99,10 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-points</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-shop</artifactId>
+        </dependency>
 
 
     </dependencies>

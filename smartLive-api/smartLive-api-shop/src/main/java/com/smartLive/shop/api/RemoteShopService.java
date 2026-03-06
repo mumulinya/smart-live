@@ -79,7 +79,7 @@ public interface RemoteShopService {
      * 更新店铺状态
      */
     @PostMapping("/inner/shop/updateShopStatus")
-    Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status);
+    Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason);
 
     /**
      * 获取全部店铺ID列表
