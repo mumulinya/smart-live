@@ -40,8 +40,8 @@ public class milvusConfig {
     private transient volatile boolean milvusClientInitAttempted;
 
     @Bean
-    public VectorStore commentVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
-        return buildVectorStore("comment", embeddingModel);
+    public VectorStore reviewVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
+        return buildVectorStore("review", embeddingModel);
     }
 
     @Bean

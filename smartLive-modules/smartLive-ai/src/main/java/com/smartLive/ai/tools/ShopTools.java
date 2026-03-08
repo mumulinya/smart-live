@@ -23,41 +23,40 @@ public class ShopTools {
 
     @Tool(description = "根据店铺类型搜索店铺，支持位置和价格条件。")
     public List<ShopVO> searchShopsByCategory(
-            @Parameter(description = "店铺类型ID，如：美食=1", required = true)
-            Long typeId,
-            @Parameter(description = "商圈/区域", required = false)
-            String area,
-            @Parameter(description = "用户提及的地址", required = false)
-            String address,
-            @Parameter(description = "用户所在地区", required = false)
-            String district,
-            @Parameter(description = "用户经度", required = false)
-            Double x,
-            @Parameter(description = "用户纬度", required = false)
-            Double y,
-            @Parameter(description = "用户期望人均", required = false)
-            Integer avgPrice,
-            @Parameter(description = "排序字段", required = false)
-            String field,
-            @ToolParam(description = "用户原始问题", required = false)
-            String userMessage
-    ) throws ExecutionException, InterruptedException, TimeoutException {
-        log.info("Calling searchShopsByCategory | category={}, area={}, avgPrice={}, field={}, userMessage={}, district={}, x={}, y={}",
-                typeId, area, avgPrice, field, userMessage, district, x, y);
+        @ToolParam(description = "用户原始问题，原样传入不要修改", required = false)
+        String userMessage,
+
+        @ToolParam(description = "店铺类型ID，必须按语义映射：美食=1，KTV=2，丽人=3，运动健身=5，酒吧=8", required = true)
+        Long typeId,
+
+        @ToolParam(description = "商圈或区域关键词，如：万达、天河城、北京路，用户没提就传null", required = false)
+        String area,
+
+        @ToolParam(description = "用户提及的具体街道或地址，如：中山大道88号，用户没提就传null", required = false)
+        String address,
+
+        @ToolParam(description = "用户所在行政区，如：天河区、南海区、三水区，从用户问题中提取，提取不到就传null", required = false)
+        String district,
+
+        @ToolParam(description = "用户当前位置的经度，必须是Double数字如113.0528，绝对禁止传文字，获取不到传null", required = false)
+        Double x,
+
+        @ToolParam(description = "用户当前位置的纬度，必须是Double数字如23.1428，绝对禁止传文字，获取不到传null", required = false)
+        Double y
+    ) {
+        log.info("Calling searchShopsByCategory | category={}, area={}, userMessage={}, district={}, x={}, y={}",
+                typeId, area, userMessage, district, x, y);
 
         ShopVO shopQuery = new ShopVO();
         shopQuery.setTypeId(typeId);
         shopQuery.setArea(area);
         shopQuery.setAddress(address);
-        shopQuery.setAvgPrice(avgPrice);
         shopQuery.setDistrict(district);
         shopQuery.setX(x);
         shopQuery.setY(y);
 
         ShopQuery.Sort sort = new ShopQuery.Sort();
-        sort.setField(field);
         sort.setAsc(true);
-
         return this.shopRagService.getShopList(shopQuery, userMessage);
     }
 
@@ -90,35 +89,5 @@ public class ShopTools {
         shopVO.setY(y);
 
         return this.shopRagService.getShopDetails(shopVO, userMessage);
-    }
-
-    @Tool(name = "searchGroupBuyingDeals", description = "搜索团购套餐。")
-    public void searchGroupBuyingDeals(
-            @ToolParam(description = "类别", required = true)
-            String category,
-            @ToolParam(description = "地区或商圈", required = false)
-            String location,
-            @ToolParam(description = "最高价格", required = false)
-            Double maxPrice,
-            @ToolParam(description = "最低折扣率", required = false)
-            Double minDiscountRate
-    ) {
-        log.info("searchGroupBuyingDeals | category={}, location={}, maxPrice={}, minDiscountRate={}",
-                category, location, maxPrice, minDiscountRate);
-    }
-
-    @Tool(name = "searchTantanNotes", description = "搜索探店笔记。")
-    public void searchTantanNotes(
-            @ToolParam(description = "关键词", required = false)
-            String keyword,
-            @ToolParam(description = "店铺类型", required = false)
-            String category,
-            @ToolParam(description = "作者类型", required = false)
-            String authorType,
-            @ToolParam(description = "排序方式", required = false)
-            String sortBy
-    ) {
-        log.info("searchTantanNotes | keyword={}, category={}, authorType={}, sortBy={}",
-                keyword, category, authorType, sortBy);
     }
 }

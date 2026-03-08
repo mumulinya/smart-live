@@ -1,107 +1,116 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <artifactId>smartLive-modules</artifactId>
         <groupId>com.smartLive</groupId>
         <version>3.6.6</version>
     </parent>
+
     <artifactId>smartLive-modules-ai</artifactId>
-    <description>
-        smartLive-modules-ai ai模块
-    </description>
+    <description>smartLive-modules-ai ai module</description>
+
     <properties>
-        <spring-ai.version>1.0.2</spring-ai.version>
+        <spring-ai.version>1.1.2</spring-ai.version>
+        <jackson.version>2.17.2</jackson.version>
     </properties>
+
     <dependencies>
-        <!-- SpringCloud Alibaba Nacos -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
-
-        <!-- SpringCloud Alibaba Nacos Config -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
-
-        <!-- SpringCloud Alibaba Sentinel -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
         </dependency>
 
-        <!-- SpringBoot Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
-        <!-- Mysql Connector -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
-        <!-- smartLive Common DataSource -->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-datasource</artifactId>
         </dependency>
-
-        <!-- smartLive Common DataScope -->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-datascope</artifactId>
         </dependency>
-
-        <!-- smartLive Common Log -->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-log</artifactId>
         </dependency>
-
-        <!-- smartLive Common Swagger -->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
-        <!--RabbitMQ-->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-rabbitmq</artifactId>
         </dependency>
-        <!--hutool-->
+
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.7.17</version>
         </dependency>
-        <!--arthas-->
         <dependency>
             <groupId>com.taobao.arthas</groupId>
             <artifactId>arthas-spring-boot-starter</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
+<dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-client-chat</artifactId>
+        </dependency>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.22</version>
+            <groupId>com.alibaba.cloud.ai</groupId>
+            <artifactId>spring-ai-alibaba-agent-framework</artifactId>
+            <version>1.1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-chat-memory</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-pdf-document-reader</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-milvus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-milvus-store</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+        </dependency>
+        <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>
-        <!-- 在pom.xml的<dependencies>标签内添加以下依赖 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
@@ -109,7 +118,6 @@
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
-            <version>2.0.2</version>
         </dependency>
         <dependency>
             <groupId>xerces</groupId>
@@ -121,7 +129,6 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- 添加缺失的 JSON 处理依赖 -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -130,25 +137,7 @@
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-client-chat</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-chat-memory</artifactId>
-        </dependency>
 
-       <!-- Milvus 向量存储 -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-vector-store-milvus</artifactId>
-        </dependency>
-        <!-- Milvus 向量存储 -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-milvus-store</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-interaction</artifactId>
@@ -157,18 +146,8 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-product</artifactId>
         </dependency>
-        <!--        openai的接口-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.ai</groupId>-->
-<!--            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>-->
-<!--        </dependency>-->
-        <!--        智普ai-->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-zhipuai</artifactId>
-        </dependency>
-
     </dependencies>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -178,8 +157,16 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
     <repositories>
         <repository>
             <id>spring-milestones</id>
@@ -202,10 +189,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <!-- 指定主启动类 -->
                     <mainClass>com.smartLive.ai.SmartLiveAiApplication</mainClass>
                     <excludes>
-                        <!-- 排除不需要的依赖 -->
                         <exclude>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
@@ -215,13 +200,12 @@
                 <executions>
                     <execution>
                         <goals>
-                            <goal>repackage</goal>  <!-- 关键：重新打包 -->
+                            <goal>repackage</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- 可选：添加编译插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -235,3 +219,4 @@
         </plugins>
     </build>
 </project>
+

@@ -33,8 +33,9 @@ public class Msg {
                     .text(text)
                     .metadata(metadata == null ? Map.of() : metadata)
                     .build();
-            case ASSISTANT -> new AssistantMessage(text, metadata, toolCalls, List.of());
+            case ASSISTANT -> new AssistantMessage(text);
             default -> throw new IllegalArgumentException("Unsupported message type: " + messageType);
         };
     }
 }
+

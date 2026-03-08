@@ -1,9 +1,5 @@
 package com.smartLive.ai.domain.DTO;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.ToString;
@@ -12,7 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * AI Chat Message Entity
+ * AI Chat Message DTO
  *
  * @author smartLive
  */
@@ -22,7 +18,6 @@ public class MessageDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** Message ID */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /** Session ID */

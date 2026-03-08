@@ -3,7 +3,7 @@ package com.smartLive.ai.listener;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
 import com.smartLive.ai.entity.request.AIGenerateRequest;
-import com.smartLive.ai.strategy.handlers.CommentHandler;
+import com.smartLive.ai.service.ai.AIReviewGenerateService;
 import com.smartLive.common.redis.service.RedisService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -18,16 +18,14 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import org.springframework.util.DigestUtils;
 
 @Component
 @Slf4j
 public class AiListener {
 
     @Autowired
-    private CommentHandler commentHandler;
+    private AIReviewGenerateService aiReviewGenerateService;
 
     @Autowired
     private RedisService redisService;
@@ -73,13 +71,11 @@ public class AiListener {
                 }
             });
             log.info("ai comment generation request received, size={}", list.size());
-            commentHandler.aiCreateComment(list);
+            aiReviewGenerateService.aiCreateReview(list);
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
             log.error("[MQ幂等] AI生成评论处理异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
             redisService.deleteObject(idempotentKey);
-            // 抛出异常以触发 Spring Retry 机制。当重试次数耗尽后，
-            // 默认的 RejectAndDontRequeueRecoverer 会将消息投入死信队列（若配置了死信交换机）
             throw new RuntimeException("AI生成评论处理异常，触发本地重试", e);
         }
     }

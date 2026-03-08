@@ -101,6 +101,9 @@ public class ProductRagService implements IProductRagService {
             if (productVO.getActivityType() != null) {
                 filters.add("activityType == " + productVO.getActivityType());
             }
+            if (productVO.getCategory() != null) {
+                filters.add("category == " + productVO.getCategory());
+            }
             if (productVO.getTypeId() != null) {
                 filters.add("typeId == " + productVO.getTypeId());
             }
@@ -148,6 +151,7 @@ public class ProductRagService implements IProductRagService {
             product.setPrice(toBigDecimal(metadata.get("price")));
             product.setOriginalPrice(toBigDecimal(metadata.get("originalPrice")));
             product.setActivityType(toInteger(metadata.get("activityType")));
+            product.setCategory(toInteger(metadata.get("category")));
             product.setStatus(toInteger(metadata.get("status")));
             product.setStock(toInteger(metadata.get("stock")));
             product.setBeginTime(toLocalDateTime(metadata.get("beginTime")));

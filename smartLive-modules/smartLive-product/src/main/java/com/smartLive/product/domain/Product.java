@@ -24,7 +24,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Product extends BaseEntity implements Serializable {
+public class Product   implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
@@ -121,5 +121,8 @@ public class Product extends BaseEntity implements Serializable {
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
+    /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date updateTime;
 
 }

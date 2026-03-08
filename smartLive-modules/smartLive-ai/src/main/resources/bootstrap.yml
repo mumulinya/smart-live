@@ -1,9 +1,29 @@
 # Tomcat
 server:
   port: 9213
-
+#arthas
+arthas:
+  tunnel-server: ws://127.0.0.1:7777/ws
+  app-name: ${spring.application.name}
+  http-port: 9313
+  telnet-port: 9413
 # Spring
 spring:
+  application:
+    name: smartLive-ai
+  rabbitmq:
+    username: smart-live
+    password: 123167
+    host: 192.168.182.20
+    virtual-host: smart-live
+    port: 5672
+    listener:
+      simple:
+        acknowledge-mode: manual
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
   jackson:
     deserialization:
       read-unknown-enum-values-as-null: true
@@ -14,62 +34,80 @@ spring:
     allow-bean-definition-overriding: true
   elasticsearch:
     url: http://localhost:9200
-  application:
-    name: smartLive-ai
-  rabbitmq:
-    username: smart-live
-    password: 123167
-    host: ${RABBITMQ_HOST:192.168.182.20}
-    virtual-host: smart-live
-    port: 5672
-    listener:
-      simple:
-        acknowledge-mode: manual   #none：关闭ack  manual：手动ack  auto：自动ack
-        retry:
-          enabled: true
-          max-attempts: 3
-          initial-interval: 1000ms
   ai:
-    vectorstore:
-      milvus:
-        enabled: ${MILVUS_ENABLED:true}
-        host: ${MILVUS_HOST:192.168.182.20}
-        port: 19530
-        database-name: "default"
-        embedding-dimension: 1024
-        metric-type: COSINE
-        index-type: FLAT
-        initialize-schema: false
-    # Keep zhipu starter disabled for chat to avoid enum parse incompatibility.
-    zhipuai:
-      api-key: 09efff4822ea42d2aaf63b60e127dfd9.kBLXYVD4YGfJUJES
-      chat:
-        enabled: false
-        options:
-          model: GLM-4.7-flash
+    template:
+        renderer: simple
     openai:
-      api-key: sk-bTsi4ARaytKeClsp00658008F82a4d8d87D4EcEeA003E748
+#      api-key: 09efff4822ea42d2aaf63b60e127dfd9.kBLXYVD4YGfJUJES
+      api-key: sk-imRr2QbZua3cA7cc7c7aBfDb94304a698cD4A72a4704C15f
       chat:
-        # Use Zhipu OpenAI-compatible endpoint
-        base-url: https://open.bigmodel.cn
-        completions-path: /api/paas/v4/chat/completions
-        api-key: 09efff4822ea42d2aaf63b60e127dfd9.kBLXYVD4YGfJUJES
+        enabled: true
+#        base-url: https://open.bigmodel.cn
+#        completions-path: /api/paas/v4/chat/completions
+        base-url: https://api.edgefn.net
+        completions-path: /v1/chat/completions
         options:
-          model: GLM-4.7-flash
+            model: GLM-4.7
+#            model: GLM-4.7-flash
+#           model: GLM-4.6v
+        timeout: 90s
       embedding:
         base-url: https://api.siliconflow.cn
         api-key: sk-kyrqakqjbcbdkjyfdnoovhnmmoyhdggaalcpgqpmagkkyqcb
         options:
           model: BAAI/bge-m3
           dimensions: 1024
+    retry:
+      max-attempts: 1
+      on-client-errors: false
+      on-http-codes:
+        - 408
+      exclude-on-http-codes:
+        - 400
+        - 401
+        - 403
+        - 404
+        - 422
+      backoff:
+        initial-interval: 8s
+        multiplier: 2
+        max-interval: 30s
+    vectorstore:
+      milvus:
+        enabled: true
+        host: 192.168.182.20
+        port: 19530
+        database-name: default
+        embedding-dimension: 1024
+        metric-type: COSINE
+        index-type: FLAT
+        initialize-schema: false
+        collection-name: smartLive_vector_store
+        recreate-collection: false
+    rag:
+      chunk-size: 1000
+      chunk-overlap: 200
+      retrieval-enabled: true
+      retrieval-search-type: similarity
+      retrieval-top-k: 5
   profiles:
     active: dev
   cloud:
     nacos:
       discovery:
-        server-addr: ${NACOS_HOST:127.0.0.1}:8848
+        server-addr: 127.0.0.1:8848
       config:
-        server-addr: ${NACOS_HOST:127.0.0.1}:8848
+        server-addr: 127.0.0.1:8848
         file-extension: yml
         shared-configs:
           - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+smartlive:
+  ai:
+    chat-model-bean: openAiChatModel
+    framework:
+      enabled: false  #开启智能agent
+    autonomy:
+      max-iterations: 6
+      max-plan-steps: 4
+      max-replans: 2
+      max-runtime-seconds: 45

@@ -13,7 +13,7 @@ import com.smartLive.ai.entity.request.AIChatRequest;
 import com.smartLive.ai.mapper.MessageMapper;
 import com.smartLive.ai.service.IMessageService;
 import com.smartLive.ai.service.ISessionService;
-import com.smartLive.ai.service.orchestration.AIChatOrchestrator;
+import com.smartLive.ai.service.chat.AgentChatContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.codec.ServerSentEvent;
@@ -35,7 +35,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private ISessionService sessionService;
 
     @Autowired
-    private AIChatOrchestrator aiChatOrchestrator;
+    private AgentChatContext agentChatContext;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -85,7 +85,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         request.setDistrict(messageDTO.getRegion());
         StringBuilder fullResponse = new StringBuilder();
 
-        return aiChatOrchestrator.processMessage(request)
+        return agentChatContext.generateResponse(request, String.valueOf(sessionId), false)
                 .map(chunk -> {
                     String safeChunk = chunk == null ? "" : chunk;
                     fullResponse.append(safeChunk);

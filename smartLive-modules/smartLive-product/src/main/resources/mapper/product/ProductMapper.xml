@@ -29,14 +29,12 @@
         <result property="endTime"      column="end_time"    />
         <result property="createTime"   column="create_time"    />
         <result property="updateTime"   column="update_time"    />
-        <result property="createBy"     column="create_by"    />
-        <result property="updateBy"     column="update_by"    />
     </resultMap>
 
     <sql id="selectProductVo">
         select id, shop_id, name, sub_title, category, activity_type, rules_json, price, original_price, stock,
                sold, reviews, fans,status, stars, validity_type, use_start_time, use_end_time, valid_days, cover_img,
-               begin_time, end_time, create_time, update_time, create_by, update_by
+               begin_time, end_time, create_time, update_time
         from product
     </sql>
 
@@ -82,8 +80,6 @@
             <if test="stars != null">stars,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
-            <if test="createBy != null">create_by,</if>
-            <if test="updateBy != null">update_by,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="shopId != null">#{shopId},</if>
@@ -108,8 +104,6 @@
             <if test="stars != null">#{stars},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
-            <if test="createBy != null">#{createBy},</if>
-            <if test="updateBy != null">#{updateBy},</if>
         </trim>
     </insert>
 
@@ -137,7 +131,6 @@
             <if test="fans != null">fans = #{fans},</if>
             <if test="stars != null">stars = #{stars},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
-            <if test="updateBy != null">update_by = #{updateBy},</if>
         </trim>
         where id = #{id}
     </update>

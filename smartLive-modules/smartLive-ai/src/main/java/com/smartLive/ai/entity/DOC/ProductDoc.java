@@ -16,12 +16,13 @@ public class ProductDoc implements Serializable {
     private String shopId;
     private Long typeId;
     private String shopName;
-    private String name; 
+    private String name;
     private String subTitle;
     private String rulesJson;
     private BigDecimal price;
     private BigDecimal originalPrice;
     private Integer activityType;
+    private Integer category;
     private Integer status;
     private Integer stock;
     /** 有效期类型：1-固定日期，2-动态有效期 */

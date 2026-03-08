@@ -30,16 +30,15 @@ public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
         // 1. 策略自己知道要把 Map 转成什么实体类，Listener 不需要知道
         ProductDoc doc = EsTool.convertToObject((Map) rawData, ProductDoc.class);
-        // 2. 调用业务 Service
-        List<Document> existing = productVectorStore.similaritySearch(id);
-        if (!existing.isEmpty()) {
-            // 删除
-            delete(id);
-        }
+        // 删除旧数据 (精准匹配 id 元数据)
+        delete(id);
+        
         Document document = createDocument(doc);
-        List<Document> list=new ArrayList<>();
-        list.add(document);
-        productVectorStore.add(list);
+        if (document != null) {
+            List<Document> list = new ArrayList<>();
+            list.add(document);
+            productVectorStore.add(list);
+        }
         return true;
     }
 
@@ -51,6 +50,16 @@ public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
         for (int i = 0; i < list.size(); i += batchSize) {
             int end = Math.min(i + batchSize, list.size());
             List<ProductDoc> batch = list.subList(i, end);
+
+            // 提取这一批的所有 id，用 in 表达式提前删除旧数据
+            List<String> idList = batch.stream()
+                    .map(product -> String.valueOf(product.getId()))
+                    .toList();
+            if (!idList.isEmpty()) {
+                String inExpr = String.join(", ", idList);
+                String filterExpr = String.format("id in [%s]", inExpr);
+                productVectorStore.delete(filterExpr);
+            }
 
             // 转换为Document并添加元数据
             List<Document> documents = batch.stream()
@@ -95,7 +104,9 @@ public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
         putIfNotNull(metadata, "activityType", product.getActivityType());
         putIfNotNull(metadata, "status", product.getStatus());
         putIfNotNull(metadata, "stock", product.getStock());
-        
+        putIfNotNull(metadata, "category", product.getCategory());
+
+
         // Time and new fields
         putIfNotNull(metadata, "beginTime", product.getBeginTime());
         putIfNotNull(metadata, "endTime", product.getEndTime());

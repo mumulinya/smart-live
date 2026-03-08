@@ -186,7 +186,7 @@ public class ShopRagService implements IShopRagService {
             shop.setArea(toStringValue(metadata.get("area")));
             shop.setAddress(toStringValue(metadata.get("address")));
             shop.setAvgPrice(toInteger(metadata.get("avgPrice")));
-            shop.setScore(toInteger(metadata.get("score")));
+            shop.setScore(toInteger(metadata.get("score"))/10.0);
             shop.setSold(toInteger(metadata.get("sold")));
             shop.setComments(toInteger(metadata.get("comments")));
             shop.setX(toDouble(metadata.get("x")));

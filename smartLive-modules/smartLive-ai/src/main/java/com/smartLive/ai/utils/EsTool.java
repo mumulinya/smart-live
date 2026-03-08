@@ -94,7 +94,7 @@ public class EsTool {
             jsonMap.put("activityType", product.getActivityType());
             jsonMap.put("status", product.getStatus());
             jsonMap.put("stock", product.getStock());
-            
+            jsonMap.put("coverImg", product.getCoverImg());
             // Time fields
             if (product.getBeginTime() != null) {
                 jsonMap.put("beginTime", product.getBeginTime());

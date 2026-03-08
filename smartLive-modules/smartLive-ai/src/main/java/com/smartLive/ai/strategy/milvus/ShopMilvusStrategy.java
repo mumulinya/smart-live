@@ -31,18 +31,18 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
         // 1. 策略自己知道要把 Map 转成什么实体类，Listener 不需要知道
         ShopDoc doc = EsTool.convertToObject((Map) rawData, ShopDoc.class);
-        List<Document> existing = shopVectorStore.similaritySearch(id);
-        if (!existing.isEmpty()) {
-            // 删除
-            delete(id);
-        }
+        // 删除旧数据 (精准匹配 id 元数据)
+        delete(id);
+        
         Document document = null;
         if (doc != null) {
             document = createDocument(doc);
         }
-        List<Document> list=new ArrayList<>();
-        list.add(document);
-        shopVectorStore.add(list);
+        if (document != null) {
+            List<Document> list = new ArrayList<>();
+            list.add(document);
+            shopVectorStore.add(list);
+        }
         return true;
     }
 
@@ -54,6 +54,16 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
         for (int i = 0; i < list.size(); i += batchSize) {
             int end = Math.min(i + batchSize, list.size());
             List<ShopDoc> batch = list.subList(i, end);
+
+            // 提取这一批的所有 id，用 in 表达式提前删除旧数据
+            List<String> idList = batch.stream()
+                    .map(shop -> String.valueOf(shop.getId()))
+                    .toList();
+            if (!idList.isEmpty()) {
+                String inExpr = String.join(", ", idList);
+                String filterExpr = String.format("id in [%s]", inExpr);
+                shopVectorStore.delete(filterExpr);
+            }
 
             // 转换为Document并添加元数据
             List<Document> documents = batch.stream()

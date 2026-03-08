@@ -52,6 +52,9 @@ public class ProductVO implements Serializable
     /** 活动类型 0:普通售卖, 1:秒杀活动 */
     private Integer activityType;
 
+    /** 商品类型 1:代金券, 2:团购套餐 */
+    private Integer category;
+
     /** 封面图片 */
     private String coverImg;
 
