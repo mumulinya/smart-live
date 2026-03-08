@@ -26,14 +26,8 @@ public class ProductTools {
         @ToolParam(description = "用户原始问题，原样传入不要修改", required = false)
         String userMessage,
 
-        @ToolParam(description = "商户类型ID，按语义映射：美食=1，KTV=2，丽人=3，运动健身=5，酒吧=8。用户直接问商品没提类型就传null", required = false)
-        Long typeId,
-
         @ToolParam(description = "店铺ID，已知具体店铺ID时才传，直接问商品不涉及具体店铺传null", required = false)
         String shopId,
-
-        @ToolParam(description = "店铺名称，用户明确说了店铺名才传，如：星巴克、海底捞。直接问商品不涉及店铺传null", required = false)
-        String shopName,
 
         @ToolParam(description = "商品类型：1=代金券（满减/抵扣），2=团购套餐（多人套餐/单人餐），不确定传null", required = false)
         Integer category,
@@ -42,13 +36,11 @@ public class ProductTools {
         Integer type
     ){
         ProductVO product = new ProductVO();
-        product.setTypeId(typeId);
         product.setShopId(shopId);
-        product.setShopName(shopName);
         product.setActivityType(type); // Assuming type maps to activityType
         product.setCategory(category);
-        log.info("🔍 搜索商品 | userMessage={}, typeId={}, shopId={}, shopName={}, category={}, type={}",
-                userMessage, typeId, shopId, shopName, category, type);
+        log.info("🔍 搜索商品 | userMessage={},shopId={}, category={}, type={}",
+                userMessage, shopId, category, type);
         List<ProductVO> productList = productRagService.getProductList(product, userMessage);
         productList.forEach(productVO -> log.info("🔍 返回搜索结果：{}", productVO));
         return productList;

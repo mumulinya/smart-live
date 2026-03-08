@@ -76,7 +76,8 @@ public class AutonomousAgentStrategy implements AgentChatStrategy {
     }
 
     @Override
-    public Flux<String> streamChat(AIChatRequest chatRequest, String chatId) {
+    public Flux<String> streamChat(AIChatRequest chatRequest) {
+        String chatId = resolveChatId(chatRequest);
         String enrichedMessage = buildEnrichedMessage(chatRequest);
         log.info("开始自主执行任务: chatId={}, userMessage={}", chatId, enrichedMessage);
         return executeAutonomousLoop(enrichedMessage, chatId)

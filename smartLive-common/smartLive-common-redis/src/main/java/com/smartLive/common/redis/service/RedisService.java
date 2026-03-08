@@ -211,6 +211,48 @@ public class RedisService
     }
 
     /**
+     * 向 List 右侧追加一个元素（保持时间顺序：旧 -> 新）
+     *
+     * @param key 缓存键
+     * @param value 追加元素
+     * @return 追加后的列表长度
+     */
+    public <T> long rightPushCacheList(final String key, final T value)
+    {
+        Long count = redisTemplate.opsForList().rightPush(key, value);
+        return count == null ? 0 : count;
+    }
+
+    /**
+     * 向 List 右侧批量追加元素
+     *
+     * @param key 缓存键
+     * @param dataList 追加元素列表
+     * @return 追加后的列表长度
+     */
+    public <T> long rightPushAllCacheList(final String key, final List<T> dataList)
+    {
+        if (dataList == null || dataList.isEmpty()) {
+            Long size = redisTemplate.opsForList().size(key);
+            return size == null ? 0 : size;
+        }
+        Long count = redisTemplate.opsForList().rightPushAll(key, dataList);
+        return count == null ? 0 : count;
+    }
+
+    /**
+     * 按索引范围截断 List（用于固定窗口）
+     *
+     * @param key 缓存键
+     * @param start 起始索引
+     * @param end 结束索引
+     */
+    public void trimCacheList(final String key, final long start, final long end)
+    {
+        redisTemplate.opsForList().trim(key, start, end);
+    }
+
+    /**
      * 获得缓存的list对象
      *
      * @param key 缓存的键值
@@ -219,6 +261,19 @@ public class RedisService
     public <T> List<T> getCacheList(final String key)
     {
         return redisTemplate.opsForList().range(key, 0, -1);
+    }
+
+    /**
+     * 按索引区间读取 List
+     *
+     * @param key 缓存键
+     * @param start 起始索引
+     * @param end 结束索引
+     * @return 指定范围内元素
+     */
+    public <T> List<T> getCacheListRange(final String key, final long start, final long end)
+    {
+        return redisTemplate.opsForList().range(key, start, end);
     }
     /**
      * 缓存 List 数据

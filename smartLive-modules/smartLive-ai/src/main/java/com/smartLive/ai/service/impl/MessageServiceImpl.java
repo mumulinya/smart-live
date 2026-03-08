@@ -2,10 +2,6 @@ package com.smartLive.ai.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.smartLive.ai.domain.DTO.MessageDTO;
 import com.smartLive.ai.domain.Message;
 import com.smartLive.ai.domain.Session;
@@ -14,8 +10,10 @@ import com.smartLive.ai.mapper.MessageMapper;
 import com.smartLive.ai.service.IMessageService;
 import com.smartLive.ai.service.ISessionService;
 import com.smartLive.ai.service.chat.AgentChatContext;
+import com.smartLive.ai.service.chat.support.MessageTableChatMemoryManager;
+import com.smartLive.ai.service.chat.support.RecommendationCardHelper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -24,21 +22,22 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-/**
- * AI Message Service Implementation
- */
 @Service
 @Slf4j
+@RequiredArgsConstructor
+/**
+ * 聊天入口：
+ * 1. 先按会话重建 ChatMemory（优先 Redis，miss 再查 DB）
+ * 2. 当前轮 user/assistant 消息继续由业务层写入 message 表
+ * 3. 每次落库后同步追加到 Redis 记忆缓存，降低后续回源成本
+ * 4. 推荐卡片额外透出 card_render 事件给前端
+ */
 public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> implements IMessageService {
 
-    @Autowired
-    private ISessionService sessionService;
-
-    @Autowired
-    private AgentChatContext agentChatContext;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ISessionService sessionService;
+    private final AgentChatContext agentChatContext;
+    private final MessageTableChatMemoryManager chatMemoryManager;
+    private final RecommendationCardHelper recommendationCardHelper;
 
     @Override
     public List<Message> selectMessageList(Integer current, Long sessionId) {
@@ -74,18 +73,28 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         Long userId = messageDTO.getUserId();
         String message = messageDTO.getMessage();
 
-        saveMessage(sessionId, "user", message);
-
         AIChatRequest request = new AIChatRequest();
         request.setMessage(message);
-        request.setSessionId(String.valueOf(sessionId));
-        request.setUserId(String.valueOf(userId));
+        if (sessionId != null) {
+            request.setSessionId(String.valueOf(sessionId));
+        }
+        if (userId != null) {
+            request.setUserId(String.valueOf(userId));
+        }
         request.setX(messageDTO.getX());
         request.setY(messageDTO.getY());
         request.setDistrict(messageDTO.getRegion());
-        StringBuilder fullResponse = new StringBuilder();
 
-        return agentChatContext.generateResponse(request, String.valueOf(sessionId), false)
+        String conversationId = resolveConversationId(request);
+        boolean contextEnabled = !Boolean.FALSE.equals(messageDTO.getContextMode());
+        // 在写入当前轮用户消息前重建记忆，避免“历史 + 当前输入”重复注入。
+        chatMemoryManager.rebuildConversationMemory(conversationId, sessionId, contextEnabled);
+
+        Message userRecord = saveMessage(sessionId, "user", message);
+        chatMemoryManager.appendMessageToCache(userRecord);
+
+        StringBuilder fullResponse = new StringBuilder();
+        return agentChatContext.generateResponse(request, false)
                 .map(chunk -> {
                     String safeChunk = chunk == null ? "" : chunk;
                     fullResponse.append(safeChunk);
@@ -96,11 +105,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                 })
                 .concatWith(Flux.defer(() -> {
                     String response = fullResponse.toString();
-                    String json = extractRecommendationJson(response);
+                    String json = recommendationCardHelper.extractRecommendationJson(response);
                     if (json == null) {
                         return Flux.empty();
                     }
-                    String normalizedJson = normalizeRecommendationJson(json);
+                    String normalizedJson = recommendationCardHelper.normalizeRecommendationJson(json);
                     log.info("Detected recommendation JSON, sending card_render event");
                     return Flux.just(ServerSentEvent.<String>builder()
                             .event("card_render")
@@ -113,159 +122,28 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                         return;
                     }
                     try {
-                        saveMessage(sessionId, "assistant", responseText);
+                        // 模型最终返回文本仍按业务方式落库，同时增量刷新 Redis 记忆缓存。
+                        Message assistantRecord = saveMessage(sessionId, "assistant", responseText);
+                        chatMemoryManager.appendMessageToCache(assistantRecord);
                         log.info("Saved assistant response for session {}", sessionId);
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e) {
                         log.error("Failed to save assistant response", e);
                     }
                 });
     }
 
-    private String extractRecommendationJson(String content) {
-        if (content == null || content.isEmpty()) {
-            return null;
+    private String resolveConversationId(AIChatRequest request) {
+        if (request == null) {
+            return "anonymous";
         }
-
-        int end = content.lastIndexOf("}");
-        if (end < 0) {
-            return null;
+        if (hasText(request.getSessionId())) {
+            return request.getSessionId();
         }
-
-        int braceCount = 0;
-        int start = -1;
-        for (int i = end; i >= 0; i--) {
-            char c = content.charAt(i);
-            if (c == '}') {
-                braceCount++;
-            } else if (c == '{') {
-                braceCount--;
-                if (braceCount == 0) {
-                    start = i;
-                    break;
-                }
-            }
+        if (hasText(request.getUserId())) {
+            return "user::" + request.getUserId();
         }
-
-        if (start < 0) {
-            return null;
-        }
-
-        String json = content.substring(start, end + 1);
-        return isRecommendationJson(json) ? json : null;
-    }
-
-    private boolean isRecommendationJson(String content) {
-        if (!content.startsWith("{") || !content.endsWith("}")) {
-            return false;
-        }
-
-        try {
-            JsonNode jsonNode = objectMapper.readTree(content);
-            return jsonNode.has("recommendations") && jsonNode.has("replyText");
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private String normalizeRecommendationJson(String json) {
-        try {
-            JsonNode parsed = objectMapper.readTree(json);
-            if (!(parsed instanceof ObjectNode root)) {
-                return json;
-            }
-
-            String type = resolveRecommendationType(root);
-
-            if (!hasText(root.path("type").asText(null))) {
-                root.put("type", type);
-            }
-
-            JsonNode recommendationsNode = root.get("recommendations");
-            if (recommendationsNode instanceof ArrayNode recommendations) {
-                for (JsonNode node : recommendations) {
-                    if (!(node instanceof ObjectNode recommendation)) {
-                        continue;
-                    }
-                    if (!hasText(recommendation.path("type").asText(null))) {
-                        recommendation.put("type", type);
-                    }
-                }
-            }
-
-            return objectMapper.writeValueAsString(root);
-        } catch (Exception e) {
-            log.warn("Failed to normalize recommendation JSON, keep original", e);
-            return json;
-        }
-    }
-
-    private String resolveRecommendationType(ObjectNode root) {
-        String rootType = root.path("type").asText(null);
-        if (hasText(rootType)) {
-            return rootType;
-        }
-
-        JsonNode recommendationsNode = root.get("recommendations");
-        if (recommendationsNode instanceof ArrayNode recommendations) {
-            for (JsonNode node : recommendations) {
-                if (!(node instanceof ObjectNode recommendation)) {
-                    continue;
-                }
-
-                String itemType = recommendation.path("type").asText(null);
-                if (hasText(itemType)) {
-                    return itemType;
-                }
-
-                if (looksLikeProductRecommendation(recommendation)) {
-                    return "voucher";
-                }
-                if (looksLikeShopRecommendation(recommendation)) {
-                    return "shop";
-                }
-            }
-        }
-
-        return "shop";
-    }
-
-    private boolean looksLikeProductRecommendation(ObjectNode recommendation) {
-        return hasAnyField(recommendation,
-                "shopId",
-                "voucherType",
-                "title",
-                "rules",
-                "payValue",
-                "actualValue",
-                "stock");
-    }
-
-    private boolean looksLikeShopRecommendation(ObjectNode recommendation) {
-        return hasAnyField(recommendation,
-                "distanceText",
-                "avgPrice",
-                "openHours",
-                "address",
-                "x",
-                "y",
-                "sold");
-    }
-
-    private boolean hasAnyField(ObjectNode node, String... fieldNames) {
-        for (String fieldName : fieldNames) {
-            JsonNode value = node.get(fieldName);
-            if (value == null || value.isNull()) {
-                continue;
-            }
-            if (value.isTextual()) {
-                if (hasText(value.asText())) {
-                    return true;
-                }
-                continue;
-            }
-            return true;
-        }
-        return false;
+        return "anonymous";
     }
 
     private boolean hasText(String value) {

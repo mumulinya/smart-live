@@ -47,7 +47,7 @@ public class ProductRagService implements IProductRagService {
         if (StringUtils.hasText(filter)) {
             builder.filterExpression(filter);
         }
-
+        log.info("RAG query: {}", filter);
         List<Document> results = productVectorStore.similaritySearch(builder.build());
         log.info("Product RAG search results: {}", results);
         return convertDocumentsToProductVO(results);
@@ -92,11 +92,11 @@ public class ProductRagService implements IProductRagService {
 
     private String buildFilterExpression(ProductVO productVO) {
         List<String> filters = new ArrayList<>();
-        filters.add("status == 1");
+//        filters.add("status == 1");
 
         if (productVO != null) {
-            if (StringUtils.hasText(productVO.getShopName())) {
-                filters.add(String.format("shopName == '%s'", escapeForFilter(productVO.getShopName())));
+            if (productVO.getShopId() != null) {
+                filters.add("shopId in [\"" + productVO.getShopId() + "\"]");
             }
             if (productVO.getActivityType() != null) {
                 filters.add("activityType == " + productVO.getActivityType());
@@ -104,17 +104,11 @@ public class ProductRagService implements IProductRagService {
             if (productVO.getCategory() != null) {
                 filters.add("category == " + productVO.getCategory());
             }
-            if (productVO.getTypeId() != null) {
-                filters.add("typeId == " + productVO.getTypeId());
-            }
             if (StringUtils.hasText(productVO.getName())) {
                 filters.add(String.format("name == '%s'", escapeForFilter(productVO.getName())));
             }
             if (productVO.getId() != null) {
                 filters.add("id == " + productVO.getId());
-            }
-            if (productVO.getShopId() != null && !productVO.getShopId().isEmpty()) {
-                filters.add("shopId == " + productVO.getShopId().split(",")[0]);
             }
         }
         return String.join(" && ", filters);

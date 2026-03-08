@@ -60,7 +60,7 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
     }
 
     @Override
-    public Flux<String> streamChat(AIChatRequest chatRequest, String chatId) {
+    public Flux<String> streamChat(AIChatRequest chatRequest) {
         LlmRoutingAgent agent = getOrCreateRoutingAgent();
         if (agent == null) {
             return Flux.error(new IllegalStateException("Failed to build RoutingAgent"));

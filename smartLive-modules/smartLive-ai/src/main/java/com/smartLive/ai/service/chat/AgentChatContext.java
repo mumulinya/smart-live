@@ -35,17 +35,17 @@ public class AgentChatContext {
     /**
      * 生成聊天响应。
      */
-    public Flux<String> generateResponse(AIChatRequest chatRequest, String chatId, Boolean autonomous) {
+    public Flux<String> generateResponse(AIChatRequest chatRequest, Boolean autonomous) {
         boolean useAuto = (autonomous != null) ? autonomous : false;
         if (useAuto) {
-            return autonomousAgentStrategy.streamChat(chatRequest, chatId);
+            return autonomousAgentStrategy.streamChat(chatRequest);
         }
 
         boolean frameworkEnabled = environment.getProperty("smartlive.ai.framework.enabled", Boolean.class, true);
         if (frameworkEnabled) {
-            return frameworkRoutingStrategy.streamChat(chatRequest, chatId);
+            return frameworkRoutingStrategy.streamChat(chatRequest);
         } else {
-            return directRoutingStrategy.streamChat(chatRequest, chatId);
+            return directRoutingStrategy.streamChat(chatRequest);
         }
     }
 }

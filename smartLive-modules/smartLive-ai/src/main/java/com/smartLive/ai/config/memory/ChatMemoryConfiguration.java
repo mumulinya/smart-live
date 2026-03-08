@@ -7,21 +7,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-/**
- * ChatMemory configuration.
- */
 @Configuration
 public class ChatMemoryConfiguration {
 
-    /**
-     * In-memory chat window memory.
-     */
+    // 当前先控制为 30 条，后续需要可再调回 100。
+    public static final int MAX_MESSAGES = 30;
+
     @Primary
     @Bean("frameworkChatMemory")
     public ChatMemory frameworkChatMemory() {
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(new InMemoryChatMemoryRepository())
-                .maxMessages(100)
+                .maxMessages(MAX_MESSAGES)
                 .build();
     }
 }
