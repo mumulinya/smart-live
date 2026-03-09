@@ -3,6 +3,7 @@ package com.smartLive.ai.entity.vo;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * 商品对象
@@ -29,10 +31,6 @@ public class ProductVO implements Serializable
 
     /** 商铺id */
     private String shopId;
-
-    private String shopName;
-
-    private Long typeId;
 
     /** 商品名称 */
     private String name;
@@ -72,14 +70,23 @@ public class ProductVO implements Serializable
     /**
      * 秒杀开始时间
      */
-    @TableField(exist = false)
-    private LocalDateTime beginTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date beginTime;
 
     /**
      * 秒杀结束时间
      */
-    @TableField(exist = false)
-    private LocalDateTime endTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date endTime;
 
-    // Getters for specific logic if needed, or Lombok @Data handles generic ones.
+    /** 有效期类型：1-固定日期，2-动态有效期 */
+    private Integer validityType;
+    /** 固定日期的开始/结束时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date useStartTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date useEndTime;
+
+    /** 动态有效期：领取后多少天有效 */
+    private Integer validDays;
 }

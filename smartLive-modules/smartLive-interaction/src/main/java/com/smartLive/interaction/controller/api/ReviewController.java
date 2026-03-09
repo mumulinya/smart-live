@@ -11,6 +11,7 @@ import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.interaction.domain.Review;
+import com.smartLive.interaction.domain.VO.ReviewVO;
 import com.smartLive.interaction.service.IReviewService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,7 @@ public class ReviewController extends BaseController
     public TableDataInfo list(Review review)
     {
         startPage();
-        List<Review> list = reviewService.selectReviewList(review);
+        List<ReviewVO> list = reviewService.selectReviewList(review);
         return getDataTable(list);
     }
 
@@ -51,8 +52,8 @@ public class ReviewController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, Review review)
     {
-        List<Review> list = reviewService.selectReviewList(review);
-        ExcelUtil<Review> util = new ExcelUtil<Review>(Review.class);
+        List<ReviewVO> list = reviewService.selectReviewList(review);
+        ExcelUtil<ReviewVO> util = new ExcelUtil<ReviewVO>(ReviewVO.class);
         util.exportExcel(response, list, "评论数据");
     }
 
@@ -178,4 +179,19 @@ public class ReviewController extends BaseController
         return R.ok(reviewService.getReviewTotal());
     }
 
+    /**
+     * 全量发布评价数据到向量库（仅 Milvus）。
+     */
+    @PostMapping("/allPublish")
+    public AjaxResult allPublish() {
+        return success(reviewService.allPublish());
+    }
+
+    /**
+     * 按指定 ID 发布评价数据到向量库（仅 Milvus）。
+     */
+    @PostMapping("/publish/{ids}")
+    public AjaxResult publish(@PathVariable String[] ids) {
+        return success(reviewService.publish(ids));
+    }
 }

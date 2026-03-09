@@ -2,6 +2,7 @@ package com.smartLive.ai.service.rag.impl;
 
 import com.smartLive.ai.entity.vo.ProductVO;
 import com.smartLive.ai.service.rag.IProductRagService;
+import com.smartLive.ai.utils.RagMetadataValueUtils;
 import com.smartLive.product.api.RemoteProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -12,11 +13,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,41 +48,29 @@ public class ProductRagService implements IProductRagService {
         log.info("Product RAG search results: {}", results);
         return convertDocumentsToProductVO(results);
     }
-
+    /**
+     * 涓嬪崟
+     */
     @Override
     public String orderProduct(ProductVO productVo) {
+        Long productVoId = productVo.getId();
         Long userId = productVo.getUserId();
-        List<Document> results = productVectorStore.similaritySearch(
-                SearchRequest.builder()
-                        .filterExpression(buildFilterExpression(productVo))
-                        .topK(1)
-                        .build());
-        log.info("🔍 RAG搜索结果：{}", results);
-        //要下单的优惠券
-        ProductVO vo = convertDocumentToProductVO(results.get(0));
-        if (vo == null) {
-            return "没有找到该商品";
-        }
-        log.info("下单的商品为" + vo);
-        if (vo.getActivityType() == 1 && vo.getStock() <= 0) {
-            log.info("该商品已售罄");
-            return "该商品已售罄";
-        }
         try {
             Long result = null;
             // Unified purchase interface
             CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> {
-                return remoteProductService.purchaseProduct(vo.getId(), userId);
+                return remoteProductService.purchaseProduct(productVoId, userId);
             });
             result = future.get();
             if (result != null ) {
-                return "抢购成功，订单id为" + result;
+                return "鎶㈣喘鎴愬姛锛佹偍鐨勮鍗曞凡鐢熸垚锛岃鍗旾D涓猴細" + result;
+
             } else {
-                return  "抢购失败";
+                return  "鎶㈣喘澶辫触";
             }
         } catch (Exception e) {
-            log.error("抢购失败", e);
-            return "抢购失败";
+            log.error("鎶㈣喘澶辫触", e);
+            return "鎶㈣喘澶辫触";
         }
     }
 
@@ -133,92 +117,32 @@ public class ProductRagService implements IProductRagService {
             Map<String, Object> metadata = document.getMetadata();
             ProductVO product = new ProductVO();
 
-            product.setId(toLong(metadata.get("id")));
+            product.setId(RagMetadataValueUtils.toLong(metadata.get("id")));
             if (metadata.get("shopId") != null) {
                 product.setShopId(metadata.get("shopId").toString());
             }
-            product.setShopName(toStringValue(metadata.get("shopName")));
-            product.setTypeId(toLong(metadata.get("typeId")));
-            product.setName(toStringValue(metadata.get("name"))); // Updated to name
-            product.setSubTitle(toStringValue(metadata.get("subTitle")));
-            product.setRulesJson(toStringValue(metadata.get("rulesJson")));
-            product.setPrice(toBigDecimal(metadata.get("price")));
-            product.setOriginalPrice(toBigDecimal(metadata.get("originalPrice")));
-            product.setActivityType(toInteger(metadata.get("activityType")));
-            product.setCategory(toInteger(metadata.get("category")));
-            product.setStatus(toInteger(metadata.get("status")));
-            product.setStock(toInteger(metadata.get("stock")));
-            product.setBeginTime(toLocalDateTime(metadata.get("beginTime")));
-            product.setEndTime(toLocalDateTime(metadata.get("endTime")));
-
+            product.setName(RagMetadataValueUtils.toStringValue(metadata.get("name")));
+            product.setSubTitle(RagMetadataValueUtils.toStringValue(metadata.get("subTitle")));
+            product.setRulesJson(RagMetadataValueUtils.toStringValue(metadata.get("rulesJson")));
+            product.setPrice(RagMetadataValueUtils.toBigDecimal(metadata.get("price")));
+            product.setOriginalPrice(RagMetadataValueUtils.toBigDecimal(metadata.get("originalPrice")));
+            product.setActivityType(RagMetadataValueUtils.toInteger(metadata.get("activityType")));
+            product.setCategory(RagMetadataValueUtils.toInteger(metadata.get("category")));
+            product.setStatus(RagMetadataValueUtils.toInteger(metadata.get("status")));
+            product.setStock(RagMetadataValueUtils.toInteger(metadata.get("stock")));
+            product.setCoverImg(RagMetadataValueUtils.toStringValue(metadata.get("coverImg")));
+// 鉁?鏃堕棿瀛楁鍏ㄩ儴鏀圭敤 parseDate
+            product.setBeginTime(RagMetadataValueUtils.parseDate(RagMetadataValueUtils.toStringValue(metadata.get("beginTime"))));
+            product.setEndTime(RagMetadataValueUtils.parseDate(RagMetadataValueUtils.toStringValue(metadata.get("endTime"))));
+            product.setValidityType(RagMetadataValueUtils.toInteger(metadata.get("validityType")));
+            product.setUseStartTime(RagMetadataValueUtils.parseDate(RagMetadataValueUtils.toStringValue(metadata.get("useStartTime"))));
+            product.setUseEndTime(RagMetadataValueUtils.parseDate(RagMetadataValueUtils.toStringValue(metadata.get("useEndTime"))));
+            product.setValidDays(RagMetadataValueUtils.toInteger(metadata.get("validDays")));
             return product;
         } catch (Exception e) {
             log.warn("Failed to convert Document to ProductVO: {}", e.getMessage());
             return null;
         }
     }
-
-    private String toStringValue(Object value) {
-        if (value == null) {
-            return null;
-        }
-        String text = value.toString().trim();
-        return text.isEmpty() || "null".equalsIgnoreCase(text) ? null : text;
-    }
-
-    private Long toLong(Object value) {
-        BigDecimal decimal = toBigDecimal(value);
-        return decimal == null ? null : decimal.longValue();
-    }
-
-    private Integer toInteger(Object value) {
-        BigDecimal decimal = toBigDecimal(value);
-        return decimal == null ? null : decimal.intValue();
-    }
-
-    private BigDecimal toBigDecimal(Object value) {
-        if (value == null) {
-            return null;
-        }
-        String text = value.toString().trim();
-        if (text.isEmpty() || "null".equalsIgnoreCase(text)) {
-            return null;
-        }
-        try {
-            return new BigDecimal(text);
-        } catch (NumberFormatException ex) {
-            log.warn("Cannot parse numeric metadata value: {}", text);
-            return null;
-        }
-    }
-
-    private LocalDateTime toLocalDateTime(Object value) {
-        if (value == null) {
-            return null;
-        }
-        String text = value.toString().trim();
-        if (text.isEmpty() || "null".equalsIgnoreCase(text)) {
-            return null;
-        }
-
-        BigDecimal decimal = toBigDecimal(value);
-        if (decimal != null) {
-            long epoch = decimal.longValue();
-            if (Math.abs(epoch) < 100_000_000_000L) {
-                return LocalDateTime.ofInstant(Instant.ofEpochSecond(epoch), ZoneId.systemDefault());
-            }
-            return LocalDateTime.ofInstant(Instant.ofEpochMilli(epoch), ZoneId.systemDefault());
-        }
-
-        try {
-            return LocalDateTime.parse(text);
-        } catch (DateTimeParseException ignored) {
-        }
-        try {
-            return LocalDateTime.ofInstant(Instant.parse(text), ZoneId.systemDefault());
-        } catch (DateTimeParseException ex) {
-            log.warn("Cannot parse time metadata value: {}", text);
-            return null;
-        }
-    }
 }
+

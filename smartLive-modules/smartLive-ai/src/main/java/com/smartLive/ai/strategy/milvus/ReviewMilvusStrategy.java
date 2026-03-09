@@ -83,42 +83,47 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
 
     @Override
     public Document createDocument(ReviewDTO review) {
-        // 构建文本内容
-        String content = String.format("%s %s %s",
-                review.getContent() != null ? review.getContent() : "",
-                review.getSourceName() != null ? review.getSourceName() : "",
-                review.getNickName() != null ? review.getNickName() : ""
-        ).trim();
+        String content = String.format("%s", review.getContent());
 
-        // 构建元数据
         Map<String, Object> metadata = new HashMap<>();
+
+        // === 基础字段（必需）===
         putIfNotNull(metadata, "id", review.getId());
         putIfNotNull(metadata, "userId", review.getUserId());
         putIfNotNull(metadata, "shopId", review.getShopId());
-        putIfNotNull(metadata, "orderId", review.getOrderId());
-        putIfNotNull(metadata, "sourceType", review.getSourceType());
         putIfNotNull(metadata, "sourceId", review.getSourceId());
-        putIfNotNull(metadata, "sourceName", review.getSourceName());
-        putIfNotNull(metadata, "images", review.getImages());
-        putIfNotNull(metadata, "content", review.getContent());
-        putIfNotNull(metadata, "liked", review.getLiked());
-        putIfNotNull(metadata, "replyCount", review.getReplyCount());
-        putIfNotNull(metadata, "stared", review.getStared());
+        putIfNotNull(metadata, "sourceType", review.getSourceType());
+
+        // === 过滤字段 ===
         putIfNotNull(metadata, "status", review.getStatus());
+        putIfNotNull(metadata, "isAIGenerated", review.getIsAIGenerated());
+
+        // === 评分字段（用于排序和推荐） ===
         putIfNotNull(metadata, "score", review.getScore());
         putIfNotNull(metadata, "serviceScore", review.getServiceScore());
         putIfNotNull(metadata, "tasteScore", review.getTasteScore());
         putIfNotNull(metadata, "envScore", review.getEnvScore());
+
+        // === 热度指标（用于排序） ===
+        metadata.put("liked", review.getLiked() != null ? review.getLiked() : 0);
+        metadata.put("replyCount", review.getReplyCount() != null ? review.getReplyCount() : 0);
+        metadata.put("stared", review.getStared() != null ? review.getStared() : 0);
+
+        // === 展示字段 ===
         putIfNotNull(metadata, "nickName", review.getNickName());
         putIfNotNull(metadata, "userIcon", review.getUserIcon());
+        putIfNotNull(metadata, "images", review.getImages());
 
-        if (review.getCreateTime() != null) {
-            putIfNotNull(metadata, "createTime", review.getCreateTime().getTime());
-        }
+        // === 时间戳（用于排序） ===
+        metadata.put("createTime", review.getCreateTime() != null ?
+                review.getCreateTime().getTime() : System.currentTimeMillis());
+
+        // === 其他信息 ===
+        metadata.put("isAnonymous", review.getIsAnonymous() != null ? review.getIsAnonymous() : false);
+        putIfNotNull(metadata, "sourceName", review.getSourceName());
 
         return new Document(content, metadata);
     }
-
     private void putIfNotNull(Map<String, Object> map, String key, Object value) {
         if (value != null) {
             map.put(key, value);

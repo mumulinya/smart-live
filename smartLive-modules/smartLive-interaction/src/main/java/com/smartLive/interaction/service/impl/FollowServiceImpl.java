@@ -150,6 +150,16 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         if(UserContextHolder.getUser()==null){
             return false;
         }
+        if(Boolean.TRUE.equals(followDTO.getIsFollow())){
+            //先判断是否关注，防止重复关注
+            Follow follow = new Follow();
+            follow.setSourceType(followDTO.getSourceType());
+            follow.setSourceId(followDTO.getSourceId());
+            Boolean followed = isFollowed(follow);
+            if (followed) {
+                return true;
+            }
+        }
         //获取当前用户id
         Long userId = UserContextHolder.getUser().getId();
         // 1. 获取对应的枚举策略

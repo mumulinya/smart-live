@@ -105,7 +105,7 @@ public class MilvusSyncListener {
             channel.basicAck(deliveryTag, false);
             return;
         }
-
+       log.info("Milvus batch insert start, type={},data={}", request.getType(), request.getData());
         if (messageId == null || messageId.isEmpty()) {
             log.error("[MQ幂等] Milvus批量同步消息缺失 messageId，拒绝消费");
             channel.basicNack(deliveryTag, false, false);

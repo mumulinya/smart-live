@@ -48,20 +48,15 @@ public class ProductTools {
 
     @Tool(name = "orderProduct",description = "下单商品/代金券，示例：我要下单xxx店铺的xxx")
     public String orderProduct(
-            @ToolParam( description = "店铺名称") String shopName,
-            @ToolParam( description = "代金券名称") String voucherName,
-            @ToolParam( description = "优惠券类型：0-普通券，1-秒杀券") Integer type,
-            @ToolParam( description = "商品类型：1-代金券，2-团购套餐") Integer category,
-            @ToolParam( description = "用户ID") Long userId,
-            @ToolParam( description = "用户消息") String userMessage
+            @ToolParam(description = "商品ID，从推荐列表中获取") Long productId,
+            @ToolParam(description = "店铺ID") String shopId,
+            @ToolParam(description = "用户ID") Long userId
     ){
-        log.info("抢购优惠券 | shopName={}, type={}, category={}, voucherName={}, userId={},userMessage={}",
-                shopName, type, category, voucherName, userId,userMessage);
+        log.info("抢购优惠券 | shopId={}, productId={}, userId={}",
+                shopId, productId, userId);
         ProductVO query = new ProductVO();
-        query.setShopName(shopName);
-        query.setName(voucherName); // Assuming name maps to voucherName
-        query.setActivityType(type);
-        query.setCategory(category);
+        query.setId(productId);
+        query.setShopId(shopId);
         query.setUserId(userId);
         return   productRagService.orderProduct(query);
     }

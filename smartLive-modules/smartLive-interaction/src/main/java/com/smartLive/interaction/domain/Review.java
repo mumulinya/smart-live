@@ -40,7 +40,7 @@ public class Review extends BaseEntity
     @Excel(name = "订单id")
     private Long orderId;
 
-    /** 来源类型  1（店铺）, 2（文章）, 3（团购）等。 */
+    /** 来源类型  */
     @Excel(name = "来源类型  1", readConverterExp = "店=铺")
     private Integer sourceType;
 

@@ -8,185 +8,205 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 评论Service接口
- * 
+ * 评价 Service 接口。
+ *
  * @author mumulin
  * @date 2025-09-21
  */
 public interface IReviewService extends IService<Review> {
-    /**
-     * 查询评论
-     *
-     * @param id 评论主键
-     * @return 评论
-     */
-     Review selectReviewById(Long id);
 
     /**
-     * 查询评论列表
+     * 根据主键查询评价。
      *
-     * @param review 评论
-     * @return 评论集合
+     * @param id 评价主键
+     * @return 评价实体
      */
-     List<Review> selectReviewList(Review review);
+    Review selectReviewById(Long id);
 
     /**
-     * 新增评论
+     * 按条件查询评价列表（管理端）。
      *
-     * @param review 评论
-     * @return 结果
+     * @param review 查询条件
+     * @return 评价视图列表
      */
-     int insertReview(Review review);
+    List<ReviewVO> selectReviewList(Review review);
 
     /**
-     * 修改评论
+     * 新增评价。
      *
-     * @param review 评论
-     * @return 结果
+     * @param review 评价实体
+     * @return 影响行数
      */
-     int updateReview(Review review);
+    int insertReview(Review review);
 
     /**
-     * 批量删除评论
+     * 修改评价。
      *
-     * @param ids 需要删除的评论主键集合
-     * @return 结果
+     * @param review 评价实体
+     * @return 影响行数
      */
-     int deleteReviewByIds(Long[] ids);
+    int updateReview(Review review);
 
     /**
-     * 删除评论信息
+     * 批量删除评价。
      *
-     * @param id 评论主键
-     * @return 结果
+     * @param ids 评价主键数组
+     * @return 影响行数
      */
-     int deleteReviewById(Long id);
+    int deleteReviewByIds(Long[] ids);
 
     /**
-     * 获取评价列表（分页）
+     * 根据主键删除评价。
      *
-     * @param review  评价查询条件
-     * @param current 当前页码
-     * @param sort    排序方式：latest(最新), hot(最热)
-     * @return 评价列表
+     * @param id 评价主键
+     * @return 影响行数
+     */
+    int deleteReviewById(Long id);
+
+    /**
+     * 分页查询评价列表（前台）。
+     *
+     * @param review 查询条件
+     * @param current 当前页
+     * @param sort 排序方式：latest（最新）/hot（最热）
+     * @return 评价视图列表
      */
     List<ReviewVO> listReview(Review review, Integer current, String sort);
 
     /**
-     * 用户新增评价
+     * 用户新增评价。
      *
      * @param review 评价实体
-     * @return 评价ID
+     * @return 评价 ID
      */
     Integer addReview(Review review);
 
-
     /**
-     * 用户删除评价
+     * 用户删除评价。
      *
-     * @param review 评价实体（包含ID和用户信息）
-     * @return 删除结果
+     * @param review 评价实体（包含必要身份与资源信息）
+     * @return 是否删除成功
      */
     Boolean deleteReview(Review review);
 
     /**
-     * 获取用户的评价列表
+     * 查询用户自己的评价列表。
      *
-     * @param review  评价查询条件
-     * @param current 当前页码
-     * @return 用户评价列表
+     * @param review 查询条件
+     * @param current 当前页
+     * @return 评价视图列表
      */
     List<ReviewVO> getReviewOfUser(Review review, Integer current);
 
     /**
-     * 获取用户发表的评价数
+     * 查询评价数量。
      *
-     * @param review 评价查询条件
-     * @return 评价数量
+     * @param review 查询条件
+     * @return 数量
      */
     Integer getReviewCount(Review review);
 
     /**
-     * 获取评价总数
+     * 查询评价总数。
      *
-     * @return 评价总数
+     * @return 总数
      */
     Integer getReviewTotal();
 
     /**
-     * 根据ID列表批量获取评价
+     * 按评价 ID 列表批量查询评价。
      *
-     * @param sourceIdList 评价ID列表
-     * @return 评价列表
+     * @param sourceIdList 评价 ID 列表
+     * @return 评价视图列表
      */
     List<ReviewVO> getReviewListByIds(List<Long> sourceIdList);
 
     /**
-     * 批量更新评价点赞数
+     * 批量更新评价点赞数。
      *
-     * @param updateMap 评价ID与点赞数的映射
-     * @return 更新结果
+     * @param updateMap 评价 ID 与点赞数映射
+     * @return 是否更新成功
      */
     Boolean updateLikeCountBatch(Map<Long, Integer> updateMap);
+
     /**
-     * 批量更新评价子评论数
+     * 批量更新评价子评论数。
      *
-     * @param updateMap 评价ID与子评论数的映射
-     * @return 更新结果
+     * @param updateMap 评价 ID 与子评论数映射
+     * @return 是否更新成功
      */
     Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
+
     /**
-     * 批量更新评价收藏数
+     * 批量更新评价收藏数。
      *
-     * @param updateMap 评价ID与收藏数的映射
-     * @return 更新结果
+     * @param updateMap 评价 ID 与收藏数映射
+     * @return 是否更新成功
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
+
     /**
-     * 获取评价点赞数
+     * 查询评价点赞数。
      *
-     * @param sourceId 评价ID
-     * @return 点赞数量
+     * @param sourceId 评价 ID
+     * @return 点赞数
      */
     Integer getReviewLikeCount(Long sourceId);
+
     /**
-     * 根据ID获取评价详情
+     * 根据主键查询评价详情。
      *
      * @param id 评价主键
-     * @return 评价VO
+     * @return 评价视图对象
      */
     ReviewVO getReviewById(Long id);
+
     /**
-     * 获取评价收藏数
+     * 查询评价收藏数。
      *
-     * @param sourceId 评价ID
-     * @return 收藏数量
+     * @param sourceId 评价 ID
+     * @return 收藏数
      */
     Integer getReviewStarCount(Long sourceId);
 
     /**
-     * 更新评价状态（审核通过/拒绝）
+     * 更新评价审核状态。
      *
-     * @param id     评价ID
-     * @param status 状态
-     * @param reason 拒绝原因（通过时为null）
-     * @return 更新结果
+     * @param id 评价 ID
+     * @param status 审核状态
+     * @param reason 拒绝原因（通过时可为 null）
+     * @return 是否更新成功
      */
     Boolean updateReviewStatus(Long id, Integer status, String reason);
 
     /**
-     * 判断当前用户是否评价过目标资源
+     * 判断当前用户是否评价过目标资源。
      *
-     * @param review 评价查询条件（至少包含 sourceType/sourceId）
-     * @return 是否评价过
+     * @param review 查询条件（至少包含 sourceType/sourceId）
+     * @return true 表示已评价
      */
     Boolean isReview(Review review);
 
     /**
-     * 保存AI自动创建的评价
+     * 保存 AI 生成的评价。
      *
      * @param reviews 评价列表
-     * @return 保存结果
+     * @return 是否保存成功
      */
     Boolean saveAiCreateReview(List<Review> reviews);
+
+    /**
+     * 全量发布评价到向量库。
+     *
+     * @return 发布结果
+     */
+    String allPublish();
+
+    /**
+     * 按 ID 发布评价到向量库。
+     *
+     * @param ids 评价 ID 数组
+     * @return 发布结果
+     */
+    String publish(String[] ids);
 }

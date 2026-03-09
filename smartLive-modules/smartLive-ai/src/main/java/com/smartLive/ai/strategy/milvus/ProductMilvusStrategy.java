@@ -9,10 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 @Component
 public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
     @Autowired
@@ -86,7 +85,7 @@ public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
     public Document createDocument(ProductDoc product) {
         // 1. 文档内容：需要被搜索的文本
         String content = String.format("%s %s %s",
-                product.getShopName(), product.getName(), product.getRulesJson());
+                product.getName(),product.getSubTitle(), product.getRulesJson());
 
         // 构建元数据
         Map<String, Object> metadata = new HashMap<>();
@@ -94,8 +93,6 @@ public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
         if (product.getShopId() != null && !product.getShopId().isEmpty()) {
             putIfNotNull(metadata, "shopId", product.getShopId());
         }
-        putIfNotNull(metadata, "typeId", product.getTypeId());
-        putIfNotNull(metadata, "shopName", product.getShopName());
         putIfNotNull(metadata, "name", product.getName());
         putIfNotNull(metadata, "subTitle", product.getSubTitle());
         putIfNotNull(metadata, "rulesJson", product.getRulesJson());
@@ -105,16 +102,14 @@ public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
         putIfNotNull(metadata, "status", product.getStatus());
         putIfNotNull(metadata, "stock", product.getStock());
         putIfNotNull(metadata, "category", product.getCategory());
-
-
+        putIfNotNull(metadata, "coverImg", product.getCoverImg());
         // Time and new fields
-        putIfNotNull(metadata, "beginTime", product.getBeginTime());
-        putIfNotNull(metadata, "endTime", product.getEndTime());
+        putIfNotNull(metadata, "beginTime", formatDate(product.getBeginTime()));
+        putIfNotNull(metadata, "endTime", formatDate(product.getEndTime()));
         putIfNotNull(metadata, "validityType", product.getValidityType());
         putIfNotNull(metadata, "validDays", product.getValidDays());
-        putIfNotNull(metadata, "useStartTime", product.getUseStartTime());
-        putIfNotNull(metadata, "useEndTime", product.getUseEndTime());
-
+        putIfNotNull(metadata, "beginTime", formatDate(product.getBeginTime()));
+        putIfNotNull(metadata, "endTime", formatDate(product.getEndTime()));
         return new Document(content, metadata);
     }
     // 工具方法防止输入空值
@@ -123,4 +118,10 @@ public class ProductMilvusStrategy implements MilvusSyncStrategy<ProductDoc>{
             map.put(key, value);
         }
     }
+    // 加一个转换工具方法
+    private String formatDate(Date date) {
+        if (date == null) return null;
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
+    }
+
 }

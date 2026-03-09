@@ -112,9 +112,6 @@ public class EsTool {
             if (product.getUseEndTime() != null) {
                 jsonMap.put("useEndTime", product.getUseEndTime());
             }
-
-            jsonMap.put("shopName", product.getShopName());
-            jsonMap.put("typeId", product.getTypeId());
         }
 
         return jsonMap;

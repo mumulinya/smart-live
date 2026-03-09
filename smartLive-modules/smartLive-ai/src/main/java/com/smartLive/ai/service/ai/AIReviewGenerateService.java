@@ -58,7 +58,8 @@ public class AIReviewGenerateService {
     }
 
     private ReviewDTO createReview(ReviewDTO queryDTO) {
-        List<ReviewDTO> reviews = reviewRagService.getReviews(queryDTO, null);
+//        List<ReviewDTO> reviews = reviewRagService.getReviews(null, null);
+        List<ReviewDTO> reviews=new ArrayList<>();
         if (reviews == null || reviews.isEmpty()) {
             return null;
         }

@@ -1,5 +1,8 @@
 package com.smartLive.interaction.strategy.review;
 
+import com.smartLive.interaction.domain.VO.ReviewVO;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,6 +15,12 @@ public interface ReviewStrategy {
      * 获取策略类型 (对应 ResourceTypeEnum 的 code)
      */
     Integer getType();
+    /**
+     * 设置评价来源名称
+     * @param reviewVO
+     * @return
+     */
+    List<ReviewVO> setSourceName(List<ReviewVO> reviewVOs);
 
     /**
      * 批量同步评价数到数据库

@@ -1,5 +1,6 @@
 package com.smartLive.interaction.service.impl;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
+import com.smartLive.common.core.constant.mq.SearchMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.constant.PageConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.AppLoginUser;
@@ -18,6 +20,7 @@ import com.smartLive.common.core.enums.RankRedisEnum;
 import com.smartLive.common.core.enums.ReviewTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
+import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
@@ -29,6 +32,8 @@ import com.smartLive.interaction.domain.Review;
 import com.smartLive.interaction.domain.VO.ReviewVO;
 import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.Star;
+import com.smartLive.interaction.strategy.factory.ReviewStrategyFactory;
+import com.smartLive.interaction.strategy.review.ReviewStrategy;
 import org.springframework.beans.BeanUtils;
 import com.smartLive.interaction.mapper.ReviewMapper;
 import com.smartLive.interaction.service.ILikeService;
@@ -59,7 +64,7 @@ import java.util.stream.Collectors;
  * 评价服务核心实现类
  *
  * 架构说明：
- * 1. 坚持“单一职责原则”：本类仅处理评价业务的 CRUD、组装外部依赖（RPC）、以及发送数据到 Redis 缓存/消息队列。
+ * 1. 坚持“单一职责原则”：本类仅处理评价业务의 CRUD、组装外部依赖（RPC）、以及发送数据到 Redis 缓存/消息队列。
  * 2. 动静分离设计：评价详情使用统一的 CACHE_REVIEW_KEY 进行存储，排行榜 ID 列表按业务隔离存储在 ZSet 中。
  * 3. 异步计算解耦：所有复杂的动态热度分计算均移交至 SyncDataServiceImpl 的 XXL-JOB 定时任务处理。
  *
@@ -96,12 +101,14 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Autowired
     private CacheClient cacheClient;
     private ResourceStrategyFactory resourceStrategyFactory;
+    private ReviewStrategyFactory reviewStrategyFactory;
 
     @Autowired
-    public ReviewServiceImpl(@Lazy ILikeService likeService, @Lazy IStarService starService, @Lazy ResourceStrategyFactory resourceStrategyFactory) {
+    public ReviewServiceImpl(@Lazy ILikeService likeService, @Lazy IStarService starService, @Lazy ResourceStrategyFactory resourceStrategyFactory, @Lazy ReviewStrategyFactory reviewStrategyFactory) {
         this.likeService = likeService;
         this.starService = starService;
         this.resourceStrategyFactory = resourceStrategyFactory;
+        this.reviewStrategyFactory = reviewStrategyFactory;
     }
 
     /**
@@ -150,8 +157,20 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 评价集合
      */
     @Override
-    public List<Review> selectReviewList(Review review) {
-        return reviewMapper.selectReviewList(review);
+    public List<ReviewVO> selectReviewList(Review review) {
+        List<Review> reviews = reviewMapper.selectReviewList(review);
+        List<ReviewVO> reviewVOList = convertToReviewVOList(reviews);
+        // 根据资源类型进行分组
+        Map<Integer, List<ReviewVO>> reviewMap = reviewVOList.stream()
+                .collect(Collectors.groupingBy(ReviewVO::getSourceType));
+        List<ReviewVO> result=new ArrayList<>();
+        // 遍历资源类型进行分组
+        reviewMap.forEach((sourceType, reviewVOS) -> {
+            ReviewStrategy reviewStrategy = reviewStrategyFactory.getStrategy(sourceType);
+            List<ReviewVO> re = reviewStrategy.setSourceName(reviewVOS);
+            result.addAll(re);
+        });
+        return result;
     }
 
     /**
@@ -180,7 +199,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (i > 0 && review.getStatus() == 0) {
             sendAuditMessage(review);
         }
-        // 数据变更，必须清除统一的详情缓存保证数据一致性
+        // 数据变更，必须清除详情缓存保证数据一致性
         if (i > 0) {
             clearReviewCache(review.getId());
         }
@@ -266,8 +285,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                     zSetIdManager.saveToZSet(hotRankKey, finalDbList, Review::getId, Review::getCreateTime);
                     zSetIdManager.saveToZSet(newRankKey, finalDbList, Review::getId, Review::getCreateTime);
 
-                    // 【核心补充】将从数据库里粗排兜底拉出来的数据 ID，推入热度待算队列，
-                    // 交给底层的 XXL-Job 异步执行“基于衰减函数和各项互动数据”的精准重算！
+                    // 【核心补充】将从数据库里粗排兜底拉出来的数项 ID，推入热度待算队列，
+                    // 交给底层的 XXL-Job 异步执行“基于衰减函数和各项互动数据”的精准重算。
 
                     if (hotRankRedisEnum.getCalcQueueKey() != null) {
                         redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(),finalDbList.stream().map(r -> String.valueOf(r.getId())).collect(Collectors.toSet()));
@@ -442,7 +461,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             // 4. 将目标源 ID 放入待落库同步队列
             redisService.setCacheSet(reviewSyncKey, Collections.singleton(dbReview.getSourceId().toString()));
 
-            // 5. 评价被删，目标源的互动量减少，必须把它扔进算分队列，让定时任务给目标源【降火/降权】
+            // 5. 评价被删，目标源的互动量减少，必须把它扔进算分队列，让定时任务给目标源【降温 / 降权】
             if (hotRankRedisEnum != null) {
                 redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), dbReview.getId().toString());
             }
@@ -525,7 +544,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     /**
      * 统计符合特定条件的评价数量
-     * 优先级: Redis 独立计数器 → review 表 COUNT
+     * 优先级: Redis 独立计数器 -> review 表 COUNT
      *
      * @param review 查询条件
      * @return 统计总数
@@ -541,7 +560,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             if (count != null) {
                 return count;
             }
-            // 2. 计数器不存在，从 review 表 COUNT 查询并回写 Redis
+            // 2. 璁℃暟鍣ㄤ笉瀛樺湪锛屼粠 review 琛?COUNT 鏌ヨ骞跺洖鍐?Redis
             count = query()
                     .eq("source_type", review.getSourceType())
                     .eq("source_id", review.getSourceId())
@@ -549,7 +568,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             redisService.setCacheObject(reviewCountKey, count);
             return count;
         }
-        // 通用条件查询（后台管理等场景），直接走数据库
+        // 閫氱敤鏉′欢鏌ヨ锛堝悗鍙扮鐞嗙瓑鍦烘櫙锛夛紝鐩存帴璧版暟鎹簱
         return query()
                 .eq(review.getSourceType() != null, "source_type", review.getSourceType())
                 .eq(review.getSourceId() != null, "source_id", review.getSourceId())
@@ -661,7 +680,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (CollUtil.isEmpty(reviewList)) {
             return;
         }
-        // 筛选出 sourceType 为商品类型的评价，收集其 sourceId 作为商品ID
+        // 绛涢€夊嚭 sourceType 涓哄晢鍝佺被鍨嬬殑璇勪环锛屾敹闆嗗叾 sourceId 浣滀负鍟嗗搧ID
         Integer productCode = GlobalBizTypeEnum.PRODUCT.getCode();
         List<Long> productIds = reviewList.stream()
                 .filter(r -> productCode.equals(r.getSourceType()) && r.getSourceId() != null)
@@ -697,7 +716,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     /**
      * RPC 批量远程调用获取发布评价的用户详情（昵称、头像）
      *
-     * @param reviewList 待挂载用户信息的评价列表
+     * @param reviewList 待挂载用户信息系统的评价列表
      */
     private void queryReviewListUserMessage(List<ReviewVO> reviewList) {
         if (CollUtil.isEmpty(reviewList)) {
@@ -765,7 +784,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 批量同步落库方法（被 XXL-JOB 调度任务回调使用）
+     * 批量同步落库方法（被 XXL-JOB 调度任务回调使用）：
      * 批量更新点赞数后，必须清除对应的详情缓存，避免出现前台展示脏读。
      *
      * @param updateMap K:评价ID, V:最新点赞数
@@ -793,11 +812,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 批量同步落库方法（被 XXL-JOB 调度任务回调使用）
-     * 同步数据库中评价的回复数量（子评论数）。
+     * 鎵归噺鍚屾钀藉簱鏂规硶锛堣 XXL-JOB 璋冨害浠诲姟鍥炶皟浣跨敤锛?
+     * 鍚屾鏁版嵁搴撲腑璇勪环鐨勫洖澶嶆暟閲忥紙瀛愯瘎璁烘暟锛夈€?
      *
-     * @param updateMap K:评价ID, V:最新回复数
-     * @return 是否处理成功
+     * @param updateMap K:璇勪环ID, V:鏈€鏂板洖澶嶆暟
+     * @return 鏄惁澶勭悊鎴愬姛
      */
     @Override
     public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
@@ -821,11 +840,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 批量同步落库方法（被 XXL-JOB 调度任务回调使用）
-     * 同步数据库中评价的关注/收藏数量。
+     * 鎵归噺鍚屾钀藉簱鏂规硶锛堣 XXL-JOB 璋冨害浠诲姟鍥炶皟浣跨敤锛?
+     * 鍚屾鏁版嵁搴撲腑璇勪环鐨勫叧娉?鏀惰棌鏁伴噺銆?
      *
-     * @param updateMap K:评价ID, V:最新收藏数
-     * @return 是否处理成功
+     * @param updateMap K:璇勪环ID, V:鏈€鏂版敹钘忔暟
+     * @return 鏄惁澶勭悊鎴愬姛
      */
     @Override
     public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
@@ -849,10 +868,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 获取单条评价的当前点赞总数
+     * 鑾峰彇鍗曟潯璇勪环鐨勫綋鍓嶇偣璧炴€绘暟
      *
-     * @param sourceId 评价ID
-     * @return 点赞数量
+     * @param sourceId 璇勪环ID
+     * @return 鐐硅禐鏁伴噺
      */
     @Override
     public Integer getReviewLikeCount(Long sourceId) {
@@ -861,11 +880,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 聚合查询获取单条评价的完整详情
-     * 包含对防缓存击穿（逻辑过期/互斥锁）的底层封装调用，并聚合远端的关联业务数据。
+     * 鑱氬悎鏌ヨ鑾峰彇鍗曟潯璇勪环鐨勫畬鏁磋鎯?
+     * 鍖呭惈瀵归槻缂撳瓨鍑荤┛锛堥€昏緫杩囨湡/浜掓枼閿侊級鐨勫簳灞傚皝瑁呰皟鐢紝骞惰仛鍚堣繙绔殑鍏宠仈涓氬姟鏁版嵁銆?
      *
-     * @param id 评价主键
-     * @return 完整数据封装实体
+     * @param id 璇勪环涓婚敭
+     * @return 瀹屾暣鏁版嵁灏佽瀹炰綋
      */
     @Override
     public ReviewVO getReviewById(Long id) {
@@ -898,7 +917,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 vo.setShopLogo(shop.getImages());
             }
         }
-        // 挂载商品信息（商品标题、背景图、价格）
+        // 鎸傝浇鍟嗗搧淇℃伅锛堝晢鍝佹爣棰樸€佽儗鏅浘銆佷环鏍硷級
         Integer productCode = GlobalBizTypeEnum.PRODUCT.getCode();
         if (productCode.equals(review.getSourceType()) && review.getSourceId() != null) {
             ProductDTO productDTO = remoteProductService.getProductById(review.getSourceId());
@@ -917,10 +936,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 获取单条评价的当前收藏总数
+     * 鑾峰彇鍗曟潯璇勪环鐨勫綋鍓嶆敹钘忔€绘暟
      *
-     * @param sourceId 评价ID
-     * @return 收藏数量
+     * @param sourceId 璇勪环ID
+     * @return 鏀惰棌鏁伴噺
      */
     @Override
     public Integer getReviewStarCount(Long sourceId) {
@@ -929,10 +948,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 清理大一统的单条评价详情缓存
-     * 任何涉及到评价内容或互动数据更新的操作，均需调用此方法以确保后续读取的数据新鲜度。
+     * 娓呯悊澶т竴缁熺殑鍗曟潯璇勪环璇︽儏缂撳瓨
+     * 浠讳綍娑夊強鍒拌瘎浠峰唴瀹规垨浜掑姩鏁版嵁鏇存柊鐨勬搷浣滐紝鍧囬渶璋冪敤姝ゆ柟娉曚互纭繚鍚庣画璇诲彇鐨勬暟鎹柊椴滃害銆?
      *
-     * @param reviewId 评价主键
+     * @param reviewId 璇勪环涓婚敭
      */
     private void clearReviewCache(Long reviewId) {
         if (reviewId == null) {
@@ -942,10 +961,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 批量清理评价详情缓存
-     * 主要用于数据批量同步落库后的级联清理动作。
+     * 鎵归噺娓呯悊璇勪环璇︽儏缂撳瓨
+     * 涓昏鐢ㄤ簬鏁版嵁鎵归噺鍚屾钀藉簱鍚庣殑绾ц仈娓呯悊鍔ㄤ綔銆?
      *
-     * @param reviewIds 评价主键集合
+     * @param reviewIds 璇勪环涓婚敭闆嗗悎
      */
     private void clearReviewCacheBatch(Collection<Long> reviewIds) {
         if (CollUtil.isEmpty(reviewIds)) {
@@ -961,12 +980,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 保存评价 ID 到 Redis 排行榜中 (发布时的极简占位版)
-     * 业务解耦：为了保证接口响应速度，只给新评价赋予时间戳作为初始分。
-     * 精确的基于互动量与时间衰减的热度分数重算，完全移交至 SyncDataServiceImpl 异步处理。
+     * 淇濆瓨璇勪环 ID 鍒?Redis 鎺掕姒滀腑 (鍙戝竷鏃剁殑鏋佺畝鍗犱綅鐗?
+     * 涓氬姟瑙ｈ€︼細涓轰簡淇濊瘉鎺ュ彛鍝嶅簲閫熷害锛屽彧缁欐柊璇勪环璧嬩簣鏃堕棿鎴充綔涓哄垵濮嬪垎銆?
+     * 绮剧‘鐨勫熀浜庝簰鍔ㄩ噺涓庢椂闂磋“鍑忕殑鐑害鍒嗘暟閲嶇畻锛屽畬鍏ㄧЩ浜よ嚦 SyncDataServiceImpl 寮傛澶勭悊銆?
      *
-     * @param reviewType 评价目标源类型
-     * @param review 评价实体
+     * @param reviewType 璇勪环鐩爣婧愮被鍨?
+     * @param review 璇勪环瀹炰綋
      */
     private void saveReviewRankToRedis(ReviewTypeEnum reviewType, Review review) {
         if (reviewType == null || review == null || review.getId() == null || review.getSourceId() == null) {
@@ -977,24 +996,97 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         String hotRankKey = hotRankRedisEnum.getHotRankKeyPrefix() + review.getSourceId();
         String newRankKey = hotRankRedisEnum.getNewRankKeyPrefix() + review.getSourceId();
 
-        // 1. 【最新榜】：绝对准确。直接存入发布时间戳。
+        // 1. 銆愭渶鏂版銆戯細缁濆鍑嗙‘銆傜洿鎺ュ瓨鍏ュ彂甯冩椂闂存埑銆?
         redisService.setCacheZSet(newRankKey, review.getId().toString(), scoreTime);
 
-        // 2. 【热门榜】：赋予一个极高的初始分（当前时间戳），保证用户刚发完评价能瞬间排在榜首。
-        // 真实的“重力衰减”精细化算分，交由 XXL-JOB 定时任务稍后来洗牌。
+        // 2. 銆愮儹闂ㄦ銆戯細璧嬩簣涓€涓瀬楂樼殑鍒濆鍒嗭紙褰撳墠鏃堕棿鎴筹級锛屼繚璇佺敤鎴峰垰鍙戝畬璇勪环鑳界灛闂存帓鍦ㄦ棣栥€?
+        // 鐪熷疄鐨勨€滈噸鍔涜“鍑忊€濈簿缁嗗寲绠楀垎锛屼氦鐢?XXL-JOB 瀹氭椂浠诲姟绋嶅悗鏉ユ礂鐗屻€?
         redisService.setCacheZSet(hotRankKey, review.getId().toString(), (double) scoreTime);
     }
 
+        /**
+     * 全量发布评价数据到向量库（仅 Milvus）。
+     *
+     * @return 发布结果
+     */
+    @Override
+    public String allPublish() {
+        int page = PageConstants.PAGE_NUMBER;
+        int pageSize = PageConstants.ES_PAGE_SIZE;
+        while (true) {
+            List<Review> reviews = query()
+                    .page(new Page<>(page, pageSize))
+                    .getRecords();
+            if (CollUtil.isEmpty(reviews)) {
+                break;
+            }
+            int finalPage = page;
+            executorService.submit(() -> {
+                log.info("线程{}，开始发布第{}页评价数据", Thread.currentThread().getName(), finalPage);
+                sendReviewMilvusBatchMessage(reviews);
+                log.info("线程{}，发布第{}页完成，数量={}", Thread.currentThread().getName(), finalPage, reviews.size());
+            });
+            page++;
+        }
+        return "数据发布完成";
+    }
+
     /**
-     * 运营后台处理评价审核状态
+     * 按 ID 发布评价数据到向量库（仅 Milvus）。
+     *
+     * @param ids 评价 ID 数组
+     * @return 发布结果
+     */
+    @Override
+    public String publish(String[] ids) {
+        if (ids == null || ids.length == 0) {
+            return "参数为空";
+        }
+        List<Long> idList = Arrays.stream(ids)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        executorService.submit(() -> {
+            log.info("线程{}，开始发布指定评价：{}", Thread.currentThread().getName(), idList);
+            List<Review> reviews = query().in("id", idList).list();
+            if (CollUtil.isNotEmpty(reviews)) {
+                sendReviewMilvusBatchMessage(reviews);
+            }
+        });
+        return "发布成功";
+    }
+
+    /**
+     * 批量发送评价同步消息（仅同步到 Milvus 向量库）。
+     *
+     * @param reviews 评价列表
+     */
+    private void sendReviewMilvusBatchMessage(List<?> reviews) {
+        if (CollUtil.isEmpty(reviews)) {
+            return;
+        }
+        ContentBatchSyncMessage request = new ContentBatchSyncMessage();
+        request.setIndexName("review_index");
+        request.setData(reviews);
+        request.setType(GlobalBizTypeEnum.REVIEW.getCode());
+
+        mqMessageSendUtils.sendMqMessage(
+                SearchMqConstants.MILVUS_SYNC_EXCHANGE,
+                SearchMqConstants.MILVUS_SYNC_BATCH_INSERT_ROUTING_KEY,
+                request);
+    }
+
+    /**
+     * 运营后台处理评价审核状态。
      *
      * @param id 评价主键
-     * @param status 更新后的审核状态
+     * @param status 审核状态
+     * @param reason 拒绝原因
      * @return 是否处理成功
      */
     @Override
     public Boolean updateReviewStatus(Long id, Integer status, String reason) {
-        // 拒绝时写入拒绝原因，通过时清空拒绝原因
+        // 拒绝时记录拒绝原因，通过时清空拒绝原因
         String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
         boolean update = update(new UpdateWrapper<Review>()
                 .set("status", status)
@@ -1003,7 +1095,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (update) {
             clearReviewCache(id);
         }
-        // 如果审核被拒绝，必须将其从前端的展示榜单中彻底移除，并触发依赖其主体的降分逻辑
+        // 若审核被拒绝，需要同步将该评价从排行榜中移除并触发所属主体降分逻辑
         if(update && AuditStatusEnum.isRejected(status)){
             Review review = getById(id);
             ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
@@ -1013,10 +1105,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
             String reviewSyncKey = reviewType.getReviewSyncKey();
 
-            // 将违规评价从排行榜中剔除
+            // 灏嗚繚瑙勮瘎浠蜂粠鎺掕姒滀腑鍓旈櫎
             redisService.removeCacheZSetObject(reviewKeyPrefix, review.getId().toString());
             redisService.removeCacheZSetObject(reviewNewRankKeyPrefix, review.getId().toString());
-            // 确保 Redis 计数器已初始化，再递减
+            // 3. 确保 Redis 计数器已初始化，再递减
             getReviewCount(review);
             redisService.decrementCacheValue(reviewCountKeyPrefix);
             redisService.setCacheSet(reviewSyncKey, Collections.singleton(review.getSourceId().toString()));
@@ -1035,7 +1127,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * 常用作发布前的防刷校验，或前台 UI “去评价”按钮的状态控制。
      *
      * @param review 封装了目标源和用户ID的参数对象
-     * @return true=已评价, false=未评价
+     * @return true=已评价 false=未评价
      */
     @Override
     public Boolean isReview(Review review) {
@@ -1065,7 +1157,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             return true;
         }
 
-        // 缓存未命中时查库兜底，状态 2 (已删除)的无效数据不计入其中
+        // 缓存未命中时查库兜底，状态 2 (已删除) 的无效数据不计入其中
         long count = query()
                 .eq("user_id", userId)
                 .eq("source_type", review.getSourceType())
@@ -1080,10 +1172,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 构建用于标记用户“已评价目标源”足迹历史的 Redis ZSet Key
+     * 鏋勫缓鐢ㄤ簬鏍囪鐢ㄦ埛鈥滃凡璇勪环鐩爣婧愨€濊冻杩瑰巻鍙茬殑 Redis ZSet Key
      *
-     * @param reviewType 评价类型枚举
-     * @param userId 触发行为的用户 ID
+     * @param reviewType 璇勪环绫诲瀷鏋氫妇
+     * @param userId 瑙﹀彂琛屼负鐨勭敤鎴?ID
      * @return Redis Key
      */
     private String userReviewKey(ReviewTypeEnum reviewType, Long userId) {
@@ -1094,11 +1186,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 当发生物理删除或违规下架操作时调用的补偿清理逻辑。
-     * 若该用户在该目标源下，已没有任何有效的评价记录，则同步擦除 Redis 中他的“已评价”足迹。
+     * 褰撳彂鐢熺墿鐞嗗垹闄ゆ垨杩濊涓嬫灦鎿嶄綔鏃惰皟鐢ㄧ殑琛ュ伩娓呯悊閫昏緫銆?
+     * 鑻ヨ鐢ㄦ埛鍦ㄨ鐩爣婧愪笅锛屽凡娌℃湁浠讳綍鏈夋晥鐨勮瘎浠疯褰曪紝鍒欏悓姝ユ摝闄?Redis 涓粬鐨勨€滃凡璇勪环鈥濊冻杩广€?
      *
-     * @param reviewType 评价类型枚举
-     * @param review 被操作的评价实体
+     * @param reviewType 璇勪环绫诲瀷鏋氫妇
+     * @param review 琚搷浣滅殑璇勪环瀹炰綋
      */
     private void evictUserReviewSourceIfNeeded(ReviewTypeEnum reviewType, Review review) {
         if (reviewType == null || review == null || review.getUserId() == null || review.getSourceId() == null) {

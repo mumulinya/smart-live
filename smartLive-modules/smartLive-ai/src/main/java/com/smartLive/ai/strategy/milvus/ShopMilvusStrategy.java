@@ -88,24 +88,29 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
     }
     @Override
     public Document createDocument(ShopDoc shop) {
-        // 1. 文档内容：需要被搜索的文本
         String content = String.format("%s %s %s",
                 shop.getName(), shop.getArea(), shop.getAddress());
-        // 2. 元数据：用于过滤的固定值
+
         Map<String, Object> metadata = new HashMap<>();
-        metadata.put("id", shop.getId());
-        metadata.put("name", shop.getName());
-        metadata.put("area", shop.getArea());
-        metadata.put("address", shop.getAddress());
-        metadata.put("x", shop.getX());
-        metadata.put("y", shop.getY());
-        metadata.put("sold", shop.getSold());
-        metadata.put("comments", shop.getComments());
-        metadata.put("openHours", shop.getOpenHours());
-        metadata.put("images", shop.getImages());
-        metadata.put("typeId", shop.getTypeId());
-        metadata.put("avgPrice", shop.getAvgPrice());
-        metadata.put("score", shop.getScore());
+        putIfNotNull(metadata, "id", shop.getId());
+        putIfNotNull(metadata, "name", shop.getName());
+        putIfNotNull(metadata, "area", shop.getArea());
+        putIfNotNull(metadata, "address", shop.getAddress());
+        putIfNotNull(metadata, "x", shop.getX());
+        putIfNotNull(metadata, "y", shop.getY());
+        putIfNotNull(metadata, "sold", shop.getSold());
+        putIfNotNull(metadata, "comments", shop.getComments());
+        putIfNotNull(metadata, "openHours", shop.getOpenHours());
+        putIfNotNull(metadata, "shopLogo", shop.getShopLogo());
+        putIfNotNull(metadata, "typeId", shop.getTypeId());
+        putIfNotNull(metadata, "avgPrice", shop.getAvgPrice());
+        putIfNotNull(metadata, "score", shop.getScore());
+
         return new Document(content, metadata);
+    }
+    private void putIfNotNull(Map<String, Object> map, String key, Object value) {
+        if (value != null) {
+            map.put(key, value);
+        }
     }
 }

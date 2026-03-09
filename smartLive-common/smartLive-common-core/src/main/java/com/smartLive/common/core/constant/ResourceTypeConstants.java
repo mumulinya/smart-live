@@ -9,6 +9,5 @@ public class ResourceTypeConstants {
     public static final int BLOG_CODE=3;
     public static final int PRODUCT_CODE=4;
     public static final int COMMENT_CODE=5;
-    public static final int GROUP_BUY_CODE=6;
     public static final int REVIEW_CODE=7;
 }

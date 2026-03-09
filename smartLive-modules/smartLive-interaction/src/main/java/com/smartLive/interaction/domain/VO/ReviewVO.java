@@ -1,6 +1,7 @@
 package com.smartLive.interaction.domain.VO;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.smartLive.common.core.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +19,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReviewVO implements Serializable {
+public class ReviewVO extends BaseEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键 */

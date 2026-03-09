@@ -14,8 +14,6 @@ import java.util.Date;
 public class ProductDoc implements Serializable {
     private Long id;
     private String shopId;
-    private Long typeId;
-    private String shopName;
     private String name;
     private String subTitle;
     private String rulesJson;

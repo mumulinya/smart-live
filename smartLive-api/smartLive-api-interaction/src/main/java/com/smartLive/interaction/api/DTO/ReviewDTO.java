@@ -106,4 +106,5 @@ public class ReviewDTO extends BaseEntity
      * 是否AI生成
      */
     private Boolean isAIGenerated;
+    private String rejectReason;
 }

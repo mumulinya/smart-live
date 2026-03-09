@@ -23,6 +23,9 @@ public interface AgentChatStrategy {
     default String buildEnrichedMessage(AIChatRequest request) {
         StringBuilder sb = new StringBuilder();
         sb.append("User message: ").append(request.getMessage());
+        if(request.getUserId()!= null){
+            sb.append("\n(User ID: ").append(request.getUserId()).append(")");
+        }
         if (request.getDistrict() != null && !request.getDistrict().trim().isEmpty()) {
             sb.append("\n(User district: ").append(request.getDistrict());
             if (request.getX() != null && request.getY() != null) {

@@ -27,7 +27,7 @@
     </resultMap>
 
     <sql id="selectReviewVo">
-        select id, user_id, source_type, source_id, shop_id, order_id,score, service_score, taste_score, env_score, is_anonymous, reject_reason, images, content, liked, reply_count,status, rating, create_time, update_time from review
+        select id, user_id, source_type, source_id, shop_id, order_id,score, service_score, taste_score, env_score, is_anonymous, reject_reason, images, content, liked, reply_count,status, create_time, update_time from review
     </sql>
 
     <select id="selectReviewList" parameterType="com.smartLive.interaction.domain.Review" resultMap="ReviewResult">

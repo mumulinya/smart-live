@@ -2,6 +2,7 @@ package com.smartLive.ai.service.rag.impl;
 
 import com.smartLive.ai.entity.vo.ShopVO;
 import com.smartLive.ai.service.rag.IShopRagService;
+import com.smartLive.ai.utils.RagMetadataValueUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -9,7 +10,6 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -180,19 +180,19 @@ public class ShopRagService implements IShopRagService {
             Map<String, Object> metadata = document.getMetadata();
 
             ShopVO shop = new ShopVO();
-            shop.setId(toLong(metadata.get("id")));
-            shop.setName(toStringValue(metadata.get("name")));
-            shop.setTypeId(toLong(metadata.get("typeId")));
-            shop.setArea(toStringValue(metadata.get("area")));
-            shop.setAddress(toStringValue(metadata.get("address")));
-            shop.setAvgPrice(toInteger(metadata.get("avgPrice")));
-            shop.setScore(toInteger(metadata.get("score"))/10.0);
-            shop.setSold(toInteger(metadata.get("sold")));
-            shop.setComments(toInteger(metadata.get("comments")));
-            shop.setX(toDouble(metadata.get("x")));
-            shop.setY(toDouble(metadata.get("y")));
-            shop.setOpenHours(toStringValue(metadata.get("openHours")));
-            shop.setImages(toStringValue(metadata.get("images")));
+            shop.setId(RagMetadataValueUtils.toLong(metadata.get("id")));
+            shop.setName(RagMetadataValueUtils.toStringValue(metadata.get("name")));
+            shop.setTypeId(RagMetadataValueUtils.toLong(metadata.get("typeId")));
+            shop.setArea(RagMetadataValueUtils.toStringValue(metadata.get("area")));
+            shop.setAddress(RagMetadataValueUtils.toStringValue(metadata.get("address")));
+            shop.setAvgPrice(RagMetadataValueUtils.toInteger(metadata.get("avgPrice")));
+            shop.setScore(RagMetadataValueUtils.toInteger(metadata.get("score")) / 10.0);
+            shop.setSold(RagMetadataValueUtils.toInteger(metadata.get("sold")));
+            shop.setComments(RagMetadataValueUtils.toInteger(metadata.get("comments")));
+            shop.setX(RagMetadataValueUtils.toDouble(metadata.get("x")));
+            shop.setY(RagMetadataValueUtils.toDouble(metadata.get("y")));
+            shop.setOpenHours(RagMetadataValueUtils.toStringValue(metadata.get("openHours")));
+            shop.setShopLogo(RagMetadataValueUtils.toStringValue(metadata.get("shopLogo")));
             return shop;
         } catch (Exception e) {
             log.warn("Failed to convert Document to ShopVO: {}", e.getMessage());
@@ -200,39 +200,5 @@ public class ShopRagService implements IShopRagService {
         }
     }
 
-    private String toStringValue(Object value) {
-        return value == null ? null : value.toString();
-    }
-
-    private Long toLong(Object value) {
-        BigDecimal decimal = toBigDecimal(value);
-        return decimal == null ? null : decimal.longValue();
-    }
-
-    private Integer toInteger(Object value) {
-        BigDecimal decimal = toBigDecimal(value);
-        return decimal == null ? null : decimal.intValue();
-    }
-
-    private Double toDouble(Object value) {
-        BigDecimal decimal = toBigDecimal(value);
-        return decimal == null ? null : decimal.doubleValue();
-    }
-
-    private BigDecimal toBigDecimal(Object value) {
-        if (value == null) {
-            return null;
-        }
-        String text = value.toString().trim();
-        if (text.isEmpty() || "null".equalsIgnoreCase(text)) {
-            return null;
-        }
-        try {
-            return new BigDecimal(text);
-        } catch (NumberFormatException ex) {
-            log.warn("Cannot parse numeric metadata value: {}", text);
-            return null;
-        }
-    }
 }
 
