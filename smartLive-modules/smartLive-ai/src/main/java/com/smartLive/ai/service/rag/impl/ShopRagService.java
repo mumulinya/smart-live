@@ -153,6 +153,9 @@ public class ShopRagService implements IShopRagService {
 
     private String buildFilterExpression(ShopVO shopVo) {
         List<String> filters = new ArrayList<>();
+        if (shopVo.getId() != null) {
+            filters.add("id == " + shopVo.getId());
+        }
         if (shopVo.getTypeId() != null) {
             filters.add("typeId == " + shopVo.getTypeId());
         }

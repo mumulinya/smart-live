@@ -1,11 +1,14 @@
 package com.smartLive.product.job;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.enums.ItemActionType;
 import com.smartLive.common.core.enums.ProductActivityTypeEnum;
 import com.smartLive.common.core.enums.ProductStatusEnum;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.order.api.DTO.ProductSoldDTO;
+import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.product.domain.Product;
 import com.smartLive.product.service.IProductService;
 import com.xxl.job.core.biz.model.ReturnT;
@@ -16,7 +19,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 秒杀商品生命周期管理 XXL-JOB 定时任务处理器
@@ -38,6 +43,9 @@ public class ProductSeckillJobHandler {
 
     @Autowired
     private RedisService redisService;
+
+    @Autowired
+    private RemoteOrderService remoteOrderService;
 
     // ==================== 任务一：秒杀预热 ====================
 
@@ -223,5 +231,82 @@ public class ProductSeckillJobHandler {
 
         log.info("======== 秒杀结束回收完成，本次回收 {} 个商品 ========", recoveredCount);
         return ReturnT.SUCCESS;
+    }
+
+    // ==================== 任务四：商品库存同步 ====================
+
+    /**
+     * 商品库存同步定时任务
+     * <p>
+     * 以订单表数据为准，重新计算商品真实剩余库存并同步回 MySQL。
+     * 公式：真实库存 = 初始库存 - 已完成订单数量
+     *
+     * </p>
+     * <p>建议 CRON: 0 0 2 * * ?（每天凌晨2点执行）</p>
+     */
+    @XxlJob("productStockSyncJobHandler")
+    public ReturnT<String> productStockSyncJobHandler() {
+        log.info("======== 触发 XXL-JOB: 商品库存同步任务 productStockSyncJobHandler ========");
+
+        try {
+            // 1. 只查普通商品，秒杀商品不处理
+            List<Product> products = productService.lambdaQuery()
+                    .eq(Product::getStatus, ProductStatusEnum.NORMAL.getCode())
+                    .eq(Product::getActivityType, ProductActivityTypeEnum.SECKILL.getCode())
+                    .le(Product::getBeginTime, new Date())  // 已开始
+                    .ge(Product::getEndTime, new Date())    // 未结束
+                    .list();
+
+            if (CollUtil.isEmpty(products)) {
+                log.info("暂无需要同步的商品");
+                return ReturnT.SUCCESS;
+            }
+
+            // 2. RPC 获取各商品已完成订单数量
+            List<ProductSoldDTO> soldList = remoteOrderService.countProductSold();
+            Map<Long, Long> soldMap = soldList.stream()
+                    .collect(Collectors.toMap(
+                            ProductSoldDTO::getProductId,
+                            ProductSoldDTO::getSoldCount
+                    ));
+
+            int syncCount = 0;
+            for (Product product : products) {
+                try {
+                    // 3. 真实库存 = 初始库存 - 已售数量
+                    Long soldCount = soldMap.getOrDefault(product.getId(), 0L);
+                    Integer realStock = product.getStock() - soldCount.intValue();
+                    realStock = Math.max(realStock, 0); // 防止负数
+
+                    // 4. 有差异才更新，减少不必要的数据库操作
+                    if (!realStock.equals(product.getStock())) {
+                        log.warn("商品 {} 库存不一致！当前={} 实际={} 修正中...",
+                                product.getId(), product.getStock(), realStock);
+
+                        productService.update(new UpdateWrapper<Product>()
+                                .set("stock", realStock)
+                                .set("sold", soldCount)
+                                .eq("id", product.getId())
+                        );
+
+                        // 5. 清理 Redis 缓存
+                        redisService.deleteObject(RedisConstants.CACHE_PRODUCT_KEY + product.getId());
+                        //6. 重新写入redis 缓存
+                        redisService.setCacheObject(RedisConstants.CACHE_PRODUCT_KEY + product.getId(), realStock);
+                        syncCount++;
+                    }
+
+                } catch (Exception e) {
+                    log.error("商品 {} 库存同步失败", product.getId(), e);
+                }
+            }
+
+            log.info("======== 商品库存同步完成，本次修正 {} 个商品 ========", syncCount);
+            return ReturnT.SUCCESS;
+
+        } catch (Exception e) {
+            log.error("商品库存同步任务异常", e);
+            return new ReturnT<>(ReturnT.FAIL_CODE, "同步失败：" + e.getMessage());
+        }
     }
 }

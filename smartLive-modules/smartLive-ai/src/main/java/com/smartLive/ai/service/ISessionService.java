@@ -44,4 +44,13 @@ public interface ISessionService extends IService<Session> {
      * @return true if success
      */
     boolean deleteSession(Long sessionId);
+
+    /**
+     * Update session title
+     *
+     * @param sessionId Session ID
+     * @param title     New title
+     * @return true if success
+     */
+    boolean updateSessionTitle(Long sessionId, String title);
 }

@@ -49,7 +49,7 @@ public class ProductRagService implements IProductRagService {
         return convertDocumentsToProductVO(results);
     }
     /**
-     * 涓嬪崟
+     * 下单
      */
     @Override
     public String orderProduct(ProductVO productVo) {
@@ -63,14 +63,14 @@ public class ProductRagService implements IProductRagService {
             });
             result = future.get();
             if (result != null ) {
-                return "鎶㈣喘鎴愬姛锛佹偍鐨勮鍗曞凡鐢熸垚锛岃鍗旾D涓猴細" + result;
+                return "抢购成功！您的订单已生成，订单ID为：" + result;
 
             } else {
-                return  "鎶㈣喘澶辫触";
+                return  "抢购失败";
             }
         } catch (Exception e) {
-            log.error("鎶㈣喘澶辫触", e);
-            return "鎶㈣喘澶辫触";
+            log.error("抢购失败", e);
+            return "抢购失败";
         }
     }
 
@@ -131,7 +131,7 @@ public class ProductRagService implements IProductRagService {
             product.setStatus(RagMetadataValueUtils.toInteger(metadata.get("status")));
             product.setStock(RagMetadataValueUtils.toInteger(metadata.get("stock")));
             product.setCoverImg(RagMetadataValueUtils.toStringValue(metadata.get("coverImg")));
-// 鉁?鏃堕棿瀛楁鍏ㄩ儴鏀圭敤 parseDate
+// ✅ 时间字段全部改用 parseDate
             product.setBeginTime(RagMetadataValueUtils.parseDate(RagMetadataValueUtils.toStringValue(metadata.get("beginTime"))));
             product.setEndTime(RagMetadataValueUtils.parseDate(RagMetadataValueUtils.toStringValue(metadata.get("endTime"))));
             product.setValidityType(RagMetadataValueUtils.toInteger(metadata.get("validityType")));

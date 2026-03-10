@@ -12,6 +12,7 @@ import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.order.domain.VO.OrderVO;
 import com.smartLive.order.domain.Order;
+import com.smartLive.order.domain.VO.ProductSoldVO;
 import com.smartLive.order.service.IOrderService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,5 +76,8 @@ public class InnerOrderController extends BaseController
     Integer paySuccess(@PathVariable("orderId") Long orderId, @PathVariable("payType") Integer payType) {
         return orderService.paySuccess(orderId, payType);
     }
-
+    @GetMapping("/count/product/sold")
+    public List<ProductSoldVO> countProductSold() {
+        return orderService.countProductSold();
+    }
 }

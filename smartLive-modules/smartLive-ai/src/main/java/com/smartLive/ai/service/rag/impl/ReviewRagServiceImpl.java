@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,186 +27,125 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         this.reviewVectorStore = vectorStore;
     }
     @Override
-    public List<ReviewVO> getReviews(ReviewVO reviewVO, String userMessage) {
-        String ragQuery = (userMessage == null || userMessage.isBlank())
-                ? "review comment"
-                : userMessage;
+    public String getReviewSummary(Integer sourceType, Long sourceId,
+                                   Integer minScore, Integer maxScore, String userMessage) {
+        // 1. 构建基础 filter
+        String baseFilter = buildFilter(sourceType, sourceId);
+        log.info("📝 评价 RAG baseFilter: {}", baseFilter);
 
-        String filter = buildFilterExpression(reviewVO);
-
-        SearchRequest.Builder builder = SearchRequest.builder()
-                .query(ragQuery)
-                .topK(10);
-
-        if (StringUtils.hasText(filter)) {
-            builder.filterExpression(filter);
+        // 2. 用户指定了评分范围 → 只搜指定范围
+        if (minScore != null || maxScore != null) {
+            return searchByScoreRange(baseFilter, minScore, maxScore);
         }
 
-        log.info("RAG query: {}, filter: {}", ragQuery, filter);
+        // 3. 用户没有指定评分 → 好中差全部搜索，综合总结
+        return searchAllRange(baseFilter);
+    }
+    /**
+     * 用户指定了评分范围，只搜指定范围
+     */
+    private String searchByScoreRange(String baseFilter, Integer minScore, Integer maxScore) {
+        String scoreFilter = buildScoreFilter(minScore, maxScore);
 
-        List<Document> documents = reviewVectorStore.similaritySearch(builder.build());
-        log.info("Review RAG search results count: {}", documents.size());
+        // 根据评分范围判断搜索关键词
+        String query = (minScore != null && minScore >= 4)
+                ? "好吃 满意 推荐 不错 服务好"
+                : "差 失望 不推荐 难吃 服务差";
 
-        return documents.stream()
-                .map(this::documentToReviewVO)
-                .collect(Collectors.toList());
+        log.info("📊 指定评分搜索 scoreFilter={}", scoreFilter);
+        List<Document> reviews = searchReviews(query, baseFilter, scoreFilter, 15);
+
+        if (reviews.isEmpty()) {
+            return "暂无相关评价数据";
+        }
+
+        StringBuilder context = new StringBuilder();
+        context.append("以下是筛选后的真实用户评价，请综合总结给用户，不要逐条列出原文：\n\n");
+        reviews.forEach(d -> context.append("- ").append(d.getText()).append("\n"));
+        return context.toString();
     }
 
-    @Override
-    public List<ReviewVO> getReviewsByScore(ReviewVO reviewVO, String userMessage) {
-        String ragQuery = (userMessage == null || userMessage.isBlank())
-                ? "review comment"
-                : userMessage;
+    /**
+     * 用户未指定评分，好中差全部搜索
+     */
+    private String searchAllRange(String baseFilter) {
+        List<Document> goodReviews   = searchReviews("好吃 满意 推荐 不错 服务好", baseFilter, "score >= 4", 10);
+        List<Document> normalReviews = searchReviews("一般 还行 普通 凑合",         baseFilter, "score == 3", 5);
+        List<Document> badReviews    = searchReviews("差 失望 不推荐 难吃 服务差",   baseFilter, "score < 3",  5);
 
-        String filter = buildFilterExpressionWithScore(reviewVO);
+        log.info("📊 好评{}条 中评{}条 差评{}条",
+                goodReviews.size(), normalReviews.size(), badReviews.size());
 
-        SearchRequest.Builder builder = SearchRequest.builder()
-                .query(ragQuery)
-                .topK(10);
-
-        if (StringUtils.hasText(filter)) {
-            builder.filterExpression(filter);
+        if (goodReviews.isEmpty() && normalReviews.isEmpty() && badReviews.isEmpty()) {
+            return "暂无评价数据";
         }
 
-        log.info("RAG query by score: {}, filter: {}", ragQuery, filter);
-
-        List<Document> documents = reviewVectorStore.similaritySearch(builder.build());
-
-        return documents.stream()
-                .map(this::documentToReviewVO)
-                .collect(Collectors.toList());
+        StringBuilder context = new StringBuilder();
+        context.append("以下是真实用户评价数据，请综合总结给用户，不要逐条列出原文，用自然语言描述整体口碑：\n\n");
+        appendReviews(context, "好评", goodReviews);
+        appendReviews(context, "中评", normalReviews);
+        appendReviews(context, "差评", badReviews);
+        return context.toString();
     }
 
-    @Override
-    public List<ReviewVO> getReviewsSortByPopularity(ReviewVO reviewVO, String userMessage) {
-        String ragQuery = (userMessage == null || userMessage.isBlank())
-                ? "review comment"
-                : userMessage;
+    /**
+     * 从向量库搜索评价
+     */
+    private List<Document> searchReviews(String query, String baseFilter,
+                                         String scoreFilter, int topK) {
+        try {
+            String fullFilter = baseFilter.isEmpty()
+                    ? scoreFilter
+                    : baseFilter + " && " + scoreFilter;
 
-        String filter = buildFilterExpression(reviewVO);
-
-        SearchRequest.Builder builder = SearchRequest.builder()
-                .query(ragQuery)
-                .topK(20);
-
-        if (StringUtils.hasText(filter)) {
-            builder.filterExpression(filter);
+            log.info("🔍 评价搜索 fullFilter={}", fullFilter);
+            return reviewVectorStore.similaritySearch(
+                    SearchRequest.builder()
+                            .query(query)
+                            .topK(topK)
+                            .filterExpression(fullFilter)
+                            .build()
+            );
+        } catch (Exception e) {
+            log.warn("⚠️ 评价搜索失败 scoreFilter={} error={}", scoreFilter, e.getMessage());
+            return new ArrayList<>();
         }
-
-        log.info("RAG query by popularity: {}, filter: {}", ragQuery, filter);
-
-        List<Document> documents = reviewVectorStore.similaritySearch(builder.build());
-
-        // 按热度排序：liked + replyCount
-        return documents.stream()
-                .map(this::documentToReviewVO)
-                .sorted((a, b) -> {
-                    int scoreA = (a.getLiked() != null ? a.getLiked() : 0) +
-                            (a.getReplyCount() != null ? a.getReplyCount() : 0);
-                    int scoreB = (b.getLiked() != null ? b.getLiked() : 0) +
-                            (b.getReplyCount() != null ? b.getReplyCount() : 0);
-                    return scoreB - scoreA;
-                })
-                .limit(10)
-                .collect(Collectors.toList());
     }
 
-    @Override
-    public List<ReviewVO> searchReviews(ReviewVO reviewVO, String userMessage) {
-        String ragQuery = (userMessage == null || userMessage.isBlank())
-                ? "review"
-                : userMessage;
-
-        String filter = "metadata.status == 0";
-
-        SearchRequest.Builder builder = SearchRequest.builder()
-                .query(ragQuery)
-                .topK(reviewVO.getLimit() != null ? reviewVO.getLimit() : 10);
-
-//        if (StringUtils.hasText(filter)) {
-//            builder.filterExpression(filter);
-//        }
-
-        log.info("Global search reviews: {}, filter: {}", ragQuery, filter);
-
-        List<Document> documents = reviewVectorStore.similaritySearch(builder.build());
-
-        return documents.stream()
-                .map(this::documentToReviewVO)
-                .collect(Collectors.toList());
+    /**
+     * 拼接评价内容到上下文
+     */
+    private void appendReviews(StringBuilder context, String label, List<Document> reviews) {
+        if (reviews.isEmpty()) return;
+        context.append(label).append("：\n");
+        reviews.forEach(d -> context.append("- ").append(d.getText()).append("\n"));
+        context.append("\n");
     }
 
-    // ========== 辅助方法 ==========
-
-    private String buildFilterExpression(ReviewVO reviewVO) {
-        StringBuilder filter = new StringBuilder();
-//        filter.append("metadata.status == 0");
-
-        if (reviewVO.getSourceType() != null) {
-            filter.append(" && metadata.sourceType == ").append(reviewVO.getSourceType());
+    /**
+     * 构建基础 Milvus filter
+     */
+    private String buildFilter(Integer sourceType, Long sourceId) {
+        List<String> filters = new ArrayList<>();
+        if (sourceType != null) {
+            filters.add("sourceType == " + sourceType);
         }
-
-        if (reviewVO.getSourceId() != null) {
-            filter.append(" && metadata.sourceId == ").append(reviewVO.getSourceId());
+        if (sourceId != null) {
+            filters.add("sourceId == " + sourceId);
         }
-
-        if (reviewVO.getIsAIGenerated() != null && !reviewVO.getIsAIGenerated()) {
-            filter.append(" && metadata.isAIGenerated == false");
-        }
-
-        return filter.toString();
+        return String.join(" && ", filters);
     }
 
-    private String buildFilterExpressionWithScore(ReviewVO reviewVO) {
-        String baseFilter = buildFilterExpression(reviewVO);
-
-        if (reviewVO.getMinScore() != null) {
-            baseFilter += " && metadata.score >= " + reviewVO.getMinScore();
+    /**
+     * 构建评分范围 filter
+     */
+    private String buildScoreFilter(Integer minScore, Integer maxScore) {
+        if (minScore != null && maxScore != null) {
+            return "score >= " + minScore + " && score <= " + maxScore;
+        } else if (minScore != null) {
+            return "score >= " + minScore;
+        } else {
+            return "score <= " + maxScore;
         }
-
-        return baseFilter;
-    }
-
-    private ReviewVO documentToReviewVO(Document document) {
-        Map<String, Object> metadata = document.getMetadata();
-
-        ReviewVO vo = new ReviewVO();
-        vo.setId(Long.parseLong(metadata.get("id").toString()));
-        vo.setUserId(Long.parseLong(metadata.get("userId").toString()));
-        vo.setShopId(Long.parseLong(metadata.get("shopId").toString()));
-        vo.setSourceId(Long.parseLong(metadata.get("sourceId").toString()));
-        vo.setSourceType((Integer) metadata.get("sourceType"));
-
-        vo.setContent((String) metadata.get("content"));
-        vo.setScore((Integer) metadata.get("score"));
-
-        Object serviceScoreObj = metadata.get("serviceScore");
-        if (serviceScoreObj != null) {
-            vo.setServiceScore(((Number) serviceScoreObj).shortValue());
-        }
-
-        Object tasteScoreObj = metadata.get("tasteScore");
-        if (tasteScoreObj != null) {
-            vo.setTasteScore(((Number) tasteScoreObj).shortValue());
-        }
-
-        Object envScoreObj = metadata.get("envScore");
-        if (envScoreObj != null) {
-            vo.setEnvScore(((Number) envScoreObj).shortValue());
-        }
-
-        vo.setLiked((Integer) metadata.get("liked"));
-        vo.setReplyCount((Integer) metadata.get("replyCount"));
-        vo.setStared((Integer) metadata.get("stared"));
-
-        vo.setNickName((String) metadata.get("nickName"));
-        vo.setUserIcon((String) metadata.get("userIcon"));
-        vo.setSourceName((String) metadata.get("sourceName"));
-
-        if (metadata.containsKey("relevance")) {
-            vo.setRelevanceScore(Float.parseFloat(metadata.get("relevance").toString()));
-        }
-
-        return vo;
     }
 }

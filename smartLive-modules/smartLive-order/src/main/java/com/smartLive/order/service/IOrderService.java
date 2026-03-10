@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.order.domain.VO.OrderVO;
 import com.smartLive.order.domain.Order;
+import com.smartLive.order.domain.VO.ProductSoldVO;
 
 /**
  * 订单表Service接口
@@ -149,4 +150,9 @@ public interface IOrderService  extends IService<Order>
      * @return 订单状态
      */
     String getOrderStatus(Long id);
+    /**
+     * 获取商品销售统计
+     * @return
+     */
+    List<ProductSoldVO> countProductSold();
 }

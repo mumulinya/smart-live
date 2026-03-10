@@ -21,6 +21,7 @@ import com.smartLive.common.core.enums.ReviewTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
+import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
@@ -182,7 +183,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Override
     public int insertReview(Review review) {
         review.setCreateTime(DateUtils.getNowDate());
-        return reviewMapper.insertReview(review);
+        int i = reviewMapper.insertReview(review);
+        if (i > 0) {
+            // 同步写入向量库
+            publish(new String[]{review.getId().toString()});
+        }
+        return i;
     }
 
     /**
@@ -202,6 +208,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         // 数据变更，必须清除详情缓存保证数据一致性
         if (i > 0) {
             clearReviewCache(review.getId());
+            // 同步更新向量库(如果已经存在会删除后重新插入)
+            publish(new String[]{review.getId().toString()});
         }
         return i;
     }
@@ -217,6 +225,19 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         int rows = reviewMapper.deleteReviewByIds(ids);
         if (rows > 0 && ids != null && ids.length > 0) {
             clearReviewCacheBatch(Arrays.asList(ids));
+            // 同步删除向量库数据
+            for (Long id : ids) {
+                executorService.submit(() -> {
+                    ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                    contentSyncMessage.setId(id);
+                    contentSyncMessage.setIndexName("review_index");
+                    contentSyncMessage.setType(GlobalBizTypeEnum.REVIEW.getCode());
+                    mqMessageSendUtils.sendMqMessage(
+                            SearchMqConstants.MILVUS_SYNC_EXCHANGE,
+                            SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY,
+                            contentSyncMessage);
+                });
+            }
         }
         return rows;
     }
@@ -232,6 +253,15 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         int rows = reviewMapper.deleteReviewById(id);
         if (rows > 0) {
             clearReviewCache(id);
+            // 同步删除向量库数据
+            ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+            contentSyncMessage.setId(id);
+            contentSyncMessage.setIndexName("review_index");
+            contentSyncMessage.setType(GlobalBizTypeEnum.REVIEW.getCode());
+            mqMessageSendUtils.sendMqMessage(
+                    SearchMqConstants.MILVUS_SYNC_EXCHANGE,
+                    SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY,
+                    contentSyncMessage);
         }
         return rows;
     }
@@ -394,6 +424,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             if (hotRankRedisEnum != null) {
                 redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), review.getId().toString());
             }
+
+            // 7. 同步新增的数据到向量库
+            publish(new String[]{review.getId().toString()});
         }
         return i;
     }
@@ -465,6 +498,16 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             if (hotRankRedisEnum != null) {
                 redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), dbReview.getId().toString());
             }
+
+            // 6. 同步删除向量库数据
+            ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+            contentSyncMessage.setId(dbReview.getId());
+            contentSyncMessage.setIndexName("review_index");
+            contentSyncMessage.setType(GlobalBizTypeEnum.REVIEW.getCode());
+            mqMessageSendUtils.sendMqMessage(
+                    SearchMqConstants.MILVUS_SYNC_EXCHANGE,
+                    SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY,
+                    contentSyncMessage);
 
             evictUserReviewSourceIfNeeded(reviewType, dbReview);
         }
@@ -1094,6 +1137,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq("id", id));
         if (update) {
             clearReviewCache(id);
+            // 状态变更，同步更新向量库(如果已经存在会删除后重新插入，从而包含最新的状态，状态如果是拒绝或者审查则在后续检索时不该查到，可以通过配置检索策略忽略 status)
+            publish(new String[]{id.toString()});
         }
         // 若审核被拒绝，需要同步将该评价从排行榜中移除并触发所属主体降分逻辑
         if(update && AuditStatusEnum.isRejected(status)){

@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.smartLive.order.domain.Order;
+import com.smartLive.order.domain.VO.ProductSoldVO;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * 订单表Mapper接口
@@ -60,4 +62,15 @@ public interface OrderMapper extends BaseMapper<Order>
      * @return 结果
      */
     public int deleteOrderByIds(Long[] ids);
+    /**
+     * 查询商品销售量
+     * @return
+     */
+    @Select("""
+    SELECT source_id, COUNT(*) as sold_count
+    FROM order
+    WHERE status != 4
+    GROUP BY source_id
+    """)
+    List<ProductSoldVO> countProductSold();
 }

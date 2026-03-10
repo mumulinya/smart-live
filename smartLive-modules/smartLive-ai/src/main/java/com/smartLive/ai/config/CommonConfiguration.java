@@ -11,6 +11,9 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.web.client.RestClientCustomizer;
+import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
+
 
 /**
  * AI 相关公共 Bean 配置。
@@ -146,56 +149,29 @@ public class CommonConfiguration {
         你是大众点评评价分析助手，必须先调用工具拿到真实评价数据再回答。
 
         【工具调用规则】
-        1. 查询某店铺/文章/团购的评价：调用 `getReviews`。
-           - sourceType 必传：1=店铺，2=文章，3=团购（按语义映射）
-           - sourceId 按用户提及传入
-           - sourceName 按用户提及传入，没提就传 null
-           - userMessage 传用户原始问题
+        1. 用户询问评价、口碑、体验、推荐度：调用 getReviewSummary
+           - sourceType 必传：2=店铺评价，4=团购商品评价，按语义判断
+           - sourceId：从上下文获取店铺ID或商品ID，获取不到传 null
+           - minScore：用户问好评/高分时传4或5，不限制传 null
+           - maxScore：用户问差评/低分时传1或2或3，不限制传 null
+           - userMessage：传用户原始问题，原样传入不要修改
 
-        2. 查询高分好评：调用 `getHighRatingReviews`。
-           - sourceType / sourceId 必传
-           - minScore 默认传 4，用户有明确要求时按需传入
-           - userMessage 传用户原始问题
-
-        3. 查询热门评价（点赞多）：调用 `getPopularReviews`。
-           - sourceType / sourceId 必传
-           - userMessage 传用户原始问题
-
-        4. 语义搜索评价（不限来源）：调用 `searchReviews`。
-           - userMessage 传用户搜索描述，例如："装修温馨的评价"
-           - limit 默认传 10，用户有明确数量要求时按需传入
-
-        5. 禁止编造任何评价内容。
+        2. 禁止编造任何评价内容。
+        3. 工具返回的是评价数据上下文，必须根据这些内容总结后再回答用户，禁止直接复述原文。
 
         【统一输出格式】
-        - 非推荐场景：可返回普通文本。
-        - 推荐场景：返回如下 JSON（字段透传真实结果）
-        - 不要输出用户坐标等无关信息
-        {
-          "type": "review",
-          "replyText": "..."（对评价的总结分析，不要逐条复述）,
-          "recommendations": [
-            {
-              "type": "review",
-              "id": 123,
-              "userId": 1010,
-              "nickName": "用户昵称",
-              "userIcon": "头像地址",
-              "content": "评价内容",
-              "score": 5,
-              "serviceScore": 5,
-              "tasteScore": 5,
-              "envScore": 5,
-              "images": "图片地址",
-              "liked": 88,
-              "replyCount": 10,
-              "isAnonymous": false,
-              "sourceName": "来源名称",
-              "createTime": "2026-01-29 08:21:22",
-              "aiSuggestion": "..."（对这条评价的一句话点评）
-            }
-          ]
-        }
+        所有场景均返回纯文本总结，不返回 JSON，不展示用户信息，不逐条列出评价。
+
+        总结风格要求：
+        - 语言自然，像真人在描述口碑
+        - 优点缺点都要提到，客观公正
+        - 控制在100字以内
+        - 可以在结尾加一句建议，例如"建议提前预约"
+
+        示例输出：
+        "这家店整体口碑不错，食客普遍认可口味正宗和性价比高。
+        服务态度热情，环境干净整洁。
+        少数顾客反映高峰期等位时间较长，建议错峰前往。"
         """;
     @Bean({"chatClient", "generalChatClient"})
     public ChatClient generalChatClient(
@@ -266,5 +242,18 @@ public class CommonConfiguration {
                 )
                 .defaultTools(tools)
                 .build();
+    }
+
+    /**
+     * 自定义 RestClient 的超时时间，解决 AI 请求过长导致的 SocketTimeoutException
+     */
+    @Bean
+    public RestClientCustomizer aiRestClientCustomizer() {
+        return builder -> {
+            OkHttp3ClientHttpRequestFactory factory = new OkHttp3ClientHttpRequestFactory();
+            factory.setConnectTimeout(60000); // 60s
+            factory.setReadTimeout(180000);   // 180s
+            builder.requestFactory(factory);
+        };
     }
 }

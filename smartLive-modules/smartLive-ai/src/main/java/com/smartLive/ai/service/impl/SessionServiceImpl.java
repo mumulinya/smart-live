@@ -85,4 +85,22 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
         // Delete session
         return this.removeById(sessionId);
     }
+
+    @Override
+    public boolean updateSessionTitle(Long sessionId, String title) {
+        if (StringUtils.isBlank(title)) {
+            return false;
+        }
+        
+        Long userId = UserContextHolder.getUser().getId();
+        Session session = this.getById(sessionId);
+        
+        if (session == null || !session.getUserId().equals(userId)) {
+            return false;
+        }
+        
+        session.setTitle(title);
+        session.setUpdateTime(new Date());
+        return this.updateById(session);
+    }
 }

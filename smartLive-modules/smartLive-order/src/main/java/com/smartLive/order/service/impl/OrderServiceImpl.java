@@ -11,6 +11,7 @@ import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.order.domain.VO.ProductSoldVO;
 import com.smartLive.product.api.RemoteProductService;
 import com.smartLive.points.api.RemotePointsService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -493,5 +494,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         // 3. 既没 key 也没库记录 -> 失败
         return "FAILED";
+    }
+
+    /**
+     * 获取商品销售统计
+     *
+     * @return
+     */
+    @Override
+    public List<ProductSoldVO> countProductSold() {
+        return orderMapper.countProductSold();
     }
 }

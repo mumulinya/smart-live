@@ -67,4 +67,20 @@ public class SessionController extends BaseController {
         }
         return Result.fail("Failed to delete session");
     }
+
+    /**
+     * Update session title
+     */
+    @PutMapping("/{sessionId}/title")
+    public Result updateSessionTitle(@PathVariable("sessionId") Long sessionId, @RequestBody Map<String, String> params) {
+        String title = params.get("title");
+        if (title == null || title.trim().isEmpty()) {
+            return Result.fail("Title cannot be empty");
+        }
+        boolean success = sessionService.updateSessionTitle(sessionId, title);
+        if (success) {
+            return Result.ok();
+        }
+        return Result.fail("Failed to update session title");
+    }
 }
