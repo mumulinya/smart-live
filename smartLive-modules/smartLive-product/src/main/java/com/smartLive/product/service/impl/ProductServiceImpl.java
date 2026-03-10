@@ -28,10 +28,12 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
 import com.smartLive.common.redis.util.ZSetIdManager;
+import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
-import com.smartLive.interaction.api.DTO.StarDTO;
+import java.util.function.Consumer;
+import com.smartLive.common.core.enums.SalesTypeEnum;
 import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.service.strategy.PurchaseStrategy;
 
@@ -815,6 +817,75 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         clearProductCacheBatch(updateMap.keySet());
         return true;
     }
+
+    /**
+     * 批量更新销量
+     *
+     * @param updateMap 商品ID与销量的映射
+     * @return 更新结果
+     */
+    /**
+     * 批量更新销量
+     *
+     * @param updateMap 商品ID与销量的映射
+     * @return 更新结果
+     */
+    @Override
+    public Boolean updateSoldBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+        // 分批处理，防止 SQL 语句过长
+        if (updateMap.size() > 500) {
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                productMapper.updateSoldBatch(batchMap);
+            }
+        } else {
+            productMapper.updateSoldBatch(updateMap);
+        }
+        // 清除受影响商品的缓存
+        clearProductCacheBatch(updateMap.keySet());
+        return true;
+    }
+
+    /**
+     * 定时任务执逻辑：同步商品销量数据从 Redis 到数据库
+     */
+    @Override
+    public void syncSalesData() {
+        log.info("开始定时任务：同步商品销量数据");
+        String countKeyPrefix = SalesTypeEnum.PRODUCT_SALES.getCountKeyPrefix();
+        String dirtyKey = SalesTypeEnum.PRODUCT_SALES.getDirtyKey();
+        String tempKey = dirtyKey + ":TEMP";
+
+        // 执行同步逻辑，完成后更新热度计算队列
+        redisService.syncDataWithSnapshot("商品销量", countKeyPrefix, dirtyKey, tempKey,
+                this::updateSoldBatch,
+                updateMap -> enqueueIds(RedisConstants.PRODUCT_CALC_QUEUE_KEY, updateMap.keySet()));
+        log.info("定时任务：同步商品销量数据完成");
+    }
+
+
+
+    /**
+     * 批量将 ID 存入 Redis Set 集合中（供热度计算队列使用）
+     */
+    private void enqueueIds(String key, Collection<Long> ids) {
+        if (key == null || CollUtil.isEmpty(ids)) {
+            return;
+        }
+        for (Long id : ids) {
+            if (id != null) {
+                redisService.setCacheSet(key, id.toString());
+            }
+        }
+    }
+
     /**
      * 获取商品收藏数
      *

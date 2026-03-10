@@ -240,4 +240,16 @@ public interface IProductService extends IService<Product>
      * @param itemActionType 动作类型
      */
     void sendProductActionMessageToMQ(Long productId, ItemActionType itemActionType);
+
+    /**
+     * 批量更新销量
+     * @param updateMap 商品id和销量
+     * @return 结果
+     */
+    Boolean updateSoldBatch(Map<Long, Integer> updateMap);
+
+    /**
+     * 同步销量数据从 Redis 到数据库
+     */
+    void syncSalesData();
 }

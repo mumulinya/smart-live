@@ -1,10 +1,14 @@
 package com.smartLive.order.api.factory;
 
 import com.smartLive.common.core.domain.R;
+import com.smartLive.order.api.DTO.ProductSoldDTO;
 import com.smartLive.order.api.RemoteOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+
 @Component
 @Slf4j
 public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderService> {
@@ -41,6 +45,16 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
             public Integer paySuccess(Long orderId, Integer payType) {
                 log.error("更新订单支付状态失败:{}", cause.getMessage());
                 return 0;
+            }
+
+            /**
+             * 统计商品销售数量
+             *
+             * @return
+             */
+            @Override
+            public List<ProductSoldDTO> countProductSold() {
+                return List.of();
             }
         };
 

@@ -113,4 +113,21 @@ public class ShopInnerController extends BaseController {
                 .map(Shop::getId)
                 .collect(java.util.stream.Collectors.toList());
     }
+
+    /**
+     * 批量更新销量 (Feign 内部调用)
+     */
+    @PostMapping("/updateSoldBatch")
+    public Boolean updateSoldBatch(@RequestBody Map<Long, Integer> updateMap){
+        return shopService.updateSoldBatch(updateMap);
+    }
+
+    /**
+     * 获取指定 ID 的销量 (Feign 内部调用)
+     */
+    @GetMapping("/getSold/{id}")
+    public Integer getSold(@PathVariable("id") Long id){
+        Shop shop = shopService.getById(id);
+        return shop != null ? shop.getSold() : 0;
+    }
 }

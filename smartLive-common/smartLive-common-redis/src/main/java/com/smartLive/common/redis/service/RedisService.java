@@ -4,8 +4,10 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Distance;
@@ -22,7 +24,6 @@ import org.springframework.data.geo.Point;
  * 
  * @author smartLive
  **/
-@SuppressWarnings(value = { "unchecked", "rawtypes" })
 @Component
 @Slf4j
 public class RedisService
@@ -737,5 +738,64 @@ public class RedisService
     public <T> void setMultiCacheObject(final Map<String, T> cacheMap)
     {
         redisTemplate.opsForValue().multiSet(cacheMap);
+    }
+
+    /**
+     * 通用的 Redis 快照轮转与同步落库模型 (Atomic Snapshot Rotation)
+     * 1. 将脏数据 Key 重命名为临时 Key (原子操作)；
+     * 2. 读取临时 Key 中的 ID 列表及对应的 Redis 计数值；
+     * 3. 执行数据库批量更新动作；
+     * 4. 执行同步后动作（如推入算分队列）；
+     * 5. 删除临时 Key。
+     *
+     * @param desc            同步任务描述（用于日志）
+     * @param countKeyPrefix  Redis 计数值 Key 前缀
+     * @param dirtyKey        Redis 脏数据集合 Key
+     * @param tempKey         处理时的临时快照 Key
+     * @param dbAction        执行落库操作的函数
+     * @param afterSyncAction 落库成功后的回调函数
+     */
+    public void syncDataWithSnapshot(String desc,
+                                     String countKeyPrefix,
+                                     String dirtyKey,
+                                     String tempKey,
+                                     Consumer<Map<Long, Integer>> dbAction,
+                                     Consumer<Map<Long, Integer>> afterSyncAction) {
+        try {
+            if (Boolean.FALSE.equals(this.hasKey(dirtyKey))) {
+                return;
+            }
+
+            if (Boolean.TRUE.equals(this.hasKey(tempKey))) {
+                this.deleteObject(tempKey);
+            }
+            // 核心：原子重命名，确保同步过程中产生的新脏数据在下一轮处理
+            this.rename(dirtyKey, tempKey);
+
+            Set<Object> dirtyIds = this.getCacheSet(tempKey);
+            if (CollUtil.isEmpty(dirtyIds)) {
+                this.deleteObject(tempKey);
+                return;
+            }
+
+            Map<Long, Integer> updateMap = new HashMap<>(dirtyIds.size());
+            for (Object idObj : dirtyIds) {
+                if (idObj == null) continue;
+                Long id = Long.valueOf(idObj.toString());
+                Object countObj = this.getCacheObject(countKeyPrefix + id);
+                updateMap.put(id, countObj == null ? 0 : Integer.parseInt(countObj.toString()));
+            }
+
+            if (CollUtil.isNotEmpty(updateMap)) {
+                dbAction.accept(updateMap);
+                if (afterSyncAction != null) {
+                    afterSyncAction.accept(updateMap);
+                }
+            }
+
+            this.deleteObject(tempKey);
+        } catch (Exception e) {
+            log.error("[{}] 数据同步异常", desc, e);
+        }
     }
 }

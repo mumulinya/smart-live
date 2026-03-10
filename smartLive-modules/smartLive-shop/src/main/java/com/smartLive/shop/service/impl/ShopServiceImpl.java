@@ -2,6 +2,8 @@ package com.smartLive.shop.service.impl;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
+import java.util.function.Consumer;
+import com.smartLive.common.core.enums.SalesTypeEnum;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -800,6 +802,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @param updateMap 商铺id和评论数
      * @return 批量更新结果
      */
+    /**
+     * 批量更新商铺粉丝数
+     *
+     * @param updateMap 商铺id和粉丝数
+     * @return 批量更新结果
+     */
     @Override
     public Boolean updateFansCountBatch(Map<Long, Integer> updateMap) {
         if (CollUtil.isEmpty(updateMap)) {
@@ -821,6 +829,68 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         updateMap.keySet().forEach(this::flashShopRedisCache);
         flushCache();
         return true;
+    }
+    /**
+     * 批量更新店铺销量
+     *
+     * @param updateMap 店铺ID与销量的映射
+     * @return 更新结果
+     */
+    @Override
+    public Boolean updateSoldBatch(Map<Long, Integer> updateMap) {
+        if (CollUtil.isEmpty(updateMap)) {
+            return false;
+        }
+        // 分批分发，防止后端 SQL 语句过载
+        if (updateMap.size() > 500) {
+            List<List<Long>> partition = ListUtil.partition(new ArrayList<>(updateMap.keySet()), 500);
+            for (List<Long> batchKeys : partition) {
+                Map<Long, Integer> batchMap = new HashMap<>();
+                for (Long key : batchKeys) {
+                    batchMap.put(key, updateMap.get(key));
+                }
+                baseMapper.updateSoldBatch(batchMap);
+            }
+        } else {
+            baseMapper.updateSoldBatch(updateMap);
+        }
+        // 刷新 Redis 详情缓存
+        updateMap.keySet().forEach(this::flashShopRedisCache);
+        // 刷新列表缓存（销量变更会影响排序）
+        flushCache();
+        return true;
+    }
+
+    /**
+     * 定时任务执逻辑：同步店铺销量数据从 Redis 到数据库
+     */
+    @Override
+    public void syncSalesData() {
+        log.info("开始定时任务：同步店铺销量数据");
+        String countKeyPrefix = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix();
+        String dirtyKey = SalesTypeEnum.SHOP_SALES.getDirtyKey();
+        String tempKey = dirtyKey + ":TEMP";
+
+        // 执行同步逻辑，完成后更新排行榜权重队列
+        redisService.syncDataWithSnapshot("店铺销量", countKeyPrefix, dirtyKey, tempKey,
+                this::updateSoldBatch,
+                updateMap -> enqueueIds(RedisConstants.SHOP_CALC_QUEUE_KEY, updateMap.keySet()));
+        log.info("定时任务：同步店铺销量数据完成");
+    }
+
+
+    /**
+     * 推送 ID 到算分队列，用于更新热门店铺排行榜
+     */
+    private void enqueueIds(String key, Collection<Long> ids) {
+        if (key == null || CollUtil.isEmpty(ids)) {
+            return;
+        }
+        for (Long id : ids) {
+            if (id != null) {
+                redisService.setCacheSet(key, id.toString());
+            }
+        }
     }
 
     @Override

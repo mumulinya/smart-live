@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -132,7 +133,27 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
             @Override
             public List<Long> getAllShopIds() {
                 log.error("获取全部店铺ID失败:{}", cause.getMessage());
-                return null;
+                return Collections.emptyList();
+            }
+
+            /**
+             * 批量更新销量
+             *
+             * @param updateMap
+             */
+            @Override
+            public Boolean updateSoldBatch(Map<Long, Integer> updateMap) {
+                return false;
+            }
+
+            /**
+             * 获取销量
+             *
+             * @param id
+             */
+            @Override
+            public Integer getSold(Long id) {
+                return 0;
             }
         };
     }

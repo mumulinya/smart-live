@@ -104,7 +104,7 @@ public interface ProductMapper extends BaseMapper<Product>
     void updateStarCountBatch(@Param("map") Map<Long, Integer> batchMap);
 
     /**
-     * Batch update product fans count.
+     * 批量更新商品的粉丝数
      */
     @Update("<script>" +
             "UPDATE product " +
@@ -129,5 +129,24 @@ public interface ProductMapper extends BaseMapper<Product>
      */
     @Update("UPDATE product SET stock = stock - #{count} WHERE id = #{productId} AND stock >= #{count}")
     int deductStock(@Param("productId") Long productId, @Param("count") Integer count);
+
+    /**
+     * 批量更新商品销量统计 (数据库原子更新)
+     * @param updateMap 商品ID与销量数值的映射
+     */
+    @Update("<script>" +
+            "UPDATE product " +
+            "SET sold" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateSoldBatch(@Param("map") Map<Long, Integer> updateMap);
 }
 

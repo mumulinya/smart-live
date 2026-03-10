@@ -73,4 +73,18 @@ public interface RemoteProductService {
      */
     @PostMapping("/inner/product/updateProductStatus")
     Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason);
+
+    /**
+     * 批量更新销量
+     * @param updateMap 商品ID与销量映射
+     */
+    @PostMapping("/inner/product/updateSoldBatch")
+    Boolean updateSoldBatch(@RequestBody Map<Long, Integer> updateMap);
+
+    /**
+     * 获取销量
+     * @param id 商品ID
+     */
+    @GetMapping("/inner/product/getSold/{id}")
+    Integer getSold(@PathVariable("id") Long id);
 }

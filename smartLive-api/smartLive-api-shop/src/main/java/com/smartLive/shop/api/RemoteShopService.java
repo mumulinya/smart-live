@@ -86,4 +86,18 @@ public interface RemoteShopService {
      */
     @GetMapping("/inner/shop/getAllShopIds")
     List<Long> getAllShopIds();
+
+    /**
+     * 批量更新销量
+     * @param updateMap 店铺ID与销量映射
+     */
+    @PostMapping("/inner/shop/updateSoldBatch")
+    Boolean updateSoldBatch(@RequestBody Map<Long, Integer> updateMap);
+
+    /**
+     * 获取销量
+     * @param id 店铺ID
+     */
+    @GetMapping("/inner/shop/getSold/{id}")
+    Integer getSold(@PathVariable("id") Long id);
 }

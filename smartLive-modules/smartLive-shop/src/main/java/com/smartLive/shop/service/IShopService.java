@@ -170,5 +170,17 @@ public interface IShopService extends IService<Shop> {
      * @return 热门店铺列表
      */
     List<ShopVO> getHotShopRank(Integer current, Integer size, Double x, Double y);
+
+    /**
+     * 批量更新销量
+     * @param updateMap 店铺id和销量
+     * @return 结果
+     */
+    Boolean updateSoldBatch(Map<Long, Integer> updateMap);
+
+    /**
+     * 同步销量数据从 Redis 到数据库
+     */
+    void syncSalesData();
 }
 

@@ -12,11 +12,12 @@ import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.order.domain.VO.ProductSoldVO;
+import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.product.api.RemoteProductService;
 import com.smartLive.points.api.RemotePointsService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.product.api.DTO.ProductDTO;
+import com.smartLive.common.core.enums.SalesTypeEnum;
 import com.smartLive.order.domain.VO.OrderVO;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.shop.api.RemoteShopService;
@@ -55,6 +56,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
     private RemoteProductService remoteProductService;
+
+    @Autowired
+    private RemoteShopService remoteShopService;
 
     @Autowired
     private RemotePointsService remotePointsService;
@@ -125,7 +129,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public int insertOrder(Order order)
     {
         order.setCreateTime(DateUtils.getNowDate());
-        return orderMapper.insertOrder(order);
+        int i = orderMapper.insertOrder(order);
+        if (i > 0) {
+            incrementSales(order);
+        }
+        return i;
     }
 
     /**
@@ -252,7 +260,78 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             redisService.deleteObject("order:status:" + order.getId());
             // 发送延迟消息，检测订单支付状态
             mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE,OrderMqConstants.ORDER_DELAY_ROUTING_KEY,order.getId(),(OrderMqConstants.DELAY_TIME));
+
+            // 8. 累加销量统计 (Redis 缓冲 + 脏数据标记)
+            incrementSales(order);
         }
+    }
+
+    /**
+     * 增加商品及其对应店铺的销量
+     * 采用“三级回退”策略保证数据初始化：
+     * 1. 检查 Redis 计数器；
+     * 2. 若 Redis 为空，通过 Feign 调用源模块（Product/Shop）获取已落库数值；
+     * 3. 若源模块数值仍不可信或为初始化，则在本模块数据库汇总所有历史订单完成数。
+     * 
+     * @param order 订单实体
+     */
+    private void incrementSales(Order order) {
+        if (order == null || order.getSourceId() == null) {
+            return;
+        }
+
+        // 1. 处理商品销量累加
+        String productCountKey = SalesTypeEnum.PRODUCT_SALES.getCountKeyPrefix() + order.getSourceId();
+        // 如果 Redis 中没有这个商品的销量计数器，触发初始化
+        if (Boolean.FALSE.equals(redisService.hasKey(productCountKey))) {
+            initSalesCount(SalesTypeEnum.PRODUCT_SALES, order.getSourceId());
+        }
+        // 原子递增销量
+        redisService.incrementCacheValue(productCountKey, 1);
+        // 将商品 ID 标记为“脏数据”，待定时任务同步到数据库
+        redisService.setCacheSet(SalesTypeEnum.PRODUCT_SALES.getDirtyKey(), order.getSourceId().toString());
+
+        // 2. 处理店铺销量累加
+        ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
+        if (productDTO != null && productDTO.getShopId() != null) {
+            Long shopId = Long.valueOf(productDTO.getShopId());
+            String shopCountKey = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix() + shopId;
+            // 如果 Redis 中没有这个店铺的销量计数器，触发初始化
+            if (Boolean.FALSE.equals(redisService.hasKey(shopCountKey))) {
+                initSalesCount(SalesTypeEnum.SHOP_SALES, shopId);
+            }
+            // 原子递增销量
+            redisService.incrementCacheValue(shopCountKey, 1);
+            // 将店铺 ID 标记为“脏数据”，待定时任务同步到数据库
+            redisService.setCacheSet(SalesTypeEnum.SHOP_SALES.getDirtyKey(), shopId.toString());
+        }
+    }
+
+    /**
+     * 初始化销量计数器（三级策略）
+     */
+    private void initSalesCount(SalesTypeEnum type, Long id) {
+        Integer baseline = 0;
+        Integer totalOrders = 0;
+        String countKey = type.getCountKeyPrefix() + id;
+
+        if (type == SalesTypeEnum.PRODUCT_SALES) {
+            // 从商品模块获取已持久化的销量基数
+            baseline = remoteProductService.getSold(id);
+            // 从订单库获取全部已确认/支付的订单总量（兜底全量初始化）
+            totalOrders = orderMapper.sumSoldBySourceId(id);
+        } else if (type == SalesTypeEnum.SHOP_SALES) {
+            // 从店铺模块获取已持久化的销量基数
+            baseline = remoteShopService.getSold(id);
+            // 从订单库获取该店铺全部销量
+            totalOrders = orderMapper.sumSoldByShopId(id);
+        }
+
+        // 逻辑：如果基数已经包含了订单库的历史数据，则直接用基数；
+        // 初始化时应确保 Redis 中是当前最准确的【全量总数】。
+        // 根据要求：“先去源模块获取数据，然后再去本模块查询”，这里取两者之和。
+        int initialCount = (baseline != null ? baseline : 0) + (totalOrders != null ? totalOrders : 0);
+        redisService.setCacheObject(countKey, initialCount);
     }
 
     /**

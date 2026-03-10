@@ -101,9 +101,7 @@ public interface ShopMapper extends BaseMapper<Shop>
     void updateStarCountBatch(@Param("map")Map<Long, Integer> batchMap);
 
     /**
-     * Batch update shop fans count.
-     *
-     * @param batchMap shopId -> fansCount
+     * 批量更新店铺的粉丝数
      */
     @Update("<script>" +
             "UPDATE shop " +
@@ -119,4 +117,23 @@ public interface ShopMapper extends BaseMapper<Shop>
             "  </foreach>" +
             "</script>")
     void updateFansCountBatch(@Param("map") Map<Long, Integer> batchMap);
+
+    /**
+     * 批量更新店铺销量统计 (数据库原子更新)
+     * @param updateMap 店铺ID与销量数值的映射
+     */
+    @Update("<script>" +
+            "UPDATE shop " +
+            "SET sold" +
+            " = CASE id " +
+            "  <foreach collection='map.entrySet()' index='key' item='val'> " +
+            "    WHEN #{key} THEN #{val} " +
+            "  </foreach> " +
+            "END " +
+            "WHERE id IN " +
+            "  <foreach collection='map.keySet()' item='key' open='(' separator=',' close=')'> " +
+            "    #{key} " +
+            "  </foreach>" +
+            "</script>")
+    void updateSoldBatch(@Param("map") Map<Long, Integer> updateMap);
 }

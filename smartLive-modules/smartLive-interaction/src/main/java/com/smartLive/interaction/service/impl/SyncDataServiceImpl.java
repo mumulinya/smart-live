@@ -101,7 +101,7 @@ public class SyncDataServiceImpl implements ISyncDataService {
                 return;
             }
             String dirtyKey = type.getLikeDirtyKeyPrefix();
-            sync(type.getDesc(), type.getLikedCountKeyPrefix(), dirtyKey, dirtyKey + ":TEMP",
+            redisService.syncDataWithSnapshot(type.getDesc(), type.getLikedCountKeyPrefix(), dirtyKey, dirtyKey + ":TEMP",
                     strategy::transLikeCountFromRedis2DB,
                     updateMap -> enqueueCalcAfterLikeSync(type, updateMap.keySet()));
         });
@@ -124,7 +124,7 @@ public class SyncDataServiceImpl implements ISyncDataService {
                 return;
             }
             String syncKey = type.getCommentSyncKey();
-            sync(type.getDesc(), type.getCommentCountKeyPrefix(), syncKey, syncKey + ":TEMP",
+            redisService.syncDataWithSnapshot(type.getDesc(), type.getCommentCountKeyPrefix(), syncKey, syncKey + ":TEMP",
                     strategy::transCommentCountFromRedis2DB,
                     updateMap -> enqueueCalcAfterCommentSync(type, updateMap.keySet()));
         });
@@ -147,7 +147,7 @@ public class SyncDataServiceImpl implements ISyncDataService {
                 return;
             }
             String dirtyKey = type.getStarDirtyKeyPrefix();
-            sync(type.getDesc(), type.getStarCountKeyPrefix(), dirtyKey, dirtyKey + ":TEMP",
+            redisService.syncDataWithSnapshot(type.getDesc(), type.getStarCountKeyPrefix(), dirtyKey, dirtyKey + ":TEMP",
                     strategy::transStarCountFromRedis2DB,
                     updateMap -> enqueueCalcAfterStarSync(type, updateMap.keySet()));
         });
@@ -170,7 +170,7 @@ public class SyncDataServiceImpl implements ISyncDataService {
                 return;
             }
             String syncKey = type.getReviewSyncKey();
-            sync(type.getDesc(), type.getReviewCountKeyPrefix(), syncKey, syncKey + ":TEMP",
+            redisService.syncDataWithSnapshot(type.getDesc(), type.getReviewCountKeyPrefix(), syncKey, syncKey + ":TEMP",
                     strategy::transReviewCountFromRedis2DB,
                     null);
         });
@@ -192,7 +192,7 @@ public class SyncDataServiceImpl implements ISyncDataService {
             // 同步关注计数（使用独立计数器 key）
             String followDirtyKey = type.getFollowDirtyKeyPrefix();
             if (type.getFollowCountKeyPrefix() != null && followDirtyKey != null) {
-                sync(type.getDesc() + "-关注数",
+                redisService.syncDataWithSnapshot(type.getDesc() + "-关注数",
                         type.getFollowCountKeyPrefix(),
                         followDirtyKey,
                         followDirtyKey + ":TEMP",
@@ -218,7 +218,7 @@ public class SyncDataServiceImpl implements ISyncDataService {
             // 同步粉丝计数（使用独立计数器 key）
             String fansDirtyKey = type.getFansDirtyKeyPrefix();
             if (type.getFansCountKeyPrefix() != null && fansDirtyKey != null) {
-                sync(type.getDesc() + "-粉丝数",
+                redisService.syncDataWithSnapshot(type.getDesc() + "-粉丝数",
                         type.getFansCountKeyPrefix(),
                         fansDirtyKey,
                         fansDirtyKey + ":TEMP",
@@ -230,63 +230,7 @@ public class SyncDataServiceImpl implements ISyncDataService {
     }
 
 
-    /**
-     * 通用的 Redis 快照轮转与同步落库模型。
-     * 使用 RENAME 原子操作保证高并发下数据不丢失。
-     *
-     * @param desc              数据描述（用于日志）
-     * @param countKeyPrefix    数值计数器的 Redis Key 前缀
-     * @param dirtyKey          待同步的脏数据集合 Key (Sync Queue)
-     * @param tempKey           处理时的临时快照 Key
-     * @param dbAction          执行落库操作的函数
-     * @param afterSyncAction   落库成功后的回调函数（通常用于推入算分队列）
-     */
-    private void sync(String desc,
-                      String countKeyPrefix,
-                      String dirtyKey,
-                      String tempKey,
-                      Consumer<Map<Long, Integer>> dbAction,
-                      Consumer<Map<Long, Integer>> afterSyncAction) {
-        try {
-            if (Boolean.FALSE.equals(redisService.hasKey(dirtyKey))) {
-                log.debug("[{}]没有待同步数据，跳过", desc);
-                return;
-            }
 
-            if (Boolean.TRUE.equals(redisService.hasKey(tempKey))) {
-                redisService.deleteObject(tempKey);
-            }
-            // 核心：原子重命名，截取当前快照，新请求将自动生成新的 dirtyKey
-            redisService.rename(dirtyKey, tempKey);
-
-            Set<Object> dirtyIds = redisService.getCacheSet(tempKey);
-            if (CollUtil.isEmpty(dirtyIds)) {
-                redisService.deleteObject(tempKey);
-                return;
-            }
-
-            Map<Long, Integer> updateMap = new HashMap<>(dirtyIds.size());
-            for (Object idObj : dirtyIds) {
-                if (idObj == null) {
-                    continue;
-                }
-                Long id = Long.valueOf(idObj.toString());
-                Object countObj = redisService.getCacheObject(countKeyPrefix + id);
-                updateMap.put(id, countObj == null ? 0 : Integer.parseInt(countObj.toString()));
-            }
-
-            if (CollUtil.isNotEmpty(updateMap)) {
-                dbAction.accept(updateMap);
-                if (afterSyncAction != null) {
-                    afterSyncAction.accept(updateMap);
-                }
-            }
-
-            redisService.deleteObject(tempKey);
-        } catch (Exception e) {
-            log.error("[{}] 数据同步异常，保留 TEMP key 以备排查", desc, e);
-        }
-    }
 
     /**
      * 点赞数据同步后，将受影响的目标源推入算分队列。

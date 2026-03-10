@@ -91,6 +91,26 @@ public class RemoteProductFallbackFactory implements FallbackFactory<RemoteProdu
             public Boolean updateProductStatus(Long id, Integer status, String reason) {
                 return false;
             }
+
+            /**
+             * 批量更新销量
+             *
+             * @param updateMap
+             */
+            @Override
+            public Boolean updateSoldBatch(Map<Long, Integer> updateMap) {
+                return false;
+            }
+
+            /**
+             * 获取销量
+             *
+             * @param id
+             */
+            @Override
+            public Integer getSold(Long id) {
+                return 0;
+            }
         };
     }
 }

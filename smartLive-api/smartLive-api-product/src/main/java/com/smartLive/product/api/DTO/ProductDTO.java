@@ -101,4 +101,7 @@ public class ProductDTO extends BaseEntity implements Serializable {
 
     /** 粉丝数 */
     private Integer fans;
+
+    /** 销量 */
+    private Integer sold;
 }

@@ -2,6 +2,7 @@ package com.smartLive.product.controller;
 
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.product.domain.Product;
+import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.service.IProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -118,5 +119,22 @@ public class ProductInnerController extends BaseController {
     @PostMapping("/updateProductStatus")
     Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason) {
         return productService.updateProductStatus(id, status, reason);
+    }
+
+    /**
+     * 批量更新销量 (Feign 内部调用)
+     */
+    @PostMapping("/updateSoldBatch")
+    public Boolean updateSoldBatch(@RequestBody Map<Long, Integer> updateMap) {
+        return productService.updateSoldBatch(updateMap);
+    }
+
+    /**
+     * 获取指定 ID 的销量 (Feign 内部调用)
+     */
+    @GetMapping("/getSold/{id}")
+    public Integer getSold(@PathVariable("id") Long id) {
+        ProductVO product = productService.getProductById(id);
+        return product != null ? product.getSold() : 0;
     }
 }

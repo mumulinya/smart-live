@@ -68,9 +68,21 @@ public interface OrderMapper extends BaseMapper<Order>
      */
     @Select("""
     SELECT source_id, COUNT(*) as sold_count
-    FROM order
+    FROM `order`
     WHERE status != 4
     GROUP BY source_id
     """)
     List<ProductSoldVO> countProductSold();
+
+    /**
+     * 查询指定商品的累计订单销量
+     */
+    @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE source_id = #{sourceId} AND status != 4")
+    Integer sumSoldBySourceId(Long sourceId);
+
+    /**
+     * 查询指定店铺的累计订单销量
+     */
+    @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE shop_id = #{shopId} AND status != 4")
+    Integer sumSoldByShopId(Long shopId);
 }
