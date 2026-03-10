@@ -1,9 +1,13 @@
 package com.smartLive.order.job;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.common.core.constant.OrderStatusConstants;
+import com.smartLive.common.core.constant.ResourceTypeConstants;
 import com.smartLive.common.core.constant.mq.ChatMqConstants;
 import com.smartLive.common.core.enums.FeedTypeEnum;
+import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ItemActionType;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.order.domain.Order;
@@ -18,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 订单模块 XXL-JOB 定时任务处理器
@@ -81,13 +86,19 @@ public class OrderExpireJobHandler {
                 
                 String content = String.format("温馨提示：您购买的商品（订单号：%s）还有不足 %d 天即将过期，请尽快前往使用，以免影响您的权益哦~", 
                                              order.getId(), EXPIRE_NOTIFY_DAYS);
-                
+                Map<String, Object> map = BeanUtil.beanToMap(order);
+                SystemNoticeCreateDTO createDTO = new SystemNoticeCreateDTO();
+                createDTO.setUserId(order.getUserId());
+                createDTO.setSourceType(ResourceTypeConstants.ORDER_CODE);
+                createDTO.setContent(content);
+                createDTO.setTitle("订单过期提醒");
+                createDTO.setAction("order_expire");
+                createDTO.setExtraData(map);
                 // 复用系统的内部通知结构发送MQ
                 mqMessageSendUtils.sendMqMessage(
                         ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
                         ChatMqConstants.SYSTEM_NOTICE_ROUTING,
-                        content,
-                        3
+                        createDTO
                 );
                 
                 notifiedCount++;

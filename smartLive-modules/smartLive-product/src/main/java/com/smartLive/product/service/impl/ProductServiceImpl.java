@@ -14,14 +14,11 @@ import com.alibaba.nacos.client.naming.utils.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
-import com.smartLive.common.core.enums.FeedTypeEnum;
-import com.smartLive.common.core.enums.ItemActionType;
+import com.smartLive.common.core.enums.*;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
-import com.smartLive.common.core.enums.AuditStatusEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
@@ -33,7 +30,7 @@ import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import java.util.function.Consumer;
-import com.smartLive.common.core.enums.SalesTypeEnum;
+
 import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.service.strategy.PurchaseStrategy;
 
@@ -153,13 +150,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         // 保存商品
         int i = productMapper.insertProduct(product);
         if(i > 0){
-            // 如果是秒杀商品，初始化Redis库存
-            if (product.getActivityType() != null && product.getActivityType() == 1) {
-                redisService.setCacheObject(RedisConstants.SECKILL_STOCK_KEY + product.getId(), product.getStock());
-            }
-
-            // 发送消息推送动态
-            sendNewProductMessageToMQ(product);
             // 发送审核消息
             sendAuditMessage(product);
         }
@@ -226,8 +216,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             // 发送审核消息
             sendAuditMessage(product);
 
-            // 如果是秒杀，更新Redis库存
+            // 修改商品后，防止其依然存在于秒杀缓存中导致被抢购，无条件删除Redis库存
             if(product.getActivityType() != null && product.getActivityType() == 1){
+                redisService.deleteObject(RedisConstants.SECKILL_STOCK_KEY + product.getId());
+                //更新秒杀库存
                 redisService.setCacheObject(RedisConstants.SECKILL_STOCK_KEY + product.getId(), product.getStock());
             }
 
@@ -313,6 +305,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         int rows = productMapper.deleteProductById(id);
         if (rows > 0) {
             clearProductCache(id);
+            redisService.deleteObject(RedisConstants.SECKILL_STOCK_KEY + id);
         }
         return rows;
     }
@@ -711,7 +704,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             return;
         }
         redisService.deleteObject(RedisConstants.CACHE_PRODUCT_KEY + productId);
-        redisService.deleteObject(RedisConstants.SECKILL_STOCK_KEY + productId);
     }
 
     /**
@@ -909,9 +901,37 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public Boolean updateProductStatus(Long id, Integer status, String reason) {
+        Product product = getById(id);
+        if (product == null) return false;
+
+        Integer finalStatus = status;
+
+        // 如果审核通过
+        if (status.equals(ProductStatusEnum.NORMAL.getCode())) {
+            // 如果是秒杀商品
+            if (product.getActivityType() != null && product.getActivityType() == 1) {
+                Date now = DateUtils.getNowDate();
+                // 判断是否未到开始时间
+                if (product.getBeginTime() != null && product.getBeginTime().getTime() > now.getTime()) {
+                    finalStatus = ProductStatusEnum.OFF_SHELF.getCode(); // 未上架
+                }
+
+                // 按预热窗口初始化Redis库存
+                long preHeatTime = now.getTime() + (RedisConstants.SECKILL_PRE_HEAT_WINDOW_HOURS * 60 * 60 * 1000);
+                if (product.getBeginTime() == null || product.getBeginTime().getTime() <= preHeatTime) {
+                    redisService.setCacheObject(RedisConstants.SECKILL_STOCK_KEY + product.getId(), product.getStock());
+                }
+            }
+            // 发送消息推送动态
+            sendNewProductMessageToMQ(product);
+        }
+
         // 拒绝时写入拒绝原因，通过时清空拒绝原因
         String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
-        boolean b = update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Product>().set("status", status).set("reject_reason", rejectReason).eq("id", id));
+        boolean b = update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Product>()
+                .set("status", finalStatus)
+                .set("reject_reason", rejectReason)
+                .eq("id", id));
         if(b){
             publish(new String[]{id.toString()});
             clearProductCache(id);
@@ -936,9 +956,28 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * @return 恢复结果
      */
     @Override
-    public boolean recoverStock(Long id) {
+    public boolean recoverStock(Long id, Long userId) {
+        recoverRedisStockAndEligibility(id, userId);
         // Simple update: stock = stock + 1 where id = id
         return update().setSql("stock = stock + 1").eq("id", id).update();
+    }
+
+    @Override
+    public boolean recoverRedisStockAndEligibility(Long productId, Long userId) {
+        if (productId == null) return false;
+        
+        // 1. 恢复 Redis 预扣库存
+        String stockKey = "seckill:stock:" + productId;
+        redisService.incrementCacheValue(stockKey, 1);
+        
+        // 2. 移除用户重复下单限制记录 (如果提供了 userId)
+        if (userId != null) {
+            String orderKey = "seckill:order:" + productId;
+            redisService.removeCacheSet(orderKey, userId.toString());
+        }
+        
+        log.info("已回滚 Redis 秒杀数据: productId={}, userId={}", productId, userId);
+        return true;
     }
 
 }

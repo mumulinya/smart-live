@@ -227,11 +227,20 @@ public interface IProductService extends IService<Product>
     boolean deductStock(Long id);
 
     /**
-     * 恢复库存
+     * 恢复数据库库存
      * @param id 商品id
      * @return 结果
      */
-    boolean recoverStock(Long id);
+    boolean recoverStock(Long id, Long userId);
+
+    /**
+     * 恢复 Redis 中的秒杀库存及用户购买资格
+     *
+     * @param productId 商品ID
+     * @param userId    用户ID
+     * @return 恢复结果
+     */
+    boolean recoverRedisStockAndEligibility(Long productId, Long userId);
 
     /**
      * 发送商品动态操作 MQ 消息（降价/重新上架/即将下架等）

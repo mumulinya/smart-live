@@ -201,19 +201,11 @@ public class ProductSeckillJobHandler {
             try {
                 String stockKey = RedisConstants.SECKILL_STOCK_KEY + product.getId();
 
-                // 2. 从 Redis 读取真实剩余库存，回写 MySQL 保证数据一致性
-                Integer remainingStock = redisService.getCacheObject(stockKey);
-                if (remainingStock != null) {
-                    // 用 Redis 中的真实剩余库存覆盖 MySQL 中的 stock 字段
-                    product.setStock(remainingStock);
-                    log.info("商品 {} Redis 剩余库存 {} 回写 MySQL", product.getId(), remainingStock);
-                }
-
-                // 3. 修改商品状态为"已下架"，标志秒杀活动正式结束
-                product.setStatus(ProductStatusEnum.OFF_SHELF.getCode());
+                // 1. 修改商品状态为"已过期"，标志秒杀活动正式结束
+                product.setStatus(ProductStatusEnum.EXPIRED.getCode());
                 productService.updateById(product);
 
-                // 4. 清理 Redis 缓存：删除秒杀库存 Key
+                // 2. 清理 Redis 缓存：删除秒杀库存 Key
                 redisService.deleteObject(stockKey);
                 // 清理防重通知 Key（如果存在的话）
                 redisService.deleteObject(RedisConstants.SECKILL_NOTIFY_KEY + product.getId());
@@ -244,12 +236,12 @@ public class ProductSeckillJobHandler {
      * </p>
      * <p>建议 CRON: 0 0 2 * * ?（每天凌晨2点执行）</p>
      */
-    @XxlJob("productStockSyncJobHandler")
-    public ReturnT<String> productStockSyncJobHandler() {
+    @XxlJob("seckillStockCheckJobHandler")
+    public ReturnT<String> seckillStockCheckJobHandler() {
         log.info("======== 触发 XXL-JOB: 商品库存同步任务 productStockSyncJobHandler ========");
 
         try {
-            // 1. 只查普通商品，秒杀商品不处理
+            // 1. 只查秒杀商品
             List<Product> products = productService.lambdaQuery()
                     .eq(Product::getStatus, ProductStatusEnum.NORMAL.getCode())
                     .eq(Product::getActivityType, ProductActivityTypeEnum.SECKILL.getCode())

@@ -40,8 +40,16 @@ public class ProductInnerController extends BaseController {
      * 恢复库存。
      */
     @PostMapping("/recoverStock/{id}")
-    public Boolean recoverStock(@PathVariable("id") Long productId) {
-        return productService.recoverStock(productId);
+    public Boolean recoverStock(@PathVariable("id") Long productId,@RequestParam(value = "userId", required = false) Long userId) {
+        return productService.recoverStock(productId,userId);
+    }
+
+    /**
+     * 恢复 Redis 中的秒杀库存及用户购买资格 (内部调用)
+     */
+    @PostMapping("/recoverRedisStockAndEligibility")
+    public Boolean recoverRedisStockAndEligibility(@RequestParam("productId") Long productId, @RequestParam(value = "userId", required = false) Long userId) {
+        return productService.recoverRedisStockAndEligibility(productId, userId);
     }
 
     /**

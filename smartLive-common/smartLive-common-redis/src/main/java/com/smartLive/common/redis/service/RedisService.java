@@ -330,6 +330,19 @@ public class RedisService
     {
         return redisTemplate.opsForSet().add(key, value);
     }
+
+    /**
+     * 移除 Set 缓存中的单个数据
+     * 对应 Redis 命令: SREM key member
+     *
+     * @param key   缓存键值
+     * @param value 待移除的数据
+     * @return 成功移除的数量
+     */
+    public <T> Long removeCacheSet(final String key, final T value)
+    {
+        return redisTemplate.opsForSet().remove(key, value);
+    }
     /**
      * 获得缓存的set
      *

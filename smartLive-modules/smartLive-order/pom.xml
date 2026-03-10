@@ -103,6 +103,10 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-shop</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-chat</artifactId>
+        </dependency>
 
 
     </dependencies>

@@ -149,6 +149,7 @@ public class OrderListener {
         } catch (Exception e) {
             log.error("[MQ幂等] 普通订单处理异常，清理幂等锁并触发重试, orderId={}, key={}", order.getId(), idempotentKey, e);
             redisService.deleteObject(idempotentKey);
+            redisService.deleteObject("order:status:" + order.getId());
             throw new RuntimeException("普通订单处理异常，触发本地重试", e);
         }
     }

@@ -25,12 +25,14 @@
         <result property="shopId"       column="shop_id" />
         <result property="refundTime"   column="refund_time"    />
         <result property="updateTime"   column="update_time"    />
+        <result property="validStartTime" column="valid_start_time" />
+        <result property="expireTime"   column="expire_time"    />
     </resultMap>
 
     <sql id="selectOrderVo">
         select id, user_id, source_id, source_type, pay_type, status,
                pay_amount, amount, out_trade_no, review_status, review_id, review_time, refund_amount,
-               create_time, pay_time, use_time, shop_id, refund_time, update_time
+               create_time, pay_time, use_time, shop_id, refund_time, update_time, valid_start_time, expire_time
         from `order`
     </sql>
 
@@ -49,6 +51,8 @@
             <if test="outTradeNo != null and outTradeNo != ''"> and out_trade_no = #{outTradeNo}</if>
             <if test="reviewStatus != null"> and review_status = #{reviewStatus}</if>
             <if test="reviewId != null"> and review_id = #{reviewId}</if>
+            <if test="validStartTime != null"> and valid_start_time = #{validStartTime}</if>
+            <if test="expireTime != null"> and expire_time = #{expireTime}</if>
         </where>
     </select>
 
@@ -80,6 +84,8 @@
             <if test="shopId != null">shop_id,</if>
             <if test="refundTime != null">refund_time,</if>
             <if test="updateTime != null">update_time,</if>
+            <if test="validStartTime != null">valid_start_time,</if>
+            <if test="expireTime != null">expire_time,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null">#{id},</if>
@@ -102,6 +108,8 @@
             <if test="shopId != null">#{shopId},</if>
             <if test="refundTime != null">#{refundTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
+            <if test="validStartTime != null">#{validStartTime},</if>
+            <if test="expireTime != null">#{expireTime},</if>
         </trim>
     </insert>
 
@@ -127,6 +135,8 @@
             <if test="shopId != null">shop_id = #{shopId},</if>
             <if test="refundTime != null">refund_time = #{refundTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="validStartTime != null">valid_start_time = #{validStartTime},</if>
+            <if test="expireTime != null">expire_time = #{expireTime},</if>
         </trim>
         where id = #{id}
     </update>

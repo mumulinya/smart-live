@@ -115,6 +115,11 @@ public class Order extends BaseEntity implements Serializable
     @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date createTime;
 
+    /** 订单有效期开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "有效期开始时间", width = 30, dateFormat = "yyyy-MM-dd")
+    private Date validStartTime;
+
     /** 订单有效期截止时间（过期作废或被退款） */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "有效期截止时间", width = 30, dateFormat = "yyyy-MM-dd")

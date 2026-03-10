@@ -400,22 +400,22 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
      * @param feedEventMessage
      */
     private void createSystemNotice(Long userId, FeedEventMessage feedEventMessage) {
-        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(feedEventMessage.getSourceType());
-        Object resource = resourceStrategy.getResourceById(feedEventMessage.getSourceId());
-        HashMap<String,String> hashMap = resourceStrategy.getResourceContentById(feedEventMessage.getSourceId());
+        ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(feedEventMessage.getBizType());
+        Object resource = resourceStrategy.getResourceById(feedEventMessage.getBizId());
+        HashMap<String,String> hashMap = resourceStrategy.getResourceContentById(feedEventMessage.getBizId());
         //使用方法转化为map
         Map<String, Object> map = BeanUtil.beanToMap(resource);
         if (userId == null) {
             return;
         }
         try {
-            GlobalBizTypeEnum globalBizTypeEnum = GlobalBizTypeEnum.getByCode(feedEventMessage.getBizType());
+            GlobalBizTypeEnum globalBizTypeEnum = GlobalBizTypeEnum.getByCode(feedEventMessage.getSourceType());
             String desc = ItemActionType.getDescByCode(feedEventMessage.getAction());
             String content = "你关注的"+ globalBizTypeEnum.getDesc()+hashMap.get("title")+ desc;
             SystemNoticeCreateDTO createDTO = new SystemNoticeCreateDTO();
             createDTO.setUserId(userId);
-            createDTO.setSourceType(feedEventMessage.getSourceType());
-            createDTO.setSourceId(feedEventMessage.getSourceId());
+            createDTO.setSourceType(feedEventMessage.getBizType());
+            createDTO.setSourceId(feedEventMessage.getBizId());
             createDTO.setAction(globalBizTypeEnum.getBizDomain()+"_"+feedEventMessage.getAction());
             createDTO.setContent(content);
             createDTO.setTitle(globalBizTypeEnum.getDesc()+desc);

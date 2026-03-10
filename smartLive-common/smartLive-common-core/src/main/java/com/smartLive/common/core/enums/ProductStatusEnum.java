@@ -12,14 +12,20 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProductStatusEnum {
 
-    /** 正常（上架中） */
-    NORMAL(0, "正常"),
+    /** 未审核 */
+    PENDING(0, "未审核"),
+
+    /** 已上架 */
+    NORMAL(1, "已上架"),
 
     /** 已下架 */
-    OFF_SHELF(1, "已下架"),
+    OFF_SHELF(2, "已下架"),
 
-    /** 已删除 */
-    DELETED(2, "已删除");
+    /** 审核失败 */
+    AUDIT_FAIL(3, "审核失败"),
+
+    /** 已过期 */
+    EXPIRED(4, "已过期");
 
     private final Integer code;
     private final String desc;

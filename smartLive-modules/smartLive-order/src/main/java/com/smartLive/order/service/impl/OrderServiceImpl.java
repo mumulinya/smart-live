@@ -2,6 +2,7 @@ package com.smartLive.order.service.impl;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.OrderStatusConstants;
@@ -217,29 +218,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Integer count = query().eq("user_id", userId).eq("source_id", order.getSourceId()).count().intValue();
         if(count>0){
             //用户已经购买过了
-            log.error("用户已经购买过了");
+            log.error("用户已经购买过了，触发 Redis 回退");
+            // 特殊处理：如果是秒杀场景，虽然数据库挡住了，但 Lua 脚本可能已经扣了预库存，这里尝试回滚
+            remoteProductService.recoverRedisStockAndEligibility(order.getSourceId(), null);
+            redisService.deleteObject("order:status:" + order.getId());
             return;
         }
-        //5.获取商品信息以计算过期时间
-        ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
-        if (productDTO != null && productDTO.getValidityType() != null) {
-            if (productDTO.getValidityType() == 1 && productDTO.getUseEndTime() != null) {
-                order.setExpireTime(productDTO.getUseEndTime());
-            } else if (productDTO.getValidityType() == 2 && productDTO.getValidDays() != null) {
-                order.setExpireTime(DateUtils.addDays(DateUtils.getNowDate(), productDTO.getValidDays()));
-            }
-        }
-
-        // 6.扣减库存（已转为异步批量 MQ 处理，原有的 Feign 同步强拦截已移除）
-        // 物理超售防护由商品侧 Listener 和 DB CAS (stock >= count) 承担
-        // Redis 原子的超售预拦截保留在此前网关或 Controller 层
-
         // 7.创建订单
         boolean save = save(order);
         if(!save){
             //创建失败
-            log.error("创建订单失败");
-            return;
+            log.error("创建订单保存数据库失败，触发 Redis 回退");
+            remoteProductService.recoverRedisStockAndEligibility(order.getSourceId(), userId);
+            redisService.deleteObject("order:status:" + order.getId());
         }else{
             log.info("订单已创建，ID={}，数量={}，发送 MQ 异步扣库指令...", order.getId(), order.getAmount());
 
@@ -261,8 +252,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             // 发送延迟消息，检测订单支付状态
             mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE,OrderMqConstants.ORDER_DELAY_ROUTING_KEY,order.getId(),(OrderMqConstants.DELAY_TIME));
 
-            // 8. 累加销量统计 (Redis 缓冲 + 脏数据标记)
-            incrementSales(order);
+            // 8. 累加销量统计 (已移动至支付成功 pay/paySuccess 阶段，避免未支付订单造成销量虚标)
         }
     }
 
@@ -280,30 +270,61 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return;
         }
 
-        // 1. 处理商品销量累加
+        // 处理商品销量累加
         String productCountKey = SalesTypeEnum.PRODUCT_SALES.getCountKeyPrefix() + order.getSourceId();
-        // 如果 Redis 中没有这个商品的销量计数器，触发初始化
         if (Boolean.FALSE.equals(redisService.hasKey(productCountKey))) {
             initSalesCount(SalesTypeEnum.PRODUCT_SALES, order.getSourceId());
         }
-        // 原子递增销量
-        redisService.incrementCacheValue(productCountKey, 1);
-        // 将商品 ID 标记为“脏数据”，待定时任务同步到数据库
+        long amount = order.getAmount() != null ? order.getAmount() : 1;
+        redisService.incrementCacheValue(productCountKey, amount);
         redisService.setCacheSet(SalesTypeEnum.PRODUCT_SALES.getDirtyKey(), order.getSourceId().toString());
+    }
 
-        // 2. 处理店铺销量累加
-        ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
-        if (productDTO != null && productDTO.getShopId() != null) {
-            Long shopId = Long.valueOf(productDTO.getShopId());
+    /**
+     * 增加对应店铺的销量 (仅在订单实际被核销使用时调用)
+     */
+    private void incrementShopSales(Order order) {
+        log.info("订单已核销，开始累加店铺销量...{}", order);
+        if (order == null || order.getShopId() == null) {
+            return;
+        }
+        Long shopId = order.getShopId();
+        String shopCountKey = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix() + shopId;
+        if (Boolean.FALSE.equals(redisService.hasKey(shopCountKey))) {
+            initSalesCount(SalesTypeEnum.SHOP_SALES, shopId);
+        }
+        long amount = order.getAmount() != null ? order.getAmount() : 1;
+        redisService.incrementCacheValue(shopCountKey, amount);
+        redisService.setCacheSet(SalesTypeEnum.SHOP_SALES.getDirtyKey(), shopId.toString());
+    }
+
+    /**
+     * 回退商品及店铺销量 (订单取消或退款时调用)
+     *
+     * @param order 订单实体
+     * @param decrementShop 是否需要同时回退店铺销量
+     */
+    private void decrementSales(Order order, boolean decrementShop) {
+        if (order == null || order.getSourceId() == null) {
+            return;
+        }
+        long amount = order.getAmount() != null ? order.getAmount() : 1;
+
+        // 1. 回退商品销量
+        String productCountKey = SalesTypeEnum.PRODUCT_SALES.getCountKeyPrefix() + order.getSourceId();
+        if (Boolean.TRUE.equals(redisService.hasKey(productCountKey))) {
+            redisService.decrementCacheValue(productCountKey, amount);
+            redisService.setCacheSet(SalesTypeEnum.PRODUCT_SALES.getDirtyKey(), order.getSourceId().toString());
+        }
+
+        // 2. 回退店铺销量 (仅当订单已被核销，且有对应 shopId 时)
+        if (decrementShop && order.getShopId() != null) {
+            Long shopId = order.getShopId();
             String shopCountKey = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix() + shopId;
-            // 如果 Redis 中没有这个店铺的销量计数器，触发初始化
-            if (Boolean.FALSE.equals(redisService.hasKey(shopCountKey))) {
-                initSalesCount(SalesTypeEnum.SHOP_SALES, shopId);
+            if (Boolean.TRUE.equals(redisService.hasKey(shopCountKey))) {
+                redisService.decrementCacheValue(shopCountKey, amount);
+                redisService.setCacheSet(SalesTypeEnum.SHOP_SALES.getDirtyKey(), shopId.toString());
             }
-            // 原子递增销量
-            redisService.incrementCacheValue(shopCountKey, 1);
-            // 将店铺 ID 标记为“脏数据”，待定时任务同步到数据库
-            redisService.setCacheSet(SalesTypeEnum.SHOP_SALES.getDirtyKey(), shopId.toString());
         }
     }
 
@@ -384,6 +405,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setPayTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.PAID);
         order.setPayType(PayTypeConstants.BALANCE);
+        updateExpireTimeAfterPayment(order);
+        // 支付成功，累加商品销量统计
+        incrementSales(order);
         int i = updateOrder(order);
         return i;
     }
@@ -408,7 +432,40 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setPayTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.PAID);
         order.setPayType(payType);
+        updateExpireTimeAfterPayment(order);
+        // 支付成功，累加商品销量统计
+        incrementSales(order);
         return updateOrder(order);
+    }
+
+    /**
+     * 支付成功后（或付款瞬间），为特定商品类型计算真正的有效期截止时间。
+     * 避免因支付倒计时（如15分钟）导致用户亏损使用期。
+     *
+     * @param order 订单
+     */
+    private void updateExpireTimeAfterPayment(Order order) {
+        if (order == null || order.getSourceId() == null) {
+            return;
+        }
+        ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
+        if (productDTO != null && productDTO.getValidityType() != null) {
+            Date now = DateUtils.getNowDate();
+            // “购买后 N 天内有效”：支付成功这一刻起算
+            if (productDTO.getValidityType() == 2 && productDTO.getValidDays() != null) {
+                order.setValidStartTime(now);
+                order.setExpireTime(DateUtils.addDays(now, productDTO.getValidDays()));
+            }
+            // 固定有效期
+            else if (productDTO.getValidityType() == 1) {
+                if (productDTO.getUseStartTime() != null) {
+                    order.setValidStartTime(productDTO.getUseStartTime());
+                }
+                if (productDTO.getUseEndTime() != null) {
+                    order.setExpireTime(productDTO.getUseEndTime());
+                }
+            }
+        }
     }
 
     /**
@@ -424,14 +481,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if(order==null){
             throw new BusinessException("订单不存在");
         }
+        Integer oldStatus = order.getStatus();
         order.setStatus(OrderStatusConstants.CANCELLED);
         int i = updateOrder(order);
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
-            if (vo.getActivityType()==1){ // Mapped activityType (0/1) for logic
-                log.info("秒杀商品,准备恢复库存");
-                    //恢复库存
-                    remoteProductService.recoverStock(order.getSourceId());
+            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1){ 
+                log.info("秒杀商品取消,准备恢复库存");
+                // 恢复库存
+                remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
+            }
+            // 订单取消。如果是已支付订单取消（例如管理员操作），则回退商品销量 (未核销过，不需要回退店铺销量)
+            if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
+                decrementSales(order, false);
             }
         }
         return i;
@@ -450,9 +512,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if(order==null){
             throw new BusinessException("订单不存在");
         }
+        Integer oldStatus = order.getStatus();
         order.setRefundTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.REFUNDED);
         int i = updateOrder(order);
+        if(i>0){
+            ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
+            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1){ 
+                log.info("秒杀商品退款,准备恢复库存");
+                remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
+            }
+            // 订单退款。如果是已支付订单（status >= PAID）退款，回滚商品销量。若处于已核销状态退款，同时回退店铺销量
+            if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
+                boolean wasVerified = (oldStatus == OrderStatusConstants.VERIFIED);
+                decrementSales(order, wasVerified);
+            }
+        }
         return i;
     }
 
@@ -476,6 +551,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         int i = updateOrder(order);
         if (i > 0) {
+            // 核销成功，增加门店销量
+            incrementShopSales(order);
             // 订单使用成功，奖励积分
             try {
                 remotePointsService.addPoints(order.getUserId(), 100, String.valueOf(order.getId()), "订单完成奖励");

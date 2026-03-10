@@ -24,7 +24,13 @@ public interface RemoteProductService {
      * 恢复库存
      */
     @PostMapping("/inner/product/recoverStock/{id}")
-    Boolean recoverStock(@PathVariable("id") Long productId);
+    Boolean recoverStock(@PathVariable("id") Long productId,@RequestParam("userId") Long userId);
+
+    /**
+     * 恢复 Redis 中的秒杀库存及用户购买资格
+     */
+    @PostMapping("/inner/product/recoverRedisStockAndEligibility")
+    Boolean recoverRedisStockAndEligibility(@RequestParam("productId") Long productId, @RequestParam("userId") Long userId);
 
     /**
      * 获取商品总数

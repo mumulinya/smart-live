@@ -40,8 +40,13 @@ public class RemoteProductFallbackFactory implements FallbackFactory<RemoteProdu
             }
 
             @Override
-            public Boolean recoverStock(Long productId)
+            public Boolean recoverStock(Long productId,Long userId)
             {
+                return false;
+            }
+
+            @Override
+            public Boolean recoverRedisStockAndEligibility(Long productId, Long userId) {
                 return false;
             }
 
