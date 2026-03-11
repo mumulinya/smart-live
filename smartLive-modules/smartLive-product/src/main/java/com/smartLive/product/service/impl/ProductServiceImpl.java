@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import com.smartLive.product.mapper.ProductMapper;
 import com.smartLive.product.domain.Product;
@@ -48,9 +49,15 @@ import com.smartLive.product.service.IProductService;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 商品Service业务层处理
+ * 商品业务逻辑实现类
+ * 
+ * 核心职能：
+ * 1. 采用策略模式（PurchaseStrategy）统一处理普通购买与秒杀抢购逻辑。
+ * 2. 联动 Elasticsearch (ES) 与 Milvus (向量库) 实现双索引实时/批量同步。
+ * 3. 基于 RabbitMQ 发起内容审核、Feed 流通知及库存补偿。
+ * 4. 集成 Redis 实现多级缓存加载、热门商品排行榜 ZSet 维护及增量销量统计。
  *
- * @author 桃桃
+ * @author smartLive
  * @date 2026-02-18
  */
 @Service
@@ -61,8 +68,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private ProductMapper productMapper;
     @Autowired
     private RedisService redisService;
-    @Autowired
-    private RemoteShopService remoteShopService;
+
     @Autowired
     private RemoteStarService remoteStarService;
     @Autowired
@@ -80,6 +86,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private CacheClient cacheClient;
     @Autowired
     private ZSetIdManager zSetIdManager;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 查询商品
@@ -275,7 +283,15 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         int i = productMapper.deleteProductByIds(ids);
         // 删除es数据
         if (i > 0) {
-            clearProductCacheBatch(Arrays.asList(ids));
+            List<Long> productIds = Arrays.asList(ids);
+            clearProductCacheBatch(productIds);
+            List<String> seckillKeys = productIds.stream()
+                    .filter(Objects::nonNull)
+                    .map(id -> RedisConstants.SECKILL_STOCK_KEY + id)
+                    .toList();
+            if (CollUtil.isNotEmpty(seckillKeys)) {
+                redisService.deleteObject(seckillKeys);
+            }
             for (Long id : ids) {
                 executorService.submit(()->{
                     log.info("线程{}删除es数据id为：{}", Thread.currentThread().getName(), id);
@@ -312,11 +328,16 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
 
     /**
-     * 购买商品（策略模式，根据活动类型分发普通/秒杀策略）
+     * 购买商品（统一分发逻辑）
+     * 
+     * 流程：
+     * 1. 校验商品存在性。
+     * 2. 根据 activityType (0为普通, 1为秒杀) 从 purchaseStrategyMap 动态获取执行策略。
+     * 3. 策略内部负责处理具体的库存扣减、限购检查及订单生成。
      *
      * @param productId 商品ID
      * @param userId    用户ID
-     * @return 订单ID
+     * @return 最终产生的订单 ID
      */
     @Override
     @Transactional
@@ -325,8 +346,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (product == null) {
             throw new RuntimeException("商品不存在");
         }
-        // Select strategy based on activityType
-        // 0: Normal, 1: Seckill
+        // 根据活动类型选择策略：0-普通, 1-秒杀
         String strategyName = "NormalPurchaseStrategy";
         if (product.getActivityType() != null && product.getActivityType() == 1) {
             strategyName = "SeckillPurchaseStrategy";
@@ -334,7 +354,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         PurchaseStrategy strategy = purchaseStrategyMap.get(strategyName);
         if (strategy == null) {
-             throw new RuntimeException("未找到对应的购买策略: " + strategyName);
+             throw new RuntimeException("系统配置错误：未找到对应的购买策略 " + strategyName);
         }
 
         return strategy.purchase(userId, product);
@@ -489,30 +509,33 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
-     * 获取热门商品排行榜（按类别区分代金券/团购套餐）
-     * 首页调用：传 current=1, size=10
-     * 榜单页调用：传 current=n, size=10
+     * 获取热门商品排行榜（支持分页与分类）
+     * 
+     * 实现细节：
+     * 1. 优先从 Redis ZSet ( hot_rank:product:xxx ) 中获取已计算好的 ID 分页序列。
+     * 2. 若 ZSet 击穿且为首页请求，则从数据库读取 (按销量+时间)，并异步触发重写 ZSet 任务。
+     * 3. 返回的 VO 中附带 hotScore (热度分)，便于前端展示排名及热度值。
      *
-     * @param current  页码
-     * @param size     每页数量
+     * @param current  当前页
+     * @param size     页大小
      * @param category 种类 (1:代金券, 2:团购套餐)
-     * @return 热门商品列表
+     * @return 商品排行榜列表
      */
     @Override
     public List<ProductVO> getHotProductRank(Integer current, Integer size, Integer category) {
         int pageNo = current == null || current < 1 ? 1 : current;
         int pageSize = size == null || size < 1 ? 10 : size;
 
-        // 1. 防御性拦截：最多只给看前 100 名
+        // 1. 防御性拦截：最多只提供前 100 名的精选榜单
         if (pageNo * pageSize > 100) {
             return Collections.emptyList();
         }
 
         // 2. 根据 category 决定对应的 Redis Key
         String hotRankKey = RedisConstants.PRODUCT_HOT_RANK_KEY;
-        if (com.smartLive.common.core.enums.ProductEnum.VOUCHER.getCode().equals(category)) {
+        if (ProductEnum.VOUCHER.getCode().equals(category)) {
             hotRankKey += "voucher";
-        } else if (com.smartLive.common.core.enums.ProductEnum.SET_MEAL.getCode().equals(category)) {
+        } else if (ProductEnum.SET_MEAL.getCode().equals(category)) {
             hotRankKey += "deal";
         } else {
             return Collections.emptyList();
@@ -524,7 +547,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         Page<Long> longPage = zSetIdManager.pageIds(hotRankKey, null, current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> productIdList = longPage.getRecords();
 
-        if (CollUtil.isEmpty(productIdList)) {
+        if (CollUtil.isEmpty(productIdList)&&current == 1) {
             // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页
             log.info("商品热榜 ZSet ({}) 为空，走数据库兜底查询", hotRankKey);
             List<Product> dbList = query()
@@ -721,13 +744,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .toList();
         if (CollUtil.isNotEmpty(productKeys)) {
             redisService.deleteObject(productKeys);
-        }
-        List<String> seckillKeys = productIds.stream()
-                .filter(Objects::nonNull)
-                .map(id -> RedisConstants.SECKILL_STOCK_KEY + id)
-                .toList();
-        if (CollUtil.isNotEmpty(seckillKeys)) {
-            redisService.deleteObject(seckillKeys);
         }
     }
     /**
@@ -933,8 +949,16 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .set("reject_reason", rejectReason)
                 .eq("id", id));
         if(b){
-            publish(new String[]{id.toString()});
             clearProductCache(id);
+            // 如果审核通过，则将其加入Redis热榜和计算队列
+            if (status.equals(ProductStatusEnum.NORMAL.getCode())) {
+                publish(new String[]{id.toString()});
+                String rankKeySuffix = (product.getCategory() != null && product.getCategory() == 1) ? "voucher" : "deal";
+                String hotRankKey = RedisConstants.PRODUCT_HOT_RANK_KEY + rankKeySuffix;
+                double score = product.getCreateTime() != null ? (double) product.getCreateTime().getTime() : (double) System.currentTimeMillis();
+                redisService.setCacheZSet(hotRankKey, id.toString(), score);
+                redisService.setCacheSet(RedisConstants.PRODUCT_CALC_QUEUE_KEY, id.toString());
+            }
         }
         return b;
     }
@@ -973,7 +997,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         // 2. 移除用户重复下单限制记录 (如果提供了 userId)
         if (userId != null) {
             String orderKey = "seckill:order:" + productId;
-            redisService.removeCacheSet(orderKey, userId.toString());
+            Long l = stringRedisTemplate.opsForSet().remove(orderKey, userId.toString());
+            log.info("已移除用户下单限制: productId={}, userId={}, result={}", productId, userId, l);
         }
         
         log.info("已回滚 Redis 秒杀数据: productId={}, userId={}", productId, userId);

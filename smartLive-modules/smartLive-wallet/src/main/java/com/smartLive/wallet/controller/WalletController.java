@@ -20,7 +20,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Wallet app controller.
+ * 个人钱包业务控制层
+ * 处理个人余额查询、流水分析、模拟充值以及支付密码的设置与核验功能。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/wallet")
@@ -29,6 +33,12 @@ public class WalletController {
     @Autowired
     private IWalletService walletService;
 
+    /**
+     * 获取当前用户的钱包账户概览
+     * 包含实时余额、累计收益/消费等基础统计。
+     * 
+     * @return 钱包详情 VO
+     */
     @GetMapping("/info")
     public Result getWalletInfo() {
         Long userId = UserContextHolder.getUser().getId();
@@ -36,6 +46,14 @@ public class WalletController {
         return Result.ok(data);
     }
 
+    /**
+     * 查询钱包收支明细记录列表
+     * 
+     * @param page 页码
+     * @param pageSize 每页条数
+     * @param type 类型过滤（income-收入，expense-支出，all-全部）
+     * @return 事务列表 Result
+     */
     @GetMapping("/transaction/list")
     public Result getTransactionList(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
@@ -46,6 +64,12 @@ public class WalletController {
         return Result.ok(data);
     }
 
+    /**
+     * 账户充值（模拟充值逻辑）
+     * 
+     * @param dto 充值参数
+     * @return 最新余额 Result
+     */
     @PostMapping("/recharge")
     public Result recharge(@RequestBody WalletRechargeDTO dto) {
         Long userId = UserContextHolder.getUser().getId();
@@ -55,6 +79,12 @@ public class WalletController {
         return Result.ok(data);
     }
 
+    /**
+     * 设置或重置钱包支付密码
+     * 
+     * @param dto 包含密码的参数包
+     * @return 状态结果 Result
+     */
     @PostMapping("/password/set")
     public Result setPayPassword(@RequestBody WalletPasswordSetDTO dto) {
         Long userId = UserContextHolder.getUser().getId();
@@ -62,6 +92,12 @@ public class WalletController {
         return Result.ok();
     }
 
+    /**
+     * 核验钱包支付密码是否正确
+     * 
+     * @param dto 待校验密码
+     * @return 核验结果（verified: true/false）
+     */
     @PostMapping("/password/verify")
     public Result verifyPayPassword(@RequestBody WalletPasswordVerifyDTO dto) {
         Long userId = UserContextHolder.getUser().getId();

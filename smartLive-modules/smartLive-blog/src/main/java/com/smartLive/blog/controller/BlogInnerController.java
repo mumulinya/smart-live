@@ -20,10 +20,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 博客Controller
+ * 博客内部服务控制器
+ * 提供给其他微服务（如互动模块、审核模块）调用的 Feign 内部接口，负责数据同步、状态变更及批量详情查询。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/inner/blog")
@@ -39,27 +40,30 @@ public class BlogInnerController extends BaseController
         return blogService.updateBlogStatus(targetId, status, reason);
     }
     /**
-     * 获取博客详情
-     * @param id
-     * @return
+     * 获取博客及其关联数据的详情对象（VO）
+     * 
+     * @param id 博客ID
+     * @return 包含互动数据与博主信息的视图对象
      */
     @GetMapping("/getBlogById/{id}")
     BlogVO getBlogById(@PathVariable("id") Long id){
         return blogService.getBlogById(id);
     }
     /**
-     * 获取用户博客数量
-     * @param userId
-     * @return
+     * 获取指定用户的博文发布总数
+     * 
+     * @param userId 用户ID
+     * @return 博文总数
      */
     @GetMapping("/getBlogCount/{userId}")
     Integer getBlogCount(@PathVariable("userId")Long userId){
         return blogService.getBlogCount(userId);
     }
     /**
-     * 获取博客点赞数
-     * @param userId
-     * @return
+     * 获取指定用户名下所有博文累计获赞总数
+     * 
+     * @param userId 用户ID
+     * @return 获赞总数
      */
     @GetMapping("/getUserLikeCount/{userId}")
     Integer getLikeCount( @PathVariable("userId")Long userId){

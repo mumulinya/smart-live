@@ -40,7 +40,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Like service.
+ * 点赞业务实现层
+ * 提供全站内容的通用点赞/取消点赞功能，并实现了基于作者维度的聚合获赞统计。
+ * 
+ * 核心流程：
+ * 1. 使用 Redis ZSet 存储资源的点赞用户列表（支持按时间排序）。
+ * 2. 采用双向 ZSet 存储用户的点赞足迹。
+ * 3. 实现了点赞热度的自动策略同步，确保店铺、博客等源表的点赞数最终一致。
+ * 4. 自动维护“作者总获赞数”的 Redis 计数器。
  */
 @Service
 @Slf4j
@@ -54,6 +61,13 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
     @Autowired
     private ZSetIdManager zSetIdManager;
 
+    /**
+     * 点赞或取消点赞核心逻辑
+     * 实现原子性的 DB 记录变更与 Redis 缓存同步。
+     *
+     * @param like 点赞参数（sourceType, sourceId）
+     * @return 操作成功返回 true
+     */
     @Override
     public Boolean likeOrCancelLike(Like like) {
         AppLoginUser user = UserContextHolder.getUser();

@@ -12,6 +12,13 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 
+/**
+ * 系统通知实体类
+ * 对应数据库表 chat_system_notice，存储系统向用户推送的各类业务通知（如点赞、评论提醒、审核反馈等）。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
+ */
 @Data
 @TableName(value = "chat_system_notice",autoResultMap = true)
 public class SystemNotice implements Serializable {

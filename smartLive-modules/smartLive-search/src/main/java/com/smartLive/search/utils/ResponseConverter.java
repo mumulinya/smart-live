@@ -17,32 +17,37 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * ES 响应结果转换器
+ * 负责从 SearchResponse 中解析原始数据、高亮片段以及计算业务相关的动态字段（如距离）。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
+ */
 public class ResponseConverter {
 
-    private ResponseConverter() {
-    }
+    private ResponseConverter() {}
     
     /**
-     * 将ES搜索结果转换为博客列表
+     * 解析 ES 响应并填充博客列表
+     * 支持 Title、Content 和博主昵称 (Name) 的高亮片段替换。
      */
     public static List<BlogDoc> convertToBlogList(SearchResponse response) {
         List<BlogDoc> blogs = new ArrayList<>();
         for (SearchHit hit : response.getHits().getHits()) {
-            //获取source数据
             String source = hit.getSourceAsString();
-            //转化为对应的对象
             BlogDoc blog = JSON.parseObject(source, BlogDoc.class);
-            //处理高亮结果
+            // 提取高亮字段并回填至实体
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
-            if (highlightFields != null&&highlightFields.size()>0) {
+            if (highlightFields != null && !highlightFields.isEmpty()) {
                 String[] fields = EsTool.getDefaultSearchFields(EsIndexNameConstants.BLOG_INDEX_NAME);
                 for (String field : fields) {
-                    if (field.equals("title")&&highlightFields.get(field) != null) {
-                        blog.setTitle(highlightFields.get(field).getFragments()[0].toString());
-                    } else if (field.equals("content")&&highlightFields.get(field) != null) {
-                        blog.setContent(highlightFields.get(field).getFragments()[0].toString());
-                    }else if (field.equals("name")&&highlightFields.get(field) != null) {
-                        blog.setName(highlightFields.get(field).getFragments()[0].toString());
+                    HighlightField hf = highlightFields.get(field);
+                    if (hf != null) {
+                        String text = hf.getFragments()[0].toString();
+                        if ("title".equals(field)) blog.setTitle(text);
+                        else if ("content".equals(field)) blog.setContent(text);
+                        else if ("name".equals(field)) blog.setName(text);
                     }
                 }
             }
@@ -52,37 +57,30 @@ public class ResponseConverter {
     }
     
     /**
-     * 将ES搜索结果转换为店铺列表
+     * 解析 ES 响应并填充店铺列表
+     * 包含 LBS 距离重算：根据请求的经纬度与店铺坐标，实时计算两者之间的直线球面距离（Haversin 公式）。
      */
     public static List<ShopDoc> convertToShopList(SearchResponse response, FilterSearchRequest request) {
         List<ShopDoc> shops = new ArrayList<>();
         for (SearchHit hit : response.getHits().getHits()) {
             String source = hit.getSourceAsString();
             ShopDoc shop = JSON.parseObject(source, ShopDoc.class);
-            //设置距离
-            if(request!=null){
-                // 假设 shop.getLocation() 格式是 "lat,lon" 或包含这两者
-                double shopLat = shop.getY(); // 提取店铺纬度
-                double shopLon = shop.getX(); // 提取店铺经度
-
-                // 使用 Hutool 工具类直接算出距离（精确到米），然后塞给 DTO！
-                double distance = SloppyMath.haversinMeters(request.getLat(), request.getLon(), shopLat, shopLon);
-
-                // 格式化一下（比如 1550 米变成 "1.5km"）再传给前端
+            // 实时计算距离 (单位：米)
+            if (request != null && shop.getX() != null && shop.getY() != null) {
+                double distance = SloppyMath.haversinMeters(request.getLat(), request.getLon(), shop.getY(), shop.getX());
                 shop.setDistance(distance);
             }
 
-            //处理高亮结果
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
-            if (highlightFields != null&&highlightFields.size()>0) {
+            if (highlightFields != null && !highlightFields.isEmpty()) {
                 String[] fields = EsTool.getDefaultSearchFields(EsIndexNameConstants.SHOP_INDEX_NAME);
                 for (String field : fields) {
-                    if (field.equals("name")&&highlightFields.get(field) != null) {
-                        shop.setName(highlightFields.get(field).getFragments()[0].toString());
-                    } else if (field.equals("address")&&highlightFields.get(field) != null) {
-                        shop.setAddress(highlightFields.get(field).getFragments()[0].toString());
-                    } else if (field.equals("area")&&highlightFields.get(field) != null) {
-                        shop.setArea(highlightFields.get(field).getFragments()[0].toString());
+                    HighlightField hf = highlightFields.get(field);
+                    if (hf != null) {
+                        String text = hf.getFragments()[0].toString();
+                        if ("name".equals(field)) shop.setName(text);
+                        else if ("address".equals(field)) shop.setAddress(text);
+                        else if ("area".equals(field)) shop.setArea(text);
                     }
                 }
             }
@@ -92,24 +90,23 @@ public class ResponseConverter {
     }
     
     /**
-     * 将ES搜索结果转换为用户列表
+     * 解析并填充用户检索列表
      */
     public static List<UserDoc> convertToUserList(SearchResponse response) {
         List<UserDoc> users = new ArrayList<>();
         for (SearchHit hit : response.getHits().getHits()) {
             String source = hit.getSourceAsString();
             UserDoc user = JSON.parseObject(source, UserDoc.class);
-            //处理高亮结果
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
-            if (highlightFields != null&&highlightFields.size()>0) {
+            if (highlightFields != null && !highlightFields.isEmpty()) {
                 String[] fields = EsTool.getDefaultSearchFields(EsIndexNameConstants.USER_INDEX_NAME);
                 for (String field : fields) {
-                    if (field.equals("nickName")&&highlightFields.get(field) != null) {
-                        user.setNickName(highlightFields.get(field).getFragments()[0].toString());
-                    } else if (field.equals("introduce")&&highlightFields.get(field) != null) {
-                        user.setIntroduce(highlightFields.get(field).getFragments()[0].toString());
-                    }else if (field.equals("city")&&highlightFields.get(field) != null) {
-                        user.setCity(highlightFields.get(field).getFragments()[0].toString());
+                    HighlightField hf = highlightFields.get(field);
+                    if (hf != null) {
+                        String text = hf.getFragments()[0].toString();
+                        if ("nickName".equals(field)) user.setNickName(text);
+                        else if ("introduce".equals(field)) user.setIntroduce(text);
+                        else if ("city".equals(field)) user.setCity(text);
                     }
                 }
             }
@@ -119,25 +116,23 @@ public class ResponseConverter {
     }
     
     /**
-     * 将ES搜索结果转换为商品列表
+     * 解析并填充商品列表
      */
     public static List<ProductDoc> convertToProductList(SearchResponse response) {
         List<ProductDoc> products = new ArrayList<>();
         for (SearchHit hit : response.getHits().getHits()) {
             String source = hit.getSourceAsString();
             ProductDoc product = JSON.parseObject(source, ProductDoc.class);
-            //处理高亮结果
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
-            System.out.println("高亮结果为"+highlightFields);
-            if (highlightFields != null&&highlightFields.size()>0) {
+            if (highlightFields != null && !highlightFields.isEmpty()) {
                 String[] fields = EsTool.getDefaultSearchFields(EsIndexNameConstants.PRODUCT_INDEX_NAME);
                 for (String field : fields) {
-                    if (field.equals("name")&&highlightFields.get(field) != null) {
-                        product.setName(highlightFields.get(field).getFragments()[0].toString());
-                    } else if (field.equals("subTitle")&&highlightFields.get(field) != null) {
-                        product.setSubTitle(highlightFields.get(field).getFragments()[0].toString());
-                    } else if (field.equals("shopName")&&highlightFields.get(field) != null) {
-                        product.setShopName(highlightFields.get(field).getFragments()[0].toString());
+                    HighlightField hf = highlightFields.get(field);
+                    if (hf != null) {
+                        String text = hf.getFragments()[0].toString();
+                        if ("name".equals(field)) product.setName(text);
+                        else if ("subTitle".equals(field)) product.setSubTitle(text);
+                        else if ("shopName".equals(field)) product.setShopName(text);
                     }
                 }
             }
@@ -147,7 +142,7 @@ public class ResponseConverter {
     }
     
     /**
-     * 构建分页响应
+     * 构建标准分页结果集
      */
     public static <T> Map<String, Object> buildPageResult(SearchResponse response, List<T> list) {
         Map<String, Object> result = new HashMap<>();
@@ -159,19 +154,11 @@ public class ResponseConverter {
     }
 
     /**
-     * 将米转换为前端展示的格式化字符串
-     *
-     * @param distanceMeters 距离（米）
-     * @return 格式化后的字符串，如 "850m" 或 "1.2km"
+     * 距离展格式化工具
+     * 将米级数字转化为符合用户阅读习惯的 "m" 或 "km"。
      */
     private static String formatDistance(double distanceMeters) {
-        if (distanceMeters < 1000) {
-            // 小于 1 公里，直接显示整数米
-            return (int) distanceMeters + "m";
-        } else {
-            // 大于 1 公里，转换为 km 并保留一位小数
-            double km = distanceMeters / 1000.0;
-            return String.format("%.1fkm", km);
-        }
+        if (distanceMeters < 1000) return (int) distanceMeters + "m";
+        return String.format("%.1fkm", distanceMeters / 1000.0);
     }
 }

@@ -80,28 +80,5 @@ public class HotRankJobHandler {
         });
         return ReturnT.SUCCESS;
     }
-
-    /**
-     * 凌晨全量重建店铺热榜（建议 CRON: 0 0 3 * * ?）
-     */
-    @XxlJob("shopFullRebuildRankJob")
-    public ReturnT<String> shopFullRebuildRankJob() throws Exception {
-        log.info("触发 xxl-job: 店铺热榜全量重建任务 shopFullRebuildRankJob");
-        executorService.execute(() -> {
-            hotRankService.fullRebuildHotRankByBizType(GlobalBizTypeEnum.SHOP.getCode());
-        });
-        return ReturnT.SUCCESS;
-    }
-
-    /**
-     * 凌晨全量重建博客热榜（建议 CRON: 0 0 3 * * ?）
-     */
-    @XxlJob("blogFullRebuildRankJob")
-    public ReturnT<String> blogFullRebuildRankJob() throws Exception {
-        log.info("触发 xxl-job: 博客热榜全量重建任务 blogFullRebuildRankJob");
-        executorService.execute(() -> {
-            hotRankService.fullRebuildHotRankByBizType(GlobalBizTypeEnum.BLOG.getCode());
-        });
-        return ReturnT.SUCCESS;
-    }
 }
+

@@ -11,10 +11,11 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 博客对象 tb_blog
+ * 博客实体类
+ * 对应数据库表 tb_blog，记录了用户的探店笔记、媒体附件及互动统计数据。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @TableName("blog")
 @Data

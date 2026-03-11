@@ -32,6 +32,12 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
     @Lazy
     private IMessageService messageService;
 
+    /**
+     * 创建全新会话
+     *
+     * @param title 会话标题，若为空则默认设为 "New Chat"
+     * @return 产生的会话 ID
+     */
     @Override
     public Long createSession(String title) {
         Session session = new Session();
@@ -44,6 +50,12 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
         return session.getId();
     }
 
+    /**
+     * 查询用户会话列表（分页）
+     *
+     * @param current 当前页码
+     * @return 会话分页数据
+     */
     @Override
     public List<Session> selectSessionList(Integer current) {
         Long userId = UserContextHolder.getUser().getId();
@@ -53,6 +65,13 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
                 .page(new Page<>(current, 10))
                 .getRecords();
     }
+    /**
+     * 根据关键词搜索会话
+     *
+     * @param keyword 标题关键词
+     * @param current 当前页码
+     * @return 搜索结果列表
+     */
     @Override
     public List<Session> searchByKeyword(String keyword, Integer current) {
         // 获取当前登录用户ID
@@ -65,7 +84,14 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
         return this.page(page, wrapper).getRecords();
     }
 
+    /**
+     * 删除会话及其关联的所有消息记录
+     *
+     * @param sessionId 会话 ID
+     * @return 是否删除成功
+     */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteSession(Long sessionId) {
         Long userId = UserContextHolder.getUser().getId();
         Session session = this.getById(sessionId);
@@ -74,18 +100,21 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
             return false;
         }
 
-        // Ensure user owns the session
+        // 越权检查
         if (!session.getUserId().equals(userId)) {
             return false;
         }
 
-        // Delete associated messages
+        // 联动删除消息表数据
         messageService.remove(new LambdaQueryWrapper<Message>().eq(Message::getSessionId, sessionId));
 
-        // Delete session
+        // 删除会话本身
         return this.removeById(sessionId);
     }
 
+    /**
+     * 重命名会话
+     */
     @Override
     public boolean updateSessionTitle(Long sessionId, String title) {
         if (StringUtils.isBlank(title)) {

@@ -17,10 +17,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
- * 评论管理外部接口
+ * 评论管理控制层
+ * 提供全站内容的评论发布、层级查询（一级/二级子评论）、删除及点赞互动等功能。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/comment")
@@ -102,7 +103,13 @@ public class CommentController extends BaseController
     }
 
     /**
-     * 获取评论列表（分页）
+     * 分页查询一级评论列表
+     * 支持按照时间或热度（点赞/回复数）进行动态排序显示。
+     *
+     * @param comment 过滤条件 (如来源 ID、类型)
+     * @param current 页码
+     * @param sort    排序字段 (default/new)
+     * @return 一级评论列表
      */
     @GetMapping("/listComment")
     public Result listComment(Comment  comment,@RequestParam("current") Integer current,
@@ -153,7 +160,11 @@ public class CommentController extends BaseController
     }
 
     /**
-     * 判断当前用户是否评论过目标资源
+     * 校验当前用户是否已发布过针对该资源的评论
+     * 常用于防重复发布或特定的互动状态显示。
+     *
+     * @param comment 评论检索条件
+     * @return 布尔结果
      */
     @GetMapping("/isComment")
     public Result isComment(Comment comment){

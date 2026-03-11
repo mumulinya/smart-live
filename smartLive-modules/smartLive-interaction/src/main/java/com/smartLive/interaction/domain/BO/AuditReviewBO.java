@@ -10,10 +10,11 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 评价对象 tb_comments
- *
- * @author mumulin
- * @date 2025-10-02
+ * 评价审核业务对象
+ * 用于封装待审核评价的详细内容及关联图文，支撑 AI 自动风险识别与管理端人工复核。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Data
 @AllArgsConstructor
@@ -22,7 +23,7 @@ public class AuditReviewBO extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** 主键 */
+    /** 主键ID */
     private Long id;
 
     /** 用户id */

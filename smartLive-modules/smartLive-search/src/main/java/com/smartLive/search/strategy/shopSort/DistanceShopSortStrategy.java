@@ -8,17 +8,23 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
-@Component("distanceShopSortStrategy")
+/**
+ * 地理位置距离排序策略
+ * 实现“离我最近”搜索。利用 ES 的 GeoDistanceSort 对地理坐标点（Location）进行实时距离换算并升序排列。
+ */
+@Component
 public class DistanceShopSortStrategy implements ShopSortStrategy {
+
     @Override
     public String getSortType() {
-        return "distance"; // 专属标识
+        return "distance";
     }
+
     @Override
-    public void buildSortAndQuery(SearchSourceBuilder sourceBuilder, BoolQueryBuilder boolQuery, FilterSearchRequest request) {
-        sourceBuilder.query(boolQuery); // 原封不动塞入 boolQuery
-        if (request.getLat() != null && request.getLon() != null) {
-            sourceBuilder.sort(SortBuilders.geoDistanceSort("location", request.getLat(), request.getLon())
+    public void buildSortAndQuery(SearchSourceBuilder sourceBuilder, BoolQueryBuilder boolQuery, FilterSearchRequest searchRequest) {
+        if (searchRequest.getLat() != null && searchRequest.getLon() != null) {
+            // 在 ES 的 search_after 或打分阶段注入地理坐标排序
+            sourceBuilder.sort(SortBuilders.geoDistanceSort("location", searchRequest.getLat(), searchRequest.getLon())
                     .order(SortOrder.ASC)
                     .unit(DistanceUnit.METERS));
         }

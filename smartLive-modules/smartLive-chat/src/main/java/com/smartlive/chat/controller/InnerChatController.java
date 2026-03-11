@@ -12,7 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 内部调用控制器 - 供 smart-live-im 调用
+ * 聊天内部服务控制器
+ * 提供给 IM 服务调用的 RPC 接口，负责跨服务的消息持久化与会话同步。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/inner/chat")

@@ -13,6 +13,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * 商品管理相关 AI 工具集
+ * 供 Spring AI Agent 自动调度，支持商品搜索、代金券查询及在线下单功能
+ *
+ * @author smartLive
+ */
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -46,13 +52,17 @@ public class ProductTools {
         return productList;
     }
 
+    /**
+     * 订单创建接口
+     * 实现在聊天界面中直接购买或抢购指定的商品
+     */
     @Tool(name = "orderProduct",description = "下单商品/代金券，示例：我要下单xxx店铺的xxx")
     public String orderProduct(
             @ToolParam(description = "商品ID，从推荐列表中获取") Long productId,
             @ToolParam(description = "店铺ID") String shopId,
             @ToolParam(description = "用户ID") Long userId
     ){
-        log.info("抢购优惠券 | shopId={}, productId={}, userId={}",
+        log.info("🔍 执行商品下单工具 | shopId={}, productId={}, userId={}",
                 shopId, productId, userId);
         ProductVO query = new ProductVO();
         query.setId(productId);

@@ -8,11 +8,11 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 博客返回对象 (View Object)
- * 用于前端展示博客详情
+ * 博客视图对象 (View Object)
+ * 用于前端展现用户的探店笔记详情，包含互动统计数据、作者信息及当前用户的交互状态。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Data
 public class BlogVO implements Serializable

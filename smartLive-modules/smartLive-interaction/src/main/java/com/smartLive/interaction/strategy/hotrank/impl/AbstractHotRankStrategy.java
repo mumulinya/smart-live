@@ -9,12 +9,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
- * 抽象的热榜策略基类，提供公共的热度常数、时间衰减算法及通用的 Redis 工具集。
+ * 抽象的热榜策略基类。
+ * 提供公共的工具方法（Redis 操作、资源批量获取、时间衰减计算等），
+ * 具体的评分公式由各子类实现。
+ *
+ * 评分体系说明（参见《SmartLive 热度评分体系设计》文档）：
+ * - 每种业务类型都有一个初始分（baseScore），避免冷启动排在最后。
+ * - 热度分 = baseScore + 各互动字段 × 对应权重。
+ * - 博客/评价/评论额外包含"时间衰减"项（30天线性衰减）。
+ * - 店铺/商品不做时间衰减，靠销量和口碑驱动热度。
  */
 @Slf4j
 public abstract class AbstractHotRankStrategy implements HotRankStrategy {
@@ -39,28 +49,33 @@ public abstract class AbstractHotRankStrategy implements HotRankStrategy {
 
     /** 热度榜计算时，需要拉取参与重算的老数据前 N 名（防霸榜机制） */
     protected static final int HOT_RANK_MERGE_TOP_N = 50;
-    /** 热度衰减算法参数：基础缓冲时间（小时） */
-    protected static final double HOT_SCORE_BASE_HOURS = 2.0D;
-    /** 热度衰减算法参数：重力衰减因子（值越大，老数据降分越快） */
-    protected static final double HOT_SCORE_GRAVITY = 1.2D;
 
     /**
-     * 【核心算法】应用牛顿冷却/重力时间衰减公式。
-     * 随着时间流逝，分母呈指数级增长，压低总分，从而给新数据出头之日。
+     * 计算时间衰减值。
+     * 规则：发布30天内有加成，30天后加成为0。
+     * - 发布当天：timeDecay = 30（最高加成）
+     * - 发布15天：timeDecay = 15（中等加成）
+     * - 超过30天：timeDecay = 0（无加成，靠互动维持热度）
      *
-     * @param interactionScore 综合互动分（分子）
-     * @param createTimeMillis 数据发布时间戳
-     * @return 最终的热度排序分
+     * @param createTime 发布/创建时间
+     * @return 时间衰减加成值（0～30）
      */
-    protected double applyTimeDecay(double interactionScore, Long createTimeMillis) {
-        long now = System.currentTimeMillis();
-        long createAt = createTimeMillis == null ? now : createTimeMillis;
-        double hours = Math.max(0D, (now - createAt) / 3600000D);
-        return interactionScore / Math.pow(hours + HOT_SCORE_BASE_HOURS, HOT_SCORE_GRAVITY);
+    protected double calcTimeDecay(Date createTime) {
+        if (createTime == null) return 0;
+        long diffMs = System.currentTimeMillis() - createTime.getTime();
+        long days = TimeUnit.MILLISECONDS.toDays(diffMs);
+        return Math.max(0, 30 - days);
     }
 
     /**
-     * 安全的 Integer 转换，防止 NPE。
+     * 对最终热度分数保留两位小数，提升 UI 展示美观度。
+     */
+    protected double roundScore(double score) {
+        return Math.round(score * 100.0) / 100.0;
+    }
+
+    /**
+     * 安全的 Integer/Number 转换，防止 NPE。
      */
     protected int safeInt(Number value) {
         return value == null ? 0 : value.intValue();

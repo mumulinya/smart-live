@@ -14,7 +14,10 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * AI 评价生成服务。
+ * AI 评价生成服务
+ * 负责批量生成 AI 探店评价，并调用远程服务进行保存
+ *
+ * @author smartLive
  */
 @Slf4j
 @Service
@@ -34,6 +37,12 @@ public class AIReviewGenerateService {
         this.remoteReviewService = remoteReviewService;
     }
 
+    /**
+     * 批量创建 AI 评价
+     * 遍历请求列表，为每个来源（如店铺、商品）生成 AI 评价并统一保存
+     *
+     * @param list 包含来源类型和来源 ID 列表的请求对象
+     */
     public void aiCreateReview(List<AIGenerateRequest> list) {
         List<ReviewDTO> reviews = new ArrayList<>();
         list.forEach(request -> {
@@ -53,10 +62,17 @@ public class AIReviewGenerateService {
             return;
         }
 
-        log.info("Will save generated reviews, size={}", reviews.size());
+        log.info("准备保存生成的 AI 评价，数量: {}", reviews.size());
         remoteReviewService.saveAiCreateReview(reviews);
     }
 
+    /**
+     * 为单个来源生成 AI 评价
+     * 调用大模型根据历史评价（RAG 逻辑，当前示例中暂留空）生成总结性的新评价
+     *
+     * @param queryDTO 包含来源类型和 ID 的查询对象
+     * @return 生成好的 ReviewDTO 对象，若无历史评价则返回 null
+     */
     private ReviewDTO createReview(ReviewDTO queryDTO) {
 //        List<ReviewDTO> reviews = reviewRagService.getReviews(null, null);
         List<ReviewDTO> reviews=new ArrayList<>();
@@ -77,7 +93,7 @@ public class AIReviewGenerateService {
         reviewDTO.setScore(5);
         reviewDTO.setCreateTime(new Date());
         reviewDTO.setStatus(0);
-        reviewDTO.setUserId(99999L);
+        reviewDTO.setUserId(99999L); // 默认 AI 专用用户 ID
         reviewDTO.setIsAIGenerated(true);
         return reviewDTO;
     }

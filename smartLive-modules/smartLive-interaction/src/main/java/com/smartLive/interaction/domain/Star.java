@@ -11,12 +11,14 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
- * 关注对象 tb_follow
+ * 收藏记录实体对象
+ * 用于持久化存储用户收藏各类资源（如博客、视频等）的行为。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @TableName("star")
 @Data

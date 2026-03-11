@@ -15,7 +15,8 @@ import reactor.core.publisher.Flux;
 import java.util.List;
 
 /**
- * Message Controller
+ * AI 消息管理 Controller
+ * 处理用户与 AI 的实时对话（基于 SSE 流式响应）以及历史消息查询
  *
  * @author smartLive
  */
@@ -28,7 +29,12 @@ public class MessageController extends BaseController {
     private IMessageService messageService;
 
     /**
-     * Get message list (history)
+     * 获取历史消息列表
+     * 分页查询指定会话的历史聊天记录
+     *
+     * @param current 当前页码
+     * @param sessionId 会话 ID
+     * @return 包含消息实体列表的 Result
      */
     @GetMapping("/list")
     public Result getMessageList(@RequestParam("current") Integer current, @RequestParam("sessionId") Long sessionId) {
@@ -37,7 +43,11 @@ public class MessageController extends BaseController {
     }
 
     /**
-     * AI Chat (SSE)
+     * AI 智能对话接口
+     * 采用 Server-Sent Events (SSE) 技术实现流式文本输出，提供流畅的打字机交互体验
+     *
+     * @param messageDTO 包含用户消息、会话上下文及地理位置等信息的 DTO
+     * @return SSE 流，数据事件名为 "message"（正文分片）或 "card_render"（推荐卡片）
      */
     @GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> chat(MessageDTO messageDTO) {

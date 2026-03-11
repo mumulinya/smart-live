@@ -11,6 +11,7 @@ import com.smartLive.common.core.enums.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.ItemActionType;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.order.domain.Order;
+import com.smartLive.order.domain.VO.OrderVO;
 import com.smartLive.order.service.IOrderService;
 import com.smartLive.product.api.RemoteProductService;
 import com.xxl.job.core.biz.model.ReturnT;
@@ -37,10 +38,6 @@ public class OrderExpireJobHandler {
     @Autowired
     private IOrderService orderService;
 
-    @Autowired
-    private RemoteProductService remoteProductService;
-
-    
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
 
@@ -86,10 +83,12 @@ public class OrderExpireJobHandler {
                 
                 String content = String.format("温馨提示：您购买的商品（订单号：%s）还有不足 %d 天即将过期，请尽快前往使用，以免影响您的权益哦~", 
                                              order.getId(), EXPIRE_NOTIFY_DAYS);
-                Map<String, Object> map = BeanUtil.beanToMap(order);
+                OrderVO orderVO = orderService.getOrderById(order.getId());
+                Map<String, Object> map = BeanUtil.beanToMap(orderVO);
                 SystemNoticeCreateDTO createDTO = new SystemNoticeCreateDTO();
                 createDTO.setUserId(order.getUserId());
                 createDTO.setSourceType(ResourceTypeConstants.ORDER_CODE);
+                createDTO.setSourceId(order.getId());
                 createDTO.setContent(content);
                 createDTO.setTitle("订单过期提醒");
                 createDTO.setAction("order_expire");
@@ -141,10 +140,7 @@ public class OrderExpireJobHandler {
 
         for (Order order : orders) {
             try {
-                // 2. 将订单状态修改为“已过期”
-                order.setStatus(OrderStatusConstants.EXPIRED);
-                orderService.updateById(order);
-
+                orderService.expired(order.getId());
                 // 3. (可选业务流转) 触发自动退款逻辑 / 回收操作
                 // 真实环境需要接入微信/支付宝原路返回接口
                 log.info("订单 {} 状态已变更为【已过期】，准备触发退款或补偿逻辑，原付金额 {} 分", order.getId(), order.getPayAmount());

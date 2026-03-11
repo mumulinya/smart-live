@@ -19,6 +19,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * 商品 RAG (检索增强生成) 服务
+ * 负责在 Milvus 向量库中检索相关商品、代金券，并提供下单等功能
+ *
+ * @author smartLive
+ */
 @Service
 @Slf4j
 public class ProductRagService implements IProductRagService {
@@ -32,6 +38,14 @@ public class ProductRagService implements IProductRagService {
         this.remoteProductService = remoteProductService;
     }
 
+    /**
+     * 搜索商品列表
+     * 根据用户输入的语义和过滤条件，在向量库中进行相似度检索
+     *
+     * @param productVo 过滤条件（如 shopId, category 等）
+     * @param userMessage 用户搜索的文本消息
+     * @return 检索到的商品 VO 列表
+     */
     @Override
     public List<ProductVO> getProductList(ProductVO productVo, String userMessage) {
         String ragQuery = (userMessage == null || userMessage.isBlank()) ? "product coupon" : userMessage;
@@ -43,13 +57,17 @@ public class ProductRagService implements IProductRagService {
         if (StringUtils.hasText(filter)) {
             builder.filterExpression(filter);
         }
-        log.info("RAG query: {}", filter);
+        log.info("RAG 检索过滤条件: {}", filter);
         List<Document> results = productVectorStore.similaritySearch(builder.build());
-        log.info("Product RAG search results: {}", results);
+        log.info("商品 RAG 检索结果: {}", results);
         return convertDocumentsToProductVO(results);
     }
     /**
-     * 下单
+     * 在对话中直接下单/抢购商品
+     * 通过异步调用远程产品服务实现下单操作
+     *
+     * @param productVo 包含产品 ID 和用户 ID 的对象
+     * @return 下单结果提示信息
      */
     @Override
     public String orderProduct(ProductVO productVo) {
@@ -57,7 +75,7 @@ public class ProductRagService implements IProductRagService {
         Long userId = productVo.getUserId();
         try {
             Long result = null;
-            // Unified purchase interface
+            // 统一购买接口
             CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> {
                 return remoteProductService.purchaseProduct(productVoId, userId);
             });
@@ -74,6 +92,13 @@ public class ProductRagService implements IProductRagService {
         }
     }
 
+    /**
+     * 构建向量检索的过滤表达式
+     * 将 ProductVO 中的字段转化为 Spring AI 支持的过滤语法
+     *
+     * @param productVO 包含过滤参数的对象
+     * @return 过滤表达式字符串
+     */
     private String buildFilterExpression(ProductVO productVO) {
         List<String> filters = new ArrayList<>();
 //        filters.add("status == 1");
@@ -98,10 +123,16 @@ public class ProductRagService implements IProductRagService {
         return String.join(" && ", filters);
     }
 
+    /**
+     * 转义过滤值中的特殊字符
+     */
     private String escapeForFilter(String input) {
         return input.replace("'", "\\'");
     }
 
+    /**
+     * 批量转换 Document 为 ProductVO
+     */
     private List<ProductVO> convertDocumentsToProductVO(List<Document> documents) {
         if (documents == null || documents.isEmpty()) {
             return List.of();
@@ -112,6 +143,9 @@ public class ProductRagService implements IProductRagService {
                 .toList();
     }
 
+    /**
+     * 将 Spring AI 的 Document 将元数据映射为 ProductVO 实体
+     */
     private ProductVO convertDocumentToProductVO(Document document) {
         try {
             Map<String, Object> metadata = document.getMetadata();
@@ -131,7 +165,7 @@ public class ProductRagService implements IProductRagService {
             product.setStatus(RagMetadataValueUtils.toInteger(metadata.get("status")));
             product.setStock(RagMetadataValueUtils.toInteger(metadata.get("stock")));
             product.setCoverImg(RagMetadataValueUtils.toStringValue(metadata.get("coverImg")));
-// ✅ 时间字段全部改用 parseDate
+            // 时间字段处理
             product.setBeginTime(RagMetadataValueUtils.parseDate(RagMetadataValueUtils.toStringValue(metadata.get("beginTime"))));
             product.setEndTime(RagMetadataValueUtils.parseDate(RagMetadataValueUtils.toStringValue(metadata.get("endTime"))));
             product.setValidityType(RagMetadataValueUtils.toInteger(metadata.get("validityType")));
@@ -140,7 +174,7 @@ public class ProductRagService implements IProductRagService {
             product.setValidDays(RagMetadataValueUtils.toInteger(metadata.get("validDays")));
             return product;
         } catch (Exception e) {
-            log.warn("Failed to convert Document to ProductVO: {}", e.getMessage());
+            log.warn("Document 转换为 ProductVO 失败: {}", e.getMessage());
             return null;
         }
     }

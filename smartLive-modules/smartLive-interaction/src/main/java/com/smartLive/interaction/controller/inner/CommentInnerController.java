@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 评论管理内部接口
+ * 评论管理内部控制层
+ * 提供 AI 评论触发、全量数据导出及跨模块状态更新等 RPC 支持。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/inner/comment")

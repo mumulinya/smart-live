@@ -24,10 +24,11 @@ import com.smartlive.chat.mapper.ChatMessagesMapper;
 import com.smartlive.chat.domain.ChatMessages;
 
 /**
- * 用户聊天消息Service业务层处理
- *
- * @author 木木林
- * @date 2025-10-05
+ * 用户私聊消息业务处理实现类
+ * 负责私聊消息的持久化、历史记录的分页拉取、未读状态更新以及与 IM 服务的实时同步。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Service
 @Slf4j

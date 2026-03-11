@@ -52,18 +52,20 @@ import java.util.stream.Collectors;
 
 /**
  * 评论服务核心实现类
+ * 实现了高性能的层级评论系统。
  *
- * 架构说明：
- * 1. 坚持“单一职责原则”：本类专注于评论数据的 CRUD、组装外部依赖（RPC）、以及发送数据到 Redis/MQ。
- * 2. 动静分离设计：所有评论详细内容大一统存储在 CACHE_COMMENT_KEY 中，排行榜 ID 列表按业务隔离开。
- * 3. 级联异步计算解耦：去除了所有手动的父级分数计算流转，统交由 SyncDataServiceImpl 后台通过 Sync 队列级联到 Calc 队列进行全自动处理。
+ * 架构核心：
+ * 1. 动静分离：详情存储在 String (Cache)，排序关系维护在 ZSet (Rank)。
+ * 2. 异步闭环：通过 Redis Set 收集变动 ID，级联触发 MySQL 重塑与策略算分。
+ * 3. 智能抗压：多级缓存管理器处理高频读取，Pipeline 优化批量校验。
+ * 4. 内容安全：接入飞书/本地审核队列，实现 AI 辅助的内容自动巡检。
  *
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Service
 @Slf4j
-public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService {
+class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService {
     @Autowired
     private CommentMapper commentMapper;
     @Autowired
@@ -218,7 +220,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         // 兜底逻辑：缓存击穿时查库并重建 ZSet 榜单
-        if (voList == null || voList.isEmpty()) {
+        if ((voList == null || voList.isEmpty())&&current==1) {
             log.info("从数据库中获取评论数据");
             var q = query()
                     .eq("source_id", comment.getSourceId())
@@ -583,10 +585,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     /**
-     * 批量从 Redis 详情池中根据 ID 获取评论详情
+     * 批量从 Redis 详情池获取评论数据（视图对象）
+     * 包含博主、用户信息和点赞状态的级联装配。
      *
-     * @param sourceIdList 评论主键集合
-     * @return 对应的评论实体
+     * @param sourceIdList 评论 ID 列表
+     * @return 装配完整的 CommentVO 列表
      */
     @Override
     public List<CommentVO> getCommentListByIds(List<Long> sourceIdList) {

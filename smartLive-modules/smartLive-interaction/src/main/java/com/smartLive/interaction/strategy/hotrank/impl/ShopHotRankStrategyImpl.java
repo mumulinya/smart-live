@@ -15,8 +15,17 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/** 
- * 店铺本身的人气榜 
+/**
+ * 店铺热度计算策略实现
+ * 
+ * 核心指标：
+ * 1. 销量（Sold）：直接反映店铺的经营热度。
+ * 2. 评分（Score）：体现商户的口碑与服务质量，权重最高。
+ * 3. 互动数：包含评价数与收藏数。
+ * 注意：店铺作为长期经营实体，不设时间衰减项，完全由市场表现决定排名。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Slf4j
 @Component
@@ -24,26 +33,41 @@ public class ShopHotRankStrategyImpl extends AbstractHotRankStrategy {
 
     @Autowired
     private RemoteShopService remoteShopService;
-    
+
+    /**
+     * 获取当前策略对应的业务类型。
+     *
+     * @return 业务类型编码，此处为店铺类型。
+     */
     @Override
-    public Integer getType() { 
-        return GlobalBizTypeEnum.SHOP.getCode(); 
+    public Integer getType() {
+        return GlobalBizTypeEnum.SHOP.getCode();
     }
-    
+
+    /**
+     * 同步刷新有变动的店铺热度分。
+     * 该方法会从 Redis 的计算队列中取出待更新的店铺ID，
+     * 合并当前热榜中的部分高排名店铺，然后批量获取这些店铺的最新数据，
+     * 计算新的热度分数并更新到 Redis 热榜中。
+     */
     @Override
     public void calculateAndRefreshRank() {
         String calcKey = RedisConstants.SHOP_CALC_QUEUE_KEY;
         String tempKey = calcKey + ":TEMP";
         try {
+            // 如果计算队列为空，则直接返回
             if (Boolean.FALSE.equals(redisService.hasKey(calcKey))) return;
-            
+
+            // 将计算队列重命名为临时队列，确保原子性处理
             redisService.rename(calcKey, tempKey);
+            // 获取临时队列中的待更新店铺ID集合
             Set<Object> activeSet = redisService.getCacheSet(tempKey);
             if (CollUtil.isEmpty(activeSet)) {
                 redisService.deleteObject(tempKey);
                 return;
             }
 
+            // 将待更新ID转换为Long类型集合
             Set<Long> candidateIds = toLongSet(activeSet);
             String hotRankKey = RedisConstants.SHOP_HOT_RANK_KEY;
             candidateIds.addAll(getTopIds(hotRankKey, HOT_RANK_MERGE_TOP_N));
@@ -115,13 +139,25 @@ public class ShopHotRankStrategyImpl extends AbstractHotRankStrategy {
     }
 
     /**
-     * 店铺热度打分公式（复用于增量和全量）
+     * 店铺热度打分公式（参见《SmartLive 热度评分体系设计》第二章）
+     *
+     * hotScore = baseScore + sold × 0.3 + score × 0.4 + commentCount × 0.2 + stars × 0.1
+     *
+     * @param shop 店铺信息
+     * @return 热度分（保留两位小数）
      */
     private double calcShopScore(ShopVO shop) {
-        double soldWeight = 2.0D;
-        double commentWeight = 1.8D;
-        int stars = safeInt(shop.getScore()) / 10;
-        double interaction = stars * 1.5D + safeInt(shop.getSold()) * soldWeight + safeInt(shop.getComments()) * commentWeight + 1.0D;
-        return applyTimeDecay(interaction, shop.getCreateTime() == null ? null : shop.getCreateTime().getTime());
+        // 初始分：普通新店铺 = 60分
+        double baseScore = 60.0;
+
+        // 评分字段 score 是 1~5 分，乘10 保存（如 45 代表 4.5 分）
+        double score = safeInt(shop.getScore()) / 10.0;
+
+        return roundScore(baseScore
+                + safeInt(shop.getSold()) * 0.3     // 销量，反映受欢迎程度
+                + score * 0.4                        // 评分权重最高，口碑最重要
+                + safeInt(shop.getComments()) * 0.2   // 评价数量，反映活跃度
+                + safeInt(shop.getStars()) * 0.1      // 收藏数，社交认可度
+        );
     }
 }

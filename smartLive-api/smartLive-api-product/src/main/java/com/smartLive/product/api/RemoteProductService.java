@@ -57,7 +57,9 @@ public interface RemoteProductService {
     Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
 
     /**
-     * Batch update product fans count.
+     * 批量更新商品粉丝数/关注数 (热榜计算时同步互动数据)
+     * @param updateMap 商品ID与粉丝数增量/全量映射
+     * @return 是否成功
      */
     @PostMapping("/inner/product/updateFansCountBatch")
     Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap);
@@ -93,4 +95,12 @@ public interface RemoteProductService {
      */
     @GetMapping("/inner/product/getSold/{id}")
     Integer getSold(@PathVariable("id") Long id);
+
+    /**
+     * 获取全部商品ID列表
+     * 用于凌晨热榜全量重建任务，避免全表扫描 VO。
+     * @return 商品ID集合
+     */
+    @GetMapping("/inner/product/getAllProductIds")
+    List<Long> getAllProductIds();
 }

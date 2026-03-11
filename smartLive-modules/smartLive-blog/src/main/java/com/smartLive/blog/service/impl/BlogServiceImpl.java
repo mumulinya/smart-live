@@ -47,10 +47,11 @@ import java.util.stream.Collectors;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
 
 /**
- * 博客Service业务层处理
+ * 博客核心业务处理实现类
+ * 涵盖了博文发布、秒杀关联、ES同步及多级缓存管理等业务逻辑。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Service
 @Slf4j
@@ -283,41 +284,42 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
         if (CollUtil.isNotEmpty(blogIdList)) {
             return getBlogListByIds(blogIdList);
-        }
+        }else if(current==1){
+            // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
+            List<Blog> dbList = query()
+                    .ne("status","2")
+                    .ne("status","3")
+                    .orderByDesc("liked")
+                    .orderByDesc("create_time")
+                    .list();
 
-        // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
-        List<Blog> dbList = query()
-                .ne("status","2")
-                .ne("status","3")
-                .orderByDesc("liked")
-                .orderByDesc("create_time")
-                .list();
+            List<Blog> blogList = new ArrayList<>();
+            if (CollUtil.isNotEmpty(dbList)) {
+                final List<Blog> finalDbList = dbList;
+                executorService.execute(() -> {
+                    log.info("重建博客热榜 ZSet");
+                    zSetIdManager.saveToZSet(RedisConstants.BLOG_HOT_RANK_KEY, finalDbList, Blog::getId, Blog::getCreateTime);
 
-        List<Blog> blogList = new ArrayList<>();
-        if (CollUtil.isNotEmpty(dbList)) {
-            final List<Blog> finalDbList = dbList;
-            executorService.execute(() -> {
-                log.info("重建博客热榜 ZSet");
-                zSetIdManager.saveToZSet(RedisConstants.BLOG_HOT_RANK_KEY, finalDbList, Blog::getId, Blog::getCreateTime);
+                    // 推进计算队列等候定时长函数处理真正的衰减和融合热度分
+                    if (RedisConstants.BLOG_CALC_QUEUE_KEY != null) {
+                        redisService.setCacheSet(RedisConstants.BLOG_CALC_QUEUE_KEY, finalDbList.stream().map(b -> String.valueOf(b.getId())).collect(Collectors.toSet()));
+                    }
+                });
 
-                // 推进计算队列等候定时长函数处理真正的衰减和融合热度分
-                if (RedisConstants.BLOG_CALC_QUEUE_KEY != null) {
-                    redisService.setCacheSet(RedisConstants.BLOG_CALC_QUEUE_KEY, finalDbList.stream().map(b -> String.valueOf(b.getId())).collect(Collectors.toSet()));
+                // 手动分页截取当前页数据
+                int start = (current - 1) * SystemConstants.MAX_PAGE_SIZE;
+                int pageSize = SystemConstants.MAX_PAGE_SIZE;
+                if (dbList.size() > start) {
+                    blogList = dbList.subList(start, Math.min(start + pageSize, dbList.size()));
                 }
-            });
-
-            // 手动分页截取当前页数据
-            int start = (current - 1) * SystemConstants.MAX_PAGE_SIZE;
-            int pageSize = SystemConstants.MAX_PAGE_SIZE;
-            if (dbList.size() > start) {
-                blogList = dbList.subList(start, Math.min(start + pageSize, dbList.size()));
             }
-        }
 
-        List<BlogVO> voList = convertToBlogVOList(blogList);
-        queryBlogListUserMessage(voList);
-        queryBlogListIsLike(voList);
-        return voList;
+            List<BlogVO> voList = convertToBlogVOList(blogList);
+            queryBlogListUserMessage(voList);
+            queryBlogListIsLike(voList);
+            return voList;
+        }
+        return Collections.emptyList();
     }
 
 

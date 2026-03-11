@@ -14,10 +14,11 @@ import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
 
 /**
- * 用户聊天消息Controller
+ * 用户私聊消息控制器
+ * 处理私聊消息的发送、历史记录分页查询以及聊天历史日期范围的获取。
  * 
- * @author 木木林
- * @date 2025-10-05
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/message")
@@ -27,7 +28,11 @@ public class ChatMessagesController extends BaseController
     private IChatMessagesService chatMessagesService;
 
     /**
-     * 查询用户聊天消息列表
+     * 分页查询指定会话的聊天消息列表
+     * 
+     * @param chatMessages 查询条件（需包含 sessionId）
+     * @param current 当前页码
+     * @return 消息列表 R 对象
      */
     @GetMapping("/list")
     public Result list(ChatMessages chatMessages,@RequestParam(value = "current",defaultValue = "1") Integer current)
@@ -47,7 +52,11 @@ public class ChatMessagesController extends BaseController
     }
 
     /**
-     * 新增用户聊天消息
+     * 发送/推送一条私聊消息
+     * 逻辑包含异步推送到 MQ 以及持久化到数据库。
+     * 
+     * @param chatMessages 消息实体
+     * @return 发送结果 AjaxResult
      */
     @Log(title = "用户聊天消息", businessType = BusinessType.INSERT)
     @PostMapping("/send")

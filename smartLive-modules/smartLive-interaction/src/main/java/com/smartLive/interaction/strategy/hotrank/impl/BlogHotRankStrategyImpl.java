@@ -16,7 +16,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 博客本身的人气榜，按收藏/点赞独立计算 
+ * 博客热度计算策略实现
+ * 
+ * 核心逻辑：
+ * 1. 监听 Redis 计算队列中的活跃博客 ID。
+ * 2. 结合点赞、评论、收藏等互动数据，按照《SmartLive 热度评分体系》进行加权打分。
+ * 3. 维护 ZSet 排行榜，并支持基于 30 天线性衰减的时间加成，确保新内容能够获得曝光。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Slf4j
 @Component
@@ -30,6 +38,12 @@ public class BlogHotRankStrategyImpl extends AbstractHotRankStrategy {
         return GlobalBizTypeEnum.BLOG.getCode(); 
     }
     
+    /**
+     * 增量计算并刷新热度榜单
+     * 1. 从活跃队列中提取近期有互动（点赞/收藏等）的博客。
+     * 2. 融合当前榜单前 N 名，确保头部数据的竞争实时性。
+     * 3. 重新计算分数并更新 Redis ZSet。
+     */
     @Override
     public void calculateAndRefreshRank() {
         String calcKey = RedisConstants.BLOG_CALC_QUEUE_KEY;
@@ -77,6 +91,10 @@ public class BlogHotRankStrategyImpl extends AbstractHotRankStrategy {
         }
     }
 
+    /**
+     * 全量重建博客榜单任务
+     * 通常在系统初始化或算法大幅调整时执行，遍历所有有效博客 ID 进行重建。
+     */
     @Override
     public void fullRebuildRank() {
         log.info("开始全量重建博客热榜...");
@@ -115,12 +133,27 @@ public class BlogHotRankStrategyImpl extends AbstractHotRankStrategy {
     }
 
     /**
-     * 博客热度打分公式（复用于增量和全量）
+     * 博客热度打分公式（参见《SmartLive 热度评分体系设计》第四章）
+     *
+     * hotScore = baseScore + liked × 0.4 + commentCount × 0.3 + stared × 0.2 + timeDecay × 0.1
+     * 初始分：普通用户 = 50, 达人/认证用户 = 65
+     * timeDecay = max(0, 30 - 发布天数)
+     *
+     * @param blog 博客信息
+     * @return 热度分（保留两位小数）
      */
     private double calcBlogScore(BlogVO blog) {
-        double likeWeight = 1.5D;
-        double commentWeight = 2.0D;
-        double interaction = safeInt(blog.getLiked()) * likeWeight + safeInt(blog.getComments()) * commentWeight + 1.0D;
-        return applyTimeDecay(interaction, blog.getPublishTime() == null ? null : blog.getPublishTime().getTime());
+        // 初始分：普通用户 = 50分
+        double baseScore = 50.0;
+
+        // 时间衰减：30天内的新内容有额外加成
+        double timeDecay = calcTimeDecay(blog.getPublishTime());
+
+        return roundScore(baseScore
+                + safeInt(blog.getLiked()) * 0.4       // 点赞数权重最高，内容质量核心指标
+                + safeInt(blog.getComments()) * 0.3    // 评论数，反映互动活跃度
+                + safeInt(blog.getStared()) * 0.2      // 收藏数，长期价值体现
+                + timeDecay * 0.1                      // 时间衰减，30天内新内容加成
+        );
     }
 }

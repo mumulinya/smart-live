@@ -27,13 +27,15 @@ public class AiSuggestQuestionController extends BaseController {
     private IAiSuggestQuestionService suggestQuestionService;
 
     /**
-     * Get 3 random suggestions
+     * 获取随机推荐问题
+     * 随机抽取 3 个预设的 AI 对话引导问题，显示在前端搜索框或聊天界面下方
+     *
+     * @return 包含问题内容列表的 Result
      */
     @GetMapping
     public Result getSuggestions() {
         List<AiSuggestQuestion> list = suggestQuestionService.getRandomSuggestions(3);
-        // Only return the content strings assuming frontend structure expects array of strings, 
-        // or we return the full objects. Let's return strings per current UI expectation.
+        // 仅返回内容字符串列表，符合前端 UI 渲染逻辑
         List<String> contents = list.stream().map(AiSuggestQuestion::getContent).collect(Collectors.toList());
         return Result.ok(contents);
     }

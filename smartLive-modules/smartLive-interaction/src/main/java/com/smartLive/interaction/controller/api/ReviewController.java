@@ -20,10 +20,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 评论Controller
+ * 评价（Review）管理控制层
+ * 处理针对店铺和商品的图文评价，支持分页检索、多维排序（按热门/时间）以及同步至向量库（Milvus）进行 AI 检索。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/review")
@@ -103,14 +104,24 @@ public class ReviewController extends BaseController
     }
 
     /**
-     * 获取评论列表
+     * 分页查询评价列表
+     * 支持热度（默认）与时间顺序混排。
+     *
+     * @param review  检索条件（资源 ID、类型等）
+     * @param current 页码
+     * @param sort    排序规则
+     * @return 评价视图对象列表
      */
     @GetMapping("/listReview")
     public Result listReview(Review review, @RequestParam("current") Integer current, @RequestParam(value = "sort", required = false) String sort){
         return Result.ok(reviewService.listReview(review, current, sort));
     }
     /**
-     * 添加评论
+     * 添加评价
+     * 允许用户对商品或服务提交新的评价。
+     *
+     * @param review 评价实体，包含评价内容、评分等信息
+     * @return 操作结果
      */
     @PostMapping("/addReview")
     public Result addReview(@RequestBody Review review)
@@ -123,6 +134,10 @@ public class ReviewController extends BaseController
     }
     /**
      * 修改评价
+     * 允许用户更新已提交的评价内容。
+     *
+     * @param review 评价实体，包含待更新的评价信息
+     * @return 操作结果
      */
     @PutMapping("/updateReview")
     public Result updateReview(@RequestBody Review review)
@@ -135,6 +150,10 @@ public class ReviewController extends BaseController
     }
     /**
      * 删除评价
+     * 允许用户删除自己的评价。
+     *
+     * @param review 评价实体，通常包含评价ID
+     * @return 操作结果
      */
     @PostMapping("/removeReview")
     public Result removeReview(@RequestBody Review review)
@@ -142,12 +161,23 @@ public class ReviewController extends BaseController
 
         return Result.ok(reviewService.deleteReview(review));
     }
+    /**
+     * 获取当前用户的评价列表
+     * 分页查询指定用户的所有评价。
+     *
+     * @param review  检索条件（如用户ID）
+     * @param current 页码
+     * @return 用户的评价列表
+     */
     @GetMapping("/of/user")
     public Result getReviewOfUser(Review review,@RequestParam("current") Integer current){
         return Result.ok(reviewService.getReviewOfUser(review,current));
     }
     /**
-     * 获取评论
+     * 根据ID获取评价详情
+     *
+     * @param id 评价ID
+     * @return 评价详情
      */
     @GetMapping("/getReview/{id}")
     public Result getReviewById(@PathVariable("id")Long id){
@@ -155,15 +185,19 @@ public class ReviewController extends BaseController
     }
 
     /**
-     * 判断当前用户是否评价过目标资源
+     * 判断当前用户是否已评价目标资源
+     *
+     * @param review 包含用户ID和目标资源ID/类型
+     * @return 是否已评价
      */
     @GetMapping("/isReview")
     public Result isReview(Review review){
         return Result.ok(reviewService.isReview(review));
     }
     /**
-     * 获取评价总数
-     * @return
+     * 获取指定条件的评价总数
+     * @param review 检索条件（如资源ID、类型）
+     * @return 评价总数
      */
     @GetMapping("/getReviewCount")
     R<Integer> getReviewCount(Review review){
@@ -171,8 +205,8 @@ public class ReviewController extends BaseController
     }
 
     /**
-     * 获取评论总数
-     * @return
+     * 获取所有评价的总数
+     * @return 所有评价的总数
      */
     @GetMapping("/getReviewTotal")
     R<Integer> getReviewTotal(){
@@ -180,7 +214,10 @@ public class ReviewController extends BaseController
     }
 
     /**
-     * 全量发布评价数据到向量库（仅 Milvus）。
+     * 全量发布评价数据到向量库（仅 Milvus）
+     * 将所有评价数据同步至向量数据库，用于支撑语义搜索及 AI 辅助分析功能。
+     *
+     * @return 同步结果
      */
     @PostMapping("/allPublish")
     public AjaxResult allPublish() {
@@ -188,7 +225,11 @@ public class ReviewController extends BaseController
     }
 
     /**
-     * 按指定 ID 发布评价数据到向量库（仅 Milvus）。
+     * 将指定的评价数据同步至向量数据库（Milvus）
+     * 用于支撑语义搜索及 AI 辅助分析功能。
+     *
+     * @param ids 评价 ID 数组
+     * @return 同步结果
      */
     @PostMapping("/publish/{ids}")
     public AjaxResult publish(@PathVariable String[] ids) {

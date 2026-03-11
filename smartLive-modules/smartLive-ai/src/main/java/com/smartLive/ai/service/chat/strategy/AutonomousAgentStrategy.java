@@ -87,6 +87,18 @@ public class AutonomousAgentStrategy implements AgentChatStrategy {
                 });
     }
 
+    /**
+     * 自主循环核心逻辑
+     * 1. 初始化对话历史，注入 System Prompt。
+     * 2. 进入 ReAct (Thought -> Action -> Observation) 循环。
+     * 3. 解析模型返回的 JSON，提取思考、行动和最终答案。
+     * 4. 如果是 REPLY，则结束循环并广播最终答案。
+     * 5. 如果是工具调用，则执行对应工具并将结果反馈给模型，继续下一轮迭代。
+     *
+     * @param userMessage 用户原始输入
+     * @param chatId 会话 ID
+     * @return 最终响应的 Flux 流
+     */
     private Flux<String> executeAutonomousLoop(String userMessage, String chatId) {
         List<Message> history = new ArrayList<>();
         history.add(new SystemMessage(SYSTEM_PROMPT));
@@ -144,6 +156,9 @@ public class AutonomousAgentStrategy implements AgentChatStrategy {
         });
     }
 
+    /**
+     * 从模型返回的混合文本中提取标准的 JSON 字符串
+     */
     private String extractJson(String text) {
         if (text == null) return "{}";
         int start = text.indexOf("{");
@@ -154,6 +169,14 @@ public class AutonomousAgentStrategy implements AgentChatStrategy {
         return text;
     }
 
+    /**
+     * 工具分发与执行逻辑
+     * 根据模型决策中的 action 名称，调度具体的 RAG 服务或工具方法
+     *
+     * @param action 工具名称（如 TOOL_SEARCH_PRODUCT）
+     * @param input 工具输入参数
+     * @return 工具执行后的文本结果
+     */
     private String executeTool(String action, String input) {
         try {
             switch (action) {

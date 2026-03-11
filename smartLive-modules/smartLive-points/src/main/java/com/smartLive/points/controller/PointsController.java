@@ -2,6 +2,7 @@ package com.smartLive.points.controller;
 
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.web.domain.Result;
+import com.smartLive.points.domain.DailySignIn;
 import com.smartLive.points.domain.vo.LotteryConfigVO;
 import com.smartLive.points.domain.vo.LotteryResultVO;
 import com.smartLive.points.domain.vo.WalletInfoVO;
@@ -40,10 +41,9 @@ public class PointsController {
     public Result getRecordList(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
-            @RequestParam(value = "type", defaultValue = "all") String type) {
+            @RequestParam(value = "type", required = false) Integer type) {
         Long userId = UserContextHolder.getUser().getId();
-        Map<String, Object> data = pointsService.getRecordList(userId, page, pageSize, type);
-        return Result.ok(data);
+        return Result.ok(pointsService.getRecordList(userId, page, pageSize, type));
     }
 
     /**
@@ -52,8 +52,8 @@ public class PointsController {
     @PostMapping("/sign_in")
     public Result signIn() {
         Long userId = UserContextHolder.getUser().getId();
-        Map<String, Object> data = pointsService.signIn(userId);
-        return Result.ok(data);
+        DailySignIn signIn = pointsService.signIn(userId);
+        return Result.ok(signIn);
     }
 
     /**

@@ -62,15 +62,17 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * 评价服务核心实现类
+ * 评价服务核心实现层
+ * 实现了针对全站各类资源（店铺、商品、代金券等）的图文评价管理。
  *
- * 架构说明：
- * 1. 坚持“单一职责原则”：本类仅处理评价业务의 CRUD、组装外部依赖（RPC）、以及发送数据到 Redis 缓存/消息队列。
- * 2. 动静分离设计：评价详情使用统一的 CACHE_REVIEW_KEY 进行存储，排行榜 ID 列表按业务隔离存储在 ZSet 中。
- * 3. 异步计算解耦：所有复杂的动态热度分计算均移交至 SyncDataServiceImpl 的 XXL-JOB 定时任务处理。
+ * 核心技术栈：
+ * 1. 动静分离逻辑：详情存 Cache，热算关系存 ZSet Rank。
+ * 2. 异步双轨计算：实时落库与异步重排并行，通过 XXL-JOB 实现衰减因子的精准热度算分。
+ * 3. AI 向量检索集成：同步评价数据至 Milvus 向量库，支撑语义维度的智能内容检索。
+ * 4. 自动化审核流：集成 AI 内容分析，实现评价发布的即时合规性检测。
  *
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Service
 @Slf4j
@@ -272,6 +274,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      *
      * @param review  查询条件（包含 sourceType 和 sourceId）
      * @param current 当前页码
+     * @param sort 排序方式
      * @return 组装好的评价视图列表
      */
     @Override
@@ -296,7 +299,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         List<Long> reviewIdList = longPage.getRecords();
 
         // 兜底逻辑：如果缓存击穿（ZSet 中没有数据），去 MySQL 查询并重建 ZSet 缓存
-        if (CollUtil.isEmpty(reviewIdList)) {
+        if (CollUtil.isEmpty(reviewIdList)&&current == 1) {
             log.info("Redis ZSet empty, querying DB for Review IDs");
             List<Review> dbList = query()
                     .eq("source_id", review.getSourceId())
@@ -603,7 +606,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             if (count != null) {
                 return count;
             }
-            // 2. 璁℃暟鍣ㄤ笉瀛樺湪锛屼粠 review 琛?COUNT 鏌ヨ骞跺洖鍐?Redis
+            // 2. 计数器不存在，从 review 表 COUNT 查询并回写 Redis
             count = query()
                     .eq("source_type", review.getSourceType())
                     .eq("source_id", review.getSourceId())
@@ -611,7 +614,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             redisService.setCacheObject(reviewCountKey, count);
             return count;
         }
-        // 閫氱敤鏉′欢鏌ヨ锛堝悗鍙扮鐞嗙瓑鍦烘櫙锛夛紝鐩存帴璧版暟鎹簱
+        // 通用条件查询（后台管理等场景），直接走数据库
         return query()
                 .eq(review.getSourceType() != null, "source_type", review.getSourceType())
                 .eq(review.getSourceId() != null, "source_id", review.getSourceId())
@@ -723,7 +726,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (CollUtil.isEmpty(reviewList)) {
             return;
         }
-        // 绛涢€夊嚭 sourceType 涓哄晢鍝佺被鍨嬬殑璇勪环锛屾敹闆嗗叾 sourceId 浣滀负鍟嗗搧ID
+        // 筛选出 sourceType 为商品类型的评价，收集其 sourceId 作为商品ID
         Integer productCode = GlobalBizTypeEnum.PRODUCT.getCode();
         List<Long> productIds = reviewList.stream()
                 .filter(r -> productCode.equals(r.getSourceType()) && r.getSourceId() != null)

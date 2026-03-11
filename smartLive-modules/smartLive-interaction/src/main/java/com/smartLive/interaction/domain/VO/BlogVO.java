@@ -11,9 +11,11 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * @Description: 博客VO
- * @Author: mumulin
- * @CreateTime: 2026-1-07 15:09
+ * 博客摘要视图对象
+ * 用于在 Feed 流或热榜中展示博客的基础信息及互动统计数据。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Data
 @AllArgsConstructor
@@ -68,4 +70,10 @@ public class BlogVO {
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date publishTime;  // 发布时间
+
+    /** 
+     * 收藏数
+     * 博客的长期价值指标，权重通常仅次于点赞。
+     */
+    private Integer stared;
 }

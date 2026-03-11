@@ -11,10 +11,11 @@ import com.smartLive.common.core.web.domain.BaseEntity;
 import java.util.Date;
 
 /**
- * 用户聊天消息对象 tb_chat_messages
+ * 用户聊天消息实体类
+ * 对应数据库表 chat_messages，记录用户间的私聊文本内容、发送状态及时间戳。
  * 
- * @author 木木林
- * @date 2025-10-05
+ * @author smartLive
+ * @date 2026-03-11
  */
 @TableName("chat_messages")
 @Data

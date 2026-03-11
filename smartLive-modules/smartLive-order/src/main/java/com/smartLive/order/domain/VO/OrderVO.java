@@ -112,4 +112,12 @@ public class OrderVO extends BaseEntity implements Serializable
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
+
+    /** 订单有效期开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date validStartTime;
+
+    /** 订单有效期截止时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date expireTime;
 }

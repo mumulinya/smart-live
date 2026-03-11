@@ -69,4 +69,15 @@ public class ShopVO {
     private String keyword;
 
     private Boolean isFollow;
+
+    /** 
+     * 收藏数
+     * 用于热度计算，代表用户的静态认可度。
+     */
+    private Integer stars;
+    /** 
+     * 关注数（粉丝数）
+     * 反映店铺的长期品牌力。
+     */
+    private Integer fans;
 }

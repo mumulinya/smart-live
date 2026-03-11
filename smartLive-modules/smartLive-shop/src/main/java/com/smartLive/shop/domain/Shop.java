@@ -13,10 +13,11 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 店铺对象 tb_shop
+ * 店铺实体类
+ * 记录店铺的基础信息、地理坐标以及收藏、评价、销量等统计指标。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @TableName("shop")
 @AllArgsConstructor
@@ -73,11 +74,12 @@ public class Shop extends BaseEntity implements Serializable
     /** 评论数量 */
     @Excel(name = "评论数量")
     private Integer reviews;
-    /** 收藏数量 */
+    /** 收藏数量 (基于互动模块同步) */
     @Excel(name = "收藏数量")
     private Integer stared;
-    /** fans count */
-    @Excel(name = "fans")
+
+    /** 粉丝数量 (基于关注模块同步) */
+    @Excel(name = "粉丝数")
     private Integer fans;
 
     /** 评分，1~5分，乘10保存，避免小数 */

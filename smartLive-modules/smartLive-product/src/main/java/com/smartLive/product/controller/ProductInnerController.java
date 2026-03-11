@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 商品内部 Controller。
+ * 商品模块内部 RPC 接口控制器
+ * 供其他微服务（如 Order, AI, Search）通过 Feign 进行跨模块调用
  */
 @RestController
 @RequestMapping("/inner/product")
@@ -21,7 +22,8 @@ public class ProductInnerController extends BaseController {
     private IProductService productService;
 
     /**
-     * 购买商品（统一入口）。
+     * 跨模块购买商品（统一入口）
+     * 常由 AI 模块在会话中直接触发抢购时调用
      */
     @PostMapping("/purchase")
     public Long purchaseProduct(@RequestParam("id") Long productId, @RequestParam("userId") Long userId) {
@@ -29,7 +31,10 @@ public class ProductInnerController extends BaseController {
     }
 
     /**
-     * 扣减库存（OrderService 调用）。
+     * 扣减库存（由 OrderService 订单生成流程中调用）
+     *
+     * @param productId 商品 ID
+     * @return 是否扣减成功
      */
     @PostMapping("/deductStock/{id}")
     public Boolean deductStock(@PathVariable("id") Long productId) {
@@ -37,7 +42,7 @@ public class ProductInnerController extends BaseController {
     }
 
     /**
-     * 恢复库存。
+     * 恢复库存（发生退款或订单取消时调用）
      */
     @PostMapping("/recoverStock/{id}")
     public Boolean recoverStock(@PathVariable("id") Long productId,@RequestParam(value = "userId", required = false) Long userId) {
@@ -53,7 +58,7 @@ public class ProductInnerController extends BaseController {
     }
 
     /**
-     * 获取商品列表（内部）。
+     * 批量查询商品详情列表（内部）
      */
     @PostMapping("/listProduct")
     public List<Product> listProduct(@RequestBody Product product) {
@@ -144,5 +149,17 @@ public class ProductInnerController extends BaseController {
     public Integer getSold(@PathVariable("id") Long id) {
         ProductVO product = productService.getProductById(id);
         return product != null ? product.getSold() : 0;
+    }
+
+    /**
+     * 获取全部商品ID列表
+     * 专门供给热榜模块在凌晨进行全量重建时调用，以最小开销获取所有合法的商品ID。
+     * @return ID 列表
+     */
+    @GetMapping("/getAllProductIds")
+    public List<Long> getAllProductIds() {
+        return productService.list().stream()
+                .map(Product::getId)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

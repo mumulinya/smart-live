@@ -21,10 +21,11 @@ import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.page.TableDataInfo;
 
 /**
- * 店铺Controller
+ * 店铺管理控制层
+ * 提供店铺的 CRUD 维护、热门排行榜分页查询、地理位置搜索及索引全量发布功能。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 
@@ -34,7 +35,11 @@ public class ShopController extends BaseController {
     private IShopService shopService;
 
     /**
-     * 分页查询店铺列表
+     * 分页查询店铺列表 (后台管理场景)
+     * 支持根据店铺名称、分类、地址等字段进行多条件模糊匹配。
+     *
+     * @param shop 店铺查询实体
+     * @return 分页后的店铺数据表格
      */
     @RequiresPermissions("business:shop:list")
     @GetMapping("/list")
@@ -107,6 +112,7 @@ public class ShopController extends BaseController {
      * 根据商铺名称关键字分页查询商铺信息
      *
      * @param name    商铺名称关键字
+     * @param area    区域关键字
      * @param current 页码
      * @return 商铺列表
      */
@@ -150,8 +156,17 @@ public class ShopController extends BaseController {
     }
     /**
      * 获取热门店铺排行榜 (大一统分页接口)
-     * 首页调用：传 current=1, size=10
-     * 榜单页调用：传 current=n, size=10
+     * 
+     * 核心逻辑：
+     * 1. 优先从 Redis 缓存中获取已按热度分排序的店铺序列。
+     * 2. 若提供坐标 (x,y)，则联动地理位置距离进行权重微调。
+     * 3. 首页推荐场景通常传 current=1, size=10。
+     *
+     * @param current 当前页码
+     * @param size    每页数量
+     * @param x       用户当前经度 (可选)
+     * @param y       用户当前纬度 (可选)
+     * @return 热门店铺 VO 列表
      */
     @GetMapping("/hot/rank")
     public Result getHotShopRank(
@@ -178,10 +193,11 @@ public class ShopController extends BaseController {
     }
 
     /**
-     * 根据多个店铺id查询店铺列表
+     * 根据多个店铺 ID 批量查询店铺详情
+     * 常用于购物车、收藏夹等需要展示多个店铺基础信息的场景。
      *
-     * @param ids 逗号分隔的店铺id列表
-     * @return 店铺详情数据列表
+     * @param ids 逗号分隔的店铺 ID 字符串 (例如: "1,2,3")
+     * @return 店铺详情 VO 列表
      */
     @GetMapping("/listByIds")
     public Result queryShopByIds(@RequestParam("ids") String ids) {

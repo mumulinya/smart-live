@@ -21,6 +21,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+/**
+ * 关注订阅流（Feed）业务实现类
+ * 实现了基于 Redis ZSet 的“推拉结合”订阅流模型。
+ * 
+ * 核心逻辑：
+ * 1. 采用滚动分页（Scroll Pagination）避免传统分页在大数据量下的深翻页性能问题。
+ * 2. 支持多种动作记录（发布、更新等）的聚合展示。
+ * 3. 实现了动态资源策略匹配，透明处理不同业务实体（博客、商品等）的详情装配。
+ */
 @Service
 @Slf4j
 public class feedServiceImpl implements IFeedService {
@@ -28,6 +37,14 @@ public class feedServiceImpl implements IFeedService {
     RedisService redisService;
     @Autowired
     private ResourceStrategyFactory resourceStrategyFactory;
+    /**
+     * 【核心读链路】分页查询用户的 Feed 流列表
+     * 
+     * @param feedType 订阅流类型（关注的人、推荐系统等）
+     * @param max 上一次查询的最小分值（时间戳），用于滚动游标
+     * @param offset 相同分值下的偏移量
+     * @return 包含聚合详情与滚动游标的结果集
+     */
     @Override
     public ScrollResult queryFeedList(Integer feedType, Long max, Integer offset) {
         if(UserContextHolder.getUser() == null){

@@ -11,10 +11,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 收藏服务内部接口
+ * 收藏服务内部控制层
+ * 为微服务架构提供收藏状态查询、统计及批量校验等 RPC 接口，主要由 Shop、Product 等模块通过 Feign 调用。
  *
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/inner/star")

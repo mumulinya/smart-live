@@ -40,6 +40,9 @@ public class RedisMqIdempotentConstants {
     /** 商品模块前缀 */
     public static final String PRODUCT_PREFIX = MQ_IDEMPOTENT_PREFIX + "product:";
 
+    /** 积分模块前缀 */
+    public static final String POINTS_PREFIX = MQ_IDEMPOTENT_PREFIX + "points:";
+
     /** 默认幂等 key 过期时间（秒）：24小时 */
     public static final long DEFAULT_TTL_SECONDS = 86400L;
 

@@ -57,10 +57,16 @@ import com.smartLive.shop.service.IShopService;
 import jakarta.annotation.Resource;
 
 /**
- * 店铺Service业务层处理
+ * 店铺业务实现类
+ * 
+ * 核心职能：
+ * 1. 维护店铺基础信息，并同步触发 Elasticsearch 与 Milvus 搜索引擎索引。
+ * 2. 整合 Redis 多级缓存管理，解决高并发下的缓存穿透与缓存击穿（逻辑过期/互斥锁模式）。
+ * 3. 联动互动模块接口，异步获取/更新店铺的收藏、关注、销量及评论数指标。
+ * 4. 实现基于 Redis GEO 数据集的地理位置附近搜索与排行榜计算。
  *
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Service
 @Slf4j
@@ -145,7 +151,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         int i = shopMapper.insertShop(shop);
         if(i > 0){
             flashShopListRedisCache(shop.getTypeId());
-            publish(new String[]{shop.getId().toString()});
             //发送审核信息
             sendAuditMessage(shop);
         }
@@ -181,10 +186,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 批量删除店铺
+     * 实现分页删除店铺逻辑
+     * 1. 物理删除数据库记录。
+     * 2. 异步发送 MQ 消息同步清除搜索引擎 (ES/Milvus) 索引。
+     * 3. 立即清除 Redis 分类列表缓存及详情缓存。
      *
-     * @param ids 需要删除的店铺主键
-     * @return 结果
+     * @param ids 需要删除的店铺主键集合
+     * @return 删除行数
      */
     @Override
     public int deleteShopByIds(String[] ids) {
@@ -264,10 +272,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private CacheClient cacheClient;
 
     /**
-     * 根据id查询商铺信息
+     * 根据 ID 获取商铺详情
+     * 采用“逻辑过期”结合“空值缓存”的综合策略解决缓存击穿与穿透问题。
+     * 内部还会联动互动模块查询当前用户是否收藏或关注了该店铺。
      *
-     * @param id 商铺id
-     * @return 商铺详情数据
+     * @param id 商铺 ID
+     * @return 增强后的商铺 VO
      */
     @Override
     public ShopVO queryById(Long id) {
@@ -277,7 +287,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 //        Shop shop = queryWithMutex(id);
         //逻辑过期来解决缓存击穿
 //        Shop shop = queryWithLogicalExpire(id);
-        //缓存穿透,使用工具类CacheClient
+        // 利用 CacheClient 工具类封装逻辑过期与防穿透逻辑
         Shop shop = cacheClient.queryWithLogicalExpireAndPassThrough(RedisConstants.CACHE_SHOP_KEY, id, Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         //逻辑过期解决缓存击穿 使用工具类CacheClient
 //        Shop shop = cacheClient.queryWithLogicalExpire(RedisConstants.CACHE_SHOP_KEY, id, Shop.class,this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
@@ -285,9 +295,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             return null;
         }
         ShopVO shopVO = convertToShopVO(shop);
-        //是否收藏
+        // 渲染当前用户的互动状态：收藏与关注
         isShopStared(shopVO);
-        //是否关注
         isShopFollowed(shopVO);
         return shopVO;
     }
@@ -372,10 +381,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
 
     /**
-     * 逻辑过期解决缓存击穿：不删缓存，返回旧数据并异步重建
+     * 逻辑过期策略方案：
+     * 用于解决极高并发下的“缓存击穿”。即使缓存过期，先返回旧数据，
+     * 同时开启后台线程异步查询数据库并更新缓存，从而保证系统吞吐量。
      *
-     * @param id 店铺ID
-     * @return 店铺实体，缓存不存在返回null
+     * @param id 店铺 ID
+     * @return 包含逻辑过期数据的店铺对象
      */
     public Shop queryWithLogicalExpire(Long id) {
         String key = RedisConstants.CACHE_SHOP_KEY + id;
@@ -523,14 +534,16 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         return convertToShopVO(shop);
     }
     /**
-     * 根据条件查询商铺信息
+     * 多维度条件搜索商铺逻辑
+     * 支持分类过滤、关键字模糊匹配（名称/地址）以及地理坐标 (X,Y) 距离排序。
      *
-     * @param shop 搜索条件
-     * @return 搜索结果
+     * @param shop 包含搜索条件的实体 (包含用户坐标)
+     * @return 根据距离从近到远排序的商铺列表
      */
     @Override
     public List<ShopVO> getShopByCondition(Shop shop) {
         QueryWrapper<Shop> wrapper = new QueryWrapper<>();
+        // 利用 MySQL 函数计算球面距离
         String distanceSql = "ST_Distance_Sphere(point(x, y), point(" + shop.getX() + ", " + shop.getY() + ")) as distance";
         wrapper.select("*, " + distanceSql);
         // 1. 分类条件
@@ -607,9 +620,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 刷新商铺缓存
+     * 手动触发商铺全量缓存刷新
+     * 1. 清除并重建基于分类的商铺列表 Redis 缓存。
+     * 2. 清除并重建基于 Redis GEO 索引的商铺坐标缓存（用于附近搜索）。
      *
-     * @return 刷新结果
+     * @return 刷新任务执行结果
      */
     @Override
     public String flushCache() {
@@ -681,9 +696,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 全部发布店铺
+     * 全量发布店铺数据至搜索引擎
+     * 采用分页查询数据库并利用线程池异步发送 MQ 批量同步消息，确保 ES 与 Milvus 数据最新。
      *
-     * @return 全部发布结果
+     * @return 发布任务启动说明
      */
     @Override
     public String allPublish() {
@@ -764,10 +780,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 批量更新商铺收藏数
+     * 批量更新商铺收藏数 (统计逻辑)
+     * 1. 采用分包批处理模式，防止 SQL 参数过长。
+     * 2. 更新后同步刷新 Redis 详情缓存及全量热度缓存。
      *
-     * @param updateMap 商铺id和收藏数
-     * @return 更新结果
+     * @param updateMap 店铺 ID -> 收藏增量
+     * @return 执行结果
      */
     @Override
     public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
@@ -938,6 +956,14 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             if (shop != null && shop.getTypeId() != null) {
                 flashShopListRedisCache(shop.getTypeId());
             }
+            // 如果审核通过，则进行搜索引擎同步并加入Redis相关队列
+            if (AuditStatusEnum.PASS.getCode() == status) {
+                publish(new String[]{id.toString()});
+                String hotRankKey = RedisConstants.SHOP_HOT_RANK_KEY;
+                double score = shop != null && shop.getCreateTime() != null ? (double) shop.getCreateTime().getTime() : (double) System.currentTimeMillis();
+                redisService.setCacheZSet(hotRankKey, id.toString(), score);
+                redisService.setCacheSet(RedisConstants.SHOP_CALC_QUEUE_KEY, id.toString());
+            }
         }
         return updated;
     }
@@ -969,7 +995,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         Page<Long> longPage = zSetIdManager.pageIds(RedisConstants.SHOP_HOT_RANK_KEY, null, current, SystemConstants.MAX_PAGE_SIZE);
         List<Long> shopIdList = longPage.getRecords();
 
-        if (CollUtil.isEmpty(shopIdList)) {
+        if (CollUtil.isEmpty(shopIdList)&&current == 1) {
             // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
             log.info("店铺热榜 ZSet 为空，走数据库兜底查询");
             List<Shop> dbList = query()

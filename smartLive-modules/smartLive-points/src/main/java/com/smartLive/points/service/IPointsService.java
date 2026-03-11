@@ -1,5 +1,6 @@
 package com.smartLive.points.service;
 
+import com.smartLive.points.domain.DailySignIn;
 import com.smartLive.points.domain.PointsRecord;
 import com.smartLive.points.domain.vo.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,10 +29,10 @@ public interface IPointsService {
      * @param userId   用户ID
      * @param page     页码
      * @param pageSize 每页数量
-     * @param type     筛选类型 all/in/out
+     * @param type     筛选类型
      * @return 分页结果
      */
-    Map<String, Object> getRecordList(Long userId, Integer page, Integer pageSize, String type);
+    List<PointsRecordVO> getRecordList(Long userId, Integer page, Integer pageSize,Integer type);
 
     /**
      * 执行签到
@@ -39,7 +40,7 @@ public interface IPointsService {
      * @param userId 用户ID
      * @return 签到结果
      */
-    Map<String, Object> signIn(Long userId);
+    DailySignIn signIn(Long userId);
 
     /**
      * 获取抽奖配置

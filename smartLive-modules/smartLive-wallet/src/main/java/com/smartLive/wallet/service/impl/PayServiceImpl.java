@@ -43,9 +43,11 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 支付服务实现 (Strategy Pattern)
+ * 支付基础服务实现类 (采用策略模式)
+ * 负责聚合支付下单、异步回调的通用处理逻辑、支付状态的主动查询以及订单超时的延迟任务触发。
  *
  * @author smartLive
+ * @date 2026-03-11
  */
 @Slf4j
 @Service
@@ -90,6 +92,17 @@ public class PayServiceImpl implements IPayService {
     // 1. 统一下单
     // ==========================================
 
+    /**
+     * 统一下单入口
+     * 1. 自动根据业务类型解析金额
+     * 2. 检查幂等性，对于同一业务单据复用支付流水
+     * 3. 落地本地流水表并发送延迟取消消息
+     * 4. 路由至具体的支付策略（微信/支付宝/余额）进行网络下单
+     * 
+     * @param userId 操作用户
+     * @param dto 下单参数
+     * @return 支付指令响应
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UnifiedPayVO unifiedOrder(Long userId, UnifiedPayDTO dto) {
@@ -143,6 +156,10 @@ public class PayServiceImpl implements IPayService {
     // 2. 查询支付状态
     // ==========================================
 
+    /**
+     * 主动向第三方通道同步支付结果
+     * 解决前端轮询时数据库尚未收到异步回调的问题。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PayStatusVO queryPayStatus(String paySn) {
@@ -307,7 +324,10 @@ public class PayServiceImpl implements IPayService {
     // ==========================================
 
     /**
-     * 通用回调业务处理
+     * 核心业务处理逻辑：
+     * 1. 校验单据存在性与金额一致性
+     * 2. 更新本地支付流水状态（成功/失败）
+     * 3. 根据业务类型 (充值/订单支付) 分发后续逻辑
      */
     private void processCallback(String paySn, String transactionId, BigDecimal callbackAmount, boolean isSuccess) {
         PaymentRecord record = findByPaySn(paySn);
@@ -380,7 +400,8 @@ public class PayServiceImpl implements IPayService {
     }
 
     /**
-     * 业务分发
+     * 业务逻辑分发器
+     * 处理充值入账或订单状态变更。
      */
     private void dispatchBusiness(PaymentRecord record) {
         String bizType = record.getBizType();
@@ -388,6 +409,7 @@ public class PayServiceImpl implements IPayService {
 
         if (BIZ_TYPE_RECHARGE.equals(bizType)) {
             try {
+                // 1. 钱包充值入账
                 walletService.recharge(record.getUserId(), record.getAmount());
                 log.info("充值成功, userId={}, amount={}", record.getUserId(), record.getAmount());
             } catch (Exception e) {
@@ -396,7 +418,7 @@ public class PayServiceImpl implements IPayService {
             }
         } else if (BIZ_TYPE_ORDER.equals(bizType)) {
             try {
-                // 1. 记录账单流水
+                // 1. 记录账单明细
                 walletService.recordOrderPayment(
                         record.getUserId(),
                         record.getAmount(),
@@ -404,10 +426,10 @@ public class PayServiceImpl implements IPayService {
                         record.getPayMethod()
                 );
 
-                // 2. 映射支付方式到 PayTypeConstants
+                // 2. 映射支付方式映射
                 int payType = mapPayType(record.getPayMethod());
 
-                // 3. Feign调用订单模块更新订单状态
+                // 3. RPC通知订单中心更新状态
                 Long orderId = Long.parseLong(record.getBizId());
                 Integer result = remoteOrderService.paySuccess(orderId, payType);
                 if (result == null || result <= 0) {

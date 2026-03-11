@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Factory to retrieve the appropriate HotRankStrategy.
+ * 热榜评分策略工厂
+ * 用于根据业务类型动态获取对应的热榜算分策略实现。
  */
 @Component
 public class HotRankStrategyFactory {
@@ -23,6 +24,11 @@ public class HotRankStrategyFactory {
         }
     }
 
+    /**
+     * 根据业务类型编码获取热榜策略
+     * @param type 业务类型编码 (GlobalBizTypeEnum)
+     * @return 对应的策略实现，未找到则返回 null
+     */
     public HotRankStrategy getStrategy(Integer type) {
         return strategyMap.get(type);
     }

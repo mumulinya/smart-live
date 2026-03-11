@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 评论返回对象 (View Object)
- * 用于前端展示评论详情
+ * 评论视图对象 (View Object)
+ * 用于前端展现评论及其关联的用户、点赞状态、资源信息。
  *
- * @author mumulin
- * @date 2025-10-02
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Data
 @AllArgsConstructor

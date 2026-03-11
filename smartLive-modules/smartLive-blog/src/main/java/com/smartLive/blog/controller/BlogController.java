@@ -17,10 +17,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 博客管理外部接口
+ * 博客管理控制器
+ * 提供了博客的发布、修改、后台管理列表以及移动端热门/分类/个人博文流的查询接口。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/blog")
@@ -67,7 +68,10 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 刷新博客缓存
+     * 刷新博客详情缓存与排行榜。
+     * 适用于数据大面积变动或缓存异常时的手动重置。
+     *
+     * @return 刷新成功标识
      */
     @GetMapping("/flushCache")
     public AjaxResult flushCache() {
@@ -182,9 +186,10 @@ public class BlogController extends BaseController
         return Result.ok(blogService.queryBlogById(id));
     }
     /**
-     * 设置博客是否置顶
-     * @param blog 博客实体
-     * @return 操作结果
+     * 设置/取消博客置顶
+     * 
+     * @param blog 博客实体（需包含 id 和 isPin 状态）
+     * @return 操作成功信息或失败提示
      */
     @PutMapping("/isPin")
     public Result isPin(@RequestBody Blog blog){
@@ -195,7 +200,9 @@ public class BlogController extends BaseController
             return Result.fail("操作失败");
     }
     /**
-     * 全量发布博客
+     * 全量发布/同步博客数据至搜索库与向量库
+     *
+     * @return 触发结果
      */
     @PostMapping("/allPublish")
     public AjaxResult allPublish() {
@@ -203,7 +210,10 @@ public class BlogController extends BaseController
     }
 
     /**
-     * 发布指定ID的博客
+     * 批量发布/同步指定 ID 的博客
+     *
+     * @param ids 博客 ID 数组
+     * @return 触发结果
      */
     @PostMapping("/publish/{ids}")
     public AjaxResult allPublish(@PathVariable String[] ids) {

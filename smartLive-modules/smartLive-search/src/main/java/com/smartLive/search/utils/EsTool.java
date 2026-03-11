@@ -3,8 +3,6 @@ package com.smartLive.search.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.ResourceTypeConstants;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.ResourceTypeEnum;
 import com.smartLive.search.domain.BlogDoc;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
@@ -15,20 +13,27 @@ import org.elasticsearch.search.SearchHit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * ES 搜索引擎核心工具类
+ * 提供 Java 对象与 ES JSON Map 之间的双向转换，以及基于索引类型的搜索字段动态获取。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
+ */
 public class EsTool {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-
-    private EsTool() {
-
-    }
+    private EsTool() {}
 
     /**
-     * 将数据对象转换为JSON格式的Map
+     * 将业务领域对象 (BlogDoc, ShopDoc, etc.) 适配为 ES 索引要求的 JSON Map。
+     * 包含对地理位置坐标 (location) 和时间戳 (TimeMillis) 的特殊转换。
+     * 
+     * @param data 原始实体对象
+     * @return 符合 ES Mapping 的 Map 格式
      */
    public static Map<String, Object> convertToJsonMap(Object data) {
-       System.out.println("进入转换格式："+data);
         Map<String, Object> jsonMap = new HashMap<>();
 
         if (data instanceof BlogDoc) {
@@ -53,7 +58,7 @@ public class EsTool {
             jsonMap.put("shopLogo", shop.getShopLogo());
             jsonMap.put("area", shop.getArea());
             jsonMap.put("address", shop.getAddress());
-            // 处理地理位置
+            // LBS 特殊映射：将 x/y 坐标包装为 ES 的 geo_point 对象
             if (shop.getX() != null && shop.getY() != null) {
                 Map<String, Double> location = new HashMap<>();
                 location.put("lat", shop.getY());
@@ -86,8 +91,6 @@ public class EsTool {
             jsonMap.put("id", product.getId());
             if (product.getShopId() != null && !product.getShopId().isEmpty()) {
                 jsonMap.put("shopId", Long.valueOf(product.getShopId().split(",")[0]));
-            } else {
-                jsonMap.put("shopId", null);
             }
             jsonMap.put("name", product.getName());
             jsonMap.put("subTitle", product.getSubTitle());
@@ -109,13 +112,12 @@ public class EsTool {
                 jsonMap.put("createTime", product.getCreateTime().getTime());
             }
         }
-
         return jsonMap;
     }
-    /**
-     * 根据数据类型获取索引的默认搜索字段
-     */
 
+    /**
+     * 根据业务类型代码获取需要参与搜索匹配的字段列表
+     */
     public static String[] getDefaultSearchFields(Integer type) {
         switch (type) {
             case ResourceTypeConstants.BLOG_CODE: return new String[]{"title", "content", "name"};
@@ -125,21 +127,17 @@ public class EsTool {
             default: return new String[]{};
         }
     }
+
     /**
-     * 根据数据类型将搜索结果转换为对象列表
+     * 自动解析搜索响应并转换为强类型列表
      */
     public static List<? extends Object> convertSearchResult(Integer type, SearchResponse response) throws Exception {
         switch (type) {
-            case ResourceTypeConstants.BLOG_CODE:
-                return ResponseConverter.convertToBlogList(response);
-            case ResourceTypeConstants.SHOP_CODE:
-                return ResponseConverter.convertToShopList(response, null);
-            case ResourceTypeConstants.USER_CODE:
-                return ResponseConverter.convertToUserList(response);
-            case ResourceTypeConstants.PRODUCT_CODE:
-                return ResponseConverter.convertToProductList(response);
+            case ResourceTypeConstants.BLOG_CODE: return ResponseConverter.convertToBlogList(response);
+            case ResourceTypeConstants.SHOP_CODE: return ResponseConverter.convertToShopList(response, null);
+            case ResourceTypeConstants.USER_CODE: return ResponseConverter.convertToUserList(response);
+            case ResourceTypeConstants.PRODUCT_CODE: return ResponseConverter.convertToProductList(response);
             default:
-                // 返回原始命中数据
                 List<Map<String, Object>> result = new ArrayList<>();
                 for (SearchHit hit : response.getHits().getHits()) {
                     result.add(hit.getSourceAsMap());
@@ -147,10 +145,10 @@ public class EsTool {
                 return result;
         }
     }
-    /**
-     * 获取索引的默认搜索字段
-     */
 
+    /**
+     * 根据索引名称获取其默认的全文检索字段
+     */
     public static String[] getDefaultSearchFields(String indexName) {
         switch (indexName) {
             case EsIndexNameConstants.BLOG_INDEX_NAME: return new String[]{"title", "content", "name"};
@@ -184,49 +182,34 @@ public class EsTool {
     }
 
     /**
-     * 批量转换LinkedHashMap列表到指定类型
+     * 批量转换 Map 列表到特定 Doc 类型
+     * 兼容 LinkedHashMap (Jackson 默认) 和强类型实体。
      */
     @SuppressWarnings("unchecked")
     public static <T> List<T> convertList(List<Object> dataList, Class<T> targetClass) {
-        if (dataList == null) {
-            return new ArrayList<>();
-        }
-
+        if (dataList == null) return new ArrayList<>();
         return dataList.stream()
                 .map(item -> {
                     try {
-                        if (item instanceof LinkedHashMap) {
-                            // 处理Feign传输的LinkedHashMap
-                            return convertToObject((LinkedHashMap<String, Object>) item, targetClass);
-                        } else if (targetClass.isInstance(item)) {
-                            // 如果已经是目标类型，直接返回
-                            return (T) item;
-                        } else {
-                            System.err.println("无法转换的类型: " + item.getClass().getName() + " 到 " + targetClass.getName());
-                            return null;
-                        }
+                        if (item instanceof LinkedHashMap) return convertToObject((LinkedHashMap<String, Object>) item, targetClass);
+                        else if (targetClass.isInstance(item)) return (T) item;
+                        return null;
                     } catch (Exception e) {
-                        System.err.println("转换失败: " + e.getMessage());
                         return null;
                     }
                 })
-                .filter(item -> item != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
     /**
-     * 将LinkedHashMap转换为特定类型的对象
+     * 将单条 Map 数据映射为 Java Bean
      */
-    @SuppressWarnings("unchecked")
     public static <T> T convertToObject(Map<String, Object> map, Class<T> targetClass) {
         try {
             return objectMapper.convertValue(map, targetClass);
         } catch (Exception e) {
-            System.err.println("转换Map到" + targetClass.getSimpleName() + "失败: " + e.getMessage());
             return null;
         }
     }
-
-
 }
-

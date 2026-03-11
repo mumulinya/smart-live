@@ -22,16 +22,20 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * AI 消息业务实现类
+ * 
+ * 核心流程：
+ * 1. 聊天入口会根据会话 ID 重建 ChatMemory（优先从 Redis 获取，缺失则回源数据库）
+ * 2. 实时保存用户发送的消息及 AI 生成的消息到 message 数据表
+ * 3. 异步维护 Redis 中的消息分片缓存，优化上下文窗口加载性能
+ * 4. 内置推荐卡片识别逻辑，通过 card_render 事件推送给前端进行 UI 渲染
+ *
+ * @author smartLive
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
-/**
- * 聊天入口：
- * 1. 先按会话重建 ChatMemory（优先 Redis，miss 再查 DB）
- * 2. 当前轮 user/assistant 消息继续由业务层写入 message 表
- * 3. 每次落库后同步追加到 Redis 记忆缓存，降低后续回源成本
- * 4. 推荐卡片额外透出 card_render 事件给前端
- */
 public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> implements IMessageService {
 
     private final ISessionService sessionService;
@@ -39,6 +43,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private final MessageTableChatMemoryManager chatMemoryManager;
     private final RecommendationCardHelper recommendationCardHelper;
 
+    /**
+     * 分页查询会话详情中的消息列表
+     * 自动处理列表反转，保证时间轴从旧到新展示
+     *
+     * @param current 当前页
+     * @param sessionId 会话 ID
+     * @return 排序好的消息列表
+     */
     @Override
     public List<Message> selectMessageList(Integer current, Long sessionId) {
         List<Message> list = query().eq("session_id", sessionId)
@@ -49,6 +61,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return list;
     }
 
+    /**
+     * 保存单条消息记录并更新会话活跃时间
+     *
+     * @param sessionId 会话 ID
+     * @param role 角色（user/assistant）
+     * @param content 消息内容
+     * @return 已持久化的消息对象
+     */
     @Override
     public Message saveMessage(Long sessionId, String role, String content) {
         Message message = new Message();
@@ -67,6 +87,18 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return message;
     }
 
+    /**
+     * AI 对话核心流式接口
+     * 
+     * 1. 组装 AI 请求 DTO (AIChatRequest)
+     * 2. 重建历史记忆 (ChatMemory)
+     * 3. 流式调用大模型，实时通过 SSE 推送给前端
+     * 4. 识别并提取流中的 JSON 文本，转化为推荐卡片事件
+     * 5. 对话结束后异步持久化助手回答
+     *
+     * @param messageDTO 原始请求参数
+     * @return SSE 事件流
+     */
     @Override
     public Flux<ServerSentEvent<String>> chat(MessageDTO messageDTO) {
         Long sessionId = messageDTO.getSessionId();
@@ -110,7 +142,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                         return Flux.empty();
                     }
                     String normalizedJson = recommendationCardHelper.normalizeRecommendationJson(json);
-                    log.info("Detected recommendation JSON, sending card_render event");
+                    log.info("检测到推荐 JSON，发送 card_render 卡片事件");
                     return Flux.just(ServerSentEvent.<String>builder()
                             .event("card_render")
                             .data(normalizedJson)
@@ -125,10 +157,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                         // 模型最终返回文本仍按业务方式落库，同时增量刷新 Redis 记忆缓存。
                         Message assistantRecord = saveMessage(sessionId, "assistant", responseText);
                         chatMemoryManager.appendMessageToCache(assistantRecord);
-                        log.info("Saved assistant response for session {}", sessionId);
+                        log.info("已保存会话 {} 的助手回答", sessionId);
                     }
                     catch (Exception e) {
-                        log.error("Failed to save assistant response", e);
+                        log.error("保存助手回答失败", e);
                     }
                 });
     }

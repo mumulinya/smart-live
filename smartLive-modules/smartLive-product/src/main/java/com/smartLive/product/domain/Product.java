@@ -15,9 +15,10 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 商品对象 shop_goods (原 Voucher)
+ * 商品实体类
+ * 对应数据库 product 表，统一管理代金券、团购套餐等商品信息
  *
- * @author 桃桃
+ * @author smartLive
  * @date 2026-02-18
  */
 @TableName("product")
@@ -69,7 +70,14 @@ public class Product   implements Serializable {
 
     /** 销量 */
     private Integer sold;
-    /** 商品状态 0:正常, 1:下架, 2:删除 */
+    /** 
+     * 商品状态 
+     * PENDING(0): 待审核
+     * NORMAL(1): 正常/上架
+     * OFF_SHELF(2): 下架
+     * AUDIT_FAIL(3): 审核失败
+     * EXPIRED(4): 过期
+     */
     private Integer status;
 
     /** 审核拒绝原因 */
@@ -121,7 +129,8 @@ public class Product   implements Serializable {
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-    /** 创建时间 */
+
+    /** 更新时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
 

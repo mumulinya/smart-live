@@ -36,10 +36,13 @@ import org.springframework.stereotype.Service;
 
 
 /**
- * 关注Service业务层处理
+ * 关注关系业务实现层
+ * 维系系统内用户与用户、用户与店铺之间的社交纽带。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * 技术要点：
+ * 1. 社交关系存储：利用 Redis ZSet 极速判断“是否关注”及“共同关注”。
+ * 2. 脏数据处理：通过 Set 记录发生变动的实体，便于后续全量同步。
+ * 3. 性能优化：采用 Pipeline 批量推送动态给粉丝，提升高并发下的响应速度。
  */
 @Service
 @Slf4j
@@ -139,11 +142,12 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
 
 
     /**
-     * 关注或取关
-     *
-     * @param
-     * @param
-     * @return
+     * 核心关注/取关逻辑
+     * 1. 防止重复操作。
+     * 2. 数据库事务保存记录。
+     * 3. Redis 双向 ZSet 维护（我的关注、对方粉丝）。
+     * 4. 实时更新关注/粉丝计数的缓存。
+     * 5. 同步个人画像相关资源。
      */
     @Override
     public Boolean follow(FollowDTO followDTO) {
@@ -338,9 +342,13 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     }
 
     /**
-     * 推送数据给粉丝
+     * 将发布的动态推送给粉丝（拉推结合模式中的推部分）
+     * 流程：
+     * 1. 获取目标实体的粉丝列表。
+     * 2. 将动态信息（业务类型:ID）写入所有粉丝的 Feed 集合中。
+     * 3. 针对特定业务类型（如新商品发布）触发实时系统消息通知。
      *
-     * @param feedEventMessage
+     * @param feedEventMessage 动态事件消息
      */
     @Override
     public void pushToFollowers(FeedEventMessage feedEventMessage) {

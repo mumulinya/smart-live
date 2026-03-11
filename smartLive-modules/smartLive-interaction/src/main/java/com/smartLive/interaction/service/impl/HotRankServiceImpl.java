@@ -7,6 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * 热度榜单业务实现类
+ * 负责调度各类热度算分策略，实现排行榜的定时刷新与全量重建。
+ */
 @Service
 @Slf4j
 public class HotRankServiceImpl implements IHotRankService {
@@ -14,6 +18,11 @@ public class HotRankServiceImpl implements IHotRankService {
     @Autowired
     private HotRankStrategyFactory hotRankStrategyFactory;
 
+    /**
+     * 按业务类型重算热度榜单数据（增量/定时任务调用）
+     * 从工厂获取对应的策略，并触发 calculateAndRefreshRank
+     * @param bizTypeCode 业务类型编码 (GlobalBizTypeEnum)
+     */
     @Override
     public void calcHotRankDataByBizType(Integer bizTypeCode) {
         if (bizTypeCode == null) {
@@ -41,6 +50,11 @@ public class HotRankServiceImpl implements IHotRankService {
         log.info("[{}]类型的热度榜单重算结束，耗时:{}ms", strategy.getClass().getSimpleName(), System.currentTimeMillis() - start);
     }
 
+    /**
+     * 按业务类型执行全量热度榜重建（凌晨定时任务调用）
+     * 适用于修正长期累积的评分偏差或同步全量互动统计。
+     * @param bizTypeCode 业务类型编码 (GlobalBizTypeEnum)
+     */
     @Override
     public void fullRebuildHotRankByBizType(Integer bizTypeCode) {
         if (bizTypeCode == null) {

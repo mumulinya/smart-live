@@ -14,6 +14,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * 店铺查询相关 AI 工具集
+ * 供 AI Agent 调用，支持按类目、地理位置及详细信息的检索
+ *
+ * @author smartLive
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -21,6 +27,18 @@ public class ShopTools {
 
     private final IShopRagService shopRagService;
 
+    /**
+     * 根据店铺类型搜索店铺，支持位置和价格条件。
+     *
+     * @param userMessage 用户原始问题，原样传入不要修改
+     * @param typeId 店铺类型ID，必须按语义映射：美食=1，KTV=2，丽人=3，运动健身=5，酒吧=8
+     * @param area 商圈或区域关键词，如：万达、天河城、北京路，用户没提就传null
+     * @param address 用户提及的具体街道或地址，如：中山大道88号，用户没提就传null
+     * @param district 用户所在行政区，如：天河区、南海区、三水区，从用户问题中提取，提取不到就传null
+     * @param x 用户当前位置的经度，必须是Double数字如113.0528，绝对禁止传文字，获取不到传null
+     * @param y 用户当前位置的纬度，必须是Double数字如23.1428，绝对禁止传文字，获取不到传null
+     * @return 符合条件的店铺列表
+     */
     @Tool(description = "根据店铺类型搜索店铺，支持位置和价格条件。")
     public List<ShopVO> searchShopsByCategory(
         @ToolParam(description = "用户原始问题，原样传入不要修改", required = false)
@@ -60,6 +78,10 @@ public class ShopTools {
         return this.shopRagService.getShopList(shopQuery, userMessage);
     }
 
+    /**
+     * 获取单个店铺的深度详情
+     * 用于在用户明确指定店铺名称或从搜索列表中二次确认时调用
+     */
     @Tool(name = "getShopDetails", description = "获取单个店铺详情，包含营业时间、评分、地址等。")
     public ShopVO getShopDetails(
             @ToolParam(description = "店铺id", required = false)
@@ -78,8 +100,8 @@ public class ShopTools {
             String userMessage
     ) throws ExecutionException, InterruptedException, TimeoutException {
         boolean incRev = Boolean.TRUE.equals(includeReviews);
-        log.info("Calling getShopDetails | id={}, name={}, includeReviews={}, district={}, x={}, y={}",
-                id, name, incRev, district, x, y);
+        log.info("🔍 执行获取店铺详情工具 | id={}, name={}, x={}, y={}",
+                id, name, x, y);
 
         ShopVO shopVO = new ShopVO();
         shopVO.setId(id);

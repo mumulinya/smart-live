@@ -14,34 +14,39 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
- * 用户对象 tb_user
+ * 用户索引文档对象
+ * 对应 ES 中的 users 索引。用于实现在全站通过昵称、签名或地区搜索社交用户。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserDoc extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** 主键 */
+    /** 用户数字 ID */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /** 昵称，默认是用户id */
+    /** 用户昵称 (支持模糊搜索) */
     private String nickName;
 
-    /** 人物头像 */
+    /** 头像 URL */
     private String icon;
 
+    /** 
+     * 是否已被当前请求用户关注
+     * 仅在搜索结果返回阶段根据 FollowService 实时填充，不存储在 ES 索引中。
+     */
     private Boolean isFollow;
 
-
-    /** 个性签名 */
+    /** 个人个性签名 (支持全文检索) */
     private String introduce;
-    /** 城市 */
+    
+    /** 常驻城市 */
     private String city;
 }

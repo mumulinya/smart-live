@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.annotation.Resource;
 
 /**
- * 关注管理外部接口
+ * 关注管理控制层
+ * 用于维系用户与用户、用户与店铺之间的“关注-粉丝”社交关系，支持共同关注查询。
  *
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/follow")
@@ -40,9 +41,12 @@ public class FollowController {
         return Result.ok(followServiceImpl.isFollowed(follow));
     }
     /**
-     * 查询共同关注用户列表
-     * @param follow
-     * @return
+     * 获取共同关注列表
+     * 展示当前登录用户与目标用户共同关注的实体。
+     *
+     * @param follow 查询条件
+     * @param current 当前页码
+     * @return 共同关注的实体列表
      */
     @GetMapping("/common")
     public Result common(Follow follow,@RequestParam("current") Integer current){

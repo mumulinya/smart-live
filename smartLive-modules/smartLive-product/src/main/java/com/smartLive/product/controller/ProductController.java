@@ -18,9 +18,10 @@ import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.page.TableDataInfo;
 
 /**
- * 商品Controller
+ * 商品与代金券管理控制器
+ * 提供商品（包含普通商品、代金券、团购套餐）的增删改查、库存管理、状态更新及热榜查询功能
  *
- * @author 桃桃
+ * @author smartLive
  * @date 2026-02-18
  */
 @RestController
@@ -30,7 +31,11 @@ public class ProductController extends BaseController {
     private IProductService productService;
 
     /**
-     * 查询商品列表 (Data Table)
+     * 分页查询商品列表
+     * 该方法适配 Ruoyi 数据表格组件，返回包含总条数的 TableDataInfo 对象
+     *
+     * @param product 查询过滤条件
+     * @return 分页后的商品显示对象列表 (ProductVO)
      */
     @RequiresPermissions("product:product:list")
     @GetMapping("/list")
@@ -41,7 +46,11 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 查询商品列表 (Ajax Result)
+     * 获取全量或过滤后的商品列表 (AjaxResult 包装)
+     * 常用于下拉框或无需复杂分页的前端场景
+     *
+     * @param product 过滤条件
+     * @return 包含商品 VO 列表的 AjaxResult
      */
     @GetMapping("/productList")
     public AjaxResult productList(Product product) {
@@ -62,7 +71,11 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 获取商品详细信息
+     * 获取指定 ID 的商品详细信息
+     * 返回 ProductVO，包含店铺名称、分类描述等关联信息
+     *
+     * @param id 商品主键 ID
+     * @return 商品详情
      */
     @RequiresPermissions("product:product:query")
     @GetMapping(value = "/{id}")
@@ -99,7 +112,8 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 商品降价
+     * 手动触发商品降价逻辑
+     * 该接口会更新商品的现价，并可能触发相关的降价通知或标签更新
      */
     @PostMapping("/priceReduced/{id}")
     public AjaxResult priceReduced(@PathVariable("id") Long id) {
@@ -107,7 +121,12 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 修改商品状态
+     * 修改商品审批状态
+     * 支持 PENDING(待审核), NORMAL(正常), OFF_SHELF(下架), AUDIT_FAIL(审核失败), EXPIRED(过期) 状态流转
+     *
+     * @param id 商品 ID
+     * @param status 目标状态码
+     * @param reason 若审核失败，填写的失败原因
      */
     @PostMapping("/updateProductStatus")
     public Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason) {
@@ -183,11 +202,15 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 购买商品 (整合了普通购买和秒杀)
+     * 购买/抢购商品接口 (核心业务)
+     * 内部自动根据商品类型（普通/秒杀）执行对应的扣减库存和生成订单策略
+     *
+     * @param productId 商品 ID
+     * @return 返回生成的订单 ID，失败则抛出异常
      */
     @PostMapping("/purchase/{id}")
     public Result purchaseProduct(@PathVariable("id") Long productId) {
-        //获取当前用户id
+        // 获取当前登录用户 ID
         Long userId = UserContextHolder.getUser().getId();
         Long orderId = productService.purchaseProduct(productId, userId);
         return Result.ok(orderId);

@@ -13,45 +13,53 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 博客文档对象
+ * 博客/笔记索引文档对象
+ * 对应 ES 中的 blogs 索引，用于全文检索探店笔记与用户动态。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BlogDoc extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
+    
+    /** 博客唯一标识 */
     private Long id;
 
-    /** 博客类型id */
+    /** 博客分类 ID (与业务数据库对应) */
     private Long typeId;
 
-    /** 标题 */
+    /** 笔记标题 (支持全文检索) */
     @Excel(name = "标题")
     private String title;
 
-    /** 探店的照片，最多9张，多张以","隔开 */
+    /** 笔记配图 URL 列表 (逗号分隔存储) */
     private String images;
 
-    /** 探店的文字描述 */
+    /** 笔记正文内容 (核心搜索字段) */
     private String content;
 
-    /** 点赞数量 */
+    /** 累计点赞数 */
     private Integer liked;
 
-    /** 创建时间 */
+    /** 发布时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-    /**
-     * 用户图标
-     */
+    /** 发布者头像 */
     private String icon;
-    /**
-     * 用户姓名
-     */
+    
+    /** 发布者昵称 */
     private String name;
 
+    /** 数据操作类型 (insert/update/delete) */
     private String actionType;
+    
+    /** 业务来源类型 (用于数据同步识别) */
     private Integer sourceType;
+    
+    /** 原始业务数据 ID */
     private Long sourceId;
 }

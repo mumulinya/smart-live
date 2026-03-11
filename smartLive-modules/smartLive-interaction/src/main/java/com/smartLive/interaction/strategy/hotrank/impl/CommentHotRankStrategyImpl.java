@@ -18,7 +18,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 评论实体的全局统一热度计算策略
+ * 评论热度计算策略实现
+ * 
+ * 核心逻辑：
+ * 1. 自动对一级评论（parentId=0）进行热度排序。
+ * 2. 评分维度：点赞数（用户共鸣度）、回复数（讨论激烈度）及发布时间。
+ * 3. 旨在将高质量、有深度的见解推送到评论区顶部。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @Slf4j
 @Component
@@ -34,6 +42,9 @@ public class CommentHotRankStrategyImpl extends AbstractHotRankStrategy {
         return GlobalBizTypeEnum.COMMENT.getCode();
     }
 
+    /**
+     * 增量刷新评论热度榜
+     */
     @Override
     public void calculateAndRefreshRank() {
         Arrays.stream(CommentTypeEnum.values()).forEach(type -> {
@@ -105,18 +116,82 @@ public class CommentHotRankStrategyImpl extends AbstractHotRankStrategy {
         });
     }
 
+    /**
+     * 评论热度打分公式（参见《SmartLive 热度评分体系设计》第六章）
+     *
+     * hotScore = baseScore + liked × 0.4 + replyCount × 0.4 + timeDecay × 0.2
+     * 初始分：普通评论 = 50
+     * timeDecay = max(0, 30 - 发布天数)
+     *
+     * @param type    评论类型
+     * @param comment 评论实体
+     * @return 热度分（保留两位小数）
+     */
     private double calcCommentHotScore(CommentTypeEnum type, Comment comment) {
-        double likeWeight = 1.0D;
-        double replyWeight = 2.0D;
-        if (type == CommentTypeEnum.REVIEW_COMMENT) {
-            likeWeight = 1.2D;
-            replyWeight = 1.5D;
-        } else if (type == CommentTypeEnum.COMMENT_COMMENT) {
-            likeWeight = 1.0D;
-            replyWeight = 1.2D;
+        // 初始分：普通评论 = 50分
+        double baseScore = 50.0;
+
+        // 时间衰减：30天内的新评论有额外加成
+        double timeDecay = calcTimeDecay(comment.getCreateTime());
+
+        return roundScore(baseScore
+                + safeInt(comment.getLiked()) * 0.4       // 点赞数
+                + safeInt(comment.getReplyCount()) * 0.4  // 回复数，引发讨论的评论更有价值
+                + timeDecay * 0.2                         // 新评论优先
+        );
+    }
+
+    /**
+     * 全量重建所有评论热榜
+     */
+    @Override
+    public void fullRebuildRank() {
+        log.info("开始全量重建评论热榜...");
+        try {
+            // 1. 查询所有正常状态的评论（排除 status=2 禁止查看的）
+            List<Comment> allComments = commentMapper.selectList(
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Comment>()
+                            .ne(Comment::getStatus, 2)
+                            .eq(Comment::getParentId, 0L)
+            );
+            if (CollUtil.isEmpty(allComments)) {
+                log.warn("全量重建评论热榜：未获取到任何评论数据");
+                return;
+            }
+            log.info("全量重建评论热榜：共获取到 {} 条一级评论", allComments.size());
+
+            // 2. 按 sourceType 和 sourceId 分组
+            for (CommentTypeEnum type : CommentTypeEnum.values()) {
+                RankRedisEnum redisEnum = RankRedisEnum.getByCategoryAndCode("COMMENT", type.getCode());
+                if (redisEnum == null || redisEnum.getHotRankKeyPrefix() == null) continue;
+
+                // 筛选当前类型的评论，按 sourceId 分组
+                Map<Long, List<Comment>> sourceGrouped = allComments.stream()
+                        .filter(c -> c.getSourceType() != null && c.getSourceType().equals(type.getCode()))
+                        .filter(c -> c.getSourceId() != null)
+                        .collect(Collectors.groupingBy(Comment::getSourceId));
+
+                for (Map.Entry<Long, List<Comment>> entry : sourceGrouped.entrySet()) {
+                    Long sourceId = entry.getKey();
+                    List<Comment> comments = entry.getValue();
+                    String hotRankKey = redisEnum.getHotRankKeyPrefix() + sourceId;
+
+                    Set<ZSetOperations.TypedTuple<String>> tuples = new HashSet<>();
+                    for (Comment comment : comments) {
+                        double score = calcCommentHotScore(type, comment);
+                        tuples.add(new DefaultTypedTuple<>(String.valueOf(comment.getId()), score));
+                    }
+
+                    if (!tuples.isEmpty()) {
+                        redisService.deleteObject(hotRankKey);
+                        redisService.setCacheZSet(hotRankKey, tuples);
+                    }
+                }
+                log.info("全量重建[{}]评论热榜完成，共处理 {} 个来源", type.getDesc(), sourceGrouped.size());
+            }
+        } catch (Exception e) {
+            log.error("全量重建评论热榜异常", e);
         }
-        double interaction = safeInt(comment.getLiked()) * likeWeight + safeInt(comment.getReplyCount()) * replyWeight + 1.0D;
-        return applyTimeDecay(interaction, comment.getCreateTime() == null ? null : comment.getCreateTime().getTime());
     }
 
     private Map<Long, Comment> toCommentMap(List<Comment> comments) {

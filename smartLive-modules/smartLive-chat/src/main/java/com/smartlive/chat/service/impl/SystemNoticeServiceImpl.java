@@ -27,6 +27,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * 系统通知业务处理实现类
+ * 负责用户通知的分页查询、已读状态更新、未读计数以及通过 IM 实时推送信令。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
+ */
 @Slf4j
 @Service
 public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, SystemNotice> implements ISystemNoticeService {

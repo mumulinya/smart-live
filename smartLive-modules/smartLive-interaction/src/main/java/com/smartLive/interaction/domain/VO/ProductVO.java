@@ -91,4 +91,19 @@ public class ProductVO {
     private String shopLogo; // ProductDTO has shopImages, ProductVO had shopLogo/shopImages.
     private Long typeId;
     private Double hotSource;
+
+    /** 销量 */
+    private Integer sold;
+    /** 评价数 */
+    private Integer reviews;
+    /** 
+     * 收藏数
+     * 用于热度计算，代表用户对商品的意向度。
+     */
+    private Integer stars;
+    /** 
+     * 关注数（粉丝数）
+     * 在秒杀等活动商品中作为重要热度参考。
+     */
+    private Integer fans;
 }

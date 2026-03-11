@@ -7,11 +7,15 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Component;
 
+/**
+ * 价格维度排序策略
+ * 用于实现“人均消费最低”等基于数值字段的直接排序。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
+ */
 @Component("priceShopSortStrategy")
 public class PriceShopSortStrategy implements ShopSortStrategy {
-    /**
-     * 获取该策略对应的排序类型标识 (例如: "hot", "distance", "score")
-     */
     @Override
     public String getSortType() {
         return "price";
@@ -20,7 +24,7 @@ public class PriceShopSortStrategy implements ShopSortStrategy {
     @Override
     public void buildSortAndQuery(SearchSourceBuilder sourceBuilder, BoolQueryBuilder boolQuery, FilterSearchRequest request) {
         sourceBuilder.query(boolQuery);
-        // 按人均消费从低到高排
+        // 执行 ES 字段排序：按人均价格（avgPrice）升序排列
         sourceBuilder.sort(SortBuilders.fieldSort("avgPrice").order(SortOrder.ASC));
     }
 }

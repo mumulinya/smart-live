@@ -32,6 +32,10 @@ public class AiGenerateController extends BaseController {
 
     /**
      * AI 生成博客正文
+     * 根据店铺 ID 和风格偏好，生成适合小红书等平台的探店文案
+     *
+     * @param dto 博客生成请求参数，包含 shopId、描述和风格
+     * @return 包含标题列表和正文内容的 Result
      */
     @PostMapping("/blog")
     public Result generateBlog(@RequestBody BlogGenerateDTO dto) {
@@ -49,6 +53,10 @@ public class AiGenerateController extends BaseController {
 
     /**
      * AI 生成评价内容
+     * 模拟用户口吻，根据店铺特色生成真实的消费评价
+     *
+     * @param dto 评价生成请求参数，包含 shopId 和相关描述
+     * @return 生成的评价文本内容
      */
     @PostMapping("/review")
     public Result generateReview(@RequestBody ReviewGenerateDTO dto) {

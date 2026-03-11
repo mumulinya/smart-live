@@ -59,4 +59,13 @@ public interface IWalletService {
      * @return 扣减后的余额
      */
     BigDecimal consume(Long userId, BigDecimal amount, String bizId);
+
+    /**
+     * 订单退款恢复余额
+     *
+     * @param userId       用户ID
+     * @param amountInCents 退款金额（分）
+     * @param orderId      订单ID
+     */
+    void refundOrder(Long userId, BigDecimal amountInCents, String orderId);
 }

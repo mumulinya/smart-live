@@ -8,7 +8,9 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 /**
- * redis全局id生成器
+ * 基于 Redis 的全局唯一 ID 生成器
+ * 实现原理：时间戳(31位) + 序列号(32位)
+ * 能够保证在分布式环境下的唯一性、递增性及高性能
  */
 @Component
 public class RedisIdWorker {
@@ -26,23 +28,24 @@ public class RedisIdWorker {
     private RedisService redisService;
 
     /**
-     * 生成全局id
-     * @param keyPrefix  业务前缀
-     * @return
+     * 获取下一个全局唯一 ID
+     * 
+     * @param keyPrefix 业务前缀（如 order, blog 等）
+     * @return 64位长整型 ID
      */
     public Long nextId(String keyPrefix){
-        //生成时间戳
+        // 1. 生成时间戳：当前秒数 - 项目起始时间戳
         LocalDateTime now = LocalDateTime.now();
         long nowSecond = now.toEpochSecond(ZoneOffset.UTC);
         long timestamp = nowSecond - BEGIN_TIMESTAMP;
 
-        //生成序列号
-        //获取当前日期，精确到天
+        // 2. 生成序列号：根据业务前缀与日期进行增量统计
+        // 精确到天，方便后期统计订单量或进行 Key 过期管理
         String date = now.format(DateTimeFormatter.ofPattern("yyyy:MM:dd"));
-        //生成自增序列号
+        // 利用 Redis 的原子自增保证 ID 在同一秒内的唯一性
         long count = redisService.incrementCacheValue("icr:" + keyPrefix + ":" + date);
 
-        //拼接并返回
+        // 3. 拼接并返回：左移序列号位数后进行或运算
         return timestamp << COUNT_BITS | count;
     }
 }

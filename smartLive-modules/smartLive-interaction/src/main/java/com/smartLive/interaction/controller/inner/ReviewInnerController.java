@@ -10,10 +10,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 评价管理内部接口
+ * 评价管理内部控制层
+ * 提供评价审核状态更新、AI 评价暂存及跨服务状态同步等接口。
  *
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/inner/review")

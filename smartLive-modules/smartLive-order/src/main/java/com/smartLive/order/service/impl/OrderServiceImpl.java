@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.enums.ProductStatusEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -15,7 +16,8 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.order.domain.VO.ProductSoldVO;
 import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.product.api.RemoteProductService;
-import com.smartLive.points.api.RemotePointsService;
+import com.smartLive.common.core.constant.mq.PointsMqConstants;
+import com.smartLive.common.rabbitmq.domain.OrderPointsMessage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.enums.SalesTypeEnum;
@@ -35,6 +37,7 @@ import com.smartLive.order.mapper.OrderMapper;
 import com.smartLive.order.domain.Order;
 import com.smartLive.order.service.IOrderService;
 import com.smartLive.common.rabbitmq.domain.StockDeductMessage;
+import com.smartLive.common.rabbitmq.domain.OrderRefundMessage;
 import com.smartLive.common.core.constant.mq.ProductMqConstants;
 
 import jakarta.annotation.Resource;
@@ -61,8 +64,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private RemoteShopService remoteShopService;
 
-    @Autowired
-    private RemotePointsService remotePointsService;
+
     @Resource
     private RedissonClient redissonClient;
 
@@ -130,11 +132,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public int insertOrder(Order order)
     {
         order.setCreateTime(DateUtils.getNowDate());
-        int i = orderMapper.insertOrder(order);
-        if (i > 0) {
-            incrementSales(order);
-        }
-        return i;
+        return orderMapper.insertOrder(order);
     }
 
     /**
@@ -215,7 +213,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         //获取当前用户id
         Long userId = order.getUserId();
         //判断当前用户是否购买过
-        Integer count = query().eq("user_id", userId).eq("source_id", order.getSourceId()).count().intValue();
+        Integer count = query()
+                .eq("user_id", userId)
+                .eq("source_id", order.getSourceId())
+                .notIn("status",
+                        OrderStatusConstants.EXPIRED,   // 过期
+                        OrderStatusConstants.CANCELLED, // 取消
+                        OrderStatusConstants.REFUNDED   // 退款
+                ).count().intValue();
         if(count>0){
             //用户已经购买过了
             log.error("用户已经购买过了，触发 Redis 回退");
@@ -251,8 +256,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             redisService.deleteObject("order:status:" + order.getId());
             // 发送延迟消息，检测订单支付状态
             mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE,OrderMqConstants.ORDER_DELAY_ROUTING_KEY,order.getId(),(OrderMqConstants.DELAY_TIME));
-
-            // 8. 累加销量统计 (已移动至支付成功 pay/paySuccess 阶段，避免未支付订单造成销量虚标)
         }
     }
 
@@ -408,8 +411,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateExpireTimeAfterPayment(order);
         // 支付成功，累加商品销量统计
         incrementSales(order);
-        int i = updateOrder(order);
-        return i;
+        return updateOrder(order);
     }
 
     /**
@@ -486,7 +488,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         int i = updateOrder(order);
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
-            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1){ 
+            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.NORMAL.getCode())){
                 log.info("秒杀商品取消,准备恢复库存");
                 // 恢复库存
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
@@ -494,6 +496,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             // 订单取消。如果是已支付订单取消（例如管理员操作），则回退商品销量 (未核销过，不需要回退店铺销量)
             if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
                 decrementSales(order, false);
+                // 发送MQ消息通知钱包模块，将退款金额退回到用户余额
+                sendRefundMessage(order);
             }
         }
         return i;
@@ -518,7 +522,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         int i = updateOrder(order);
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
-            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1){ 
+            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.NORMAL.getCode())){
                 log.info("秒杀商品退款,准备恢复库存");
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
@@ -526,9 +530,30 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
                 boolean wasVerified = (oldStatus == OrderStatusConstants.VERIFIED);
                 decrementSales(order, wasVerified);
+                // 发送MQ消息通知钱包模块，将退款金额退回到用户余额
+                sendRefundMessage(order);
             }
         }
         return i;
+    }
+
+    /**
+     * 发送退款消息到钱包模块（所有支付方式均退款至余额）
+     *
+     * @param order 订单
+     */
+    private void sendRefundMessage(Order order) {
+        OrderRefundMessage msg = new OrderRefundMessage();
+        msg.setOrderId(order.getId());
+        msg.setUserId(order.getUserId());
+        msg.setAmount(order.getPayAmount());
+        msg.setPayType(order.getPayType());
+        mqMessageSendUtils.sendMqMessage(
+                OrderMqConstants.ORDER_REFUND_EXCHANGE,
+                OrderMqConstants.ORDER_REFUND_ROUTING_KEY,
+                msg
+        );
+        log.info("已发送退款MQ消息, orderId={}, userId={}, amount={}", order.getId(), order.getUserId(), order.getPayAmount());
     }
 
     /**
@@ -553,11 +578,18 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (i > 0) {
             // 核销成功，增加门店销量
             incrementShopSales(order);
-            // 订单使用成功，奖励积分
-            try {
-                remotePointsService.addPoints(order.getUserId(), 100, String.valueOf(order.getId()), "订单完成奖励");
-            } catch (Exception e) {
-                log.error("订单{}积分奖励失败:{}", order.getId(), e.getMessage());
+            // 订单核销成功，发送MQ消息异步奖励积分（积分 = 实付金额）
+            if (order.getPayAmount() != null && order.getPayAmount().intValue() > 0) {
+                OrderPointsMessage pointsMsg = new OrderPointsMessage();
+                pointsMsg.setOrderId(order.getId());
+                pointsMsg.setUserId(order.getUserId());
+                pointsMsg.setPayAmount(order.getPayAmount());
+                mqMessageSendUtils.sendMqMessage(
+                        PointsMqConstants.POINTS_DIRECT_EXCHANGE,
+                        PointsMqConstants.POINTS_ORDER_ROUTING_KEY,
+                        pointsMsg
+                );
+                log.info("已发送积分奖励MQ消息, orderId={}, userId={}, payAmount={}", order.getId(), order.getUserId(), order.getPayAmount());
             }
         }
         return i;
@@ -660,5 +692,37 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     public List<ProductSoldVO> countProductSold() {
         return orderMapper.countProductSold();
+    }
+
+    /**
+     * 订单过期
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public Integer expired(Long id) {
+        Order order = getById(id);
+        if(order==null){
+            throw new BusinessException("订单不存在");
+        }
+        Integer oldStatus = order.getStatus();
+        order.setStatus(OrderStatusConstants.EXPIRED);
+        int i = updateOrder(order);
+        if(i>0){
+            ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
+            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.NORMAL.getCode())){
+                log.info("秒杀商品订单过期,准备恢复库存");
+                // 恢复库存
+                remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
+            }
+            // 订单取消。如果是已支付订单取消（例如管理员操作），则回退商品销量 (未核销过，不需要回退店铺销量)
+            if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
+                decrementSales(order, false);
+                // 发送MQ消息通知钱包模块，将退款金额退回到用户余额
+                sendRefundMessage(order);
+            }
+        }
+        return i;
     }
 }

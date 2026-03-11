@@ -13,10 +13,11 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 评论对象 tb_comments
- *
- * @author mumulin
- * @date 2025-10-02
+ * 评论实体对象
+ * 用于存储针对各类资源的一级回复及多级追评。
+ * 
+ * @author smartLive
+ * @date 2026-03-11
  */
 @TableName("comment")
 @Data

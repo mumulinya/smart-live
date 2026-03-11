@@ -9,9 +9,10 @@ import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.domain.Product;
 
 /**
- * 商品Service接口
+ * 商品业务契约接口
+ * 定义商品、代金券、团购套餐的核心生命周期管理及高并发购买行为
  * 
- * @author 桃桃
+ * @author smartLive
  * @date 2026-02-18
  */
 public interface IProductService extends IService<Product>
@@ -98,16 +99,18 @@ public interface IProductService extends IService<Product>
     Long purchaseProduct(Long productId, Long userId);
 
     /**
-     * 查询全部商品列表（含店铺信息）
+     * 查询全部商品列表（含内部店铺关联信息）
+     * 用于管理员或离线统计场景
      *
-     * @return 商品列表
+     * @return 商品原始实体列表
      */
     List<Product> listProduct();
 
     /**
-     * 全部发布
+     * 手动触发全量发布
+     * 将库中所有商品同步至 Elasticsearch 搜索索引和 Milvus 向量索引
      *
-     * @return 全部发布结果
+     * @return 发布任务的简要执行结果
      */
     String allPublish();
 
@@ -200,12 +203,13 @@ public interface IProductService extends IService<Product>
     Integer getProductStarCount(Long sourceId);
 
     /**
-     * 更新商品状态（审核通过/拒绝）
+     * 更新商品审批状态并处理关联逻辑
+     * 如审核通过则自动触发索引同步与上架 MQ 通知
      *
-     * @param id     商品ID
-     * @param status 商品状态
-     * @param reason 拒绝原因（通过时为null）
-     * @return 更新结果
+     * @param id     商品 ID
+     * @param status 商品状态 (NORMAL, OFF_SHELF, AUDIT_FAIL 等)
+     * @param reason 审核失败原因（可选）
+     * @return 更新是否成功
      */
     Boolean updateProductStatus(Long id, Integer status, String reason);
 

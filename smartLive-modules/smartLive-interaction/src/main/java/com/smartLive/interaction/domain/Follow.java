@@ -13,10 +13,11 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 关注表 follow
+ * 关注关系实体对象
+ * 用于存储用户对各类资源（店铺、博主等）的关注/订阅状态。
  * 
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @TableName("follow")
 @Data

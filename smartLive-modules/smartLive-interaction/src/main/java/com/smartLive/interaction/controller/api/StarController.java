@@ -10,10 +10,11 @@ import java.util.List;
 
 
 /**
- * 收藏管理外部接口
+ * 收藏管理控制层
+ * 提供对店铺、商品、博客等资源的收藏（Star/Bookmark）功能，支持状态查询、批量校验及列表分页展示。
  *
- * @author mumulin
- * @date 2025-09-21
+ * @author smartLive
+ * @date 2026-03-11
  */
 @RestController
 @RequestMapping("/star")
@@ -75,10 +76,12 @@ public class StarController {
     }
 
     /**
-     * 批量查询是否收藏
-     * @param starDTO
-     * @param sourceIds
-     * @return
+     * 批量查询资源是否已收藏
+     * 优化性能，减少前端在列表页中发起的并发请求次数。
+     *
+     * @param starDTO   业务类型基础信息
+     * @param sourceIds 资源 ID 列表
+     * @return ID 与收藏状态的映射结果
      */
     @GetMapping("/getIsStarBatch")
     public Result getIsStarBatch(StarDTO starDTO, @RequestParam("sourceIds") List<Long> sourceIds){

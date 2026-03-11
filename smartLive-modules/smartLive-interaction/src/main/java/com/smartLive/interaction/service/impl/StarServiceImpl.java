@@ -34,7 +34,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Star service.
+ * 收藏业务实现层
+ * 实现了全站通用的收藏（收藏夹）逻辑，支持店铺、代金券、博客等多种维度的资源收藏。
+ * 
+ * 核心设计：
+ * 1. 采用 Redis ZSet 存储用户的收藏列表（按时间排序）以及资源的追随者列表。
+ * 2. 使用独立计数器进行高性能计数，并支持基于权重因子的策略同步。
+ * 3. 实现了三级降级查询机制：Redis 缓存 -> 业务属性字段（冗余） -> Star 表全量统计。
  */
 @Service
 @Slf4j
@@ -81,6 +87,17 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
         return starMapper.deleteCollectionShopById(id);
     }
 
+    /**
+     * 执行收藏或取消收藏操作
+     * 核心流程：
+     * 1. DB 持久化收藏记录。
+     * 2. 更新 Redis 双向 ZSet（用户->资源，资源->用户）。
+     * 3. 维护独立计数器并标记脏数据。
+     * 4. 调用策略类同步更新源表中的冗余统计字段（如店铺的收藏数）。
+     *
+     * @param starDTO 收藏请求参数
+     * @return 操作是否成功
+     */
     @Override
     public Boolean star(StarDTO starDTO) {
         AppLoginUser user = UserContextHolder.getUser();

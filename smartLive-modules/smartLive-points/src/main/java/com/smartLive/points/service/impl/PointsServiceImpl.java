@@ -126,7 +126,7 @@ public class PointsServiceImpl implements IPointsService {
     }
 
     @Override
-    public Map<String, Object> getRecordList(Long userId, Integer page, Integer pageSize, String type) {
+    public List<PointsRecordVO> getRecordList(Long userId, Integer page, Integer pageSize, Integer type) {
         if (page == null || page < 1) page = 1;
         if (pageSize == null || pageSize < 1) pageSize = 10;
 
@@ -134,11 +134,7 @@ public class PointsServiceImpl implements IPointsService {
         wrapper.eq(PointsRecord::getUserId, userId);
 
         // 类型筛选
-        if ("in".equals(type)) {
-            wrapper.eq(PointsRecord::getType, 1);
-        } else if ("out".equals(type)) {
-            wrapper.eq(PointsRecord::getType, 2);
-        }
+        wrapper.eq(type != null,PointsRecord::getType, type);
 
         wrapper.orderByDesc(PointsRecord::getCreateTime);
 
@@ -154,21 +150,15 @@ public class PointsServiceImpl implements IPointsService {
             vo.setDate(r.getCreateTime() != null ? r.getCreateTime().format(fmt) : "");
             vo.setDesc(r.getDescription());
             vo.setValue(r.getAmount());
-            vo.setType(r.getType() == 1 ? "in" : "out");
+            vo.setType(r.getType());
             records.add(vo);
         }
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("records", records);
-        data.put("total", result.getTotal());
-        data.put("current", result.getCurrent());
-        data.put("size", result.getSize());
-        return data;
+        return records;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> signIn(Long userId) {
+    public DailySignIn signIn(Long userId) {
         LocalDate today = LocalDate.now();
 
         // 1. 获取或初始化钱包
@@ -215,7 +205,7 @@ public class PointsServiceImpl implements IPointsService {
         Map<String, Object> result = new HashMap<>();
         result.put("points", points);
         result.put("consecutiveDays", consecutiveDays);
-        return result;
+        return signIn;
     }
 
     @Override

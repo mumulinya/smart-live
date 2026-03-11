@@ -74,6 +74,9 @@ public class RemoteProductFallbackFactory implements FallbackFactory<RemoteProdu
                 return false;
             }
 
+            /**
+             * 批量更新商品粉丝数 (降级处理)
+             */
             @Override
             public Boolean updateFansCountBatch(Map<Long, Integer> updateMap)
             {
@@ -115,6 +118,14 @@ public class RemoteProductFallbackFactory implements FallbackFactory<RemoteProdu
             @Override
             public Integer getSold(Long id) {
                 return 0;
+            }
+
+            /**
+             * 获取全部商品ID列表 (降级处理)
+             */
+            @Override
+            public List<Long> getAllProductIds() {
+                return java.util.Collections.emptyList();
             }
         };
     }

@@ -155,4 +155,10 @@ public interface IOrderService  extends IService<Order>
      * @return
      */
     List<ProductSoldVO> countProductSold();
+    /**
+     * 订单过期
+     * @param id
+     * @return
+     */
+    Integer expired(Long id);
 }

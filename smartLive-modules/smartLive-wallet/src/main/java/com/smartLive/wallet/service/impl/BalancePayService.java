@@ -19,9 +19,11 @@ import java.util.Date;
 import java.util.UUID;
 
 /**
- * 余额支付服务
+ * 站内余额支付专用服务
+ * 专门处理通过用户账户可用余额抵扣订单金额的逻辑，包含余额预扣、动账记录生成及订单状态异步通知。
  *
  * @author smartLive
+ * @date 2026-03-11
  */
 @Slf4j
 @Service
@@ -37,21 +39,27 @@ public class BalancePayService {
     private RemoteOrderService remoteOrderService;
 
     /**
-     * 余额支付
+     * 执行余额支付逻辑
+     * 1. 落地本地支付单据记录 (状态直接为成功)
+     * 2. 调用钱包服务执行原子扣减并记录账单流水
+     * 3. 同步调用订单模块标记支付成功
+     * 
+     * @param userId 支付用户 ID
+     * @param dto 支付请求参数
      */
     @Transactional(rollbackFor = Exception.class)
     public void pay(Long userId, UnifiedPayDTO dto) {
         if (!"order".equals(dto.getBizType())) {
-            throw new BusinessException("余额支付仅支持订单支付");
+            throw new BusinessException("余额支付目前仅支持商品/订单支付");
         }
         if (dto.getAmount() == null || dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("支付金额异常");
+            throw new BusinessException("支付金额不合法");
         }
 
         // 1. 生成支付流水号
         String paySn = generatePaySn();
 
-        // 2. 创建支付记录
+        // 2. 创建支付流水记录
         PaymentRecord record = new PaymentRecord();
         record.setPaySn(paySn);
         record.setUserId(userId);
@@ -59,38 +67,38 @@ public class BalancePayService {
         record.setBizId(dto.getBizId());
         record.setAmount(dto.getAmount());
         record.setPayMethod("balance");
-        record.setStatus(1); // 直接成功
+        record.setStatus(1); // 余额扣减成功即视为支付成功
         record.setPayTime(new Date());
         record.setCreateTime(new Date());
         record.setUpdateTime(new Date());
         paymentRecordMapper.insert(record);
 
-        // 3. 扣减余额 + 记录消费流水
+        // 3. 执行资产扣减 + 动账存证
         try {
             BigDecimal newBalance = walletService.consume(userId, dto.getAmount(), dto.getBizId());
-            log.info("余额扣减成功: userId={}, amount={}, newBalance={}", userId, dto.getAmount(), newBalance);
+            log.info("余额扣除成功: userId={}, amount={}, 剩余余额={}", userId, dto.getAmount(), newBalance);
         } catch (Exception e) {
-            log.error("余额扣减失败: userId={}, amount={}", userId, dto.getAmount(), e);
-            throw new BusinessException("余额不足或扣减失败");
+            log.error("余额扣除操作异常: userId={}, amount={}", userId, dto.getAmount(), e);
+            throw new BusinessException("账户余额不足或扣费异常");
         }
 
-        // 4. Feign调用订单模块更新订单状态
+        // 4. Feign RPC 同步修改订单状态
         try {
             Long orderId = Long.parseLong(dto.getBizId());
             Integer result = remoteOrderService.paySuccess(orderId, PayTypeConstants.BALANCE);
             if (result == null || result <= 0) {
-                log.error("更新订单状态失败, orderId={}", orderId);
-                throw new BusinessException("更新订单状态失败");
+                log.error("RPC 标记订单支付成功失败, orderId={}", orderId);
+                throw new BusinessException("支付业务同步失败（订单状态更新异常）");
             }
-            log.info("订单支付成功, orderId={}", orderId);
+            log.info("订单业务支付状态更新完成, orderId={}", orderId);
         } catch (NumberFormatException e) {
-            log.error("订单ID格式错误, bizId={}", dto.getBizId(), e);
-            throw new BusinessException("订单ID格式错误");
+            log.error("业务单号解析错误, bizId={}", dto.getBizId(), e);
+            throw new BusinessException("系统业务单号格式非法");
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            log.error("更新订单状态失败", e);
-            throw new BusinessException("支付失败，请稍后重试");
+            log.error("订单状态同步流程异常", e);
+            throw new BusinessException("支付环节系统繁忙，请确认订单状态");
         }
     }
 

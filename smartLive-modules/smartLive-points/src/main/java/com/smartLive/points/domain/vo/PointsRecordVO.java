@@ -27,5 +27,5 @@ public class PointsRecordVO implements Serializable {
     private Integer value;
 
     /** 类型 in:收入 out:支出 */
-    private String type;
+    private Integer type;
 }
