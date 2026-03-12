@@ -89,13 +89,8 @@ public class ProductVO implements Serializable {
     private Date endTime;
 
     // --- Join Fields ---
-    private String shopName;
-    private String shopLogo;
-    private String shopImages;
     private Boolean isStar;
     private Boolean IsFollow;
-
-    private double hotScore;
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

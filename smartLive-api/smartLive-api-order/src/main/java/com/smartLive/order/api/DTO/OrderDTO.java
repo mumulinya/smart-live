@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ import com.smartLive.common.core.web.domain.BaseEntity;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
 public class OrderDTO extends BaseEntity  implements Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -57,7 +59,6 @@ public class OrderDTO extends BaseEntity  implements Serializable
     private Integer reviewStatus;
 
     /** 评价ID */
-    @Excel(name = "评价ID")
     private Long reviewId;
 
     /** 评价时间 */

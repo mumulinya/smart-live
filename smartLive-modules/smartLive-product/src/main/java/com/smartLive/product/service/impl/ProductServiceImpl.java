@@ -170,20 +170,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * @param product 商品实体
      */
     public void sendNewProductMessageToMQ(Product product){
-        FeedEventMessage feedEventMessage= FeedEventMessage
-                .builder()
-                .feedType(FeedTypeEnum.SHOP_FEED.getCode())
-                .sourceType(GlobalBizTypeEnum.SHOP.getCode())
-                .sourceId(Long.valueOf(product.getShopId().split(",")[0]))
-                .bizType(GlobalBizTypeEnum.PRODUCT.getCode()) // KEEP VOUCHER TYPE FOR NOW
-                .bizId(product.getId())
-                .publishTime(DateUtils.getNowDate())
-                .action(ItemActionType.NEW_ITEM.getCode())
-                .build();
-        mqMessageSendUtils.sendMqMessage(
-                InteractionMqConstants.INTERACT_FEED_EXCHANGE,
-                InteractionMqConstants.INTERACT_FEED_ROUTING_KEY,
-                feedEventMessage);
+        String[] shopIds = product.getShopId().split(",");
+        for(String shopId : shopIds){
+            FeedEventMessage feedEventMessage= FeedEventMessage
+                    .builder()
+                    .feedType(FeedTypeEnum.SHOP_FEED.getCode())
+                    .sourceType(GlobalBizTypeEnum.SHOP.getCode())
+                    .sourceId(Long.valueOf(shopId))
+                    .bizType(GlobalBizTypeEnum.PRODUCT.getCode()) // KEEP VOUCHER TYPE FOR NOW
+                    .bizId(product.getId())
+                    .publishTime(DateUtils.getNowDate())
+                    .action(ItemActionType.NEW_ITEM.getCode())
+                    .build();
+            mqMessageSendUtils.sendMqMessage(
+                    InteractionMqConstants.INTERACT_FEED_EXCHANGE,
+                    InteractionMqConstants.INTERACT_FEED_ROUTING_KEY,
+                    feedEventMessage);
+        }
     }
     /**
      * 发送商品动态操作MQ消息（降价/重新上架/即将下架等）
@@ -458,6 +461,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public List<Product> getProductListByIds(List<Long> sourceIdList) {
         List<Product> productList = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_PRODUCT_KEY,
+                RedisConstants.LOCK_PRODUCT_KEY,
                 sourceIdList,
                 Product.class,
                 missingIds -> {
@@ -483,6 +487,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public ProductVO getProductById(Long id) {
         Product product = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_PRODUCT_KEY,
+                RedisConstants.LOCK_PRODUCT_KEY,
                 id,
                 Product.class,
                 productMapper::selectProductById,
@@ -581,11 +586,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
             List<Product> pageList = finalDbList.subList(start, end);
             resultList = convertToProductVOList(pageList);
-
-            // 此处走兜底，无实际 score，假分数
-            for (int i = 0; i < resultList.size(); i++) {
-                resultList.get(i).setHotScore(100.0 - i);
-            }
             return resultList;
         }
 
@@ -606,21 +606,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         // 7. 转换为 VO
         resultList = convertToProductVOList(products);
-
-        // 6. 附加快照缓存的 Score 数据给外部前端用作热度值展示
-        try {
-            List<Double> scores = redisService.getCacheZSetScoreBatch(hotRankKey,
-                    productIdList.stream().map(String::valueOf).collect(Collectors.toList()));
-            if (!CollUtil.isEmpty(scores) && scores.size() == resultList.size()) {
-                for (int i = 0; i < resultList.size(); i++) {
-                    Double score = scores.get(i);
-                    resultList.get(i).setHotScore(score != null ? score : 0.0);
-                }
-            }
-        } catch (Exception e) {
-            log.warn("获取商品热榜 score 失败", e);
-        }
-
         return resultList;
     }
 

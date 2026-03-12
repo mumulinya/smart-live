@@ -11,15 +11,20 @@ import com.smartLive.common.core.text.Convert;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.BO.ActionRecordBO;
 import com.smartLive.interaction.domain.VO.FeedVO;
+import com.smartLive.interaction.domain.VO.ProductVO;
+import com.smartLive.interaction.domain.VO.ShopVO;
 import com.smartLive.interaction.service.IFeedService;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
+import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 关注订阅流（Feed）业务实现类
@@ -66,25 +71,60 @@ public class feedServiceImpl implements IFeedService {
         for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
             long time = Objects.requireNonNull(tuple.getScore()).longValue();
             String val = Objects.requireNonNull(tuple.getValue()).toString();
-
             String[] parts = val.split(":");
-            if (parts.length < 2) continue;
-
-            String type = parts[parts.length - 2];
-            String action = parts.length > 2 ? parts[0] : "";
             Long id = Long.valueOf(parts[parts.length - 1]);
-
+            String type;
+            String action;
+            Long shopId=null;
+            switch (parts.length) {
+                case 2:
+                    // 格式异常或不支持，直接跳过
+                    continue;
+                case 3:
+                    // 格式：new:product:id
+                    action = parts[0];
+                    type = parts[1];
+                    break;
+                case 4:
+                    // 格式：shopId:new:product:id
+                    shopId = Long.parseLong(parts[0]);
+                    action = parts[1];
+                    type = parts[2];
+                    break;
+                default:
+                    continue;
+            }
             // 存入数据
             groupedMap.computeIfAbsent(type, k -> new HashMap<>())
                     .computeIfAbsent(id, k -> new ArrayList<>())
-                    .add(new ActionRecordBO(action, time));
+                    .add(new ActionRecordBO(shopId,action, time));
 
             // 滚动分页逻辑
             if (time == minTime) os++;
             else { minTime = time; os = 1; }
         }
+        // 3. 聚合数据
         List<FeedVO> voList = Lists.newArrayList();
         groupedMap.forEach((bizType, idActionMap) -> {
+            // 1. 先收集所有非空的 shopId
+            List<Long> shopIds = idActionMap.values().stream()
+                    .flatMap(List::stream)                    // 把所有 List 展开成一个流
+                    .map(ActionRecordBO::getShopId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            // 2. 批量查店铺，转成 Map 方便取用
+            //获取店铺策略
+            ResourceStrategy shopResourceStrategy = resourceStrategyFactory.getStrategy(GlobalBizTypeEnum.SHOP.getCode());
+            Map<Long, ShopVO> shopMap;
+            if (!shopIds.isEmpty()) {
+                List<ShopVO> shopList = shopResourceStrategy.getResourceList(shopIds); // 你的批量查接口
+                shopMap = shopList.stream()
+                        .collect(Collectors.toMap(ShopVO::getId, s -> s));
+            } else {
+                shopMap = new HashMap<>();
+            }
+
             // 1. 获取策略和 Resource 数据（这部分保持不变，依然是批量获取）
             Integer bizTypeEnumCode = GlobalBizTypeEnum.getByBizDomain(bizType).getCode();
             ResourceStrategy resourceStrategy = resourceStrategyFactory.getStrategy(bizTypeEnumCode);
@@ -95,6 +135,7 @@ public class feedServiceImpl implements IFeedService {
 
             if (resources != null) {
                 resources.forEach(item -> {
+
                     // 获取对象 ID
                     Long id = resourceStrategy.getResourceId(item);
 
@@ -107,9 +148,22 @@ public class feedServiceImpl implements IFeedService {
 
                             //创建返回数据
                             FeedVO feedVO = new FeedVO();
-
-                            // 2.1 保存源数据
-                            feedVO.setData(item);
+                            //获取商品的店铺数据
+                            if (node.getShopId() != null) {
+                                ShopVO shopVO = shopMap.get(node.getShopId());
+                                if (shopVO != null) {
+                                    //创建商品对象
+                                    ProductVO productVO = new ProductVO();
+                                    BeanUtils.copyProperties(item, productVO);
+                                    productVO.setShopName(shopVO.getName());
+                                    productVO.setShopLogo(shopVO.getShopLogo());
+                                    productVO.setShopId(String.valueOf(shopVO.getId()));
+                                    feedVO.setData(productVO);
+                                }
+                            }else {
+                                // 2.1 保存源数据
+                                feedVO.setData(item);
+                            }
 
                             // 2.2 设置通用数据
                             feedVO.setDataType(bizType);
@@ -117,7 +171,6 @@ public class feedServiceImpl implements IFeedService {
                             // 2.3 从 Node 中取出 Action 和 Time
                             feedVO.setAction(node.getAction());
                             feedVO.setPublishTime(new Date(node.getTime())); // 直接使用 Node 里的时间
-
                             voList.add(feedVO);
                         }
                     }

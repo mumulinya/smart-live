@@ -307,6 +307,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 1. Utilize RedisBatchCacheUtil for cached batch retrieval (UserVO with static info)
         List<UserVO> userVOList = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_USER_KEY,
+                RedisConstants.LOCK_USER_KEY,
                 userIdList,
                 UserVO.class,
                 missingIds -> {
@@ -355,6 +356,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public UserVO queryUserById(Long id) {
         UserVO userVO = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_USER_KEY,
+                RedisConstants.LOCK_USER_KEY,
                 id,
                 UserVO.class,
                 this::loadUserDetailForCache,
@@ -503,6 +505,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public UserVO queryUserInfoById(Long id) {
         return cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_USER_KEY,
+                RedisConstants.LOCK_USER_KEY,
                 id,
                 UserVO.class,
                 this::loadUserDetailForCache,

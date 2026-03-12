@@ -2,6 +2,9 @@ package com.smartLive.shop.controller;
 
 import java.util.List;
 
+import com.smartLive.common.core.context.SecurityContextHolder;
+import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.shop.domain.VO.ShopVO;
 import jakarta.servlet.http.HttpServletResponse;
 import cn.hutool.core.util.StrUtil;
@@ -45,7 +48,16 @@ public class ShopController extends BaseController {
     @GetMapping("/list")
     public TableDataInfo list(Shop shop) {
         startPage();
-        List<Shop> list = shopService.selectShopList(shop);
+        // 获取用户id
+        Long userId = SecurityUtils.getUserId();
+        boolean admin = SecurityUtils.isAdmin(userId);
+        List<Shop> list;
+        // 管理员允许查询所有店铺
+        if(admin){
+             list = shopService.selectShopList(shop);
+        }else{
+            list = shopService.selectShopListByUserId(userId, shop);
+        }
         return getDataTable(list);
     }
 

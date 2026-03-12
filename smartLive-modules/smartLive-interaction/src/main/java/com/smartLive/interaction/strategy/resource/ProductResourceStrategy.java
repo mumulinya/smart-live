@@ -80,7 +80,7 @@ public class ProductResourceStrategy implements ResourceStrategy<ProductVO> {
         ProductDTO productDTO = remoteProductService.getProductById(sourceId);
         HashMap<String,String> map = new HashMap<>();
         map.put("title",productDTO.getName()); // map name directly
-        map.put("images",productDTO.getShopImages());
+        map.put("images",productDTO.getCoverImg());
         return map;
     }
 }

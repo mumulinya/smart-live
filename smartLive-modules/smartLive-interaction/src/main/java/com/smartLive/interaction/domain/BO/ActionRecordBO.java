@@ -16,7 +16,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ActionRecordBO {
-    /** 行为类型或名称，例如 "点赞", "评论", "分享" */
+    /** 店铺ID 店铺上新 */
+    Long shopId;
+    /** 行为类型或名称，例如 "上新", "下架", "即将下架" */
     String action;
     /** 行为发生的时间戳，通常为毫秒级 */
     long time;

@@ -193,5 +193,13 @@ public interface IShopService extends IService<Shop> {
      * 同步销量数据从 Redis 到数据库
      */
     void syncSalesData();
+
+    /**
+     * 根据用户id查询所属店铺
+     * @param userId
+     * @param shop
+     * @return
+     */
+    List<Shop> selectShopListByUserId(Long userId, Shop shop);
 }
 

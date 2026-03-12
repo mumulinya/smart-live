@@ -254,6 +254,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public BlogVO queryBlogById(Long id) {
         Blog blog = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_BLOG_KEY,
+                RedisConstants.LOCK_BLOG_KEY,
                 id,
                 Blog.class,
                 this::getById,
@@ -474,6 +475,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }
         List<Blog> blogList = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_BLOG_KEY,
+                RedisConstants.LOCK_BLOG_KEY,
                 sourceIdList,
                 Blog.class,
                 missingIds -> query().in("id", missingIds).list(),

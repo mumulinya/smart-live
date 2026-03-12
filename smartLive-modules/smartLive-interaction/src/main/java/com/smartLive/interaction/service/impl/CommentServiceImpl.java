@@ -599,6 +599,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
 
         List<Comment> list = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_COMMENT_KEY,
+                RedisConstants.LOCK_COMMENT_KEY,
                 sourceIdList,
                 Comment.class,
                 missingIds -> query().in("id", missingIds).list(),

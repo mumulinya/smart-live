@@ -16,6 +16,10 @@ public class RedisConstants {
      */
     public static final Long CACHE_NULL_TTL = 2L;
     /**
+     * 逻辑过期缓存的物理过期时间
+     */
+    public static final Long CACHE_LOGICAL_EXPIRE_TTL = 1L;
+    /**
      * 店铺缓存
      */
     public static final String CACHE_SHOP_KEY = "cache:shop:";
@@ -46,6 +50,7 @@ public class RedisConstants {
      * 博客缓存
      */
     public static final String CACHE_BLOG_KEY = "cache:blog:";
+    public static final String LOCK_BLOG_KEY = "lock:blog:";
     public static final Long CACHE_BLOG_TTL = 30L;
     public static final String CACHE_HOT_BLOG_KEY = "cache:hotBlog:";
     public static final Long CACHE_HOT_BLOG_TTL = 1L;//1天
@@ -58,21 +63,25 @@ public class RedisConstants {
      * 商品缓存
      */
     public static final String CACHE_PRODUCT_KEY = "cache:product:";
+    public static final String LOCK_PRODUCT_KEY = "lock:product";
     public static final Long CACHE_PRODUCT_TTL = 30L;
 
     /**
      * 用户缓存
      */
     public static final String CACHE_USER_KEY = "cache:user:";
+    public static final String LOCK_USER_KEY = "lock:user";
     public static final Long CACHE_USER_TTL = 30L;
 
     /**
      * 评价缓存
      */
     public static final String CACHE_REVIEW_KEY = "cache:review:";
+    public static final String LOCK_REVIEW_KEY = "lock:review";
     public static final Long CACHE_REVIEW_TTL = 30L;
     public static final String CACHE_COMMENT_KEY = "cache:comment:";
     public static final Long CACHE_COMMENT_TTL = 30L;
+    public static final String LOCK_COMMENT_KEY = "lock:comment:";
 
 
     /**

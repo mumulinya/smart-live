@@ -288,7 +288,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //逻辑过期来解决缓存击穿
 //        Shop shop = queryWithLogicalExpire(id);
         // 利用 CacheClient 工具类封装逻辑过期与防穿透逻辑
-        Shop shop = cacheClient.queryWithLogicalExpireAndPassThrough(RedisConstants.CACHE_SHOP_KEY, id, Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+        Shop shop = cacheClient.queryWithLogicalExpireAndPassThrough(RedisConstants.CACHE_SHOP_KEY, RedisConstants.LOCK_SHOP_KEY,id, Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         //逻辑过期解决缓存击穿 使用工具类CacheClient
 //        Shop shop = cacheClient.queryWithLogicalExpire(RedisConstants.CACHE_SHOP_KEY, id, Shop.class,this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         if (shop == null) {
@@ -584,6 +584,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public List<ShopVO> getShopList(List<Long> ids) {
        return redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_SHOP_KEY,
+                RedisConstants.LOCK_SHOP_KEY,
                 ids,
                 ShopVO.class,
                 missingIds -> {
@@ -1040,18 +1041,19 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 }
             }
         }
-
-        // 从 Redis ZSet 中批量获取热度评分（Pipeline 一次往返）
-        if (CollUtil.isNotEmpty(resultList)) {
-            List<String> memberIds = resultList.stream()
-                    .map(s -> String.valueOf(s.getId()))
-                    .collect(Collectors.toList());
-            List<Double> scores = redisService.getCacheZSetScoreBatch(RedisConstants.SHOP_HOT_RANK_KEY, memberIds);
-            log.info("获取店铺 {} 的热度评分为{}",memberIds,scores);
-            for (int i = 0; i < resultList.size(); i++) {
-                resultList.get(i).setHotScore(scores.get(i));
-            }
-        }
         return resultList;
+    }
+
+    /**
+     * 根据用户id查询所属店铺
+     *
+     * @param userId
+     * @param shop
+     * @return
+     */
+    @Override
+    public List<Shop> selectShopListByUserId(Long userId, Shop shop) {
+
+        return List.of();
     }
 }

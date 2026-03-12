@@ -58,6 +58,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -341,38 +342,20 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             return Collections.emptyList();
         }
 
-        // 2. 第二步：根据拿到的 ID 列表，去统一的详情缓存中批量拉取数据
-        List<Review> list = redisMultiCacheManager.queryBatchWithCache(
-                RedisConstants.CACHE_REVIEW_KEY, // 大一统的统一前缀
-                reviewIdList,
-                Review.class,
-                (missingIds) -> {
-                    // 如果有部分数据在缓存中过期了，回源查库补齐
-                    return query().in("id", missingIds).list();
-                },
-                Review::getId,
-                RedisConstants.CACHE_REVIEW_TTL,
-                java.util.concurrent.TimeUnit.MINUTES
-        );
-
+        // 2. 第二步：根据拿到的 ID 列表，去根据id列表获取列表的方法批量获取评价详情
+        List<ReviewVO> list = getReviewListByIds(reviewIdList);
         if (CollUtil.isEmpty(list)) {
             return Collections.emptyList();
         }
-
-        // 3. 第三步：转换为VO，组装动态的交互状态（是否点赞）与外部用户信息、商品信息
-        List<ReviewVO> voList = convertToReviewVOList(list);
-        queryReviewListIsLike(voList);
-        queryReviewListUserMessage(voList);
-        queryReviewListProductMessage(voList);
 
         // 挂载 AI 自动评价（如果存在）
         String key = RedisConstants.CACHE_AI_REVIEW_KEY + review.getSourceType() + ":" + review.getSourceId();
         String JsonStr = redisService.getCacheObject(key);
         if (JsonStr != null) {
             ReviewVO aiReview = JSON.parseObject(JsonStr, ReviewVO.class);
-            voList.add(aiReview);
+            list.add(aiReview);
         }
-        return voList;
+        return list;
     }
 
     /**
@@ -646,12 +629,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
         List<Review> list = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_REVIEW_KEY,
+                RedisConstants.LOCK_REVIEW_KEY,
                 sourceIdList,
                 Review.class,
                 missingIds -> query().in("id", missingIds).list(),
                 Review::getId,
                 RedisConstants.CACHE_REVIEW_TTL,
-                java.util.concurrent.TimeUnit.MINUTES
+                TimeUnit.MINUTES
         );
         if (CollUtil.isEmpty(list)) {
             return Collections.emptyList();
@@ -783,15 +767,18 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
 
         Map<Long, UserDTO> userMap = userList.stream().collect(Collectors.toMap(
-                com.smartLive.user.api.domain.UserDTO::getId,
+                UserDTO::getId,
                 Function.identity(),
                 (v1, v2) -> v1
         ));
         reviewList.forEach(vo -> {
-            com.smartLive.user.api.domain.UserDTO user = userMap.get(vo.getUserId());
-            if (user != null) {
+            UserDTO user = userMap.get(vo.getUserId());
+            log.info("vo:{}",vo);
+            if (user != null&&vo.getIsAnonymous()==false) {
                 vo.setNickName(user.getNickName());
                 vo.setUserIcon(user.getIcon());
+            }else{
+                vo.setUserId(null);
             }
         });
     }
@@ -858,11 +845,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 鎵归噺鍚屾钀藉簱鏂规硶锛堣 XXL-JOB 璋冨害浠诲姟鍥炶皟浣跨敤锛?
-     * 鍚屾鏁版嵁搴撲腑璇勪环鐨勫洖澶嶆暟閲忥紙瀛愯瘎璁烘暟锛夈€?
+     * 批量同步落库方法（被 XXL-JOB 调度任务回调使用）：
+     * 同步数据库中评价的回复数量（子评论数）。
      *
-     * @param updateMap K:璇勪环ID, V:鏈€鏂板洖澶嶆暟
-     * @return 鏄惁澶勭悊鎴愬姛
+     * @param updateMap K:评价ID, V:最新回复数
+     * @return 是否处理成功
      */
     @Override
     public Boolean updateCommentCountBatch(Map<Long, Integer> updateMap) {
@@ -886,11 +873,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 鎵归噺鍚屾钀藉簱鏂规硶锛堣 XXL-JOB 璋冨害浠诲姟鍥炶皟浣跨敤锛?
-     * 鍚屾鏁版嵁搴撲腑璇勪环鐨勫叧娉?鏀惰棌鏁伴噺銆?
+     * 批量同步落库方法（被 XXL-JOB 调度任务回调使用）：
+     * 同步数据库中评价的关注/收藏数量。
      *
      * @param updateMap K:璇勪环ID, V:鏈€鏂版敹钘忔暟
-     * @return 鏄惁澶勭悊鎴愬姛
+     * @return 是否处理成功
      */
     @Override
     public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
@@ -914,10 +901,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 鑾峰彇鍗曟潯璇勪环鐨勫綋鍓嶇偣璧炴€绘暟
+     * 获取单条评价的当前点赞总数
      *
-     * @param sourceId 璇勪环ID
-     * @return 鐐硅禐鏁伴噺
+     * @param sourceId 评价ID
+     * @return 点赞数量
      */
     @Override
     public Integer getReviewLikeCount(Long sourceId) {
@@ -926,16 +913,17 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 鑱氬悎鏌ヨ鑾峰彇鍗曟潯璇勪环鐨勫畬鏁磋鎯?
-     * 鍖呭惈瀵归槻缂撳瓨鍑荤┛锛堥€昏緫杩囨湡/浜掓枼閿侊級鐨勫簳灞傚皝瑁呰皟鐢紝骞惰仛鍚堣繙绔殑鍏宠仈涓氬姟鏁版嵁銆?
+     * 聚合查询获取单条评价的完整详情。
+     * 包含对防缓存击穿（逻辑过期/互斥锁）的底层封装调用，并聚合远端的关联业务数据。
      *
-     * @param id 璇勪环涓婚敭
-     * @return 瀹屾暣鏁版嵁灏佽瀹炰綋
+     * @param id 评价主键
+     * @return 完整数据封装实体
      */
     @Override
     public ReviewVO getReviewById(Long id) {
         Review review = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_REVIEW_KEY,
+                RedisConstants.LOCK_REVIEW_KEY,
                 id,
                 Review.class,
                 this::getById,
@@ -974,18 +962,20 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             }
         }
         UserDTO userDTO = remoteAppUserService.queryUserById(review.getUserId());
-        if (userDTO != null) {
+        if (userDTO != null&&vo.getIsAnonymous()==false) {
             vo.setNickName(userDTO.getNickName());
             vo.setUserIcon(userDTO.getIcon());
+        }else{
+            vo.setUserId(null);
         }
         return vo;
     }
 
     /**
-     * 鑾峰彇鍗曟潯璇勪环鐨勫綋鍓嶆敹钘忔€绘暟
+     * 获取单条评价的当前收藏总数
      *
-     * @param sourceId 璇勪环ID
-     * @return 鏀惰棌鏁伴噺
+     * @param sourceId 评价ID
+     * @return 收藏数量
      */
     @Override
     public Integer getReviewStarCount(Long sourceId) {
@@ -994,10 +984,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 娓呯悊澶т竴缁熺殑鍗曟潯璇勪环璇︽儏缂撳瓨
-     * 浠讳綍娑夊強鍒拌瘎浠峰唴瀹规垨浜掑姩鏁版嵁鏇存柊鐨勬搷浣滐紝鍧囬渶璋冪敤姝ゆ柟娉曚互纭繚鍚庣画璇诲彇鐨勬暟鎹柊椴滃害銆?
+     * 清理单条评价详情缓存
+     * 任何涉及到评价内容或互动数据更新的操作，均需调用此方法以确保后续读取的数据新鲜度。
      *
-     * @param reviewId 璇勪环涓婚敭
+     * @param reviewId 评价主键
      */
     private void clearReviewCache(Long reviewId) {
         if (reviewId == null) {
@@ -1007,10 +997,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 鎵归噺娓呯悊璇勪环璇︽儏缂撳瓨
+     * 批量清理评价详情缓存
      * 涓昏鐢ㄤ簬鏁版嵁鎵归噺鍚屾钀藉簱鍚庣殑绾ц仈娓呯悊鍔ㄤ綔銆?
      *
-     * @param reviewIds 璇勪环涓婚敭闆嗗悎
+     * @param reviewIds 评价主键集合
      */
     private void clearReviewCacheBatch(Collection<Long> reviewIds) {
         if (CollUtil.isEmpty(reviewIds)) {
@@ -1026,9 +1016,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 淇濆瓨璇勪环 ID 鍒?Redis 鎺掕姒滀腑 (鍙戝竷鏃剁殑鏋佺畝鍗犱綅鐗?
+     * 保存评价 ID 到 Redis 排行榜中 (发布时的极简占位)
      * 涓氬姟瑙ｈ€︼細涓轰簡淇濊瘉鎺ュ彛鍝嶅簲閫熷害锛屽彧缁欐柊璇勪环璧嬩簣鏃堕棿鎴充綔涓哄垵濮嬪垎銆?
-     * 绮剧‘鐨勫熀浜庝簰鍔ㄩ噺涓庢椂闂磋“鍑忕殑鐑害鍒嗘暟閲嶇畻锛屽畬鍏ㄧЩ浜よ嚦 SyncDataServiceImpl 寮傛澶勭悊銆?
+     * 精确的基于互动量与时间衰减的热度分数重算，完全移交至 SyncDataServiceImpl 异步处理。
      *
      * @param reviewType 璇勪环鐩爣婧愮被鍨?
      * @param review 璇勪环瀹炰綋
@@ -1042,11 +1032,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         String hotRankKey = hotRankRedisEnum.getHotRankKeyPrefix() + review.getSourceId();
         String newRankKey = hotRankRedisEnum.getNewRankKeyPrefix() + review.getSourceId();
 
-        // 1. 銆愭渶鏂版銆戯細缁濆鍑嗙‘銆傜洿鎺ュ瓨鍏ュ彂甯冩椂闂存埑銆?
+        // 1. 【最新榜】：绝对准确。直接存入发布时间戳。
         redisService.setCacheZSet(newRankKey, review.getId().toString(), scoreTime);
 
-        // 2. 銆愮儹闂ㄦ銆戯細璧嬩簣涓€涓瀬楂樼殑鍒濆鍒嗭紙褰撳墠鏃堕棿鎴筹級锛屼繚璇佺敤鎴峰垰鍙戝畬璇勪环鑳界灛闂存帓鍦ㄦ棣栥€?
-        // 鐪熷疄鐨勨€滈噸鍔涜“鍑忊€濈簿缁嗗寲绠楀垎锛屼氦鐢?XXL-JOB 瀹氭椂浠诲姟绋嶅悗鏉ユ礂鐗屻€?
+        // 2. 【热门榜】：赋予一个极高的初始分（当前时间戳），保证用户刚发完评价能瞬间排在榜首。
+        // 真实的“权重衰减”精细化算分，交由 XXL-JOB 定时任务稍后来洗牌。
         redisService.setCacheZSet(hotRankKey, review.getId().toString(), (double) scoreTime);
     }
 
@@ -1153,7 +1143,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             String reviewCountKeyPrefix = reviewType.getReviewCountKeyPrefix()+ review.getSourceId();
             String reviewSyncKey = reviewType.getReviewSyncKey();
 
-            // 灏嗚繚瑙勮瘎浠蜂粠鎺掕姒滀腑鍓旈櫎
+            // 将违规评价从排行榜中剔除
             redisService.removeCacheZSetObject(reviewKeyPrefix, review.getId().toString());
             redisService.removeCacheZSetObject(reviewNewRankKeyPrefix, review.getId().toString());
             // 3. 确保 Redis 计数器已初始化，再递减
@@ -1220,10 +1210,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 鏋勫缓鐢ㄤ簬鏍囪鐢ㄦ埛鈥滃凡璇勪环鐩爣婧愨€濊冻杩瑰巻鍙茬殑 Redis ZSet Key
+     * 构建用于标记用户“已评价目标源”足迹历史的 Redis ZSet Key
      *
-     * @param reviewType 璇勪环绫诲瀷鏋氫妇
-     * @param userId 瑙﹀彂琛屼负鐨勭敤鎴?ID
+     * @param reviewType 评价类型枚举
+     * @param userId 触发行为的用户 ID
      * @return Redis Key
      */
     private String userReviewKey(ReviewTypeEnum reviewType, Long userId) {
@@ -1234,11 +1224,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 褰撳彂鐢熺墿鐞嗗垹闄ゆ垨杩濊涓嬫灦鎿嶄綔鏃惰皟鐢ㄧ殑琛ュ伩娓呯悊閫昏緫銆?
-     * 鑻ヨ鐢ㄦ埛鍦ㄨ鐩爣婧愪笅锛屽凡娌℃湁浠讳綍鏈夋晥鐨勮瘎浠疯褰曪紝鍒欏悓姝ユ摝闄?Redis 涓粬鐨勨€滃凡璇勪环鈥濊冻杩广€?
+     * 当发生物理删除或违规下架操作时调用的补偿清理逻辑。
+     * 若该用户在该目标源下，已没有任何有效的评价记录，则同步擦除 Redis 中他的“已评价”足迹。
      *
-     * @param reviewType 璇勪环绫诲瀷鏋氫妇
-     * @param review 琚搷浣滅殑璇勪环瀹炰綋
+     * @param reviewType 评价类型枚举
+     * @param review 被操作的评价实体
      */
     private void evictUserReviewSourceIfNeeded(ReviewTypeEnum reviewType, Review review) {
         if (reviewType == null || review == null || review.getUserId() == null || review.getSourceId() == null) {

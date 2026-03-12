@@ -3,6 +3,7 @@ package com.smartLive.shop.api.DTO;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
 public class ShopTypeDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;

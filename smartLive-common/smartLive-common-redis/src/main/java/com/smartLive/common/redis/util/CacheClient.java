@@ -32,7 +32,7 @@ public class CacheClient {
         redisData.setData(value);
         redisData.setExpireTime(LocalDateTime.now().plusSeconds(unit.toSeconds(time)));
         //写入redis
-        redisService.setCacheObject(key, JSONUtil.toJsonStr(redisData));
+        redisService.setCacheObject(key, JSONUtil.toJsonStr(redisData), RedisConstants.CACHE_LOGICAL_EXPIRE_TTL, TimeUnit.DAYS);
     }
 
 
@@ -125,7 +125,7 @@ public class CacheClient {
      * @param id
      * @return
      */
-    public <R,ID> R queryWithLogicalExpireAndPassThrough(String keyPrefix, ID id,Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit)  {
+    public <R,ID> R queryWithLogicalExpireAndPassThrough(String keyPrefix,String lockPrefix, ID id,Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit)  {
         String key = keyPrefix + id;
         //从缓存里获取商铺缓存
         String json =redisService.getCacheObject(key);
@@ -149,7 +149,7 @@ public class CacheClient {
         if (r.get() != null){
             //TODO 过期，缓存重建
             //获取互斥锁
-            String lockKey = RedisConstants.LOCK_SHOP_KEY + id;
+            String lockKey = lockPrefix + id;
             boolean isLock = tryLock(lockKey);
             if (isLock){
                 //取锁成功，开启独立线程,进行缓存重建

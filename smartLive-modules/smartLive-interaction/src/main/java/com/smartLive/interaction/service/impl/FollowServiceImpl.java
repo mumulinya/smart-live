@@ -376,11 +376,13 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         String value = bizDomain+":"+feedEventMessage.getBizId().toString();
         if(feedEventMessage.getAction()!=null){
             value=feedEventMessage.getAction()+":"+value;
+            //如果是店铺的事件的话，要把店铺id一起写入进去
+            if(Objects.equals(feedEventMessage.getSourceType(), FeedTypeEnum.SHOP_FEED.getCode())){
+                value=feedEventMessage.getSourceId().toString()+":"+value;
+            }
         }
-        boolean isSendSystemNotice=false;
-        if(feedEventMessage.getBizType()==GlobalBizTypeEnum.PRODUCT.getCode()){
-            isSendSystemNotice=true;
-        }
+        //判断是否发送系统通知(商品有关的动态发送系统通知)
+        boolean isSendSystemNotice= Objects.equals(feedEventMessage.getBizType(), GlobalBizTypeEnum.PRODUCT.getCode());
         // 优化方案：采用 Pipeline 批量写入替代循环写入
         List<String> userFeedKeys = new ArrayList<>(userIdList.size());
         List<String> allFeedKeys = new ArrayList<>(userIdList.size());
@@ -419,7 +421,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         try {
             GlobalBizTypeEnum globalBizTypeEnum = GlobalBizTypeEnum.getByCode(feedEventMessage.getSourceType());
             String desc = ItemActionType.getDescByCode(feedEventMessage.getAction());
-            String content = "你关注的"+ globalBizTypeEnum.getDesc()+hashMap.get("title")+ desc;
+            String content = "你关注的"+ globalBizTypeEnum.getDesc()+":《"+hashMap.get("title")+"》:"+ desc;
             SystemNoticeCreateDTO createDTO = new SystemNoticeCreateDTO();
             createDTO.setUserId(userId);
             createDTO.setSourceType(feedEventMessage.getBizType());
