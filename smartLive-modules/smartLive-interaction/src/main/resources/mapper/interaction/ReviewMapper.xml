@@ -38,6 +38,11 @@
             <if test="sourceType != null "> and source_type = #{sourceType}</if>
             <if test="sourceId != null "> and source_id = #{sourceId}</if>
             <if test="shopId != null "> and shop_id = #{shopId}</if>
+            <if test="shopIds != null and shopIds.size > 0"> and shop_id in
+                <foreach collection="shopIds" item="shopIdItem" open="(" separator="," close=")">
+                    #{shopIdItem}
+                </foreach>
+            </if>
             <if test="orderId != null "> and order_id = #{orderId}</if>
             <if test="images != null  and images != ''"> and images = #{images}</if>
             <if test="content != null  and content != ''"> and content = #{content}</if>

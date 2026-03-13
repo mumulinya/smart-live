@@ -14,11 +14,13 @@ import com.smartLive.common.core.constant.PageConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.AppLoginUser;
+import com.smartLive.common.core.enums.ContentStatusEnum;
 import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.common.RankRedisEnum;
 import com.smartLive.common.core.enums.interaction.ReviewTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
@@ -47,6 +49,7 @@ import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.product.api.RemoteProductService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.shop.api.RemoteShopService;
+import com.smartLive.system.api.RemoteUserService;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -83,6 +86,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private RemoteAppUserService remoteAppUserService;
     @Autowired
     private RemoteShopService remoteShopService;
+    @Autowired
+    private RemoteUserService remoteUserService;
     @Autowired
     private RedisService redisService;
     @Autowired
@@ -161,12 +166,24 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public List<ReviewVO> selectReviewList(Review review) {
+        if (review == null) {
+            review = new Review();
+        }
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId != null && !SecurityUtils.isAdmin(currentUserId)) {
+            List<Long> shopIds = remoteUserService.getShopIdsByUserId(currentUserId);
+            if (CollUtil.isEmpty(shopIds)) {
+                return Collections.emptyList();
+            }
+            review.setShopIds(shopIds);
+        }
+
         List<Review> reviews = reviewMapper.selectReviewList(review);
         List<ReviewVO> reviewVOList = convertToReviewVOList(reviews);
         // 根据资源类型进行分组
         Map<Integer, List<ReviewVO>> reviewMap = reviewVOList.stream()
                 .collect(Collectors.groupingBy(ReviewVO::getSourceType));
-        List<ReviewVO> result=new ArrayList<>();
+        List<ReviewVO> result = new ArrayList<>();
         // 遍历资源类型进行分组
         reviewMap.forEach((sourceType, reviewVOS) -> {
             ReviewStrategy reviewStrategy = reviewStrategyFactory.getStrategy(sourceType);
@@ -204,7 +221,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         review.setUpdateTime(DateUtils.getNowDate());
         int i = reviewMapper.updateReview(review);
         // 如果更新后状态变为待审核(0)，重新触发审核流
-        if (i > 0 && review.getStatus() == 0) {
+        if (i > 0 && Objects.equals(review.getAuditStatus(), AuditStatusEnum.WAITING.getCode())
+                && !Objects.equals(review.getStatus(), ContentStatusEnum.DRAFT.getCode())) {
             sendAuditMessage(review);
         }
         // 数据变更，必须清除详情缓存保证数据一致性
@@ -303,6 +321,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             log.info("Redis ZSet empty, querying DB for Review IDs");
             List<Review> dbList = query()
                     .eq("source_id", review.getSourceId())
+                    .eq("status", ContentStatusEnum.PUBLISHED.getCode())
                     .ne("audit_status", 2)
                     .ne("audit_status",3)
                     .eq("source_type", review.getSourceType())
@@ -370,6 +389,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         review.setCreateTime(DateUtils.getNowDate());
         int i = reviewMapper.insertReview(review);
         if (i > 0) {
+            if (Objects.equals(review.getStatus(), ContentStatusEnum.DRAFT.getCode())) {
+                return i;
+            }
             // 1. 发送给审核中心
             sendAuditMessage(review);
 
@@ -473,15 +495,14 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             redisService.removeCacheZSetObject(reviewNewRankKeyPrefix, dbReview.getId().toString());
 
             // 3. 确保 Redis 计数器已初始化，再递减目标主体的评价总数
-            getReviewCount(dbReview);
-            redisService.decrementCacheValue(reviewCountKeyPrefix);
-
-            // 4. 将目标源 ID 放入待落库同步队列
-            redisService.setCacheSet(reviewSyncKey, Collections.singleton(dbReview.getSourceId().toString()));
-
-            // 5. 评价被删，目标源的互动量减少，必须把它扔进算分队列，让定时任务给目标源【降温 / 降权】
-            if (hotRankRedisEnum != null) {
-                redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), dbReview.getId().toString());
+            if (Objects.equals(dbReview.getStatus(), ContentStatusEnum.PUBLISHED.getCode())) {
+                // 3. ensure counters and rank only for published review
+                getReviewCount(dbReview);
+                redisService.decrementCacheValue(reviewCountKeyPrefix);
+                redisService.setCacheSet(reviewSyncKey, Collections.singleton(dbReview.getSourceId().toString()));
+                if (hotRankRedisEnum != null) {
+                    redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), dbReview.getId().toString());
+                }
             }
 
             // 6. 同步删除向量库数据
@@ -494,7 +515,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                     SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY,
                     contentSyncMessage);
 
-            evictUserReviewSourceIfNeeded(reviewType, dbReview);
+            if (Objects.equals(dbReview.getStatus(), ContentStatusEnum.PUBLISHED.getCode())) {
+                evictUserReviewSourceIfNeeded(reviewType, dbReview);
+            }
         }
         return i;
     }
@@ -592,6 +615,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             count = query()
                     .eq("source_type", review.getSourceType())
                     .eq("source_id", review.getSourceId())
+                    .eq("status", ContentStatusEnum.PUBLISHED.getCode())
                     .count().intValue();
             redisService.setCacheObject(reviewCountKey, count);
             return count;
@@ -601,6 +625,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq(review.getSourceType() != null, "source_type", review.getSourceType())
                 .eq(review.getSourceId() != null, "source_id", review.getSourceId())
                 .eq(review.getUserId() != null, "user_id", review.getUserId())
+                .eq("status", ContentStatusEnum.PUBLISHED.getCode())
                 .count().intValue();
     }
 
@@ -1123,13 +1148,23 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     public Boolean updateReviewStatus(Long id, Integer status, String reason) {
         // 拒绝时记录拒绝原因，通过时清空拒绝原因
         String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
-        boolean update = update(new UpdateWrapper<Review>()
+        Integer businessStatus = null;
+        if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
+            businessStatus = ContentStatusEnum.PUBLISHED.getCode();
+        } else if (AuditStatusEnum.isRejected(status)) {
+            businessStatus = ContentStatusEnum.OFF.getCode();
+        }
+        UpdateWrapper<Review> uw = new UpdateWrapper<Review>()
                 .set("audit_status", status)
                 .set("reject_reason", rejectReason)
-                .eq("id", id));
+                .eq("id", id);
+        if (businessStatus != null) {
+            uw.set("status", businessStatus);
+        }
+        boolean update = update(uw);
         if (update) {
             clearReviewCache(id);
-            // 状态变更，同步更新向量库(如果已经存在会删除后重新插入，从而包含最新的状态，状态如果是拒绝或者审查则在后续检索时不该查到，可以通过配置检索策略忽略 status)
+            // 状态变更，同步更新向量库
             publish(new String[]{id.toString()});
         }
         // 若审核被拒绝，需要同步将该评价从排行榜中移除并触发所属主体降分逻辑
@@ -1199,6 +1234,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq("user_id", userId)
                 .eq("source_type", review.getSourceType())
                 .eq("source_id", review.getSourceId())
+                .eq("status", ContentStatusEnum.PUBLISHED.getCode())
                 .ne("audit_status", 2)
                 .count();
         if (count > 0) {
@@ -1237,6 +1273,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq("user_id", review.getUserId())
                 .eq("source_type", review.getSourceType())
                 .eq("source_id", review.getSourceId())
+                .eq("status", ContentStatusEnum.PUBLISHED.getCode())
                 .ne("audit_status", 2)
                 .count();
         if (remains <= 0) {

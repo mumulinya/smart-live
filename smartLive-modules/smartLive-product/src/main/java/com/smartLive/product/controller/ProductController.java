@@ -122,7 +122,7 @@ public class ProductController extends BaseController {
 
     /**
      * 修改商品审批状态
-     * 支持 PENDING(待审核), NORMAL(正常), OFF_SHELF(下架), AUDIT_FAIL(审核失败), EXPIRED(过期) 状态流转
+     * 支持 ON_SHELF(已上架), OFF_SHELF(已下架), EXPIRED(已过期) 状态流转
      *
      * @param id 商品 ID
      * @param status 目标状态码

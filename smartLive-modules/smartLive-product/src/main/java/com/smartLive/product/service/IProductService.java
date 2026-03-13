@@ -207,7 +207,7 @@ public interface IProductService extends IService<Product>
      * 如审核通过则自动触发索引同步与上架 MQ 通知
      *
      * @param id     商品 ID
-     * @param status 商品状态 (NORMAL, OFF_SHELF, AUDIT_FAIL 等)
+     * @param status 商品状态 (ON_SHELF, OFF_SHELF, EXPIRED 等)
      * @param reason 审核失败原因（可选）
      * @return 更新是否成功
      */

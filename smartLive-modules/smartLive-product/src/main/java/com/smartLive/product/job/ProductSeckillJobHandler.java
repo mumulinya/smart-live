@@ -67,7 +67,7 @@ public class ProductSeckillJobHandler {
 
         // 1. 查询即将开始的秒杀商品：状态正常 + 秒杀类型 + 开始时间在未来2小时内
         List<Product> products = productService.lambdaQuery()
-                .eq(Product::getStatus, ProductStatusEnum.NORMAL.getCode())
+                .eq(Product::getStatus, ProductStatusEnum.ON_SHELF.getCode())
                 .eq(Product::getActivityType, ProductActivityTypeEnum.SECKILL.getCode())
                 .ge(Product::getBeginTime, now)           // 还未开始
                 .le(Product::getBeginTime, preHeatDeadline) // 但在2小时内即将开始
@@ -130,7 +130,7 @@ public class ProductSeckillJobHandler {
 
         // 1. 查询即将结束的秒杀商品：状态正常 + 秒杀类型 + 结束时间在未来30分钟内
         List<Product> products = productService.lambdaQuery()
-                .eq(Product::getStatus, ProductStatusEnum.NORMAL.getCode())
+                .eq(Product::getStatus, ProductStatusEnum.ON_SHELF.getCode())
                 .eq(Product::getActivityType, ProductActivityTypeEnum.SECKILL.getCode())
                 .gt(Product::getEndTime, now)              // 还未结束（排除已过期的）
                 .le(Product::getEndTime, soonEndDeadline)  // 但在30分钟内即将结束
@@ -186,7 +186,7 @@ public class ProductSeckillJobHandler {
 
         // 1. 查询已过期的秒杀商品：状态正常 + 秒杀类型 + 结束时间早于当前
         List<Product> products = productService.lambdaQuery()
-                .eq(Product::getStatus, ProductStatusEnum.NORMAL.getCode())
+                .eq(Product::getStatus, ProductStatusEnum.ON_SHELF.getCode())
                 .eq(Product::getActivityType, ProductActivityTypeEnum.SECKILL.getCode())
                 .le(Product::getEndTime, now)  // 结束时间已过
                 .list();
@@ -243,7 +243,7 @@ public class ProductSeckillJobHandler {
         try {
             // 1. 只查秒杀商品
             List<Product> products = productService.lambdaQuery()
-                    .eq(Product::getStatus, ProductStatusEnum.NORMAL.getCode())
+                    .eq(Product::getStatus, ProductStatusEnum.ON_SHELF.getCode())
                     .eq(Product::getActivityType, ProductActivityTypeEnum.SECKILL.getCode())
                     .le(Product::getBeginTime, new Date())  // 已开始
                     .ge(Product::getEndTime, new Date())    // 未结束

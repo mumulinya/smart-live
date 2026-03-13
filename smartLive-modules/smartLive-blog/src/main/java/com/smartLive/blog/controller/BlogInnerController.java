@@ -4,6 +4,7 @@ import com.smartLive.blog.domain.Blog;
 import com.smartLive.blog.domain.VO.BlogVO;
 import com.smartLive.blog.service.IBlogService;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.enums.ContentStatusEnum;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
@@ -126,7 +127,7 @@ public class BlogInnerController extends BaseController
      */
     @GetMapping("/getAllBlogIds")
     public List<Long> getAllBlogIds() {
-        return blogService.query().eq("status", 0)
+        return blogService.query().eq("status", ContentStatusEnum.PUBLISHED.getCode())
                 .ne("audit_status", 2)
                 .ne("audit_status", 3)
                 .select("id")

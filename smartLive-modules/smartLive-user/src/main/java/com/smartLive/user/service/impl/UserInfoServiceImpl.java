@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -278,9 +280,20 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
      */
     @Override
     public Boolean updateUserStatus(Long id, Integer status) {
-        boolean updated = update(new UpdateWrapper<UserInfo>()
+        Integer businessStatus = null;
+        // 用户业务状态：0=正常，1=停用
+        if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
+            businessStatus = 0;
+        } else if (AuditStatusEnum.isRejected(status)) {
+            businessStatus = 1;
+        }
+        UpdateWrapper<UserInfo> uw = new UpdateWrapper<UserInfo>()
                 .set("audit_status", status)
-                .eq("user_id", id));
+                .eq("user_id", id);
+        if (businessStatus != null) {
+            uw.set("status", businessStatus);
+        }
+        boolean updated = update(uw);
         if (updated) {
             userService.clearUserCache(id);
         }

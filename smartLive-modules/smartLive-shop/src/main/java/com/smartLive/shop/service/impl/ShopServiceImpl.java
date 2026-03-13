@@ -140,6 +140,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public List<Shop> selectShopList(Shop shop) {
+        if (shop == null) {
+            shop = new Shop();
+        }
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId != null && !SecurityUtils.isAdmin(currentUserId)) {
+            return selectShopListByUserId(currentUserId, shop);
+        }
         return shopMapper.selectShopList(shop);
     }
 
@@ -997,7 +1004,21 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         Shop shop = getById(id);
         // 拒绝时写入拒绝原因，通过时清空拒绝原因
         String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
-        boolean updated = update(new UpdateWrapper<Shop>().set("audit_status", status).set("reject_reason", rejectReason).eq("id", id));
+        Integer businessStatus = null;
+        // 店铺业务状态：1=启用，2=停用
+        if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
+            businessStatus = 1;
+        } else if (AuditStatusEnum.isRejected(status)) {
+            businessStatus = 2;
+        }
+        UpdateWrapper<Shop> uw = new UpdateWrapper<Shop>()
+                .set("audit_status", status)
+                .set("reject_reason", rejectReason)
+                .eq("id", id);
+        if (businessStatus != null) {
+            uw.set("status", businessStatus);
+        }
+        boolean updated = update(uw);
         if (updated) {
             flashShopRedisCache(id);
             if (shop != null && shop.getTypeId() != null) {

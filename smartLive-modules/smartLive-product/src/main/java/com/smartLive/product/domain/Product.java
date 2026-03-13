@@ -78,11 +78,9 @@ public class Product   implements Serializable {
     private Integer sold;
     /** 
      * 商品状态 
-     * PENDING(0): 待审核
-     * NORMAL(1): 正常/上架
-     * OFF_SHELF(2): 下架
-     * AUDIT_FAIL(3): 审核失败
-     * EXPIRED(4): 过期
+     * ON_SHELF(1): listed
+     * OFF_SHELF(2): off shelf
+     * EXPIRED(3): expired
      */
     private Integer status;
 

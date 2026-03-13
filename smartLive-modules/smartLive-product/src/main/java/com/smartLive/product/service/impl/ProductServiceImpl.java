@@ -925,10 +925,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         Product product = getById(id);
         if (product == null) return false;
 
-        Integer finalStatus = status;
+        Integer finalStatus = product.getStatus() == null ? ProductStatusEnum.OFF_SHELF.getCode() : product.getStatus();
 
         // 如果审核通过
-        if (status.equals(ProductStatusEnum.NORMAL.getCode())) {
+        if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
+            finalStatus = ProductStatusEnum.ON_SHELF.getCode();
             // 如果是秒杀商品
             if (product.getActivityType() != null && product.getActivityType() == 1) {
                 Date now = DateUtils.getNowDate();
@@ -945,6 +946,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             }
             // 发送消息推送动态
             sendNewProductMessageToMQ(product);
+        } else if (AuditStatusEnum.isRejected(status)) {
+            // 审核驳回后保持业务状态为下架，避免与过期状态混淆
+            finalStatus = ProductStatusEnum.OFF_SHELF.getCode();
         }
 
         // 拒绝时写入拒绝原因，通过时清空拒绝原因
@@ -957,7 +961,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if(b){
             clearProductCache(id);
             // 如果审核通过，则将其加入Redis热榜和计算队列
-            if (status.equals(ProductStatusEnum.NORMAL.getCode())) {
+            if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
                 publish(new String[]{id.toString()});
                 String rankKeySuffix = (product.getCategory() != null && product.getCategory() == 1) ? "voucher" : "deal";
                 String hotRankKey = RedisConstants.PRODUCT_HOT_RANK_KEY + rankKeySuffix;

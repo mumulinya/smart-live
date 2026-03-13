@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.smartLive.common.core.context.SecurityContextHolder;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.shop.domain.VO.ShopVO;
 import jakarta.servlet.http.HttpServletResponse;
 import cn.hutool.core.util.StrUtil;
@@ -48,16 +47,7 @@ public class ShopController extends BaseController {
     @GetMapping("/list")
     public TableDataInfo list(Shop shop) {
         startPage();
-        // 获取用户id
-        Long userId = SecurityUtils.getUserId();
-        boolean admin = SecurityUtils.isAdmin(userId);
-        List<Shop> list;
-        // 管理员允许查询所有店铺
-        if(admin){
-             list = shopService.selectShopList(shop);
-        }else{
-            list = shopService.selectShopListByUserId(userId, shop);
-        }
+        List<Shop> list = shopService.selectShopList(shop);
         return getDataTable(list);
     }
 
@@ -66,16 +56,7 @@ public class ShopController extends BaseController {
      */
     @GetMapping("/shopList")
     public AjaxResult shopList(Shop shop) {
-        // 获取用户id
-        Long userId = SecurityUtils.getUserId();
-        boolean admin = SecurityUtils.isAdmin(userId);
-        List<Shop> list;
-        // 管理员允许查询所有店铺
-        if(admin){
-            list = shopService.selectShopList(shop);
-        }else{
-            list = shopService.selectShopListByUserId(userId, shop);
-        }
+        List<Shop> list = shopService.selectShopList(shop);
         return success(list);
     }
     /**

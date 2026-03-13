@@ -787,9 +787,20 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
      */
     @Override
     public Boolean updateCommentStatus(Long id, Integer status) {
-        boolean update = update(new UpdateWrapper<Comment>()
+        Integer businessStatus = null;
+        // 评论业务状态：0=正常，2=禁止查看
+        if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
+            businessStatus = 0;
+        } else if (AuditStatusEnum.isRejected(status)) {
+            businessStatus = 2;
+        }
+        UpdateWrapper<Comment> uw = new UpdateWrapper<Comment>()
                 .set("audit_status", status)
-                .eq("id", id));
+                .eq("id", id);
+        if (businessStatus != null) {
+            uw.set("status", businessStatus);
+        }
+        boolean update = update(uw);
         // 如果审核不通过，直接将数据移出排行榜并触发其父级目标的重计算扣分
         if (update && AuditStatusEnum.isRejected(status)) {
             Comment comment = getById(id);

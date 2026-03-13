@@ -2,6 +2,7 @@ package com.smartLive.interaction.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smartLive.common.core.annotation.Excel;
@@ -11,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 评价对象 tb_comments
@@ -36,6 +38,10 @@ public class Review extends BaseEntity
     /** 店铺id */
     @Excel(name = "店铺id")
     private Long shopId;
+
+    /** 商家可见店铺ID集合（仅后台查询参数） */
+    @TableField(exist = false)
+    private List<Long> shopIds;
     /** 订单id */
     @Excel(name = "订单id")
     private Long orderId;

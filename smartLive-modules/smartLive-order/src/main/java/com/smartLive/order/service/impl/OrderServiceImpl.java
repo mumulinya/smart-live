@@ -496,7 +496,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         int i = updateOrder(order);
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
-            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.NORMAL.getCode())){
+            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
                 log.info("秒杀商品取消,准备恢复库存");
                 // 恢复库存
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
@@ -530,7 +530,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         int i = updateOrder(order);
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
-            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.NORMAL.getCode())){
+            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
                 log.info("秒杀商品退款,准备恢复库存");
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
@@ -733,7 +733,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         int i = updateOrder(order);
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
-            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.NORMAL.getCode())){
+            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
                 log.info("秒杀商品订单过期,准备恢复库存");
                 // 恢复库存
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
