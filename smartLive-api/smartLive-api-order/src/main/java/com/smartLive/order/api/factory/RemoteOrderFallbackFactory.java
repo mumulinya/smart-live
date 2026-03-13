@@ -56,6 +56,12 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
             public List<ProductSoldDTO> countProductSold() {
                 return List.of();
             }
+
+            @Override
+            public Integer countWeekOrders(Long shopId) {
+                log.error("统计店铺近7天核销订单数失败:{}", cause.getMessage());
+                return 0;
+            }
         };
 
     }

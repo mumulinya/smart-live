@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.web.client.RestClientCustomizer;
 import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
+import org.springframework.util.StringUtils;
 
 
 /**
@@ -215,6 +216,18 @@ public class CommonConfiguration {
     }
 
     /**
+     * Shared ChatClient for merchant strategy pipeline.
+     * Uses framework chat model + chat memory advisor only.
+     */
+    @Bean("merchantStrategyChatClient")
+    public ChatClient merchantStrategyChatClient(
+            @Qualifier("frameworkChatModel") ChatModel chatModel,
+            ChatMemory chatMemory
+    ) {
+        return buildChatClient(chatModel, chatMemory, null);
+    }
+
+    /**
      * 专门用于自建 Agent 架构的智能意图路由决策器。
      * 无需记忆，无需工具，只负责通过大模型瞬间判断请求属于哪个领域。
      */
@@ -234,14 +247,18 @@ public class CommonConfiguration {
     }
 
     private ChatClient buildChatClient(ChatModel model, ChatMemory chatMemory, String systemPrompt, Object... tools) {
-        return ChatClient.builder(model)
-                .defaultSystem(systemPrompt)
+        ChatClient.Builder builder = ChatClient.builder(model)
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor(),
                         MessageChatMemoryAdvisor.builder(chatMemory).build()
-                )
-                .defaultTools(tools)
-                .build();
+                );
+        if (StringUtils.hasText(systemPrompt)) {
+            builder.defaultSystem(systemPrompt);
+        }
+        if (tools != null && tools.length > 0) {
+            builder.defaultTools(tools);
+        }
+        return builder.build();
     }
 
     /**

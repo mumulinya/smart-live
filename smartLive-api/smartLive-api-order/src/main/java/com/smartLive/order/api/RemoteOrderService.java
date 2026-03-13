@@ -63,5 +63,14 @@ public interface RemoteOrderService {
     @GetMapping("/inner/order/count/product/sold")
     List<ProductSoldDTO> countProductSold();
 
+    /**
+     * 统计店铺近 7 天核销订单数
+     *
+     * @param shopId 店铺 ID
+     * @return 订单数
+     */
+    @GetMapping("/inner/order/count/week/orders")
+    Integer countWeekOrders(@RequestParam("shopId") Long shopId);
+
 }
 

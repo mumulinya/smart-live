@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * AI 内容生成 Controller
+ * AI 鍐呭鐢熸垚 Controller
  *
  * @author smartLive
  */
@@ -31,44 +31,44 @@ public class AiGenerateController extends BaseController {
     private IReviewGenerateService reviewGenerateService;
 
     /**
-     * AI 生成博客正文
-     * 根据店铺 ID 和风格偏好，生成适合小红书等平台的探店文案
+     * AI 鐢熸垚鍗氬姝ｆ枃
+     * 鏍规嵁搴楅摵 ID 鍜岄鏍煎亸濂斤紝鐢熸垚閫傚悎灏忕孩涔︾瓑骞冲彴鐨勬帰搴楁枃妗?
      *
-     * @param dto 博客生成请求参数，包含 shopId、描述和风格
-     * @return 包含标题列表和正文内容的 Result
+     * @param dto 鍗氬鐢熸垚璇锋眰鍙傛暟锛屽寘鍚?shopId銆佹弿杩板拰椋庢牸
+     * @return 鍖呭惈鏍囬鍒楄〃鍜屾鏂囧唴瀹圭殑 Result
      */
     @PostMapping("/blog")
     public Result generateBlog(@RequestBody BlogGenerateDTO dto) {
         if (dto.getShopId() == null) {
-            return Result.fail("请提供店铺ID");
+            return Result.fail("璇锋彁渚涘簵閾篒D");
         }
         try {
             BlogGenerateVO vo = blogGenerateService.generate(dto);
             return Result.ok(vo);
         } catch (Exception e) {
-            log.error("AI 博客生成失败", e);
-            return Result.fail("AI 博客生成失败: " + e.getMessage());
+            log.error("AI 鍗氬鐢熸垚澶辫触", e);
+            return Result.fail("AI 鍗氬鐢熸垚澶辫触: " + e.getMessage());
         }
     }
 
     /**
-     * AI 生成评价内容
-     * 模拟用户口吻，根据店铺特色生成真实的消费评价
+     * AI 鐢熸垚璇勪环鍐呭
+     * 妯℃嫙鐢ㄦ埛鍙ｅ惢锛屾牴鎹簵閾虹壒鑹茬敓鎴愮湡瀹炵殑娑堣垂璇勪环
      *
-     * @param dto 评价生成请求参数，包含 shopId 和相关描述
-     * @return 生成的评价文本内容
+     * @param dto 璇勪环鐢熸垚璇锋眰鍙傛暟锛屽寘鍚?shopId 鍜岀浉鍏虫弿杩?
+     * @return 鐢熸垚鐨勮瘎浠锋枃鏈唴瀹?
      */
     @PostMapping("/review")
     public Result generateReview(@RequestBody ReviewGenerateDTO dto) {
         if (dto.getShopId() == null) {
-            return Result.fail("请提供店铺ID");
+            return Result.fail("璇锋彁渚涘簵閾篒D");
         }
         try {
             String content = reviewGenerateService.generate(dto);
             return Result.ok(content);
         } catch (Exception e) {
-            log.error("AI 评价生成失败", e);
-            return Result.fail("AI 评价生成失败: " + e.getMessage());
+            log.error("AI 璇勪环鐢熸垚澶辫触", e);
+            return Result.fail("AI 璇勪环鐢熸垚澶辫触: " + e.getMessage());
         }
     }
 }

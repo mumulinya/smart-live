@@ -155,6 +155,8 @@ public interface IOrderService  extends IService<Order>
      * @return
      */
     List<ProductSoldVO> countProductSold();
+
+    Integer countWeekOrders(Long shopId);
     /**
      * 订单过期
      * @param id

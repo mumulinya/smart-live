@@ -14,8 +14,8 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * AI 聊天会话实体
- * 对应数据库 session 表，用于管理用户的对话记录列表
+ * AI 鑱婂ぉ浼氳瘽瀹炰綋
+ * 瀵瑰簲鏁版嵁搴?session 琛紝鐢ㄤ簬绠＄悊鐢ㄦ埛鐨勫璇濊褰曞垪琛?
  *
  * @author smartLive
  */
@@ -25,21 +25,21 @@ import java.util.Date;
 public class Session implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** 会话 ID */
+    /** 浼氳瘽 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 所属用户 ID */
+    /** 鎵€灞炵敤鎴?ID */
     private Long userId;
 
-    /** 会话标题（如：美食推荐咨询） */
+    /** 浼氳瘽鏍囬锛堝锛氱編椋熸帹鑽愬挩璇級 */
     private String title;
 
-    /** 创建时间 */
+    /** 鍒涘缓鏃堕棿 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-    /** 最后更新时间（用于会话列表排序） */
+    /** 鏈€鍚庢洿鏂版椂闂达紙鐢ㄤ簬浼氳瘽鍒楄〃鎺掑簭锛?*/
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
 }

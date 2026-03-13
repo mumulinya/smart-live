@@ -80,4 +80,12 @@ public class InnerOrderController extends BaseController
     public List<ProductSoldVO> countProductSold() {
         return orderService.countProductSold();
     }
+
+    /**
+     * 统计店铺近 7 天核销订单数
+     */
+    @GetMapping("/count/week/orders")
+    public Integer countWeekOrders(@RequestParam("shopId") Long shopId) {
+        return orderService.countWeekOrders(shopId);
+    }
 }

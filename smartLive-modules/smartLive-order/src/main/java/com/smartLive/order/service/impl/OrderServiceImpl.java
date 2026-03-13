@@ -716,6 +716,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return orderMapper.countProductSold();
     }
 
+    @Override
+    public Integer countWeekOrders(Long shopId) {
+        if (shopId == null) {
+            return 0;
+        }
+        Integer count = orderMapper.countWeekOrders(shopId);
+        return count == null ? 0 : count;
+    }
+
     /**
      * 订单过期
      *

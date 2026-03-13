@@ -26,27 +26,27 @@ public class AiSuggestQuestion implements Serializable {
     private Long id;
 
     /**
-     * 问题内容
+     * 闂鍐呭
      */
     private String content;
 
     /**
-     * 分类：0=通用 1=店铺 2=商品 3=评价
+     * 鍒嗙被锛?=閫氱敤 1=搴楅摵 2=鍟嗗搧 3=璇勪环
      */
     private Integer category;
 
     /**
-     * 排序
+     * 鎺掑簭
      */
     private Integer sort;
 
     /**
-     * 0=禁用 1=启用
+     * 0=绂佺敤 1=鍚敤
      */
     private Integer status;
 
     /**
-     * 创建时间
+     * 鍒涘缓鏃堕棿
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

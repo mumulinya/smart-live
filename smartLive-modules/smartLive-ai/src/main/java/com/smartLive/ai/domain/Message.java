@@ -13,8 +13,8 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * AI 聊天消息实体
- * 对应数据库 message 表，存储会话中的每一轮对话内容
+ * AI 鑱婂ぉ娑堟伅瀹炰綋
+ * 瀵瑰簲鏁版嵁搴?message 琛紝瀛樺偍浼氳瘽涓殑姣忎竴杞璇濆唴瀹?
  *
  * @author smartLive
  */
@@ -24,23 +24,23 @@ import java.util.Date;
 public class Message implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** 消息 ID */
+    /** 娑堟伅 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 所属会话 ID */
+    /** 鎵€灞炰細璇?ID */
     private Long sessionId;
 
-    /** 角色 (user:用户, assistant:AI助手, system:系统说明) */
+    /** 瑙掕壊 (user:鐢ㄦ埛, assistant:AI鍔╂墜, system:绯荤粺璇存槑) */
     private String role;
 
-    /** 消息正文内容 */
+    /** 娑堟伅姝ｆ枃鍐呭 */
     private String content;
 
-    /** 消息类型 (text:纯文本, card:推荐卡片, image:图片) */
+    /** 娑堟伅绫诲瀷 (text:绾枃鏈? card:鎺ㄨ崘鍗＄墖, image:鍥剧墖) */
     private String type;
 
-    /** 创建时间 */
+    /** 鍒涘缓鏃堕棿 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 }

@@ -30,11 +30,11 @@ public class MessageDTO implements Serializable {
     private String message;
 
     private Long userId;
-    // 位置信息
+    // 浣嶇疆淇℃伅
     private String region;
     private Double x;
     private Double y;
-    /** 是否使用上下文 */
+    /** 鏄惁浣跨敤涓婁笅鏂?*/
     private Boolean contextMode;
     /** Message Type (text/image/tool) */
     private String type;

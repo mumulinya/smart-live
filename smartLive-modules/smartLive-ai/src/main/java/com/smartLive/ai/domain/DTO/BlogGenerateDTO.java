@@ -11,17 +11,17 @@ import lombok.Data;
 public class BlogGenerateDTO {
     
     /**
-     * 店铺ID，必传
+     * 搴楅摵ID锛屽繀浼?
      */
     private Long shopId;
     
     /**
-     * 用户描述，选填，如"重点写底料和服务"
+     * 鐢ㄦ埛鎻忚堪锛岄€夊～锛屽"閲嶇偣鍐欏簳鏂欏拰鏈嶅姟"
      */
     private String description;
     
     /**
-     * 博客风格：0=探店笔记，1=种草推荐，2=避雷测评
+     * 鍗氬椋庢牸锛?=鎺㈠簵绗旇锛?=绉嶈崏鎺ㄨ崘锛?=閬块浄娴嬭瘎
      */
     private Integer style;
 }

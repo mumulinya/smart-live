@@ -85,4 +85,16 @@ public interface OrderMapper extends BaseMapper<Order>
      */
     @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE verify_shop_id = #{shopId} AND status != 4")
     Integer sumSoldByShopId(Long shopId);
+
+    /**
+     * 统计店铺近 7 天核销订单数
+     */
+    @Select("""
+    SELECT COUNT(*)
+    FROM `order`
+    WHERE verify_shop_id = #{shopId}
+      AND status = 3
+      AND use_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    """)
+    Integer countWeekOrders(Long shopId);
 }
