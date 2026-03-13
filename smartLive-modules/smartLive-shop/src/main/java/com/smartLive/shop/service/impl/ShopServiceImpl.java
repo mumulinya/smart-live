@@ -26,11 +26,13 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.SecurityContextHolder;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.AppLoginUser;
+import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.core.enums.AuditStatusEnum;
 import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -38,6 +40,7 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
+import com.smartLive.system.api.RemoteUserService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.shop.domain.ShopType;
@@ -51,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.smartLive.shop.mapper.ShopMapper;
 import com.smartLive.shop.domain.Shop;
 import com.smartLive.shop.service.IShopService;
@@ -86,6 +90,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private RemoteStarService remoteStarService;
     @Autowired
     RemoteFollowService remoteFollowService;
+    @Autowired
+    private RemoteUserService remoteUserService;
     @Autowired
     private RedisMultiCacheManager redisMultiCacheManager;
     @Autowired
@@ -146,15 +152,27 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int insertShop(Shop shop) {
         shop.setCreateTime(DateUtils.getNowDate());
         int i = shopMapper.insertShop(shop);
-        if(i > 0){
+        if (i > 0) {
+            Long userId = SecurityUtils.getUserId();
+            if (userId == null) {
+                throw new BusinessException("获取当前登录用户ID失败");
+            }
+            if (shop.getId() == null) {
+                throw new BusinessException("店铺ID为空，无法保存用户店铺关系");
+            }
+            Boolean relationSaved = remoteUserService.addUserShopRelation(userId, shop.getId());
+            if (!Boolean.TRUE.equals(relationSaved)) {
+                throw new BusinessException("保存用户店铺关系失败");
+            }
             flashShopListRedisCache(shop.getTypeId());
             //发送审核信息
             sendAuditMessage(shop);
         }
-        return i ;
+        return i;
     }
 
     /**
@@ -195,6 +213,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 删除行数
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteShopByIds(String[] ids) {
         if (ids == null || ids.length == 0) {
             return 0;
@@ -203,11 +222,29 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 .map(shopMapper::selectShopById)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
+        List<Long> shopIdList = Arrays.stream(ids)
+                .map(id -> {
+                    try {
+                        return Long.valueOf(id);
+                    } catch (NumberFormatException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
         int i = shopMapper.deleteShopByIds(ids);
         if (i > 0) {
+            if (CollUtil.isNotEmpty(shopIdList)) {
+                Boolean relationDeleted = remoteUserService.deleteUserShopRelationByShopIds(shopIdList.toArray(new Long[0]));
+                if (!Boolean.TRUE.equals(relationDeleted)) {
+                    throw new BusinessException("删除用户店铺关系失败");
+                }
+            }
             for (String id : ids) {
-                executorService.submit(()->{
-                    log.info("线程{}，开始删除店铺{}", Thread.currentThread().getName(), id);
+                executorService.submit(() -> {
+                    log.info("线程{}，开始删除店铺索引{}", Thread.currentThread().getName(), id);
                     Long shopId;
                     try {
                         shopId = Long.valueOf(id);
@@ -219,10 +256,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                     contentSyncMessage.setId(shopId);
                     contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
                     contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
-                    //发起rabbitMq信息删除es数据
-                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
-                    //发起rabbitmq信息删除milvus数据
-                    mqMessageSendUtils.sendMqMessage( SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
+                    //发起rabbitMq消息删除es数据
+                    mqMessageSendUtils.sendMqMessage(SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
+                    //发起rabbitmq消息删除milvus数据
+                    mqMessageSendUtils.sendMqMessage(SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
                 });
             }
             Arrays.stream(ids).forEach(shopId -> {
@@ -248,17 +285,28 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteShopById(String id) {
         Shop shop = shopMapper.selectShopById(id);
         int i = shopMapper.deleteShopById(id);
         if (i > 0) {
+            Long shopId = null;
             if (shop != null && shop.getId() != null) {
+                shopId = shop.getId();
                 flashShopRedisCache(shop.getId());
             } else {
                 try {
-                    flashShopRedisCache(Long.valueOf(id));
+                    shopId = Long.valueOf(id);
+                    flashShopRedisCache(shopId);
                 } catch (NumberFormatException e) {
                     log.warn("删除店铺缓存时店铺ID格式非法: {}", id);
+                }
+            }
+
+            if (shopId != null) {
+                Boolean relationDeleted = remoteUserService.deleteUserShopRelationByShopId(shopId);
+                if (!Boolean.TRUE.equals(relationDeleted)) {
+                    throw new BusinessException("删除用户店铺关系失败");
                 }
             }
             if (shop != null && shop.getTypeId() != null) {
@@ -1053,7 +1101,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public List<Shop> selectShopListByUserId(Long userId, Shop shop) {
-
-        return List.of();
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+        List<Long> shopIds = remoteUserService.getShopIdsByUserId(userId);
+        if (CollUtil.isEmpty(shopIds)) {
+            return Collections.emptyList();
+        }
+        return shopMapper.selectShopListByIdsAndCondition(shopIds, shop == null ? new Shop() : shop);
     }
 }

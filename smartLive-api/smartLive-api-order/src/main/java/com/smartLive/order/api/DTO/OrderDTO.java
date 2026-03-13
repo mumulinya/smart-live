@@ -75,8 +75,11 @@ public class OrderDTO extends BaseEntity  implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date useTime;
 
-    /** 核销门店ID */
-    private Long shopId;
+    /** 可使用的店铺ID列表（逗号分隔） */
+    private String shopId;
+
+    /** 实际核销门店ID */
+    private Long verifyShopId;
 
     /** 退款时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

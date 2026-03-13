@@ -103,10 +103,10 @@ public interface IOrderService  extends IService<Order>
     /**
      * 使用订单 (核销)
      * @param id 订单ID
-     * @param shopId 核销的门店ID
+     * @param verifyShopId 核销的门店ID
      * @return 影响行数
      */
-    Integer use(Long id, Long shopId);
+    Integer use(Long id, Long verifyShopId);
 
     /**
      * 获取订单数量

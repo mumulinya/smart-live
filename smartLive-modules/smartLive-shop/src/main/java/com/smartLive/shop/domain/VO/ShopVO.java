@@ -70,6 +70,9 @@ public class ShopVO implements Serializable
     /** 营业时间，例如 10:00-22:00 */
     private String openHours;
 
+    /** 审核状态 */
+    private Integer status;
+
     /** 审核拒绝原因 */
     private String rejectReason;
 

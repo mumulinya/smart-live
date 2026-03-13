@@ -20,6 +20,7 @@ import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.core.utils.DateUtils;
+import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
@@ -36,6 +37,7 @@ import com.smartLive.product.service.strategy.PurchaseStrategy;
 
 import java.util.concurrent.TimeUnit;
 import com.smartLive.shop.api.RemoteShopService;
+import com.smartLive.system.api.RemoteUserService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -73,6 +75,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private RemoteStarService remoteStarService;
     @Autowired
     private RemoteFollowService remoteFollowService;
+    @Autowired
+    private RemoteUserService remoteUserService;
 
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
@@ -124,6 +128,20 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public List<Product> selectProductEntityList(Product product)
     {
+        if (product == null)
+        {
+            product = new Product();
+        }
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId != null && !SecurityUtils.isAdmin(currentUserId))
+        {
+            List<Long> shopIds = remoteUserService.getShopIdsByUserId(currentUserId);
+            if (CollUtil.isEmpty(shopIds))
+            {
+                return Collections.emptyList();
+            }
+            product.setShopIds(shopIds);
+        }
         List<Product> productList = productMapper.selectProductList(product);
         // Previously querySeckill was called here, but now fields are merged.
         return productList;

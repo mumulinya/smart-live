@@ -136,4 +136,9 @@ public interface ShopMapper extends BaseMapper<Shop>
             "  </foreach>" +
             "</script>")
     void updateSoldBatch(@Param("map") Map<Long, Integer> updateMap);
+
+    /**
+     * 根据店铺ID集合和条件查询店铺列表
+     */
+    List<Shop> selectShopListByIdsAndCondition(@Param("shopIds") List<Long> shopIds, @Param("shop") Shop shop);
 }

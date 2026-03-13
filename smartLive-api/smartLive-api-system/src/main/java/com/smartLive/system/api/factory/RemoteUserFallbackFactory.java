@@ -47,6 +47,26 @@ public class RemoteUserFallbackFactory implements FallbackFactory<RemoteUserServ
             public SysUser getUserById(Long id) {
                 return null;
             }
+
+            @Override
+            public Boolean addUserShopRelation(Long userId, Long shopId) {
+                return false;
+            }
+
+            @Override
+            public java.util.List<Long> getShopIdsByUserId(Long userId) {
+                return java.util.Collections.emptyList();
+            }
+
+            @Override
+            public Boolean deleteUserShopRelationByShopId(Long shopId) {
+                return false;
+            }
+
+            @Override
+            public Boolean deleteUserShopRelationByShopIds(Long[] shopIds) {
+                return false;
+            }
         };
     }
 }

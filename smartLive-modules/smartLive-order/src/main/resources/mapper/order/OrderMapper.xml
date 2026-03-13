@@ -23,6 +23,7 @@
         <result property="payTime"      column="pay_time"    />
         <result property="useTime"      column="use_time"    />
         <result property="shopId"       column="shop_id" />
+        <result property="verifyShopId" column="verify_shop_id" />
         <result property="refundTime"   column="refund_time"    />
         <result property="updateTime"   column="update_time"    />
         <result property="validStartTime" column="valid_start_time" />
@@ -32,7 +33,7 @@
     <sql id="selectOrderVo">
         select id, user_id, source_id, source_type, pay_type, status,
                pay_amount, amount, out_trade_no, review_status, review_id, review_time, refund_amount,
-               create_time, pay_time, use_time, shop_id, refund_time, update_time, valid_start_time, expire_time
+               create_time, pay_time, use_time, shop_id, verify_shop_id, refund_time, update_time, valid_start_time, expire_time
         from `order`
     </sql>
 
@@ -44,9 +45,20 @@
             <if test="sourceType != null "> and source_type = #{sourceType}</if>
             <if test="payType != null  and payType != ''"> and pay_type = #{payType}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="excludedStatuses != null and excludedStatuses.size > 0"> and status not in
+                <foreach collection="excludedStatuses" item="statusItem" open="(" separator="," close=")">
+                    #{statusItem}
+                </foreach>
+            </if>
             <if test="payTime != null "> and pay_time = #{payTime}</if>
             <if test="useTime != null "> and use_time = #{useTime}</if>
-            <if test="shopId != null "> and shop_id = #{shopId}</if>
+            <if test="shopId != null and shopId != ''"> and FIND_IN_SET(#{shopId}, shop_id)</if>
+            <if test="shopIds != null and shopIds.size > 0"> and (
+                <foreach collection="shopIds" item="shopIdItem" separator=" or ">
+                    FIND_IN_SET(#{shopIdItem}, shop_id)
+                </foreach>
+            )</if>
+            <if test="verifyShopId != null"> and verify_shop_id = #{verifyShopId}</if>
             <if test="refundTime != null "> and refund_time = #{refundTime}</if>
             <if test="outTradeNo != null and outTradeNo != ''"> and out_trade_no = #{outTradeNo}</if>
             <if test="reviewStatus != null"> and review_status = #{reviewStatus}</if>
@@ -81,7 +93,8 @@
             <if test="createTime != null">create_time,</if>
             <if test="payTime != null">pay_time,</if>
             <if test="useTime != null">use_time,</if>
-            <if test="shopId != null">shop_id,</if>
+            <if test="shopId != null and shopId != ''">shop_id,</if>
+            <if test="verifyShopId != null">verify_shop_id,</if>
             <if test="refundTime != null">refund_time,</if>
             <if test="updateTime != null">update_time,</if>
             <if test="validStartTime != null">valid_start_time,</if>
@@ -105,7 +118,8 @@
             <if test="createTime != null">#{createTime},</if>
             <if test="payTime != null">#{payTime},</if>
             <if test="useTime != null">#{useTime},</if>
-            <if test="shopId != null">#{shopId},</if>
+            <if test="shopId != null and shopId != ''">#{shopId},</if>
+            <if test="verifyShopId != null">#{verifyShopId},</if>
             <if test="refundTime != null">#{refundTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
             <if test="validStartTime != null">#{validStartTime},</if>
@@ -132,7 +146,8 @@
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="payTime != null">pay_time = #{payTime},</if>
             <if test="useTime != null">use_time = #{useTime},</if>
-            <if test="shopId != null">shop_id = #{shopId},</if>
+            <if test="shopId != null and shopId != ''">shop_id = #{shopId},</if>
+            <if test="verifyShopId != null">verify_shop_id = #{verifyShopId},</if>
             <if test="refundTime != null">refund_time = #{refundTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
             <if test="validStartTime != null">valid_start_time = #{validStartTime},</if>

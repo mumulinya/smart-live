@@ -83,6 +83,6 @@ public interface OrderMapper extends BaseMapper<Order>
     /**
      * 查询指定店铺的累计订单销量
      */
-    @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE shop_id = #{shopId} AND status != 4")
+    @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE verify_shop_id = #{shopId} AND status != 4")
     Integer sumSoldByShopId(Long shopId);
 }

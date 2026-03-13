@@ -141,8 +141,8 @@ public class OrderController extends BaseController
     @PostMapping("/use")
     public Result use(@RequestBody Order order) {
         Long id = order.getId();
-        Long shopId = order.getShopId();
-        Integer use = orderService.use(id, shopId);
+        Long verifyShopId = order.getVerifyShopId();
+        Integer use = orderService.use(id, verifyShopId);
         if(use>0){
             return Result.ok("使用成功");
         }

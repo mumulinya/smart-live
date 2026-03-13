@@ -2,6 +2,7 @@ package com.smartLive.order.service.impl;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -11,6 +12,7 @@ import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.enums.ProductStatusEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.bean.BeanUtils;
+import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.order.domain.VO.ProductSoldVO;
@@ -22,12 +24,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.enums.SalesTypeEnum;
 import com.smartLive.order.domain.VO.OrderVO;
-import com.smartLive.shop.api.DTO.ShopDTO;
+
 import com.smartLive.shop.api.RemoteShopService;
+import com.smartLive.system.api.RemoteUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -64,6 +67,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private RemoteShopService remoteShopService;
 
+    @Autowired
+    private RemoteUserService remoteUserService;
+
 
     @Resource
     private RedissonClient redissonClient;
@@ -93,14 +99,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Order selectOrderById(Long id)
     {
 
-        Order order = orderMapper.selectOrderById(id);
-        if (order!=null) {
-            ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
-            if(productDTO!=null && productDTO.getShopId() != null && !productDTO.getShopId().isEmpty()) {
-                order.setShopId(Long.valueOf(productDTO.getShopId().split(",")[0]));
-            }
-        }
-        return order;
+        return orderMapper.selectOrderById(id);
     }
 
     /**
@@ -112,14 +111,23 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     public List<Order> selectOrderList(Order order)
     {
-        List<Order> orderList = orderMapper.selectOrderList(order);
-        orderList.forEach(v -> {
-            ProductDTO product  = remoteProductService.getProductById(v.getSourceId());
-            if(product!=null && product.getShopId() != null && !product.getShopId().isEmpty()) {
-                v.setShopId(Long.valueOf(product.getShopId().split(",")[0]));
+        if (order == null)
+        {
+            order = new Order();
+        }
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId != null && !SecurityUtils.isAdmin(currentUserId))
+        {
+            List<Long> shopIds = remoteUserService.getShopIdsByUserId(currentUserId);
+            if (shopIds == null || shopIds.isEmpty())
+            {
+                return new ArrayList<>();
             }
-        });
-        return orderList;
+            order.setShopIds(shopIds);
+            order.setExcludedStatuses(Arrays.asList(OrderStatusConstants.UNPAID, OrderStatusConstants.CANCELLED));
+        }
+
+        return orderMapper.selectOrderList(order);
     }
 
     /**
@@ -288,10 +296,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      */
     private void incrementShopSales(Order order) {
         log.info("订单已核销，开始累加店铺销量...{}", order);
-        if (order == null || order.getShopId() == null) {
+        if (order == null || order.getVerifyShopId() == null) {
             return;
         }
-        Long shopId = order.getShopId();
+        Long shopId = order.getVerifyShopId();
         String shopCountKey = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix() + shopId;
         if (Boolean.FALSE.equals(redisService.hasKey(shopCountKey))) {
             initSalesCount(SalesTypeEnum.SHOP_SALES, shopId);
@@ -321,8 +329,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
 
         // 2. 回退店铺销量 (仅当订单已被核销，且有对应 shopId 时)
-        if (decrementShop && order.getShopId() != null) {
-            Long shopId = order.getShopId();
+        if (decrementShop && order.getVerifyShopId() != null) {
+            Long shopId = order.getVerifyShopId();
             String shopCountKey = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix() + shopId;
             if (Boolean.TRUE.equals(redisService.hasKey(shopCountKey))) {
                 redisService.decrementCacheValue(shopCountKey, amount);
@@ -560,20 +568,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * 使用订单 (核销)
      *
      * @param id 订单ID
-     * @param shopId 核销的门店ID
+     * @param verifyShopId 核销的门店ID
      * @return 影响行数
      */
     @Override
-    public Integer use(Long id, Long shopId) {
+    public Integer use(Long id, Long verifyShopId) {
         Order order = getById(id);
         if(order==null){
             throw new BusinessException("订单不存在");
         }
+        if (verifyShopId == null) {
+            throw new BusinessException("核销门店不能为空");
+        }
+        String availableShopIds = order.getShopId();
+        if (availableShopIds != null && !availableShopIds.isEmpty()) {
+            boolean matched = false;
+            for (String shopIdItem : availableShopIds.split(",")) {
+                if (verifyShopId.toString().equals(shopIdItem.trim())) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                throw new BusinessException("核销门店不在可用门店范围内");
+            }
+        }
         order.setUseTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.VERIFIED);
-        if (shopId != null) {
-            order.setShopId(shopId);
-        }
+        order.setVerifyShopId(verifyShopId);
         int i = updateOrder(order);
         if (i > 0) {
             // 核销成功，增加门店销量

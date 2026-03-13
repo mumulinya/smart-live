@@ -58,6 +58,7 @@ public class NormalPurchaseStrategy implements PurchaseStrategy {
         orderDTO.setSourceType(GlobalBizTypeEnum.PRODUCT.getCode());
         orderDTO.setSourceId(product.getId());
         orderDTO.setPayAmount(product.getPrice());
+        orderDTO.setShopId(product.getShopId());
 
         // 2. Redis 占位: 告知查询接口该订单由于 MQ 延迟仍在处理中
         redisService.setCacheObject("order:status:" + orderId, "CREATING", 60L, java.util.concurrent.TimeUnit.SECONDS);

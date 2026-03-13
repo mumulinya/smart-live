@@ -66,7 +66,16 @@ public class ShopController extends BaseController {
      */
     @GetMapping("/shopList")
     public AjaxResult shopList(Shop shop) {
-        List<Shop> list = shopService.selectShopList(shop);
+        // 获取用户id
+        Long userId = SecurityUtils.getUserId();
+        boolean admin = SecurityUtils.isAdmin(userId);
+        List<Shop> list;
+        // 管理员允许查询所有店铺
+        if(admin){
+            list = shopService.selectShopList(shop);
+        }else{
+            list = shopService.selectShopListByUserId(userId, shop);
+        }
         return success(list);
     }
     /**

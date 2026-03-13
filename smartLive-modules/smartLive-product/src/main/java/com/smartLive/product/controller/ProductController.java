@@ -37,7 +37,7 @@ public class ProductController extends BaseController {
      * @param product 查询过滤条件
      * @return 分页后的商品显示对象列表 (ProductVO)
      */
-    @RequiresPermissions("product:product:list")
+    @RequiresPermissions("business:product:list")
     @GetMapping("/list")
     public TableDataInfo list(Product product) {
         startPage();
@@ -61,7 +61,7 @@ public class ProductController extends BaseController {
     /**
      * 导出商品列表
      */
-    @RequiresPermissions("product:product:export")
+    @RequiresPermissions("business:product:export")
     @Log(title = "商品", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, Product product) {
@@ -77,7 +77,7 @@ public class ProductController extends BaseController {
      * @param id 商品主键 ID
      * @return 商品详情
      */
-    @RequiresPermissions("product:product:query")
+    @RequiresPermissions("business:product:query")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {
         return success(productService.selectProductById(id));
@@ -86,7 +86,7 @@ public class ProductController extends BaseController {
     /**
      * 新增商品
      */
-    @RequiresPermissions("product:product:add")
+    @RequiresPermissions("business:product:add")
     @Log(title = "商品", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody Product product) {
@@ -96,7 +96,7 @@ public class ProductController extends BaseController {
     /**
      * 修改商品
      */
-    @RequiresPermissions("product:product:edit")
+    @RequiresPermissions("business:product:edit")
     @Log(title = "商品", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody Product product) {

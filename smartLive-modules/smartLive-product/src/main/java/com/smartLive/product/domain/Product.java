@@ -1,6 +1,7 @@
 package com.smartLive.product.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 商品实体类
@@ -35,6 +37,10 @@ public class Product   implements Serializable {
     /** 商铺id (多个店铺用逗号分隔) */
     @Excel(name = "商铺id")
     private String shopId;
+
+    /** 查询条件：店铺ID集合（非表字段） */
+    @TableField(exist = false)
+    private List<Long> shopIds;
 
     /** 商品名称 */
     @Excel(name = "商品名称")

@@ -1,18 +1,22 @@
 package com.smartLive.system.api;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import com.smartLive.common.core.constant.SecurityConstants;
 import com.smartLive.common.core.constant.ServiceNameConstants;
 import com.smartLive.common.core.domain.R;
 import com.smartLive.system.api.domain.SysUser;
 import com.smartLive.system.api.factory.RemoteUserFallbackFactory;
 import com.smartLive.system.api.model.LoginUser;
+
+import java.util.List;
 
 /**
  * 系统用户服务
@@ -53,4 +57,28 @@ public interface RemoteUserService
     public R<Boolean> recordUserLogin(@RequestBody SysUser sysUser, @RequestHeader(SecurityConstants.FROM_SOURCE) String source);
     @GetMapping("/user/getUserById/{id}")
     SysUser getUserById(@PathVariable("id") Long id);
+
+    /**
+     * 新增用户店铺关系
+     */
+    @PostMapping("/user/shop/relation")
+    Boolean addUserShopRelation(@RequestParam("userId") Long userId, @RequestParam("shopId") Long shopId);
+
+    /**
+     * 根据用户ID查询店铺ID列表
+     */
+    @GetMapping("/user/shop/ids/{userId}")
+    List<Long> getShopIdsByUserId(@PathVariable("userId") Long userId);
+
+    /**
+     * 根据店铺ID删除关系
+     */
+    @DeleteMapping("/user/shop/relation/{shopId}")
+    Boolean deleteUserShopRelationByShopId(@PathVariable("shopId") Long shopId);
+
+    /**
+     * 根据店铺ID集合批量删除关系
+     */
+    @PostMapping("/user/shop/relation/deleteBatch")
+    Boolean deleteUserShopRelationByShopIds(@RequestBody Long[] shopIds);
 }

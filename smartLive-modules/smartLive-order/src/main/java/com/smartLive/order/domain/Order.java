@@ -3,6 +3,7 @@ package com.smartLive.order.domain;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -98,9 +99,13 @@ public class Order extends BaseEntity implements Serializable
     @Excel(name = "核销时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date useTime;
 
-    /** 核销门店ID */
-    @Excel(name = "核销门店ID")
-    private Long shopId;
+    /** 可使用的店铺ID列表（逗号分隔） */
+    @Excel(name = "可使用店铺ID列表")
+    private String shopId;
+
+    /** 实际核销门店ID */
+    @Excel(name = "实际核销门店ID")
+    private Long verifyShopId;
 
     /** 退款时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -125,4 +130,12 @@ public class Order extends BaseEntity implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "有效期截止时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date expireTime;
+
+    /** 查询条件：店铺ID集合 */
+    @TableField(exist = false)
+    private List<Long> shopIds;
+
+    /** 查询条件：排除状态集合 */
+    @TableField(exist = false)
+    private List<Integer> excludedStatuses;
 }

@@ -21,6 +21,7 @@
         <result property="stars"        column="stars"    />
         <result property="validityType" column="validity_type"    />
         <result property="status"       column="status"    />
+        <result property="rejectReason" column="reject_reason"    />
         <result property="useStartTime" column="use_start_time"    />
         <result property="useEndTime"   column="use_end_time"    />
         <result property="validDays"    column="valid_days"    />
@@ -33,7 +34,7 @@
 
     <sql id="selectProductVo">
         select id, shop_id, name, sub_title, category, activity_type, rules_json, price, original_price, stock,
-               sold, reviews, fans,status, stars, validity_type, use_start_time, use_end_time, valid_days, cover_img,
+               sold, reviews, fans,status, reject_reason, stars, validity_type, use_start_time, use_end_time, valid_days, cover_img,
                begin_time, end_time, create_time, update_time
         from product
     </sql>
@@ -42,6 +43,13 @@
         <include refid="selectProductVo"/>
         <where>
             <if test="shopId != null and shopId != ''"> and FIND_IN_SET(#{shopId}, shop_id)</if>
+            <if test="shopIds != null and shopIds.size > 0">
+                and (
+                <foreach collection="shopIds" item="shopIdItem" separator=" or ">
+                    FIND_IN_SET(#{shopIdItem}, shop_id)
+                </foreach>
+                )
+            </if>
             <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
             <if test="subTitle != null  and subTitle != ''"> and sub_title like concat('%', #{subTitle}, '%')</if>
             <if test="category != null "> and category = #{category}</if>
@@ -78,6 +86,7 @@
             <if test="reviews != null">reviews,</if>
             <if test="fans != null">fans,</if>
             <if test="stars != null">stars,</if>
+            <if test="rejectReason != null">reject_reason,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
         </trim>
@@ -102,6 +111,7 @@
             <if test="reviews != null">#{reviews},</if>
             <if test="fans != null">#{fans},</if>
             <if test="stars != null">#{stars},</if>
+            <if test="rejectReason != null">#{rejectReason},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
         </trim>
@@ -130,6 +140,7 @@
             <if test="reviews != null">reviews = #{reviews},</if>
             <if test="fans != null">fans = #{fans},</if>
             <if test="stars != null">stars = #{stars},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
         where id = #{id}

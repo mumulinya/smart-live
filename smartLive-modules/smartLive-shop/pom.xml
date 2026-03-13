@@ -69,31 +69,42 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
-        <!--RabbitMQ-->
+
+        <!-- RabbitMQ -->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-rabbitmq</artifactId>
         </dependency>
-        <!--xxl-job 分布式任务调度-->
+
+        <!-- xxl-job -->
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-xxl</artifactId>
         </dependency>
-        <!--hutool-->
+
+        <!-- hutool -->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.7.17</version>
         </dependency>
-        <!--arthas-->
+
+        <!-- arthas -->
         <dependency>
             <groupId>com.taobao.arthas</groupId>
             <artifactId>arthas-spring-boot-starter</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-interaction</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-system</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>

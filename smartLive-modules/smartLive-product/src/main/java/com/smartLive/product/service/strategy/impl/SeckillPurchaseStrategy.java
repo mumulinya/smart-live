@@ -99,6 +99,7 @@ public class SeckillPurchaseStrategy implements PurchaseStrategy {
         orderDTO.setSourceType(GlobalBizTypeEnum.PRODUCT.getCode());
         orderDTO.setSourceId(product.getId());
         orderDTO.setPayAmount(product.getPrice());
+        orderDTO.setShopId(product.getShopId());
 
         // 5. 在 Redis 记录临时创建状态，防止前端查不到订单
         redisService.setCacheObject("order:status:" + orderId, "CREATING", 60L, java.util.concurrent.TimeUnit.SECONDS);
