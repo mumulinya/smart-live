@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.resource;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.interaction.domain.VO.ProductVO;
 import com.smartLive.product.api.RemoteProductService;

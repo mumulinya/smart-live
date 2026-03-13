@@ -1,4 +1,4 @@
-package com.smartLive.common.core.enums;
+package com.smartLive.common.core.enums.common;
 import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
 import com.smartLive.common.core.constant.RedisConstants;

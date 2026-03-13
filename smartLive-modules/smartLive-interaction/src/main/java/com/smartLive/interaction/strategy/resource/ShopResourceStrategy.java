@@ -1,7 +1,6 @@
 package com.smartLive.interaction.strategy.resource;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
-import com.smartLive.interaction.domain.Comment;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.interaction.domain.VO.ShopVO;
 import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;

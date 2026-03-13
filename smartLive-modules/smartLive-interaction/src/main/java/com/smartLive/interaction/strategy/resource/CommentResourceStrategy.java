@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.resource;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.interaction.domain.VO.CommentVO;
 import com.smartLive.interaction.service.ICommentService;
 import org.springframework.beans.factory.annotation.Autowired;

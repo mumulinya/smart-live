@@ -127,6 +127,8 @@ public class BlogInnerController extends BaseController
     @GetMapping("/getAllBlogIds")
     public List<Long> getAllBlogIds() {
         return blogService.query().eq("status", 0)
+                .ne("audit_status", 2)
+                .ne("audit_status", 3)
                 .select("id")
                 .list()
                 .stream()

@@ -67,6 +67,8 @@ public class Blog extends BaseEntity implements Serializable
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
     private Short status;
 
+    private Short auditStatus;
+
     /** 审核拒绝原因 */
     private String rejectReason;
     /** 创建时间 */

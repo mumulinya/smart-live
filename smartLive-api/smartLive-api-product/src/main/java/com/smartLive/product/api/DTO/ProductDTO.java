@@ -59,6 +59,8 @@ public class ProductDTO extends BaseEntity implements Serializable {
     /** 状态 */
     private Integer status;
 
+    private Integer auditStatus;
+
     /** 有效期类型 */
     private Integer validityType;
 

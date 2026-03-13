@@ -1,7 +1,7 @@
 package com.smartLive.ai.strategy.milvus;
 
 import com.smartLive.ai.utils.EsTool;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.interaction.api.DTO.ReviewDTO;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;

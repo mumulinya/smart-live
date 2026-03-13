@@ -1,6 +1,6 @@
 package com.smartLive.interaction.job;
 
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.interaction.service.IHotRankService;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.handler.annotation.XxlJob;

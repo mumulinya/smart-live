@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.like;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.user.api.RemoteAppUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ public class UserLikeStrategy implements LikeStrategy {
     @Override
     public Integer getType() {
         // 返回用户的 GlobalBizTypeEnum.USER 的 Code
-        return com.smartLive.common.core.enums.GlobalBizTypeEnum.USER.getCode();
+        return GlobalBizTypeEnum.USER.getCode();
     }
 
     @Override

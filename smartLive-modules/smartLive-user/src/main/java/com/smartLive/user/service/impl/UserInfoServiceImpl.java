@@ -2,12 +2,11 @@ package com.smartLive.user.service.impl;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.user.DTO.UserInfoDTO;
@@ -18,7 +17,6 @@ import com.smartLive.user.domain.VO.UserVO;
 import com.smartLive.user.mapper.UserInfoMapper;
 import com.smartLive.user.service.IUserInfoService;
 import com.smartLive.user.service.IUserService;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -281,7 +279,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
     @Override
     public Boolean updateUserStatus(Long id, Integer status) {
         boolean updated = update(new UpdateWrapper<UserInfo>()
-                .set("status", status)
+                .set("audit_status", status)
                 .eq("user_id", id));
         if (updated) {
             userService.clearUserCache(id);

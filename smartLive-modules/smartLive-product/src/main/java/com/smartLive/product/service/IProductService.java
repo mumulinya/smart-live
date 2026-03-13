@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.common.core.enums.ItemActionType;
+import com.smartLive.common.core.enums.product.ItemActionType;
 import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.domain.Product;
 

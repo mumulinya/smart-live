@@ -2,8 +2,7 @@ package com.smartLive.shop.service.impl;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
-import java.util.function.Consumer;
-import com.smartLive.common.core.enums.SalesTypeEnum;
+import com.smartLive.common.core.enums.product.SalesTypeEnum;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -30,8 +29,8 @@ import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
-import com.smartLive.common.core.enums.AuditStatusEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.AuditStatusEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.core.utils.StringUtils;
@@ -51,7 +50,6 @@ import com.smartLive.common.redis.util.ZSetIdManager;
 import org.apache.lucene.util.SloppyMath;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -999,7 +997,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         Shop shop = getById(id);
         // 拒绝时写入拒绝原因，通过时清空拒绝原因
         String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
-        boolean updated = update(new UpdateWrapper<Shop>().set("status", status).set("reject_reason", rejectReason).eq("id", id));
+        boolean updated = update(new UpdateWrapper<Shop>().set("audit_status", status).set("reject_reason", rejectReason).eq("id", id));
         if (updated) {
             flashShopRedisCache(id);
             if (shop != null && shop.getTypeId() != null) {

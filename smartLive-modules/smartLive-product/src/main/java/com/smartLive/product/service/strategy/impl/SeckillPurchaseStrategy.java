@@ -1,7 +1,7 @@
 package com.smartLive.product.service.strategy.impl;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;

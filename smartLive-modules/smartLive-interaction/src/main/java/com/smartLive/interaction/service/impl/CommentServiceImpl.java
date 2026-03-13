@@ -7,16 +7,14 @@ import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.smartLive.blog.api.RemoteBlogService;
-import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.constant.RedisConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.AppLoginUser;
-import com.smartLive.common.core.enums.AuditStatusEnum;
-import com.smartLive.common.core.enums.CommentTypeEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.RankRedisEnum;
+import com.smartLive.common.core.enums.common.AuditStatusEnum;
+import com.smartLive.common.core.enums.interaction.CommentTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.RankRedisEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -33,13 +31,10 @@ import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.service.ILikeService;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
-import com.smartLive.shop.api.RemoteShopService;
-import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
 import org.springframework.beans.BeanUtils;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -224,8 +219,8 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
             log.info("从数据库中获取评论数据");
             var q = query()
                     .eq("source_id", comment.getSourceId())
-                    .ne("status", 2)
-                    .ne("status",3)
+                    .ne("audit_status", 2)
+                    .ne("audit_status",3)
                     .eq("source_type", comment.getSourceType());
             if ("latest".equals(sort)) {
                  q.orderByDesc("create_time");
@@ -274,7 +269,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
     public List<CommentVO> listChildComment(Comment comment, Integer current) {
         List<Comment> commentList = query()
                 .eq("answer_id", comment.getId())
-                .ne("status", "2")
+                .ne("audit_status", "2")
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
                 .getRecords();
@@ -793,7 +788,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
     @Override
     public Boolean updateCommentStatus(Long id, Integer status) {
         boolean update = update(new UpdateWrapper<Comment>()
-                .set("status", status)
+                .set("audit_status", status)
                 .eq("id", id));
         // 如果审核不通过，直接将数据移出排行榜并触发其父级目标的重计算扣分
         if (update && AuditStatusEnum.isRejected(status)) {
@@ -853,7 +848,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
                 .eq("user_id", userId)
                 .eq("source_type", comment.getSourceType())
                 .eq("source_id", comment.getSourceId())
-                .ne("status", "2")
+                .ne("audit_status", "2")
                 .count();
         if (count > 0) {
             redisService.setCacheZSet(userCommentKey, comment.getSourceId().toString(), System.currentTimeMillis());
@@ -900,7 +895,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
                 .eq("user_id", comment.getUserId())
                 .eq("source_type", comment.getSourceType())
                 .eq("source_id", comment.getSourceId())
-                .ne("status", "2")
+                .ne("audit_status", "2")
                 .count();
         if (remains <= 0) {
             redisService.removeCacheZSetObject(userCommentKey(commentType, comment.getUserId()), comment.getSourceId().toString());

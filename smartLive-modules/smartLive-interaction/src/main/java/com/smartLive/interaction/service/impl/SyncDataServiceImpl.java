@@ -1,13 +1,13 @@
 package com.smartLive.interaction.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.smartLive.common.core.enums.CommentTypeEnum;
-import com.smartLive.common.core.enums.FollowTypeEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.RankRedisEnum;
-import com.smartLive.common.core.enums.LikeTypeEnum;
-import com.smartLive.common.core.enums.ReviewTypeEnum;
-import com.smartLive.common.core.enums.StarTypeEnum;
+import com.smartLive.common.core.enums.interaction.CommentTypeEnum;
+import com.smartLive.common.core.enums.interaction.FollowTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.RankRedisEnum;
+import com.smartLive.common.core.enums.interaction.LikeTypeEnum;
+import com.smartLive.common.core.enums.interaction.ReviewTypeEnum;
+import com.smartLive.common.core.enums.interaction.StarTypeEnum;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.Review;
@@ -29,15 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * 互动数据同步与热度计算核心实现类

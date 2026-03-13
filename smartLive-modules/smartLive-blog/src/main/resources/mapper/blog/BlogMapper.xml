@@ -16,13 +16,14 @@
         <result property="stared"    column="stared"    />
         <result property="comments"    column="comments"    />
         <result property="status"    column="status"    />
+        <result property="auditStatus"    column="audit_status"    />
         <result property="rejectReason"    column="reject_reason"    />
         <result property="pin"    column="pin"    /> <result property="createTime"    column="create_time"    />
         <result property="updateTime"    column="update_time"    />
     </resultMap>
 
     <sql id="selectBlogVo">
-        select id, shop_id, type_id, user_id, title, images, content, liked, comments, status, reject_reason, pin, create_time, update_time from blog
+        select id, shop_id, type_id, user_id, title, images, content, liked, comments, status, audit_status, reject_reason, pin, create_time, update_time from blog
     </sql>
 
     <select id="selectBlogList" parameterType="com.smartLive.blog.domain.Blog" resultMap="BlogResult">
@@ -37,6 +38,7 @@
             <if test="liked != null  and liked != ''"> and liked = #{liked}</if>
             <if test="comments != null  and comments != ''"> and comments = #{comments}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="auditStatus != null"> and audit_status = #{auditStatus}</if>
             <if test="pin != null"> and pin = #{pin}</if> </where>
         order by pin desc, create_time desc </select>
 
@@ -57,6 +59,7 @@
             <if test="liked != null">liked,</if>
             <if test="comments != null">comments,</if>
             <if test="status != null and status != ''">status,</if>
+            <if test="auditStatus != null">audit_status,</if>
             <if test="rejectReason != null">reject_reason,</if>
             <if test="pin != null">pin,</if>
             <if test="createTime != null">create_time,</if>
@@ -72,6 +75,7 @@
             <if test="liked != null">#{liked},</if>
             <if test="comments != null">#{comments},</if>
             <if test="status != null and status != ''">#{status},</if>
+            <if test="auditStatus != null">#{auditStatus},</if>
             <if test="rejectReason != null">#{rejectReason},</if>
             <if test="pin != null">#{pin},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -91,6 +95,7 @@
             <if test="liked != null">liked = #{liked},</if>
             <if test="comments != null">comments = #{comments},</if>
             <if test="status != null ">status = #{status},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
             <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
             <if test="pin != null">pin = #{pin},</if>
             <if test="createTime != null">create_time = #{createTime},</if>

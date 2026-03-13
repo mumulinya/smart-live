@@ -1,13 +1,11 @@
 package com.smartLive.interaction.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.nacos.shaded.com.google.common.collect.Lists;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.ScrollResult;
-import com.smartLive.common.core.enums.FeedTypeEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.text.Convert;
+import com.smartLive.common.core.enums.interaction.FeedTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.BO.ActionRecordBO;
 import com.smartLive.interaction.domain.VO.FeedVO;
@@ -16,7 +14,6 @@ import com.smartLive.interaction.domain.VO.ShopVO;
 import com.smartLive.interaction.service.IFeedService;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
-import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

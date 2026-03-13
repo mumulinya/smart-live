@@ -2,7 +2,7 @@ package com.smartLive.search.strategy.esSync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.EsIndexNameConstants;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
 import com.smartLive.search.domain.BlogDoc;
 import com.smartLive.search.utils.EsTool;

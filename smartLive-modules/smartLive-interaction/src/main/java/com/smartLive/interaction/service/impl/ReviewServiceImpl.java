@@ -14,10 +14,10 @@ import com.smartLive.common.core.constant.PageConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.AppLoginUser;
-import com.smartLive.common.core.enums.AuditStatusEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.RankRedisEnum;
-import com.smartLive.common.core.enums.ReviewTypeEnum;
+import com.smartLive.common.core.enums.common.AuditStatusEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.RankRedisEnum;
+import com.smartLive.common.core.enums.interaction.ReviewTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
@@ -50,7 +50,6 @@ import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -304,8 +303,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             log.info("Redis ZSet empty, querying DB for Review IDs");
             List<Review> dbList = query()
                     .eq("source_id", review.getSourceId())
-                    .ne("status", 2)
-                    .ne("status",3)
+                    .ne("audit_status", 2)
+                    .ne("audit_status",3)
                     .eq("source_type", review.getSourceType())
                     .orderByDesc("liked")
                     .orderByDesc("create_time")
@@ -1125,7 +1124,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         // 拒绝时记录拒绝原因，通过时清空拒绝原因
         String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
         boolean update = update(new UpdateWrapper<Review>()
-                .set("status", status)
+                .set("audit_status", status)
                 .set("reject_reason", rejectReason)
                 .eq("id", id));
         if (update) {
@@ -1200,7 +1199,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq("user_id", userId)
                 .eq("source_type", review.getSourceType())
                 .eq("source_id", review.getSourceId())
-                .ne("status", 2)
+                .ne("audit_status", 2)
                 .count();
         if (count > 0) {
             redisService.setCacheZSet(userReviewKey, review.getSourceId().toString(), System.currentTimeMillis());
@@ -1238,7 +1237,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq("user_id", review.getUserId())
                 .eq("source_type", review.getSourceType())
                 .eq("source_id", review.getSourceId())
-                .ne("status", 2)
+                .ne("audit_status", 2)
                 .count();
         if (remains <= 0) {
             redisService.removeCacheZSetObject(userReviewKey(reviewType, review.getUserId()), review.getSourceId().toString());

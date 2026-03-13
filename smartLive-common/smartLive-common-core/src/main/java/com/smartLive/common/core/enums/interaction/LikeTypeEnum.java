@@ -1,7 +1,7 @@
-package com.smartLive.common.core.enums;
+package com.smartLive.common.core.enums.interaction;
 import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 
-import com.smartLive.common.core.constant.RedisConstants;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

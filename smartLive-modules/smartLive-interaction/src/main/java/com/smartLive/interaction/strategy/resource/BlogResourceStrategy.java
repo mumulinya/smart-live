@@ -2,7 +2,7 @@ package com.smartLive.interaction.strategy.resource;
 
 import com.smartLive.blog.api.RemoteBlogService;
 import com.smartLive.blog.api.DTO.BlogDTO;
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.interaction.domain.VO.BlogVO;
 import org.springframework.beans.factory.annotation.Autowired;

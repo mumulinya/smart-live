@@ -1,4 +1,4 @@
-package com.smartLive.common.core.enums;
+package com.smartLive.common.core.enums.interaction;
 
 import com.smartLive.common.core.constant.InteractionRedisKeyConstants;
 import lombok.AllArgsConstructor;

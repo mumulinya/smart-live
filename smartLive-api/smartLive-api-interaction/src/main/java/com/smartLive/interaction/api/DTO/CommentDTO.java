@@ -59,6 +59,8 @@ public class CommentDTO
     /** 状态，0：正常，1：被举报，2：禁止查看 */
     private Integer status;
 
+    private Integer auditStatus;
+
     /** 评分 */
     private Integer rating;
     /** 用户昵称 */

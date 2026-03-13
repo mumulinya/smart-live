@@ -58,6 +58,8 @@ public class ReviewVO extends BaseEntity implements Serializable {
     /** 状态 */
     private Integer status;
 
+    private Integer auditStatus;
+
     /** 评分 */
     private Integer score;
 

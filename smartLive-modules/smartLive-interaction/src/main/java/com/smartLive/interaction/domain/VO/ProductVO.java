@@ -63,6 +63,8 @@ public class ProductVO {
     @Excel(name = "状态")
     private Integer status;
 
+    private Integer auditStatus;
+
     /** 有效期类型 */
     private Integer validityType;
 

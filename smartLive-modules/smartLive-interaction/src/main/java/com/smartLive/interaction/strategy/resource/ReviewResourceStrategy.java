@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.resource;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.interaction.domain.VO.ReviewVO;
 import com.smartLive.interaction.service.IReviewService;
 import org.springframework.beans.factory.annotation.Autowired;

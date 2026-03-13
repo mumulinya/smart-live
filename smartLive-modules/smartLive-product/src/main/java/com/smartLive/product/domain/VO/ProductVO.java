@@ -62,6 +62,8 @@ public class ProductVO implements Serializable {
     private Integer stars;
     private Integer status;
 
+    private Integer auditStatus;
+
     /** 审核拒绝原因 */
     private String rejectReason;
 

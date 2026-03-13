@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.resource;
 
-import com.smartLive.common.core.enums.FollowTypeEnum;
+import com.smartLive.common.core.enums.interaction.FollowTypeEnum;
 
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;

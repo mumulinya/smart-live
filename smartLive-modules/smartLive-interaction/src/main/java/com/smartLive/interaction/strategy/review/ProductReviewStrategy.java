@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.review;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.interaction.domain.VO.ReviewVO;
 import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.product.api.RemoteProductService;

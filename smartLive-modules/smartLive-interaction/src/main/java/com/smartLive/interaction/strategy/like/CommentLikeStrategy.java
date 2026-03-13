@@ -1,7 +1,6 @@
 package com.smartLive.interaction.strategy.like;
 
-import com.smartLive.blog.api.RemoteBlogService;
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.interaction.service.ICommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.smartLive.common.core.enums;
+package com.smartLive.common.core.enums.product;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

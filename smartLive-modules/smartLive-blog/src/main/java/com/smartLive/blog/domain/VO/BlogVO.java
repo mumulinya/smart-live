@@ -55,6 +55,8 @@ public class BlogVO implements Serializable
     
     /** 状态，0：正常，1：草稿，2：禁止查看 */
     private Short status;
+
+    private Short auditStatus;
     
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

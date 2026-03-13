@@ -1,7 +1,7 @@
 package com.smartLive.search.controller;
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.RedisConstants;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.api.RemoteFollowService;

@@ -2,9 +2,9 @@ package com.smartLive.interaction.strategy.hotrank.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
-import com.smartLive.common.core.enums.CommentTypeEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.RankRedisEnum;
+import com.smartLive.common.core.enums.interaction.CommentTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.RankRedisEnum;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.mapper.CommentMapper;
@@ -95,7 +95,7 @@ public class CommentHotRankStrategyImpl extends AbstractHotRankStrategy {
                             redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
                             continue;
                         }
-                        if ("2".equals(comment.getStatus())) {
+                        if (comment.getAuditStatus() != null && comment.getAuditStatus() == 2) {
                             redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
                             if (redisEnum.getNewRankKeyPrefix() != null) {
                                 redisService.removeCacheZSetObject(redisEnum.getNewRankKeyPrefix() + sourceId, String.valueOf(id));
@@ -151,7 +151,7 @@ public class CommentHotRankStrategyImpl extends AbstractHotRankStrategy {
             // 1. 查询所有正常状态的评论（排除 status=2 禁止查看的）
             List<Comment> allComments = commentMapper.selectList(
                     new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Comment>()
-                            .ne(Comment::getStatus, 2)
+                            .ne(Comment::getAuditStatus, 2)
                             .eq(Comment::getParentId, 0L)
             );
             if (CollUtil.isEmpty(allComments)) {

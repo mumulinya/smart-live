@@ -1,7 +1,7 @@
 package com.smartLive.interaction.strategy.comment;
 
 import com.smartLive.blog.api.RemoteBlogService;
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

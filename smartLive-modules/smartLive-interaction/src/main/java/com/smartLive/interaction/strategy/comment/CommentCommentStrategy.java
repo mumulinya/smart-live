@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.comment;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.interaction.service.ICommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

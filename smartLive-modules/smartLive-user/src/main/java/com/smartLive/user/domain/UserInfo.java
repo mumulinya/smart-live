@@ -66,6 +66,8 @@ public class UserInfo extends BaseEntity implements Serializable
     @Excel(name = "背景图片")
     private String backgroundImage;
 
+    private Integer auditStatus;
+
     public void setUserId(Long userId) 
     {
         this.userId = userId;

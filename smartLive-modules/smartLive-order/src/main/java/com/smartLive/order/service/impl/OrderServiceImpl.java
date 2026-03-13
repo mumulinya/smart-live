@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
-import com.smartLive.common.core.enums.ProductStatusEnum;
+import com.smartLive.common.core.enums.product.ProductStatusEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.security.utils.SecurityUtils;
@@ -22,7 +22,7 @@ import com.smartLive.common.core.constant.mq.PointsMqConstants;
 import com.smartLive.common.rabbitmq.domain.OrderPointsMessage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.utils.DateUtils;
-import com.smartLive.common.core.enums.SalesTypeEnum;
+import com.smartLive.common.core.enums.product.SalesTypeEnum;
 import com.smartLive.order.domain.VO.OrderVO;
 
 import com.smartLive.shop.api.RemoteShopService;

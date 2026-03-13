@@ -1,6 +1,6 @@
 package com.smartLive.interaction.strategy.follow;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;
 import lombok.RequiredArgsConstructor;

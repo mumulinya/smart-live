@@ -1,19 +1,11 @@
 package com.smartLive.interaction.strategy.follow;
-import com.smartLive.common.core.constant.mq.SearchMqConstants;
 
-import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.UserResourceActionTypeConstants;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.ResourceTypeEnum;
-import com.smartLive.common.rabbitmq.domain.UserResourceMessage;
-import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.product.api.RemoteProductService;
 import com.smartLive.interaction.strategy.AbstractInteractionStrategy;
-import com.smartLive.common.core.constant.UserResourceActionTypeConstants;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.ResourceTypeEnum;
-import com.smartLive.product.api.RemoteProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

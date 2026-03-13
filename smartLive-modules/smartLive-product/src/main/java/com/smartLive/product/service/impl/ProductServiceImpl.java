@@ -10,11 +10,16 @@ import java.util.stream.Collectors;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
-import com.alibaba.nacos.client.naming.utils.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.constant.*;
-import com.smartLive.common.core.enums.*;
+import com.smartLive.common.core.enums.common.AuditStatusEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.interaction.FeedTypeEnum;
+import com.smartLive.common.core.enums.product.ItemActionType;
+import com.smartLive.common.core.enums.product.ProductEnum;
+import com.smartLive.common.core.enums.product.ProductStatusEnum;
+import com.smartLive.common.core.enums.product.SalesTypeEnum;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
@@ -30,17 +35,14 @@ import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
-import java.util.function.Consumer;
 
 import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.service.strategy.PurchaseStrategy;
 
 import java.util.concurrent.TimeUnit;
-import com.smartLive.shop.api.RemoteShopService;
+
 import com.smartLive.system.api.RemoteUserService;
-import com.smartLive.shop.api.DTO.ShopDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -949,6 +951,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
         boolean b = update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Product>()
                 .set("status", finalStatus)
+                .set("audit_status", status)
                 .set("reject_reason", rejectReason)
                 .eq("id", id));
         if(b){

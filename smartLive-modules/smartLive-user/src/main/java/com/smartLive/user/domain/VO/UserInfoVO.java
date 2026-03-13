@@ -53,6 +53,8 @@ public class UserInfoVO implements Serializable
     
     /** 背景图片 */
     private String backgroundImage;
+
+    private Integer auditStatus;
     
     /** 是否有密码 */
     private Boolean hasPassword;

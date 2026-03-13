@@ -18,9 +18,9 @@ import com.smartLive.common.rabbitmq.domain.*;
 import org.springframework.beans.BeanUtils;
 import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.enums.AuditStatusEnum;
-import com.smartLive.common.core.enums.FeedTypeEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.AuditStatusEnum;
+import com.smartLive.common.core.enums.interaction.FeedTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -35,7 +35,6 @@ import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.user.api.RemoteAppUserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.*;
@@ -288,8 +287,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         }else if(current==1){
             // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
             List<Blog> dbList = query()
-                    .ne("status","2")
-                    .ne("status","3")
+                    .ne("audit_status","2")
+                    .ne("audit_status","3")
                     .orderByDesc("liked")
                     .orderByDesc("create_time")
                     .list();
@@ -814,8 +813,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Page<Blog> page = query()
                 .select("images","liked","user_id","title","id")
                 .eq("type_id", typeId)
-                .ne("status","2")
-                .ne("status","3")
+                .ne("audit_status","2")
+                .ne("audit_status","3")
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
@@ -842,7 +841,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     public Boolean updateBlogStatus(Long targetId, Integer status, String reason) {
         // 拒绝时写入拒绝原因，通过时清空拒绝原因
         String rejectReason = AuditStatusEnum.isRejected(status) ? reason : null;
-        boolean updated = update(new UpdateWrapper<Blog>().set("status", status).set("reject_reason", rejectReason).eq("id", targetId));
+        boolean updated = update(new UpdateWrapper<Blog>().set("audit_status", status).set("reject_reason", rejectReason).eq("id", targetId));
         if (updated) {
             flashRedisBlogCache(targetId);
             flashRedisBlogListCache();

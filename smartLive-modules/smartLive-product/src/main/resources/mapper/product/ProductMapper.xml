@@ -21,6 +21,7 @@
         <result property="stars"        column="stars"    />
         <result property="validityType" column="validity_type"    />
         <result property="status"       column="status"    />
+        <result property="auditStatus"  column="audit_status"    />
         <result property="rejectReason" column="reject_reason"    />
         <result property="useStartTime" column="use_start_time"    />
         <result property="useEndTime"   column="use_end_time"    />
@@ -34,7 +35,7 @@
 
     <sql id="selectProductVo">
         select id, shop_id, name, sub_title, category, activity_type, rules_json, price, original_price, stock,
-               sold, reviews, fans,status, reject_reason, stars, validity_type, use_start_time, use_end_time, valid_days, cover_img,
+               sold, reviews, fans,status, audit_status, reject_reason, stars, validity_type, use_start_time, use_end_time, valid_days, cover_img,
                begin_time, end_time, create_time, update_time
         from product
     </sql>
@@ -55,6 +56,7 @@
             <if test="category != null "> and category = #{category}</if>
             <if test="activityType != null "> and activity_type = #{activityType}</if>
             <if test="status != null "> and status = #{status}</if>
+            <if test="auditStatus != null"> and audit_status = #{auditStatus}</if>
         </where>
     </select>
 
@@ -86,6 +88,7 @@
             <if test="reviews != null">reviews,</if>
             <if test="fans != null">fans,</if>
             <if test="stars != null">stars,</if>
+            <if test="auditStatus != null">audit_status,</if>
             <if test="rejectReason != null">reject_reason,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
@@ -111,6 +114,7 @@
             <if test="reviews != null">#{reviews},</if>
             <if test="fans != null">#{fans},</if>
             <if test="stars != null">#{stars},</if>
+            <if test="auditStatus != null">#{auditStatus},</if>
             <if test="rejectReason != null">#{rejectReason},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
@@ -140,6 +144,7 @@
             <if test="reviews != null">reviews = #{reviews},</if>
             <if test="fans != null">fans = #{fans},</if>
             <if test="stars != null">stars = #{stars},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
             <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>

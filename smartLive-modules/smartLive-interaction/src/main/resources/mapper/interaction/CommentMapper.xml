@@ -16,12 +16,13 @@
         <result property="liked"    column="liked"    />
         <result property="replyCount"    column="reply_count"    />
         <result property="status"    column="status"    />
+        <result property="auditStatus"    column="audit_status"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateTime"    column="update_time"    />
     </resultMap>
 
     <sql id="selectCommentVo">
-        select id, user_id, source_type, source_id, parent_id, answer_id, images, content, liked, reply_count,status, create_time, update_time from comment
+        select id, user_id, source_type, source_id, parent_id, answer_id, images, content, liked, reply_count,status, audit_status, create_time, update_time from comment
     </sql>
 
     <select id="selectCommentList" parameterType="com.smartLive.interaction.domain.Comment" resultMap="CommentResult">
@@ -37,6 +38,7 @@
             <if test="liked != null "> and liked = #{liked}</if>
              <if test="replyCount != null "> and reply_count = #{replyCount}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="auditStatus != null"> and audit_status = #{auditStatus}</if>
         </where>
     </select>
 
@@ -57,6 +59,7 @@
             <if test="content != null and content != ''">content,</if>
             <if test="liked != null">liked,</if>
             <if test="status != null">status,</if>
+            <if test="auditStatus != null">audit_status,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
         </trim>
@@ -70,6 +73,7 @@
             <if test="content != null and content != ''">#{content},</if>
             <if test="liked != null">#{liked},</if>
             <if test="status != null">#{status},</if>
+            <if test="auditStatus != null">#{auditStatus},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
         </trim>
@@ -87,6 +91,7 @@
             <if test="content != null and content != ''">content = #{content},</if>
             <if test="liked != null">liked = #{liked},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>

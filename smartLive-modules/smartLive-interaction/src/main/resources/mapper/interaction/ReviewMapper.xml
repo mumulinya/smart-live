@@ -16,6 +16,7 @@
         <result property="liked"    column="liked"    />
         <result property="replyCount"    column="reply_count"    />
         <result property="status"    column="status"    />
+        <result property="auditStatus"    column="audit_status"    />
         <result property="score"     column="score"    />
         <result property="serviceScore"    column="service_score"    />
         <result property="tasteScore"    column="taste_score"    />
@@ -27,7 +28,7 @@
     </resultMap>
 
     <sql id="selectReviewVo">
-        select id, user_id, source_type, source_id, shop_id, order_id,score, service_score, taste_score, env_score, is_anonymous, reject_reason, images, content, liked, reply_count,status, create_time, update_time from review
+        select id, user_id, source_type, source_id, shop_id, order_id,score, service_score, taste_score, env_score, is_anonymous, reject_reason, images, content, liked, reply_count,status, audit_status, create_time, update_time from review
     </sql>
 
     <select id="selectReviewList" parameterType="com.smartLive.interaction.domain.Review" resultMap="ReviewResult">
@@ -43,6 +44,7 @@
             <if test="liked != null "> and liked = #{liked}</if>
              <if test="replyCount != null "> and reply_count = #{replyCount}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="auditStatus != null"> and audit_status = #{auditStatus}</if>
             <if test="score != null "> and score = #{score}</if>
             <if test="serviceScore != null "> and service_score = #{serviceScore}</if>
             <if test="tasteScore != null "> and taste_score = #{tasteScore}</if>
@@ -68,6 +70,7 @@
             <if test="content != null and content != ''">content,</if>
             <if test="liked != null">liked,</if>
             <if test="status != null">status,</if>
+            <if test="auditStatus != null">audit_status,</if>
             <if test="score != null">score,</if>
             <if test="serviceScore != null">service_score,</if>
             <if test="tasteScore != null">taste_score,</if>
@@ -87,6 +90,7 @@
             <if test="content != null and content != ''">#{content},</if>
             <if test="liked != null">#{liked},</if>
             <if test="status != null">#{status},</if>
+            <if test="auditStatus != null">#{auditStatus},</if>
             <if test="score != null">#{score},</if>
             <if test="serviceScore != null">#{serviceScore},</if>
             <if test="tasteScore != null">#{tasteScore},</if>
@@ -110,6 +114,7 @@
             <if test="content != null and content != ''">content = #{content},</if>
             <if test="liked != null">liked = #{liked},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
             <if test="score != null">score = #{score},</if>
             <if test="serviceScore != null">service_score = #{serviceScore},</if>
             <if test="tasteScore != null">taste_score = #{tasteScore},</if>

@@ -6,18 +6,13 @@ import com.smartLive.chat.api.dto.SystemNoticeCreateDTO;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.ResourceTypeConstants;
 import com.smartLive.common.core.constant.mq.ChatMqConstants;
-import com.smartLive.common.core.enums.FeedTypeEnum;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.ItemActionType;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.order.domain.Order;
 import com.smartLive.order.domain.VO.OrderVO;
 import com.smartLive.order.service.IOrderService;
-import com.smartLive.product.api.RemoteProductService;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

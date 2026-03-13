@@ -60,6 +60,8 @@ public class ReviewDTO extends BaseEntity
     /** 状态，0：正常，1：草稿，2：禁止查看 */
     private Integer status;
 
+    private Integer auditStatus;
+
     /** 评分 */
     private Integer score;
     /** 服务评分 */

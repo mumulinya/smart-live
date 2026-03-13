@@ -2,9 +2,9 @@ package com.smartLive.interaction.strategy.hotrank.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
-import com.smartLive.common.core.enums.GlobalBizTypeEnum;
-import com.smartLive.common.core.enums.RankRedisEnum;
-import com.smartLive.common.core.enums.ReviewTypeEnum;
+import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.common.RankRedisEnum;
+import com.smartLive.common.core.enums.interaction.ReviewTypeEnum;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.interaction.domain.Review;
 import com.smartLive.interaction.mapper.ReviewMapper;
@@ -97,7 +97,7 @@ public class ReviewHotRankStrategyImpl extends AbstractHotRankStrategy {
                             redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
                             continue;
                         }
-                        if (review.getStatus() != null && review.getStatus() == 2) {
+                        if (review.getAuditStatus() != null && review.getAuditStatus() == 2) {
                             redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
                             if (redisEnum.getNewRankKeyPrefix() != null) {
                                 redisService.removeCacheZSetObject(redisEnum.getNewRankKeyPrefix() + sourceId, String.valueOf(id));
@@ -153,7 +153,7 @@ public class ReviewHotRankStrategyImpl extends AbstractHotRankStrategy {
             // 1. 查询所有正常状态的评价
             List<Review> allReviews = reviewMapper.selectList(
                     new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Review>()
-                            .ne(Review::getStatus, 2)
+                            .ne(Review::getAuditStatus, 2)
             );
             if (CollUtil.isEmpty(allReviews)) {
                 log.warn("全量重建评价热榜：未获取到任何评价数据");

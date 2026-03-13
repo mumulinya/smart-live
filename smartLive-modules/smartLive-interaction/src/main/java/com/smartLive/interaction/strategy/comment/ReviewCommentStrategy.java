@@ -1,8 +1,7 @@
 package com.smartLive.interaction.strategy.comment;
 
-import com.smartLive.common.core.enums.ResourceTypeEnum;
+import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.interaction.service.IReviewService;
-import com.smartLive.shop.api.RemoteShopService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

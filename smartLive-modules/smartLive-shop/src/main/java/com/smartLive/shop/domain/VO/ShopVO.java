@@ -73,6 +73,8 @@ public class ShopVO implements Serializable
     /** 审核状态 */
     private Integer status;
 
+    private Integer auditStatus;
+
     /** 审核拒绝原因 */
     private String rejectReason;
 
