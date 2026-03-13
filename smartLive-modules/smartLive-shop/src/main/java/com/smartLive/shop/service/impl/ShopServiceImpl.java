@@ -108,6 +108,18 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         return shopVO;
     }
 
+    private boolean isVisibleShop(Shop shop) {
+        return shop != null
+                && Objects.equals(shop.getStatus(), 1)
+                && Objects.equals(shop.getAuditStatus(), AuditStatusEnum.PASS.getCode());
+    }
+
+    private boolean isVisibleShop(ShopVO shopVO) {
+        return shopVO != null
+                && Objects.equals(shopVO.getStatus(), 1)
+                && Objects.equals(shopVO.getAuditStatus(), AuditStatusEnum.PASS.getCode());
+    }
+
     /**
      * 将Shop列表转换为ShopVO列表
      * @param shopList Shop实体列表
@@ -341,10 +353,25 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //逻辑过期来解决缓存击穿
 //        Shop shop = queryWithLogicalExpire(id);
         // 利用 CacheClient 工具类封装逻辑过期与防穿透逻辑
-        Shop shop = cacheClient.queryWithLogicalExpireAndPassThrough(RedisConstants.CACHE_SHOP_KEY, RedisConstants.LOCK_SHOP_KEY,id, Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+        Shop shop = cacheClient.queryWithLogicalExpireAndPassThrough(
+                RedisConstants.CACHE_SHOP_KEY,
+                RedisConstants.LOCK_SHOP_KEY,
+                id,
+                Shop.class,
+                shopId -> query()
+                        .eq("id", shopId)
+                        .eq("status", 1)
+                        .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                        .one(),
+                RedisConstants.CACHE_SHOP_TTL,
+                TimeUnit.MINUTES
+        );
         //逻辑过期解决缓存击穿 使用工具类CacheClient
 //        Shop shop = cacheClient.queryWithLogicalExpire(RedisConstants.CACHE_SHOP_KEY, id, Shop.class,this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         if (shop == null) {
+            return null;
+        }
+        if (!isVisibleShop(shop)) {
             return null;
         }
         ShopVO shopVO = convertToShopVO(shop);
@@ -583,7 +610,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public ShopVO getShopByShopName(String shopName) {
-        Shop shop = query().eq("name", shopName).one();
+        Shop shop = query()
+                .eq("name", shopName)
+                .eq("status", 1)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                .one();
         return convertToShopVO(shop);
     }
     /**
@@ -599,6 +630,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         // 利用 MySQL 函数计算球面距离
         String distanceSql = "ST_Distance_Sphere(point(x, y), point(" + shop.getX() + ", " + shop.getY() + ")) as distance";
         wrapper.select("*, " + distanceSql);
+        wrapper.eq("status", 1);
+        wrapper.eq("audit_status", AuditStatusEnum.PASS.getCode());
         // 1. 分类条件
         if (shop.getTypeId() != null) {
             wrapper.eq("type_id", shop.getTypeId());
@@ -635,21 +668,30 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public List<ShopVO> getShopList(List<Long> ids) {
-       return redisMultiCacheManager.queryBatchWithCache(
+        List<ShopVO> shopList = redisMultiCacheManager.queryBatchWithCache(
                 RedisConstants.CACHE_SHOP_KEY,
                 RedisConstants.LOCK_SHOP_KEY,
                 ids,
                 ShopVO.class,
                 missingIds -> {
                     // 3. 填查库逻辑 (Lambda表达式)
-                    List<Shop> shops = shopMapper.selectBatchIds(missingIds);
+                    List<Shop> shops = query()
+                            .in("id", missingIds)
+                            .eq("status", 1)
+                            .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                            .list();
                     return convertToShopVOList(shops);
                 },
                 ShopVO::getId,
                 RedisConstants.CACHE_SHOP_TTL,
                 TimeUnit.MINUTES
         );
-//        return convertToShopVOList(orderList);
+        if (CollUtil.isEmpty(shopList)) {
+            return Collections.emptyList();
+        }
+        return shopList.stream()
+                .filter(this::isVisibleShop)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -670,7 +712,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public List<ShopVO> getRecentShops(Integer limit) {
-        return convertToShopVOList(query().orderByDesc("create_time").last("limit " + limit).list());
+        return convertToShopVOList(query()
+                .eq("status", 1)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                .orderByDesc("create_time")
+                .last("limit " + limit)
+                .list());
     }
 
     /**
@@ -688,14 +735,21 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         redisService.deleteObject(redisService.keys(key));
         List<ShopType> shopTypeList = shopTypeService.list();
         shopTypeList.forEach(shopType -> {
-            List<Shop> shopList = query().eq("type_id", shopType.getId()).list();
+            List<Shop> shopList = query()
+                    .eq("type_id", shopType.getId())
+                    .eq("status", 1)
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                    .list();
             //缓存
             redisService.setCacheObject(RedisConstants.CACHE_SHOP_lIST_KEY+shopType.getId(), shopList);
         });
 
 
         //缓存店铺坐标数据
-        List<Shop> list = list();
+        List<Shop> list = query()
+                .eq("status", 1)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                .list();
         //删除所有店铺的坐标缓存
         redisService.deleteObject(redisService.keys(RedisConstants.SHOP_GEO_KEY+"*"));
         //把店铺分组 按照typeId分组 id一致放到一个集合
@@ -762,6 +816,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         while (true) {
             // 分页查询
             List<Shop> shops = query()
+                    .eq("status", 1)
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .page(new Page<>(page, pageSize))
                     .getRecords();
             if (shops.isEmpty()) {
@@ -801,7 +857,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         executorService.submit(() -> {
             log.info("线程{}，开始批量发布店铺：{}", Thread.currentThread().getName(), idList);
             // Batch query
-            List<Shop> shops = query().in("id", idList).list();
+            List<Shop> shops = query()
+                    .in("id", idList)
+                    .eq("status", 1)
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                    .list();
             if (CollUtil.isNotEmpty(shops)) {
                 List<ShopVO> voList = convertToShopVOList(shops);
                 // Set location
@@ -1024,13 +1084,21 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             if (shop != null && shop.getTypeId() != null) {
                 flashShopListRedisCache(shop.getTypeId());
             }
-            // 如果审核通过，则进行搜索引擎同步并加入Redis相关队列
-            if (AuditStatusEnum.PASS.getCode() == status) {
+            if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
                 publish(new String[]{id.toString()});
                 String hotRankKey = RedisConstants.SHOP_HOT_RANK_KEY;
                 double score = shop != null && shop.getCreateTime() != null ? (double) shop.getCreateTime().getTime() : (double) System.currentTimeMillis();
                 redisService.setCacheZSet(hotRankKey, id.toString(), score);
                 redisService.setCacheSet(RedisConstants.SHOP_CALC_QUEUE_KEY, id.toString());
+            } else {
+                redisService.removeCacheZSetObject(RedisConstants.SHOP_HOT_RANK_KEY, id.toString());
+                redisService.removeCacheSet(RedisConstants.SHOP_CALC_QUEUE_KEY, id.toString());
+                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                contentSyncMessage.setId(id);
+                contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
+                contentSyncMessage.setType(GlobalBizTypeEnum.SHOP.getCode());
+                mqMessageSendUtils.sendMqMessage(SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
+                mqMessageSendUtils.sendMqMessage(SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
             }
         }
         return updated;
@@ -1067,6 +1135,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
             log.info("店铺热榜 ZSet 为空，走数据库兜底查询");
             List<Shop> dbList = query()
+                    .eq("status", 1)
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .orderByDesc("sold")
                     .orderByDesc("create_time")
                     .list();
@@ -1098,6 +1168,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             // 4. 批量查询店铺详情（复用缓存批量查询）
             resultList = getShopList(shopIdList);
         }
+
+        resultList = resultList.stream()
+                .filter(this::isVisibleShop)
+                .collect(Collectors.toList());
 
         // 计算距离
         if (x != null && y != null && CollUtil.isNotEmpty(resultList)) {

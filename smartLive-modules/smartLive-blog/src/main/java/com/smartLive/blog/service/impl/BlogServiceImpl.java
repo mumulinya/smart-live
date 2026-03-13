@@ -257,11 +257,19 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 RedisConstants.LOCK_BLOG_KEY,
                 id,
                 Blog.class,
-                this::getById,
+                blogId -> query()
+                        .eq("id", blogId)
+                        .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                        .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                        .one(),
                 RedisConstants.CACHE_BLOG_TTL,
                 TimeUnit.MINUTES
         );
         if (blog == null) {
+            throw new BusinessException("数据不存在");
+        }
+        if (!Objects.equals(blog.getStatus(), ContentStatusEnum.PUBLISHED.getCode().shortValue())
+                || !Objects.equals(blog.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
             throw new BusinessException("数据不存在");
         }
         BlogVO blogVO = convertToBlogVO(blog);
@@ -289,8 +297,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             // ZSet 击穿或尚无数据时的兜底：查出全量数据写入 ZSet，再手动分页返回
             List<Blog> dbList = query()
                     .eq("status", ContentStatusEnum.PUBLISHED.getCode())
-                    .ne("audit_status","2")
-                    .ne("audit_status","3")
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .orderByDesc("liked")
                     .orderByDesc("create_time")
                     .list();
@@ -441,6 +448,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Page<Blog> page = query()
                 .eq("user_id", userId)
                 .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .orderByDesc("pin")
                 .orderByAsc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
@@ -479,7 +487,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 RedisConstants.LOCK_BLOG_KEY,
                 sourceIdList,
                 Blog.class,
-                missingIds -> query().in("id", missingIds).list(),
+                missingIds -> query()
+                        .in("id", missingIds)
+                        .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                        .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                        .list(),
                 Blog::getId,
                 RedisConstants.CACHE_BLOG_TTL,
                 TimeUnit.MINUTES
@@ -493,7 +505,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         List<Blog> orderedBlogList = new ArrayList<>(sourceIdList.size());
         for (Long blogId : sourceIdList) {
             Blog blog = blogMap.get(blogId);
-            if (blog != null) {
+            if (blog != null
+                    && Objects.equals(blog.getStatus(), ContentStatusEnum.PUBLISHED.getCode().shortValue())
+                    && Objects.equals(blog.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
                 orderedBlogList.add(blog);
             }
         }
@@ -816,8 +830,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .select("images","liked","user_id","title","id")
                 .eq("type_id", typeId)
                 .eq("status", ContentStatusEnum.PUBLISHED.getCode())
-                .ne("audit_status","2")
-                .ne("audit_status","3")
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .orderByDesc("create_time")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
@@ -861,6 +874,19 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (updated) {
             flashRedisBlogCache(targetId);
             flashRedisBlogListCache();
+            if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
+                publish(new String[]{targetId.toString()});
+            } else if (AuditStatusEnum.isRejected(status)) {
+                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                contentSyncMessage.setId(targetId);
+                contentSyncMessage.setIndexName(EsIndexNameConstants.BLOG_INDEX_NAME);
+                contentSyncMessage.setType(GlobalBizTypeEnum.BLOG.getCode());
+                mqMessageSendUtils.sendMqMessage(
+                        SearchMqConstants.ES_SYNC_EXCHANGE,
+                        SearchMqConstants.ES_SYNC_DELETE_ROUTING_KEY,
+                        contentSyncMessage
+                );
+            }
         }
         return updated;
     }
@@ -877,6 +903,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         while (true) {
             // 分页查询
             List<Blog> blogs = query()
+                    .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .page(new Page<>(page, pageSize))
                     .getRecords();
             if (blogs.isEmpty()) {
@@ -915,7 +943,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         executorService.submit(() -> {
             log.info("线程{}，开始批量发布博客：{}", Thread.currentThread().getName(), idList);
             // Batch query
-            List<Blog> blogs = query().in("id", idList).list();
+            List<Blog> blogs = query()
+                    .in("id", idList)
+                    .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                    .list();
             if (CollUtil.isNotEmpty(blogs)) {
                 List<BlogVO> voList = convertToBlogVOList(blogs);
                 // Batch populate user info

@@ -219,8 +219,8 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
             log.info("从数据库中获取评论数据");
             var q = query()
                     .eq("source_id", comment.getSourceId())
-                    .ne("audit_status", 2)
-                    .ne("audit_status",3)
+                    .eq("status", 0)
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .eq("source_type", comment.getSourceType());
             if ("latest".equals(sort)) {
                  q.orderByDesc("create_time");
@@ -269,7 +269,8 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
     public List<CommentVO> listChildComment(Comment comment, Integer current) {
         List<Comment> commentList = query()
                 .eq("answer_id", comment.getId())
-                .ne("audit_status", "2")
+                .eq("status", 0)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
                 .getRecords();
@@ -597,7 +598,11 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
                 RedisConstants.LOCK_COMMENT_KEY,
                 sourceIdList,
                 Comment.class,
-                missingIds -> query().in("id", missingIds).list(),
+                missingIds -> query()
+                        .in("id", missingIds)
+                        .eq("status", 0)
+                        .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                        .list(),
                 Comment::getId,
                 RedisConstants.CACHE_COMMENT_TTL,
                 TimeUnit.MINUTES
@@ -612,7 +617,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
         List<CommentVO> orderedList = new ArrayList<>(sourceIdList.size());
         for (Long id : sourceIdList) {
             Comment comment = commentMap.get(id);
-            if (comment != null) {
+            if (comment != null && Objects.equals(comment.getStatus(), 0) && Objects.equals(comment.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
                 CommentVO vo = convertToCommentVO(comment);
                 ResourceStrategy strategy = resourceStrategyFactory.getStrategy(comment.getSourceType());
                 if (strategy != null) {
@@ -764,6 +769,9 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
         if (comment == null) {
             return null;
         }
+        if (!Objects.equals(comment.getStatus(), 0) || !Objects.equals(comment.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
+            return null;
+        }
         CommentVO vo = convertToCommentVO(comment);
         ResourceStrategy strategy = resourceStrategyFactory.getStrategy(comment.getSourceType());
         if (strategy != null) {
@@ -859,7 +867,8 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
                 .eq("user_id", userId)
                 .eq("source_type", comment.getSourceType())
                 .eq("source_id", comment.getSourceId())
-                .ne("audit_status", "2")
+                .eq("status", 0)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .count();
         if (count > 0) {
             redisService.setCacheZSet(userCommentKey, comment.getSourceId().toString(), System.currentTimeMillis());
@@ -906,7 +915,8 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
                 .eq("user_id", comment.getUserId())
                 .eq("source_type", comment.getSourceType())
                 .eq("source_id", comment.getSourceId())
-                .ne("audit_status", "2")
+                .eq("status", 0)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .count();
         if (remains <= 0) {
             redisService.removeCacheZSetObject(userCommentKey(commentType, comment.getUserId()), comment.getSourceId().toString());

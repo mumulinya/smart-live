@@ -394,6 +394,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         List<Product> products = query()
                 .apply("FIND_IN_SET({0}, shop_id)", product.getShopId())
                 .eq("category", product.getCategory())
+                .eq("status", ProductStatusEnum.ON_SHELF.getCode())
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .orderByAsc("create_time")
                 .list();
         if (products.isEmpty()) {
@@ -484,16 +486,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 RedisConstants.LOCK_PRODUCT_KEY,
                 sourceIdList,
                 Product.class,
-                missingIds -> {
-                    return lambdaQuery()
-                            .in(Product::getId, missingIds)
-                            .list();
-                },
+                missingIds -> lambdaQuery()
+                        .in(Product::getId, missingIds)
+                        .eq(Product::getStatus, ProductStatusEnum.ON_SHELF.getCode())
+                        .eq(Product::getAuditStatus, AuditStatusEnum.PASS.getCode())
+                        .list(),
                 Product::getId,
                 RedisConstants.CACHE_PRODUCT_TTL,
                 TimeUnit.MINUTES
         );
-        return productList;
+        if (CollUtil.isEmpty(productList)) {
+            return Collections.emptyList();
+        }
+        return productList.stream()
+                .filter(product -> product != null
+                        && Objects.equals(product.getStatus(), ProductStatusEnum.ON_SHELF.getCode())
+                        && Objects.equals(product.getAuditStatus(), AuditStatusEnum.PASS.getCode()))
+                .collect(Collectors.toList());
     }
 
 
@@ -510,11 +519,19 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 RedisConstants.LOCK_PRODUCT_KEY,
                 id,
                 Product.class,
-                productMapper::selectProductById,
+                productId -> query()
+                        .eq("id", productId)
+                        .eq("status", ProductStatusEnum.ON_SHELF.getCode())
+                        .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                        .one(),
                 RedisConstants.CACHE_PRODUCT_TTL,
                 TimeUnit.MINUTES
         );
         if (product == null){
+            return null;
+        }
+        if (!Objects.equals(product.getStatus(), ProductStatusEnum.ON_SHELF.getCode())
+                || !Objects.equals(product.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
             return null;
         }
         ProductVO productVO = convertToProductVO(product);
@@ -577,6 +594,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             log.info("商品热榜 ZSet ({}) 为空，走数据库兜底查询", hotRankKey);
             List<Product> dbList = query()
                     .eq("category", category)
+                    .eq("status", ProductStatusEnum.ON_SHELF.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .orderByDesc("sold")
                     .orderByDesc("create_time")
                     .list();
@@ -612,7 +631,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         // 6. 分批查询数据库，并按 ZSet 的热度分数顺序进行排序重组
         List<Product> products = new ArrayList<>();
         if (CollUtil.isNotEmpty(productIdList)) {
-            List<Product> unsortedProducts = query().in("id", productIdList).list();
+            List<Product> unsortedProducts = query()
+                    .in("id", productIdList)
+                    .eq("status", ProductStatusEnum.ON_SHELF.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                    .list();
             // 按照 pageIds 的顺序重组
             Map<Long, Product> productMap = unsortedProducts.stream()
                 .collect(Collectors.toMap(Product::getId, p -> p));
@@ -655,6 +678,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         while (true) {
             // 分页查询
             List<Product> products = query()
+                    .eq("status", ProductStatusEnum.ON_SHELF.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .page(new Page<>(page, pageSize))
                     .getRecords();
             if (products.isEmpty()) {
@@ -693,7 +718,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         executorService.submit(() -> {
             log.info("线程{}，开始批量发布商品：{}", Thread.currentThread().getName(), idList);
             // Batch query
-            List<Product> products = query().in("id", idList).list();
+            List<Product> products = query()
+                    .in("id", idList)
+                    .eq("status", ProductStatusEnum.ON_SHELF.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                    .list();
             if (CollUtil.isNotEmpty(products)) {
                 // Batch send message
                 sendProductBatchMessage(products);
@@ -968,6 +997,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 double score = product.getCreateTime() != null ? (double) product.getCreateTime().getTime() : (double) System.currentTimeMillis();
                 redisService.setCacheZSet(hotRankKey, id.toString(), score);
                 redisService.setCacheSet(RedisConstants.PRODUCT_CALC_QUEUE_KEY, id.toString());
+            } else {
+                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                contentSyncMessage.setId(id);
+                contentSyncMessage.setIndexName(EsIndexNameConstants.PRODUCT_INDEX_NAME);
+                contentSyncMessage.setType(GlobalBizTypeEnum.PRODUCT.getCode());
+                mqMessageSendUtils.sendMqMessage(SearchMqConstants.ES_SYNC_EXCHANGE, SearchMqConstants.ES_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
+                mqMessageSendUtils.sendMqMessage(SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
             }
         }
         return b;

@@ -322,8 +322,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             List<Review> dbList = query()
                     .eq("source_id", review.getSourceId())
                     .eq("status", ContentStatusEnum.PUBLISHED.getCode())
-                    .ne("audit_status", 2)
-                    .ne("audit_status",3)
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .eq("source_type", review.getSourceType())
                     .orderByDesc("liked")
                     .orderByDesc("create_time")
@@ -616,6 +615,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                     .eq("source_type", review.getSourceType())
                     .eq("source_id", review.getSourceId())
                     .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .count().intValue();
             redisService.setCacheObject(reviewCountKey, count);
             return count;
@@ -626,7 +626,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq(review.getSourceId() != null, "source_id", review.getSourceId())
                 .eq(review.getUserId() != null, "user_id", review.getUserId())
                 .eq("status", ContentStatusEnum.PUBLISHED.getCode())
-                .count().intValue();
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                    .count().intValue();
     }
 
     /**
@@ -656,7 +657,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 RedisConstants.LOCK_REVIEW_KEY,
                 sourceIdList,
                 Review.class,
-                missingIds -> query().in("id", missingIds).list(),
+                missingIds -> query()
+                        .in("id", missingIds)
+                        .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                        .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                        .list(),
                 Review::getId,
                 RedisConstants.CACHE_REVIEW_TTL,
                 TimeUnit.MINUTES
@@ -671,7 +676,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         List<Review> orderedList = new ArrayList<>(sourceIdList.size());
         for (Long id : sourceIdList) {
             Review review = reviewMap.get(id);
-            if (review != null) {
+            if (review != null
+                    && Objects.equals(review.getStatus(), ContentStatusEnum.PUBLISHED.getCode())
+                    && Objects.equals(review.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
                 orderedList.add(review);
             }
         }
@@ -950,11 +957,19 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 RedisConstants.LOCK_REVIEW_KEY,
                 id,
                 Review.class,
-                this::getById,
+                reviewId -> query()
+                        .eq("id", reviewId)
+                        .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                        .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                        .one(),
                 RedisConstants.CACHE_REVIEW_TTL,
                 java.util.concurrent.TimeUnit.MINUTES
         );
         if (review == null) {
+            return null;
+        }
+        if (!Objects.equals(review.getStatus(), ContentStatusEnum.PUBLISHED.getCode())
+                || !Objects.equals(review.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
             return null;
         }
         ReviewVO vo = convertToReviewVO(review);
@@ -1075,6 +1090,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         int pageSize = PageConstants.ES_PAGE_SIZE;
         while (true) {
             List<Review> reviews = query()
+                    .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .page(new Page<>(page, pageSize))
                     .getRecords();
             if (CollUtil.isEmpty(reviews)) {
@@ -1108,7 +1125,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
         executorService.submit(() -> {
             log.info("线程{}，开始发布指定评价：{}", Thread.currentThread().getName(), idList);
-            List<Review> reviews = query().in("id", idList).list();
+            List<Review> reviews = query()
+                    .in("id", idList)
+                    .eq("status", ContentStatusEnum.PUBLISHED.getCode())
+                    .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                    .list();
             if (CollUtil.isNotEmpty(reviews)) {
                 sendReviewMilvusBatchMessage(reviews);
             }
@@ -1164,8 +1185,18 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         boolean update = update(uw);
         if (update) {
             clearReviewCache(id);
-            // 状态变更，同步更新向量库
-            publish(new String[]{id.toString()});
+            if (Objects.equals(status, AuditStatusEnum.PASS.getCode())) {
+                publish(new String[]{id.toString()});
+            } else {
+                ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
+                contentSyncMessage.setId(id);
+                contentSyncMessage.setIndexName("review_index");
+                contentSyncMessage.setType(GlobalBizTypeEnum.REVIEW.getCode());
+                mqMessageSendUtils.sendMqMessage(
+                        SearchMqConstants.MILVUS_SYNC_EXCHANGE,
+                        SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY,
+                        contentSyncMessage);
+            }
         }
         // 若审核被拒绝，需要同步将该评价从排行榜中移除并触发所属主体降分逻辑
         if(update && AuditStatusEnum.isRejected(status)){
@@ -1235,7 +1266,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq("source_type", review.getSourceType())
                 .eq("source_id", review.getSourceId())
                 .eq("status", ContentStatusEnum.PUBLISHED.getCode())
-                .ne("audit_status", 2)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .count();
         if (count > 0) {
             redisService.setCacheZSet(userReviewKey, review.getSourceId().toString(), System.currentTimeMillis());
@@ -1274,7 +1305,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .eq("source_type", review.getSourceType())
                 .eq("source_id", review.getSourceId())
                 .eq("status", ContentStatusEnum.PUBLISHED.getCode())
-                .ne("audit_status", 2)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .count();
         if (remains <= 0) {
             redisService.removeCacheZSetObject(userReviewKey(reviewType, review.getUserId()), review.getSourceId().toString());

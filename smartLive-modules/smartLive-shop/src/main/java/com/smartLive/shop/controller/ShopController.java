@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.SystemConstants;
+import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.web.domain.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -128,6 +129,8 @@ public class ShopController extends BaseController {
         Page<Shop> page = shopService.query()
                 .like(StrUtil.isNotBlank(name), "name", name)
                 .like(StrUtil.isNotBlank(area), "address", area)
+                .eq("status", 1)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 返回数据
         return Result.ok(page.getRecords());
@@ -212,6 +215,14 @@ public class ShopController extends BaseController {
                 .map(Long::valueOf)
                 .collect(java.util.stream.Collectors.toList());
         java.util.List<ShopVO> shops = shopService.getShopList(idList);
-        return Result.ok(shops == null ? new java.util.ArrayList<>() : shops);
+        if (shops == null) {
+            return Result.ok(new java.util.ArrayList<>());
+        }
+        shops = shops.stream()
+                .filter(shop -> shop != null
+                        && java.util.Objects.equals(shop.getStatus(), 1)
+                        && java.util.Objects.equals(shop.getAuditStatus(), AuditStatusEnum.PASS.getCode()))
+                .collect(java.util.stream.Collectors.toList());
+        return Result.ok(shops);
     }
 }
