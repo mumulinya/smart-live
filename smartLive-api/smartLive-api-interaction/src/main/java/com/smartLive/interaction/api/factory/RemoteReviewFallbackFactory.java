@@ -1,11 +1,15 @@
 package com.smartLive.interaction.api.factory;
 
 import com.smartLive.interaction.api.DTO.ReviewDTO;
+import com.smartLive.interaction.api.DTO.ShopReviewAnalysisDTO;
+import com.smartLive.interaction.api.DTO.ShopReviewSuggestDTO;
 import com.smartLive.interaction.api.RemoteReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -16,26 +20,32 @@ public class RemoteReviewFallbackFactory implements FallbackFactory<RemoteReview
         return new RemoteReviewService() {
             @Override
             public Boolean isReview(ReviewDTO reviewDTO) {
-                log.error("查询是否评价失败:{}", throwable.getMessage());
+                log.error("check review status failed: {}", throwable.getMessage());
                 return false;
             }
 
             @Override
             public Boolean updateReviewStatus(Long id, Integer status, String reason) {
-                log.error("评价服务调用失败:{}", throwable.getMessage());
+                log.error("update review status failed: {}", throwable.getMessage());
                 return false;
             }
 
-            /**
-             * 保存AI创建的评价到Redis
-             *
-             * @param reviews 评价列表
-             * @return 操作结果
-             */
             @Override
             public Boolean saveAiCreateReview(List<ReviewDTO> reviews) {
-                log.error("保存AI创建的评价到Redis失败:{}", throwable.getMessage());
+                log.error("save ai reviews failed: {}", throwable.getMessage());
                 return false;
+            }
+
+            @Override
+            public ShopReviewAnalysisDTO getShopReviewAnalysis(Long shopId, String startTime, String endTime) {
+                log.error("get shop review analysis failed: {}", throwable.getMessage());
+                return new ShopReviewAnalysisDTO(BigDecimal.ZERO, 0);
+            }
+
+            @Override
+            public ShopReviewSuggestDTO getShopReviewSuggest(Long shopId) {
+                log.error("get shop review suggest failed: {}", throwable.getMessage());
+                return new ShopReviewSuggestDTO(0, new ArrayList<>());
             }
         };
     }

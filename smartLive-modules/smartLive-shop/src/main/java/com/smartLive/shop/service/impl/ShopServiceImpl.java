@@ -39,10 +39,22 @@ import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
 import com.smartLive.interaction.api.RemoteFollowService;
 import com.smartLive.interaction.api.RemoteStarService;
+import com.smartLive.interaction.api.DTO.BadReviewDTO;
+import com.smartLive.interaction.api.DTO.ShopReviewAnalysisDTO;
+import com.smartLive.interaction.api.DTO.ShopReviewSuggestDTO;
+import com.smartLive.interaction.api.RemoteReviewService;
+import com.smartLive.order.api.DTO.ProductSalesDTO;
+import com.smartLive.order.api.DTO.ShopOrderAnalysisDTO;
+import com.smartLive.order.api.DTO.ShopOrderSuggestDTO;
+import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.system.api.RemoteUserService;
 import com.smartLive.interaction.api.DTO.FollowDTO;
 import com.smartLive.interaction.api.DTO.StarDTO;
 import com.smartLive.shop.domain.ShopType;
+import com.smartLive.shop.domain.VO.BadReviewVO;
+import com.smartLive.shop.domain.VO.ProductSalesVO;
+import com.smartLive.shop.domain.VO.ShopAnalysisVO;
+import com.smartLive.shop.domain.VO.ShopSuggestVO;
 import com.smartLive.shop.domain.VO.ShopVO;
 import com.smartLive.shop.service.IShopTypeService;
 import com.smartLive.common.redis.util.CacheClient;
@@ -73,6 +85,7 @@ import jakarta.annotation.Resource;
 @Service
 @Slf4j
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
+    private static final java.time.format.DateTimeFormatter SHOP_ANALYSIS_TIME_FORMATTER = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     @Autowired
     private ShopMapper shopMapper;
     @Autowired
@@ -90,6 +103,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     RemoteFollowService remoteFollowService;
     @Autowired
     private RemoteUserService remoteUserService;
+    @Autowired
+    private RemoteOrderService remoteOrderService;
+    @Autowired
+    private RemoteReviewService remoteReviewService;
     @Autowired
     private RedisMultiCacheManager redisMultiCacheManager;
     @Autowired
@@ -1192,6 +1209,165 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @param shop
      * @return
      */
+    @Override
+    public ShopAnalysisVO getShopAnalysis(Long shopId, String timeRange) {
+        requireShopPermission(shopId);
+        LocalDateTime[] range = buildShopAnalysisRange(timeRange);
+        String startTime = formatShopAnalysisTime(range[0]);
+        String endTime = formatShopAnalysisTime(range[1]);
+        ShopOrderAnalysisDTO orderAnalysis = remoteOrderService.getShopOrderAnalysis(shopId, startTime, endTime);
+        ShopReviewAnalysisDTO reviewAnalysis = remoteReviewService.getShopReviewAnalysis(shopId, startTime, endTime);
+        ShopAnalysisVO result = buildEmptyShopAnalysis();
+        if (orderAnalysis != null) {
+            result.setTotalOrders(orderAnalysis.getTotalOrders() == null ? 0 : orderAnalysis.getTotalOrders());
+            result.setTotalRevenue(orderAnalysis.getTotalRevenue() == null ? java.math.BigDecimal.ZERO : orderAnalysis.getTotalRevenue());
+            result.setRepurchaseCount(orderAnalysis.getRepurchaseCount() == null ? 0 : orderAnalysis.getRepurchaseCount());
+            result.setHotProducts(toProductSalesVOList(orderAnalysis.getHotProducts()));
+        }
+        if (reviewAnalysis != null) {
+            result.setAvgScore(normalizeOneDecimal(reviewAnalysis.getAvgScore()));
+            result.setBadReviewCount(reviewAnalysis.getBadReviewCount() == null ? 0 : reviewAnalysis.getBadReviewCount());
+        }
+        result.setAvgOrderPrice(calculateAvgOrderPrice(result.getTotalRevenue(), result.getTotalOrders()));
+        normalizeShopAnalysis(result);
+        return result;
+    }
+
+    @Override
+    public ShopSuggestVO getShopSuggest(Long shopId) {
+        requireShopPermission(shopId);
+        ShopOrderSuggestDTO orderSuggest = remoteOrderService.getShopOrderSuggest(shopId);
+        ShopReviewSuggestDTO reviewSuggest = remoteReviewService.getShopReviewSuggest(shopId);
+        ShopSuggestVO result = buildEmptyShopSuggest();
+        if (orderSuggest != null) {
+            result.setWeekOrders(orderSuggest.getWeekOrders() == null ? 0 : orderSuggest.getWeekOrders());
+            result.setHotProducts(toProductSalesVOList(orderSuggest.getHotProducts()));
+            result.setSlowProducts(toProductSalesVOList(orderSuggest.getSlowProducts()));
+        }
+        if (reviewSuggest != null) {
+            result.setBadReviewCount(reviewSuggest.getBadReviewCount() == null ? 0 : reviewSuggest.getBadReviewCount());
+            result.setBadReviewList(toBadReviewVOList(reviewSuggest.getBadReviewList()));
+        }
+        normalizeShopSuggest(result);
+        return result;
+    }
+
+    private void requireShopPermission(Long shopId) {
+        if (shopId == null) {
+            throw new BusinessException("shopId is required");
+        }
+        if (getById(shopId) == null) {
+            throw new BusinessException("shop does not exist");
+        }
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId == null) {
+            throw new BusinessException("user not logged in");
+        }
+        if (SecurityUtils.isAdmin(currentUserId)) {
+            return;
+        }
+        List<Long> shopIds = remoteUserService.getShopIdsByUserId(currentUserId);
+        if (CollUtil.isEmpty(shopIds) || !shopIds.contains(shopId)) {
+            throw new BusinessException("no permission for this shop");
+        }
+    }
+
+    private LocalDateTime[] buildShopAnalysisRange(String timeRange) {
+        String normalized = StrUtil.isBlank(timeRange) ? "week" : timeRange.trim().toLowerCase(Locale.ROOT);
+        LocalDateTime now = LocalDateTime.now();
+        switch (normalized) {
+            case "week":
+                return new LocalDateTime[]{now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).atStartOfDay(), now};
+            case "month":
+                return new LocalDateTime[]{now.withDayOfMonth(1).toLocalDate().atStartOfDay(), now};
+            case "quarter":
+                return new LocalDateTime[]{now.minusDays(90), now};
+            default:
+                throw new BusinessException("unsupported timeRange");
+        }
+    }
+
+    private String formatShopAnalysisTime(LocalDateTime time) {
+        return time.format(SHOP_ANALYSIS_TIME_FORMATTER);
+    }
+
+    private java.math.BigDecimal calculateAvgOrderPrice(java.math.BigDecimal totalRevenue, Integer totalOrders) {
+        if (totalRevenue == null || totalOrders == null || totalOrders <= 0) {
+            return java.math.BigDecimal.ZERO;
+        }
+        return totalRevenue.divide(java.math.BigDecimal.valueOf(totalOrders), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    private java.math.BigDecimal normalizeOneDecimal(java.math.BigDecimal value) {
+        if (value == null) {
+            return java.math.BigDecimal.ZERO;
+        }
+        return value.setScale(1, java.math.RoundingMode.HALF_UP);
+    }
+
+    private List<ProductSalesVO> toProductSalesVOList(List<ProductSalesDTO> source) {
+        if (source == null) {
+            return new ArrayList<>();
+        }
+        return source.stream().filter(Objects::nonNull).map(item -> new ProductSalesVO(item.getProductId(), item.getProductName() == null ? "" : item.getProductName(), item.getSalesCount() == null ? 0L : item.getSalesCount())).collect(Collectors.toList());
+    }
+
+    private List<BadReviewVO> toBadReviewVOList(List<BadReviewDTO> source) {
+        if (source == null) {
+            return new ArrayList<>();
+        }
+        return source.stream().filter(Objects::nonNull).map(item -> new BadReviewVO(item.getContent() == null ? "" : item.getContent(), item.getScore() == null ? 0 : item.getScore(), item.getCreateTime())).collect(Collectors.toList());
+    }
+
+    private ShopAnalysisVO buildEmptyShopAnalysis() {
+        return new ShopAnalysisVO(0, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO, 0, 0, new ArrayList<>());
+    }
+
+    private ShopSuggestVO buildEmptyShopSuggest() {
+        return new ShopSuggestVO(0, 0, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    }
+
+    private void normalizeShopAnalysis(ShopAnalysisVO result) {
+        if (result.getTotalOrders() == null) {
+            result.setTotalOrders(0);
+        }
+        if (result.getTotalRevenue() == null) {
+            result.setTotalRevenue(java.math.BigDecimal.ZERO);
+        }
+        if (result.getAvgOrderPrice() == null) {
+            result.setAvgOrderPrice(java.math.BigDecimal.ZERO);
+        }
+        if (result.getAvgScore() == null) {
+            result.setAvgScore(java.math.BigDecimal.ZERO);
+        }
+        if (result.getBadReviewCount() == null) {
+            result.setBadReviewCount(0);
+        }
+        if (result.getRepurchaseCount() == null) {
+            result.setRepurchaseCount(0);
+        }
+        if (result.getHotProducts() == null) {
+            result.setHotProducts(new ArrayList<>());
+        }
+    }
+
+    private void normalizeShopSuggest(ShopSuggestVO result) {
+        if (result.getWeekOrders() == null) {
+            result.setWeekOrders(0);
+        }
+        if (result.getBadReviewCount() == null) {
+            result.setBadReviewCount(0);
+        }
+        if (result.getBadReviewList() == null) {
+            result.setBadReviewList(new ArrayList<>());
+        }
+        if (result.getHotProducts() == null) {
+            result.setHotProducts(new ArrayList<>());
+        }
+        if (result.getSlowProducts() == null) {
+            result.setSlowProducts(new ArrayList<>());
+        }
+    }
     @Override
     public List<Shop> selectShopListByUserId(Long userId, Shop shop) {
         if (userId == null) {

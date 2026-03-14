@@ -661,4 +661,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         userIds.stream().filter(Objects::nonNull).forEach(this::clearUserCache);
     }
 
+    /**
+     * 根据用户id查询用户详情
+     *
+     * @param userId 用户id
+     * @return 用户详情
+     */
+    @Override
+    public UserVO getUserById(Long userId) {
+        User userById = selectUserById(userId);
+        if (userById != null) {
+            return convertToUserVO(userById);
+        }
+        return null;
+    }
 }

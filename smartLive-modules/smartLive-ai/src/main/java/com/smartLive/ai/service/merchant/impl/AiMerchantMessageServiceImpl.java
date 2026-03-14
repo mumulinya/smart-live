@@ -14,11 +14,15 @@ public class AiMerchantMessageServiceImpl extends ServiceImpl<AiMerchantMessageM
         implements IAiMerchantMessageService {
 
     @Override
-    public AiMerchantMessage saveMessage(Long sessionId, String role, String content) {
+    public AiMerchantMessage saveMessage(Long sessionId, String role, String content,
+                                         Long reviewId, Long productId, String timeRange) {
         AiMerchantMessage message = new AiMerchantMessage();
         message.setSessionId(sessionId);
         message.setRole(role);
         message.setContent(content);
+        message.setReviewId(reviewId);
+        message.setProductId(productId);
+        message.setTimeRange(timeRange);
         message.setCreateTime(new Date());
         this.save(message);
         return message;

@@ -1,7 +1,11 @@
 package com.smartLive.shop.api.factory;
-import com.smartLive.shop.api.RemoteShopService;
+
+import com.smartLive.common.core.web.domain.AjaxResult;
+import com.smartLive.shop.api.DTO.ShopAnalysisDTO;
 import com.smartLive.shop.api.DTO.ShopDTO;
+import com.smartLive.shop.api.DTO.ShopSuggestDTO;
 import com.smartLive.shop.api.DTO.ShopTypeDTO;
+import com.smartLive.shop.api.RemoteShopService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -19,141 +23,104 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
         return new RemoteShopService() {
             @Override
             public ShopDTO getShopByShopName(String shopName) {
-                log.error("查询商家信息失败:{}", cause.getMessage());
+                log.error("Get shop by name failed: {}", cause.getMessage());
                 return null;
             }
 
-            /**
-             * 根据条件查询商家信息
-             *
-             * @param shopDTo
-             */
             @Override
             public List<ShopDTO> queryShopList(ShopDTO shopDTo) {
-                log.error("查询商家信息失败:{}", cause.getMessage());
-                return null;
+                log.error("Query shop list failed: {}", cause.getMessage());
+                return Collections.emptyList();
             }
 
-            /**
-             * 查询商铺类型列表
-             */
             @Override
             public List<ShopTypeDTO> getShopTypeList() {
-                log.error("查询商铺类型列表失败:{}", cause.getMessage());
-                return null;
+                log.error("Get shop types failed: {}", cause.getMessage());
+                return Collections.emptyList();
             }
 
-            /**
-             * 根据商家Id查询商家信息
-             *
-             * @param shopId
-             */
             @Override
             public ShopDTO getShopById(Long shopId) {
-                log.error("查询商家信息失败:{}", cause.getMessage());
+                log.error("Get shop by id failed: {}", cause.getMessage());
                 return null;
             }
 
             @Override
             public List<ShopDTO> getShopList(List<Long> shopIdList) {
-                log.error("查询店铺列表失败:{}", cause.getMessage());
-                return null;
+                log.error("Get shop list by ids failed: {}", cause.getMessage());
+                return Collections.emptyList();
             }
 
-            /**
-             * 获取商家总数
-             */
             @Override
             public Integer getShopTotal() {
-                log.error("查询商家总数失败:{}", cause.getMessage());
-                return null;
+                log.error("Get shop total failed: {}", cause.getMessage());
+                return 0;
             }
-            /**
-             * 获取最近商家列表
-             *
-             * @param limit
-             */
+
             @Override
             public List<ShopDTO> getRecentShops(Integer limit) {
-                log.error("获取最近商家列表失败:{}", cause.getMessage());
-                return null;
+                log.error("Get recent shops failed: {}", cause.getMessage());
+                return Collections.emptyList();
             }
 
-            /**
-             * 批量更新商家评论数
-             *
-             * @param updateMap
-             */
             @Override
             public Boolean updateReviewCountBatch(Map<Long, Integer> updateMap) {
-                log.error("批量更新商家评论数失败:{}", cause.getMessage());
+                log.error("Update review count batch failed: {}", cause.getMessage());
                 return false;
             }
 
-            /**
-             * 批量更新商家收藏数
-             *
-             * @param updateMap
-             */
             @Override
             public Boolean updateStarCountBatch(Map<Long, Integer> updateMap) {
-                log.error("批量更新商家收藏数失败:{}", cause.getMessage());
+                log.error("Update star count batch failed: {}", cause.getMessage());
                 return false;
             }
 
-            /**
-             * 获取商家收藏数
-             *
-             * @param sourceId
-             */
             @Override
             public Boolean updateFansCountBatch(Map<Long, Integer> updateMap) {
-                log.error("Batch update shop fans count failed: {}", cause.getMessage());
+                log.error("Update fans count batch failed: {}", cause.getMessage());
                 return false;
             }
 
             @Override
             public Integer getStarCount(Long sourceId) {
-                log.error("获取商家收藏数失败:{}", cause.getMessage());
+                log.error("Get shop star count failed: {}", cause.getMessage());
                 return 0;
             }
 
-            /**
-             * 更新店铺状态
-             *
-             * @param id
-             * @param status
-             */
             @Override
             public Boolean updateShopStatus(Long id, Integer status, String reason) {
-                log.error("更新店铺状态失败:{}", cause.getMessage());
+                log.error("Update shop status failed: {}", cause.getMessage());
                 return false;
             }
 
             @Override
             public List<Long> getAllShopIds() {
-                log.error("获取全部店铺ID失败:{}", cause.getMessage());
+                log.error("Get all shop ids failed: {}", cause.getMessage());
                 return Collections.emptyList();
             }
 
-            /**
-             * 批量更新销量
-             *
-             * @param updateMap
-             */
             @Override
             public Boolean updateSoldBatch(Map<Long, Integer> updateMap) {
+                log.error("Update sold batch failed: {}", cause.getMessage());
                 return false;
             }
 
-            /**
-             * 获取销量
-             *
-             * @param id
-             */
             @Override
             public Integer getSold(Long id) {
+                log.error("Get sold failed: {}", cause.getMessage());
                 return 0;
+            }
+
+            @Override
+            public AjaxResult getShopAnalysis(Long shopId, String timeRange) {
+                log.error("Get shop analysis failed: {}", cause.getMessage());
+                return AjaxResult.success(new ShopAnalysisDTO());
+            }
+
+            @Override
+            public AjaxResult getShopSuggest(Long shopId) {
+                log.error("Get shop suggest failed: {}", cause.getMessage());
+                return AjaxResult.success(new ShopSuggestDTO());
             }
         };
     }

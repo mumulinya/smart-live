@@ -1,103 +1,74 @@
 package com.smartLive.shop.api;
 
 import com.smartLive.common.core.constant.ServiceNameConstants;
+import com.smartLive.common.core.web.domain.AjaxResult;
 import com.smartLive.shop.api.DTO.ShopDTO;
 import com.smartLive.shop.api.DTO.ShopTypeDTO;
 import com.smartLive.shop.api.factory.RemoteShopFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.List;
 import java.util.Map;
 
 @FeignClient(contextId = "remoteShopService", value = ServiceNameConstants.SHOP_SERVICE, fallbackFactory = RemoteShopFallbackFactory.class)
 public interface RemoteShopService {
-    /**
-     * 根据商家名称查询商家信息
-     */
+
     @GetMapping("/inner/shop/{shopName}")
     ShopDTO getShopByShopName(@PathVariable("shopName") String shopName);
 
-    /**
-     * 根据条件查询商家信息
-     */
     @PostMapping("/inner/shop/getShopList")
     List<ShopDTO> queryShopList(@RequestBody ShopDTO shopDTo);
 
-    /**
-     * 查询商铺类型列表
-     */
     @GetMapping("/inner/shop/shop-type/getShopListByType")
     List<ShopTypeDTO> getShopTypeList();
 
-
-    /**
-     * 根据商家Id查询商家信息
-     */
     @GetMapping("/inner/shop/getShopById/{shopId}")
     ShopDTO getShopById(@PathVariable("shopId") Long shopId);
 
     @GetMapping("/inner/shop/shopListByIds")
     List<ShopDTO> getShopList(@RequestParam("shopIdList") List<Long> shopIdList);
 
-    /**
-     * 获取商家总数
-     */
     @GetMapping("/inner/shop/getShopTotal")
     Integer getShopTotal();
 
-    /**
-     * 获取最近创建商家
-     */
     @GetMapping("/inner/shop/getRecentShops")
     List<ShopDTO> getRecentShops(@RequestParam("limit") Integer limit);
 
-    /**
-     * 批量更新商家评价数
-     */
     @PostMapping("/inner/shop/updateReviewCountBatch")
     Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap);
 
-    /**
-     * 批量更新商家收藏数
-     */
     @PostMapping("/inner/shop/updateStarCountBatch")
     Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap);
 
-    /**
-     * Batch update shop fans count.
-     */
     @PostMapping("/inner/shop/updateFansCountBatch")
     Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap);
 
-    /**
-     * 获取商家收藏数
-     */
     @GetMapping("/inner/shop/getStarCount/{sourceId}")
     Integer getStarCount(@PathVariable("sourceId") Long sourceId);
 
-    /**
-     * 更新店铺状态
-     */
     @PostMapping("/inner/shop/updateShopStatus")
-    Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason);
+    Boolean updateShopStatus(@RequestParam("id") Long id,
+                             @RequestParam("status") Integer status,
+                             @RequestParam(value = "reason", required = false) String reason);
 
-    /**
-     * 获取全部店铺ID列表
-     */
     @GetMapping("/inner/shop/getAllShopIds")
     List<Long> getAllShopIds();
 
-    /**
-     * 批量更新销量
-     * @param updateMap 店铺ID与销量映射
-     */
     @PostMapping("/inner/shop/updateSoldBatch")
     Boolean updateSoldBatch(@RequestBody Map<Long, Integer> updateMap);
 
-    /**
-     * 获取销量
-     * @param id 店铺ID
-     */
     @GetMapping("/inner/shop/getSold/{id}")
     Integer getSold(@PathVariable("id") Long id);
+
+    @GetMapping("/shop/analysis/{shopId}")
+    AjaxResult getShopAnalysis(@PathVariable("shopId") Long shopId,
+                               @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
+
+    @GetMapping("/shop/suggest/{shopId}")
+    AjaxResult getShopSuggest(@PathVariable("shopId") Long shopId);
 }

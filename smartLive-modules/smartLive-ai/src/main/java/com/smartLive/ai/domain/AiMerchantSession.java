@@ -22,6 +22,8 @@ public class AiMerchantSession implements Serializable {
 
     private Long shopId;
 
+    private String type;
+
     private String title;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

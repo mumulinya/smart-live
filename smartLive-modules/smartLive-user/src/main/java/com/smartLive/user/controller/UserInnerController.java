@@ -1,6 +1,7 @@
 package com.smartLive.user.controller;
 
 import com.smartLive.common.core.web.controller.BaseController;
+import com.smartLive.user.api.domain.UserDTO;
 import com.smartLive.user.domain.User;
 import com.smartLive.user.domain.VO.UserVO;
 import com.smartLive.user.service.IUserInfoService;
@@ -18,54 +19,60 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/inner/user")
-public class UserInnerController extends BaseController
-{
+public class UserInnerController extends BaseController {
     @Autowired
     private IUserService userService;
     @Autowired
     private IUserInfoService userInfoService;
+
     /**
      * 根据手机号查询用户详情
      */
     @GetMapping("/info/{phone}")
-    User getUserInfoByPhone(@PathVariable("phone") String phone){
+    User getUserInfoByPhone(@PathVariable("phone") String phone) {
         return userService.getUserInfoByPhone(phone);
     }
+
     /**
      * 创建用户
      */
     @PostMapping("/create/{phone}")
-    User createUserByPhone(@PathVariable("phone") String phone){
+    User createUserByPhone(@PathVariable("phone") String phone) {
         return userService.createUserByPhone(phone);
     }
+
     /**
      * 根据id查询用户列表
      */
     @GetMapping("/userListByIds")
-    List<UserVO> getUserList(@RequestParam("userIdList") List<Long> userIdList){
+    List<UserVO> getUserList(@RequestParam("userIdList") List<Long> userIdList) {
         return userService.getUserList(userIdList);
     }
+
     /**
      * 根据id查询用户
      */
     @GetMapping("/getUserInfo/{id}")
-    UserVO queryUserInfoById(@PathVariable("id") Long id){
+    UserVO queryUserInfoById(@PathVariable("id") Long id) {
         return userService.queryUserInfoById(id);
     }
+
     /**
      * 根据id查询用户
      */
     @GetMapping("/{id}")
-    UserVO queryUserById(@PathVariable("id") Long id){
+    UserVO queryUserById(@PathVariable("id") Long id) {
         return userService.queryUserById(id);
     }
+
     /**
      * 根据用户id查询用户名称
+     *
      * @param userId
      * @return
      */
     @GetMapping("/userNameById")
-    String getUserNameById(@RequestParam("userId") Long userId){
+    String getUserNameById(@RequestParam("userId") Long userId) {
         return userService.getUserNameById(userId);
     }
 
@@ -73,7 +80,7 @@ public class UserInnerController extends BaseController
      * 更新用户状态
      */
     @PostMapping("/updateUserStatus")
-    Boolean updateUserStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status){
+    Boolean updateUserStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status) {
         return userInfoService.updateUserStatus(id, status);
     }
 
@@ -81,7 +88,7 @@ public class UserInnerController extends BaseController
      * 批量更新用户粉丝数
      */
     @PostMapping("/updateFansCountBatch")
-    Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap){
+    Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap) {
         return userInfoService.updateFansCountBatch(updateMap);
     }
 
@@ -89,7 +96,7 @@ public class UserInnerController extends BaseController
      * 批量更新用户关注数
      */
     @PostMapping("/updateFolloweeCountBatch")
-    Boolean updateFolloweeCountBatch(@RequestBody Map<Long, Integer> updateMap){
+    Boolean updateFolloweeCountBatch(@RequestBody Map<Long, Integer> updateMap) {
         return userInfoService.updateFolloweeCountBatch(updateMap);
     }
 
@@ -97,7 +104,7 @@ public class UserInnerController extends BaseController
      * 批量更新用户被点赞数
      */
     @PostMapping("/updateUserLikedBatch")
-    Boolean updateUserLikedBatch(@RequestBody Map<Long, Integer> updateMap){
+    Boolean updateUserLikedBatch(@RequestBody Map<Long, Integer> updateMap) {
         return userInfoService.updateUserLikedBatch(updateMap);
     }
 
@@ -105,7 +112,19 @@ public class UserInnerController extends BaseController
      * 获取用户被点赞数
      */
     @GetMapping("/getUserLikedCount")
-    Integer getUserLikedCount(@RequestParam("userId") Long userId){
+    Integer getUserLikedCount(@RequestParam("userId") Long userId) {
         return userInfoService.getUserLikedCount(userId);
     }
+
+    /**
+     * 根据用户id查询用户信息
+     *
+     * @param userId
+     * @return
+     */
+    @GetMapping("/userInfoById")
+    UserVO getUserInfoById(@RequestParam("userId") Long userId) {
+        return userService.getUserById(userId);
+    }
 }
+

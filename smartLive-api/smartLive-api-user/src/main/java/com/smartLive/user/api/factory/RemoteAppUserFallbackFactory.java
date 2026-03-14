@@ -109,6 +109,18 @@ public class RemoteAppUserFallbackFactory implements FallbackFactory<RemoteAppUs
                 log.error("Get user liked count failed: {}", throwable.getMessage());
                 return 0;
             }
+
+            /**
+             * 根据用户id查询用户信息
+             *
+             * @param userId
+             * @return
+             */
+            @Override
+            public UserDTO getUserInfoById(Long userId) {
+                log.error("查询用户信息失败:{}", throwable.getMessage());
+                return null;
+            }
         };
     }
 }

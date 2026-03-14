@@ -11,6 +11,9 @@ public class CreateSessionDTO implements Serializable {
 
     private Long shopId;
 
+    private String type;
+
     private String title;
+
     private Long userId;
 }

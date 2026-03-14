@@ -1,71 +1,29 @@
 package com.smartLive.order.mapper;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.smartLive.order.domain.Order;
+import com.smartLive.order.domain.VO.ProductSalesVO;
 import com.smartLive.order.domain.VO.ProductSoldVO;
+import com.smartLive.order.domain.VO.ShopOrderAnalysisVO;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-/**
- * 订单表Mapper接口
- * 
- * @author mumulin
- * @date 2025-09-21
- */
-public interface OrderMapper extends BaseMapper<Order>
-{
-    /**
-     * 查询订单表
-     * 
-     * @param id 订单表主键
-     * @return 订单表
-     */
-    public Order selectOrderById(Long id);
+import java.time.LocalDateTime;
+import java.util.List;
 
-    /**
-     * 查询订单表列表
-     * 
-     * @param order 订单表
-     * @return 订单表集合
-     */
-    public List<Order> selectOrderList(Order order);
+public interface OrderMapper extends BaseMapper<Order> {
+    Order selectOrderById(Long id);
 
-    /**
-     * 新增订单表
-     * 
-     * @param order 订单表
-     * @return 结果
-     */
-    public int insertOrder(Order order);
+    List<Order> selectOrderList(Order order);
 
-    /**
-     * 修改订单表
-     * 
-     * @param order 订单表
-     * @return 结果
-     */
-    public int updateOrder(Order order);
+    int insertOrder(Order order);
 
-    /**
-     * 删除订单表
-     * 
-     * @param id 订单表主键
-     * @return 结果
-     */
-    public int deleteOrderById(Long id);
+    int updateOrder(Order order);
 
-    /**
-     * 批量删除订单表
-     * 
-     * @param ids 需要删除的数据主键集合
-     * @return 结果
-     */
-    public int deleteOrderByIds(Long[] ids);
-    /**
-     * 查询商品销售量
-     * @return
-     */
+    int deleteOrderById(Long id);
+
+    int deleteOrderByIds(Long[] ids);
+
     @Select("""
     SELECT source_id, COUNT(*) as sold_count
     FROM `order`
@@ -74,21 +32,12 @@ public interface OrderMapper extends BaseMapper<Order>
     """)
     List<ProductSoldVO> countProductSold();
 
-    /**
-     * 查询指定商品的累计订单销量
-     */
     @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE source_id = #{sourceId} AND status != 4")
     Integer sumSoldBySourceId(Long sourceId);
 
-    /**
-     * 查询指定店铺的累计订单销量
-     */
     @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE verify_shop_id = #{shopId} AND status != 4")
     Integer sumSoldByShopId(Long shopId);
 
-    /**
-     * 统计店铺近 7 天核销订单数
-     */
     @Select("""
     SELECT COUNT(*)
     FROM `order`
@@ -97,4 +46,21 @@ public interface OrderMapper extends BaseMapper<Order>
       AND use_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
     """)
     Integer countWeekOrders(Long shopId);
+
+    ShopOrderAnalysisVO selectShopOrderAnalysis(@Param("shopId") Long shopId,
+                                                @Param("statusList") List<Integer> statusList,
+                                                @Param("startTime") LocalDateTime startTime,
+                                                @Param("endTime") LocalDateTime endTime);
+
+    List<ProductSalesVO> selectShopHotProducts(@Param("shopId") Long shopId,
+                                               @Param("statusList") List<Integer> statusList,
+                                               @Param("startTime") LocalDateTime startTime,
+                                               @Param("endTime") LocalDateTime endTime,
+                                               @Param("limit") Integer limit);
+
+    List<ProductSalesVO> selectShopSlowProducts(@Param("shopId") Long shopId,
+                                                @Param("statusList") List<Integer> statusList,
+                                                @Param("startTime") LocalDateTime startTime,
+                                                @Param("endTime") LocalDateTime endTime,
+                                                @Param("limit") Integer limit);
 }

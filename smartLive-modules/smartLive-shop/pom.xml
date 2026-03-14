@@ -102,6 +102,11 @@
 
         <dependency>
             <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-order</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-system</artifactId>
         </dependency>
 

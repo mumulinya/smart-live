@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.smartLive.common.core.context.SecurityContextHolder;
 import com.smartLive.common.core.context.UserContextHolder;
+import com.smartLive.shop.domain.VO.ShopAnalysisVO;
+import com.smartLive.shop.domain.VO.ShopSuggestVO;
 import com.smartLive.shop.domain.VO.ShopVO;
 import jakarta.servlet.http.HttpServletResponse;
 import cn.hutool.core.util.StrUtil;
@@ -224,5 +226,16 @@ public class ShopController extends BaseController {
                         && java.util.Objects.equals(shop.getAuditStatus(), AuditStatusEnum.PASS.getCode()))
                 .collect(java.util.stream.Collectors.toList());
         return Result.ok(shops);
+    }
+
+    @GetMapping("/analysis/{shopId}")
+    public AjaxResult getShopAnalysis(@PathVariable("shopId") Long shopId,
+                                      @RequestParam(value = "timeRange", defaultValue = "week") String timeRange) {
+        return success(shopService.getShopAnalysis(shopId, timeRange));
+    }
+
+    @GetMapping("/suggest/{shopId}")
+    public AjaxResult getShopSuggest(@PathVariable("shopId") Long shopId) {
+        return success(shopService.getShopSuggest(shopId));
     }
 }

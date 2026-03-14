@@ -77,4 +77,11 @@ public interface RemoteAppUserService {
      */
     @GetMapping("/inner/user/getUserLikedCount")
     Integer getUserLikedCount(@RequestParam("userId") Long userId);
-}
+    /**
+     * 根据用户id查询用户信息
+     * @param userId
+     * @return
+     */
+    @GetMapping("/inner/user/userInfoById")
+    UserDTO getUserInfoById(@RequestParam("userId") Long userId);
+    }

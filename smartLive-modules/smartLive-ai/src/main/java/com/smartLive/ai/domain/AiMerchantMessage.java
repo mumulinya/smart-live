@@ -24,6 +24,12 @@ public class AiMerchantMessage implements Serializable {
 
     private String content;
 
+    private Long reviewId;
+
+    private Long productId;
+
+    private String timeRange;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 }

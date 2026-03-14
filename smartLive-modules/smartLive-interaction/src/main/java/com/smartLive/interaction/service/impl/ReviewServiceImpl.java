@@ -32,7 +32,10 @@ import com.smartLive.common.redis.util.ZSetIdManager;
 import com.smartLive.interaction.domain.BO.AuditReviewBO;
 import com.smartLive.interaction.domain.Like;
 import com.smartLive.interaction.domain.Review;
+import com.smartLive.interaction.domain.VO.BadReviewVO;
 import com.smartLive.interaction.domain.VO.ReviewVO;
+import com.smartLive.interaction.domain.VO.ShopReviewAnalysisVO;
+import com.smartLive.interaction.domain.VO.ShopReviewSuggestVO;
 import com.smartLive.interaction.api.DTO.LikeDTO;
 import com.smartLive.interaction.domain.Star;
 import com.smartLive.interaction.strategy.factory.ReviewStrategyFactory;
@@ -80,6 +83,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> implements IReviewService {
+    private static final java.time.format.DateTimeFormatter REVIEW_ANALYSIS_TIME_FORMATTER = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     @Autowired
     private ReviewMapper reviewMapper;
     @Autowired
@@ -154,8 +158,23 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 评价实体
      */
     @Override
-    public Review selectReviewById(Long id) {
-        return reviewMapper.selectReviewById(id);
+    public ReviewVO selectReviewById(Long id) {
+        ReviewVO reviewVO = convertToReviewVO(reviewMapper.selectReviewById(id));
+        queryReviewUserInfo(reviewVO);
+        return reviewVO;
+    }
+    /**
+     * 查询评价用户信息
+     *
+     * @param reviewVO 评价信息
+     */
+    private void queryReviewUserInfo(ReviewVO reviewVO) {
+        if (reviewVO == null) {
+            return;
+        }
+        UserDTO userDTO = remoteAppUserService.getUserInfoById(reviewVO.getUserId());
+        reviewVO.setNickName(userDTO.getNickName());
+        reviewVO.setUserIcon(userDTO.getIcon());
     }
 
     /**
@@ -190,6 +209,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             List<ReviewVO> re = reviewStrategy.setSourceName(reviewVOS);
             result.addAll(re);
         });
+        queryReviewListUserMessage(result);
         return result;
     }
 
@@ -1255,12 +1275,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (userReviewKey == null) {
             return false;
         }
-        // 优先拦截：尝试从用户的发评足迹 ZSet 中命中
         if (redisService.getCacheZSetScore(userReviewKey, review.getSourceId().toString()) != null) {
             return true;
         }
 
-        // 缓存未命中时查库兜底，状态 2 (已删除) 的无效数据不计入其中
         long count = query()
                 .eq("user_id", userId)
                 .eq("source_type", review.getSourceType())
@@ -1275,13 +1293,98 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         return false;
     }
 
-    /**
-     * 构建用于标记用户“已评价目标源”足迹历史的 Redis ZSet Key
-     *
-     * @param reviewType 评价类型枚举
-     * @param userId 触发行为的用户 ID
-     * @return Redis Key
-     */
+    @Override
+    public ShopReviewAnalysisVO getShopReviewAnalysis(Long shopId, String startTime, String endTime) {
+        if (shopId == null) {
+            return buildEmptyShopReviewAnalysis();
+        }
+        java.time.LocalDateTime[] timeRange = parseReviewAnalysisTimeRange(startTime, endTime);
+        ShopReviewAnalysisVO analysis = reviewMapper.selectShopReviewAnalysis(shopId, AuditStatusEnum.PASS.getCode(), timeRange[0], timeRange[1]);
+        if (analysis == null) {
+            analysis = buildEmptyShopReviewAnalysis();
+        }
+        normalizeShopReviewAnalysis(analysis);
+        return analysis;
+    }
+
+    @Override
+    public ShopReviewSuggestVO getShopReviewSuggest(Long shopId) {
+        if (shopId == null) {
+            return buildEmptyShopReviewSuggest();
+        }
+        java.time.LocalDateTime[] timeRange = buildCurrentWeekReviewRange();
+        ShopReviewAnalysisVO analysis = reviewMapper.selectShopReviewAnalysis(shopId, AuditStatusEnum.PASS.getCode(), timeRange[0], timeRange[1]);
+        ShopReviewSuggestVO suggest = buildEmptyShopReviewSuggest();
+        suggest.setBadReviewCount(analysis == null || analysis.getBadReviewCount() == null ? 0 : analysis.getBadReviewCount());
+        suggest.setBadReviewList(normalizeBadReviewList(reviewMapper.selectBadReviewList(shopId, AuditStatusEnum.PASS.getCode(), timeRange[0], timeRange[1], 1, 3, 10)));
+        normalizeShopReviewSuggest(suggest);
+        return suggest;
+    }
+
+    private java.time.LocalDateTime[] parseReviewAnalysisTimeRange(String startTime, String endTime) {
+        if (startTime == null || endTime == null || startTime.isBlank() || endTime.isBlank()) {
+            throw new com.smartLive.common.core.exception.BusinessException("startTime and endTime are required");
+        }
+        try {
+            java.time.LocalDateTime start = java.time.LocalDateTime.parse(startTime, REVIEW_ANALYSIS_TIME_FORMATTER);
+            java.time.LocalDateTime end = java.time.LocalDateTime.parse(endTime, REVIEW_ANALYSIS_TIME_FORMATTER);
+            if (end.isBefore(start)) {
+                throw new com.smartLive.common.core.exception.BusinessException("endTime must be greater than or equal to startTime");
+            }
+            return new java.time.LocalDateTime[]{start, end};
+        } catch (java.time.format.DateTimeParseException ex) {
+            throw new com.smartLive.common.core.exception.BusinessException("invalid time range format");
+        }
+    }
+
+    private java.time.LocalDateTime[] buildCurrentWeekReviewRange() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDate weekStart = now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        return new java.time.LocalDateTime[]{weekStart.atStartOfDay(), now};
+    }
+
+    private ShopReviewAnalysisVO buildEmptyShopReviewAnalysis() {
+        return new ShopReviewAnalysisVO(java.math.BigDecimal.ZERO, 0);
+    }
+
+    private ShopReviewSuggestVO buildEmptyShopReviewSuggest() {
+        return new ShopReviewSuggestVO(0, new ArrayList<>());
+    }
+
+    private void normalizeShopReviewAnalysis(ShopReviewAnalysisVO analysis) {
+        if (analysis.getAvgScore() == null) {
+            analysis.setAvgScore(java.math.BigDecimal.ZERO);
+        }
+        if (analysis.getBadReviewCount() == null) {
+            analysis.setBadReviewCount(0);
+        }
+    }
+
+    private ShopReviewSuggestVO normalizeShopReviewSuggest(ShopReviewSuggestVO suggest) {
+        if (suggest.getBadReviewCount() == null) {
+            suggest.setBadReviewCount(0);
+        }
+        if (suggest.getBadReviewList() == null) {
+            suggest.setBadReviewList(new ArrayList<>());
+        }
+        return suggest;
+    }
+
+    private List<BadReviewVO> normalizeBadReviewList(List<BadReviewVO> badReviewList) {
+        if (badReviewList == null) {
+            return new ArrayList<>();
+        }
+        badReviewList.forEach(item -> {
+            if (item.getContent() == null) {
+                item.setContent("");
+            }
+            if (item.getScore() == null) {
+                item.setScore(0);
+            }
+        });
+        return badReviewList;
+    }
+
     private String userReviewKey(ReviewTypeEnum reviewType, Long userId) {
         if (reviewType == null || userId == null) {
             return null;

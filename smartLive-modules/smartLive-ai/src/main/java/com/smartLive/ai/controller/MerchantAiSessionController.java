@@ -7,7 +7,15 @@ import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
 import com.smartLive.common.security.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/merchant/session")
@@ -20,13 +28,14 @@ public class MerchantAiSessionController extends BaseController {
     public AjaxResult create(@RequestBody CreateSessionDTO dto) {
         Long userId = SecurityUtils.getUserId();
         dto.setUserId(userId);
-        return AjaxResult.success(sessionService.createSession(userId, dto.getShopId()));
+        return AjaxResult.success(sessionService.createSession(userId, dto.getShopId(), dto.getType()));
     }
 
     @GetMapping("/list")
-    public AjaxResult list(@RequestParam("shopId") Long shopId) {
+    public AjaxResult list(@RequestParam("shopId") Long shopId,
+                           @RequestParam("type") String type) {
         Long userId = SecurityUtils.getUserId();
-        return AjaxResult.success(sessionService.listByUserAndShop(userId, shopId));
+        return AjaxResult.success(sessionService.listByUserAndShop(userId, shopId, type));
     }
 
     @PutMapping("/{sessionId}/title")

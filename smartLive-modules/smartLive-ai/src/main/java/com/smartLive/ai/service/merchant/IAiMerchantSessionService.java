@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface IAiMerchantSessionService extends IService<AiMerchantSession> {
 
-    Long createSession(Long userId, Long shopId);
+    Long createSession(Long userId, Long shopId, String type);
 
-    List<AiMerchantSession> listByUserAndShop(Long userId, Long shopId);
+    List<AiMerchantSession> listByUserAndShop(Long userId, Long shopId, String type);
 
     void updateTitle(Long userId, Long sessionId, String title);
 

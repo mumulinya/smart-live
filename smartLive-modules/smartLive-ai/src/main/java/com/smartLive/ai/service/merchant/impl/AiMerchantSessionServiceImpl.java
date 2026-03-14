@@ -15,10 +15,13 @@ import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionMapper, AiMerchantSession>
         implements IAiMerchantSessionService {
+
+    private static final Set<String> SUPPORTED_TYPES = Set.of("reply", "analysis", "copywrite", "suggest");
 
     private final IAiMerchantMessageService messageService;
     private final RemoteUserService remoteUserService;
@@ -29,12 +32,14 @@ public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionM
     }
 
     @Override
-    public Long createSession(Long userId, Long shopId) {
+    public Long createSession(Long userId, Long shopId, String type) {
         checkShopPermission(userId, shopId);
+        String normalizedType = normalizeAndCheckType(type);
         Date now = new Date();
         AiMerchantSession session = new AiMerchantSession();
         session.setUserId(userId);
         session.setShopId(shopId);
+        session.setType(normalizedType);
         session.setTitle("new session");
         session.setCreateTime(now);
         session.setUpdateTime(now);
@@ -43,11 +48,13 @@ public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionM
     }
 
     @Override
-    public List<AiMerchantSession> listByUserAndShop(Long userId, Long shopId) {
+    public List<AiMerchantSession> listByUserAndShop(Long userId, Long shopId, String type) {
         checkShopPermission(userId, shopId);
+        String normalizedType = normalizeAndCheckType(type);
         LambdaQueryWrapper<AiMerchantSession> wrapper = new LambdaQueryWrapper<AiMerchantSession>()
                 .eq(AiMerchantSession::getUserId, userId)
                 .eq(AiMerchantSession::getShopId, shopId)
+                .eq(AiMerchantSession::getType, normalizedType)
                 .orderByDesc(AiMerchantSession::getUpdateTime)
                 .orderByDesc(AiMerchantSession::getId);
         return this.list(wrapper);
@@ -107,4 +114,14 @@ public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionM
         }
     }
 
+    private String normalizeAndCheckType(String type) {
+        if (!StringUtils.hasText(type)) {
+            throw new ServiceException("Session type cannot be blank");
+        }
+        String normalizedType = type.trim().toLowerCase();
+        if (!SUPPORTED_TYPES.contains(normalizedType)) {
+            throw new ServiceException("Unsupported session type: " + type);
+        }
+        return normalizedType;
+    }
 }

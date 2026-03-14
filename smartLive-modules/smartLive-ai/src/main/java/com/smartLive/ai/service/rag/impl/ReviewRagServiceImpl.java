@@ -3,7 +3,6 @@ package com.smartLive.ai.service.rag.impl;
 import com.smartLive.ai.entity.vo.ReviewVO;
 import com.smartLive.ai.service.rag.IReviewRagService;
 import com.smartLive.ai.utils.RagMetadataValueUtils;
-import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -32,14 +31,16 @@ public class ReviewRagServiceImpl implements IReviewRagService {
     @Override
     public String getReviewSummary(Integer sourceType, Long sourceId,
                                    Integer minScore, Integer maxScore, String userMessage) {
-        String baseFilter = buildFilter(sourceType, sourceId);
-        log.info("Review RAG baseFilter: {}", baseFilter);
-
-        if (minScore != null || maxScore != null) {
-            return searchByScoreRange(baseFilter, minScore, maxScore);
+        String baseFilter = buildSourceFilter(sourceType, sourceId);
+        String scoreFilter = buildScoreFilter(minScore, maxScore);
+        String query = StringUtils.hasText(userMessage) ? userMessage : "店铺评价摘要";
+        List<Document> docs = searchReviewDocs(query, baseFilter, scoreFilter, 15);
+        if (docs.isEmpty()) {
+            return "暂无评价数据";
         }
-
-        return searchAllRange(baseFilter);
+        StringBuilder context = new StringBuilder("评价摘要参考：\n");
+        docs.forEach(doc -> context.append("- ").append(doc.getText()).append('\n'));
+        return context.toString();
     }
 
     @Override
@@ -48,8 +49,7 @@ public class ReviewRagServiceImpl implements IReviewRagService {
             return List.of();
         }
         String safeQuery = StringUtils.hasText(query) ? query : "店铺评价";
-        String baseFilter = buildShopFilter(shopId);
-        List<Document> docs = searchReviewDocs(safeQuery, baseFilter, "score >= 1 && score <= 5", 15);
+        List<Document> docs = searchReviewDocs(safeQuery, buildShopFilter(shopId), null, 15);
         return convertDocumentsToReviewVo(docs);
     }
 
@@ -58,87 +58,53 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         if (shopId == null) {
             return List.of();
         }
-        String baseFilter = buildShopFilter(shopId);
-        String scoreFilter = buildScoreFilter(minScore, maxScore);
-        if (!StringUtils.hasText(scoreFilter)) {
-            scoreFilter = "score >= 1 && score <= 5";
-        }
-        List<Document> docs = searchReviewDocs("店铺 差评 服务 口味", baseFilter, scoreFilter, 20);
+        List<Document> docs = searchReviewDocs("低分评价", buildShopFilter(shopId), buildScoreFilter(minScore, maxScore), 20);
         return convertDocumentsToReviewVo(docs);
     }
 
-    private String searchByScoreRange(String baseFilter, Integer minScore, Integer maxScore) {
-        String scoreFilter = buildScoreFilter(minScore, maxScore);
-
-        String query = (minScore != null && minScore >= 4)
-                ? "好吃 满意 推荐 不错 服务好"
-                : "差 失望 不推荐 难吃 服务差";
-
-        log.info("Score range search, scoreFilter={}", scoreFilter);
-        List<Document> reviews = searchReviewDocs(query, baseFilter, scoreFilter, 15);
-
-        if (reviews.isEmpty()) {
-            return "暂无相关评价数据";
+    @Override
+    public ReviewVO getReviewById(Long reviewId, Long shopId) {
+        if (reviewId == null) {
+            return null;
         }
-
-        StringBuilder context = new StringBuilder();
-        context.append("以下是真实用户评价，请综合总结给用户，不要逐条复述原文：\n\n");
-        reviews.forEach(d -> context.append("- ").append(d.getText()).append("\n"));
-        return context.toString();
+        List<String> filters = new ArrayList<>();
+        filters.add("id == " + reviewId);
+        if (shopId != null) {
+            filters.add("shopId == " + shopId);
+        }
+        List<Document> docs = searchReviewDocs("评价详情", String.join(" && ", filters), null, 1);
+        List<ReviewVO> reviews = convertDocumentsToReviewVo(docs);
+        return reviews.isEmpty() ? null : reviews.get(0);
     }
 
-    private String searchAllRange(String baseFilter) {
-        List<Document> goodReviews = searchReviewDocs("好吃 满意 推荐 不错 服务好", baseFilter, "score >= 4", 10);
-        List<Document> normalReviews = searchReviewDocs("一般 还行 普通 凑合", baseFilter, "score == 3", 5);
-        List<Document> badReviews = searchReviewDocs("差 失望 不推荐 难吃 服务差", baseFilter, "score < 3", 5);
-
-        log.info("Review summary counts: good={}, normal={}, bad={}",
-                goodReviews.size(), normalReviews.size(), badReviews.size());
-
-        if (goodReviews.isEmpty() && normalReviews.isEmpty() && badReviews.isEmpty()) {
-            return "暂无评价数据";
-        }
-
-        StringBuilder context = new StringBuilder();
-        context.append("以下是真实用户评价数据，请综合总结给用户，不要逐条复述原文：\n\n");
-        appendReviews(context, "好评", goodReviews);
-        appendReviews(context, "中评", normalReviews);
-        appendReviews(context, "差评", badReviews);
-        return context.toString();
-    }
-
-    private List<Document> searchReviewDocs(String query, String baseFilter,
-                                            String scoreFilter, int topK) {
+    private List<Document> searchReviewDocs(String query, String baseFilter, String scoreFilter, int topK) {
         try {
-            String fullFilter = StringUtils.hasText(baseFilter)
-                    ? StringUtils.hasText(scoreFilter) ? baseFilter + " && " + scoreFilter : baseFilter
-                    : scoreFilter;
-
-            log.info("Review search fullFilter={}", fullFilter);
             SearchRequest.Builder builder = SearchRequest.builder()
                     .query(query)
                     .topK(topK);
+            String fullFilter = mergeFilter(baseFilter, scoreFilter);
             if (StringUtils.hasText(fullFilter)) {
                 builder.filterExpression(fullFilter);
             }
             List<Document> documents = reviewVectorStore.similaritySearch(builder.build());
             return documents == null ? new ArrayList<>() : documents;
-        } catch (Exception e) {
-            log.warn("Review search failed, scoreFilter={}, error={}", scoreFilter, e.getMessage());
+        } catch (Exception ex) {
+            log.warn("Review vector search failed, query={}, error={}", query, ex.getMessage());
             return new ArrayList<>();
         }
     }
 
-    private void appendReviews(StringBuilder context, String label, List<Document> reviews) {
-        if (reviews.isEmpty()) {
-            return;
+    private String mergeFilter(String baseFilter, String extraFilter) {
+        if (!StringUtils.hasText(baseFilter)) {
+            return extraFilter;
         }
-        context.append(label).append("：\n");
-        reviews.forEach(d -> context.append("- ").append(d.getText()).append("\n"));
-        context.append("\n");
+        if (!StringUtils.hasText(extraFilter)) {
+            return baseFilter;
+        }
+        return baseFilter + " && " + extraFilter;
     }
 
-    private String buildFilter(Integer sourceType, Long sourceId) {
+    private String buildSourceFilter(Integer sourceType, Long sourceId) {
         List<String> filters = new ArrayList<>();
         if (sourceType != null) {
             filters.add("sourceType == " + sourceType);
@@ -150,15 +116,17 @@ public class ReviewRagServiceImpl implements IReviewRagService {
     }
 
     private String buildShopFilter(Long shopId) {
-        return "sourceType == " + GlobalBizTypeEnum.SHOP.getCode() + " && shopId == " + shopId;
+        return shopId == null ? "" : "shopId == " + shopId;
     }
 
     private String buildScoreFilter(Integer minScore, Integer maxScore) {
         if (minScore != null && maxScore != null) {
             return "score >= " + minScore + " && score <= " + maxScore;
-        } else if (minScore != null) {
+        }
+        if (minScore != null) {
             return "score >= " + minScore;
-        } else if (maxScore != null) {
+        }
+        if (maxScore != null) {
             return "score <= " + maxScore;
         }
         return "";
@@ -188,6 +156,7 @@ public class ReviewRagServiceImpl implements IReviewRagService {
             reviewVo.setId(RagMetadataValueUtils.toLong(metadata.get("id")));
             reviewVo.setUserId(RagMetadataValueUtils.toLong(metadata.get("userId")));
             reviewVo.setShopId(RagMetadataValueUtils.toLong(metadata.get("shopId")));
+            reviewVo.setOrderId(RagMetadataValueUtils.toLong(metadata.get("orderId")));
             reviewVo.setSourceId(RagMetadataValueUtils.toLong(metadata.get("sourceId")));
             reviewVo.setSourceType(RagMetadataValueUtils.toInteger(metadata.get("sourceType")));
             reviewVo.setScore(RagMetadataValueUtils.toInteger(metadata.get("score")));
@@ -207,8 +176,8 @@ public class ReviewRagServiceImpl implements IReviewRagService {
                 reviewVo.setCreateTime(new Date(createTime));
             }
             return reviewVo;
-        } catch (Exception e) {
-            log.warn("Convert document to ReviewVO failed: {}", e.getMessage());
+        } catch (Exception ex) {
+            log.warn("Convert review vector document failed: {}", ex.getMessage());
             return null;
         }
     }

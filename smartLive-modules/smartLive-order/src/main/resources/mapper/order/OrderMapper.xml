@@ -5,29 +5,28 @@
 <mapper namespace="com.smartLive.order.mapper.OrderMapper">
 
     <resultMap type="com.smartLive.order.domain.Order" id="OrderResult">
-        <result property="id"           column="id"    />
-        <result property="userId"       column="user_id"    />
-        <result property="sourceId"     column="source_id"    />
-        <result property="sourceType"   column="source_type"  />
-        <result property="payType"      column="pay_type"    />
-        <result property="status"       column="status"    />
-
-        <result property="payAmount"    column="pay_amount"    />
-        <result property="amount"       column="amount"        />
-        <result property="outTradeNo"   column="out_trade_no"  />
+        <result property="id" column="id" />
+        <result property="userId" column="user_id" />
+        <result property="sourceId" column="source_id" />
+        <result property="sourceType" column="source_type" />
+        <result property="payType" column="pay_type" />
+        <result property="status" column="status" />
+        <result property="payAmount" column="pay_amount" />
+        <result property="amount" column="amount" />
+        <result property="outTradeNo" column="out_trade_no" />
         <result property="reviewStatus" column="review_status" />
-        <result property="reviewId"     column="review_id" />
-        <result property="reviewTime"   column="review_time"   />
+        <result property="reviewId" column="review_id" />
+        <result property="reviewTime" column="review_time" />
         <result property="refundAmount" column="refund_amount" />
-        <result property="createTime"   column="create_time"    />
-        <result property="payTime"      column="pay_time"    />
-        <result property="useTime"      column="use_time"    />
-        <result property="shopId"       column="shop_id" />
+        <result property="createTime" column="create_time" />
+        <result property="payTime" column="pay_time" />
+        <result property="useTime" column="use_time" />
+        <result property="shopId" column="shop_id" />
         <result property="verifyShopId" column="verify_shop_id" />
-        <result property="refundTime"   column="refund_time"    />
-        <result property="updateTime"   column="update_time"    />
+        <result property="refundTime" column="refund_time" />
+        <result property="updateTime" column="update_time" />
         <result property="validStartTime" column="valid_start_time" />
-        <result property="expireTime"   column="expire_time"    />
+        <result property="expireTime" column="expire_time" />
     </resultMap>
 
     <sql id="selectOrderVo">
@@ -43,8 +42,8 @@
             <if test="userId != null "> and user_id = #{userId}</if>
             <if test="sourceId != null "> and source_id = #{sourceId}</if>
             <if test="sourceType != null "> and source_type = #{sourceType}</if>
-            <if test="payType != null  and payType != ''"> and pay_type = #{payType}</if>
-            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="payType != null and payType != ''"> and pay_type = #{payType}</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
             <if test="excludedStatuses != null and excludedStatuses.size > 0"> and status not in
                 <foreach collection="excludedStatuses" item="statusItem" open="(" separator="," close=")">
                     #{statusItem}
@@ -89,7 +88,6 @@
             <if test="reviewId != null">review_id,</if>
             <if test="reviewTime != null">review_time,</if>
             <if test="refundAmount != null">refund_amount,</if>
-
             <if test="createTime != null">create_time,</if>
             <if test="payTime != null">pay_time,</if>
             <if test="useTime != null">use_time,</if>
@@ -114,7 +112,6 @@
             <if test="reviewId != null">#{reviewId},</if>
             <if test="reviewTime != null">#{reviewTime},</if>
             <if test="refundAmount != null">#{refundAmount},</if>
-
             <if test="createTime != null">#{createTime},</if>
             <if test="payTime != null">#{payTime},</if>
             <if test="useTime != null">#{useTime},</if>
@@ -142,7 +139,6 @@
             <if test="reviewId != null">review_id = #{reviewId},</if>
             <if test="reviewTime != null">review_time = #{reviewTime},</if>
             <if test="refundAmount != null">refund_amount = #{refundAmount},</if>
-
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="payTime != null">pay_time = #{payTime},</if>
             <if test="useTime != null">use_time = #{useTime},</if>
@@ -155,6 +151,72 @@
         </trim>
         where id = #{id}
     </update>
+
+    <select id="selectShopOrderAnalysis" resultType="com.smartLive.order.domain.VO.ShopOrderAnalysisVO">
+        select
+            coalesce(count(*), 0) as totalOrders,
+            coalesce(sum(pay_amount), 0) as totalRevenue,
+            coalesce((
+                select count(*)
+                from (
+                    select user_id
+                    from `order`
+                    where FIND_IN_SET(#{shopId}, shop_id)
+                      and status in
+                      <foreach collection="statusList" item="statusItem" open="(" separator="," close=")">
+                          #{statusItem}
+                      </foreach>
+                      and coalesce(pay_time, create_time) <![CDATA[>=]]> #{startTime}
+                      and coalesce(pay_time, create_time) <![CDATA[<=]]> #{endTime}
+                    group by user_id
+                    having count(*) <![CDATA[>=]]> 2
+                ) repurchase_users
+            ), 0) as repurchaseCount
+        from `order`
+        where FIND_IN_SET(#{shopId}, shop_id)
+          and status in
+          <foreach collection="statusList" item="statusItem" open="(" separator="," close=")">
+              #{statusItem}
+          </foreach>
+          and coalesce(pay_time, create_time) <![CDATA[>=]]> #{startTime}
+          and coalesce(pay_time, create_time) <![CDATA[<=]]> #{endTime}
+    </select>
+
+    <select id="selectShopHotProducts" resultType="com.smartLive.order.domain.VO.ProductSalesVO">
+        select
+            source_id as productId,
+            coalesce(sum(coalesce(amount, 1)), 0) as salesCount
+        from `order`
+        where FIND_IN_SET(#{shopId}, shop_id)
+          and source_type = 2
+          and status in
+          <foreach collection="statusList" item="statusItem" open="(" separator="," close=")">
+              #{statusItem}
+          </foreach>
+          and coalesce(pay_time, create_time) <![CDATA[>=]]> #{startTime}
+          and coalesce(pay_time, create_time) <![CDATA[<=]]> #{endTime}
+        group by source_id
+        order by salesCount desc, source_id asc
+        limit #{limit}
+    </select>
+
+    <select id="selectShopSlowProducts" resultType="com.smartLive.order.domain.VO.ProductSalesVO">
+        select
+            source_id as productId,
+            coalesce(sum(coalesce(amount, 1)), 0) as salesCount
+        from `order`
+        where FIND_IN_SET(#{shopId}, shop_id)
+          and source_type = 2
+          and status in
+          <foreach collection="statusList" item="statusItem" open="(" separator="," close=")">
+              #{statusItem}
+          </foreach>
+          and coalesce(pay_time, create_time) <![CDATA[>=]]> #{startTime}
+          and coalesce(pay_time, create_time) <![CDATA[<=]]> #{endTime}
+        group by source_id
+        order by salesCount asc, source_id asc
+        limit #{limit}
+    </select>
 
     <delete id="deleteOrderById" parameterType="Long">
         delete from `order` where id = #{id}

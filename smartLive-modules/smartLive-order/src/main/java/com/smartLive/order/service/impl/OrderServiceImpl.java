@@ -15,7 +15,10 @@ import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.order.domain.VO.ProductSalesVO;
 import com.smartLive.order.domain.VO.ProductSoldVO;
+import com.smartLive.order.domain.VO.ShopOrderAnalysisVO;
+import com.smartLive.order.domain.VO.ShopOrderSuggestVO;
 import com.smartLive.product.api.DTO.ProductDTO;
 import com.smartLive.product.api.RemoteProductService;
 import com.smartLive.common.core.constant.mq.PointsMqConstants;
@@ -55,6 +58,8 @@ import jakarta.annotation.Resource;
 @Slf4j
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrderService
 {
+    private static final java.time.format.DateTimeFormatter BUSINESS_TIME_FORMATTER = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final java.util.List<Integer> BUSINESS_ORDER_STATUSES = java.util.List.of(OrderStatusConstants.PAID, OrderStatusConstants.VERIFIED);
     @Autowired
     private OrderMapper orderMapper;
 
@@ -723,6 +728,117 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         Integer count = orderMapper.countWeekOrders(shopId);
         return count == null ? 0 : count;
+    }
+    @Override
+    public ShopOrderAnalysisVO getShopOrderAnalysis(Long shopId, String startTime, String endTime) {
+        if (shopId == null) {
+            return buildEmptyOrderAnalysis();
+        }
+        java.time.LocalDateTime[] timeRange = parseBusinessTimeRange(startTime, endTime);
+        ShopOrderAnalysisVO analysis = orderMapper.selectShopOrderAnalysis(shopId, BUSINESS_ORDER_STATUSES, timeRange[0], timeRange[1]);
+        if (analysis == null) {
+            analysis = buildEmptyOrderAnalysis();
+        }
+        analysis.setHotProducts(fillProductNames(orderMapper.selectShopHotProducts(shopId, BUSINESS_ORDER_STATUSES, timeRange[0], timeRange[1], 3)));
+        normalizeOrderAnalysis(analysis);
+        return analysis;
+    }
+
+    @Override
+    public ShopOrderSuggestVO getShopOrderSuggest(Long shopId) {
+        if (shopId == null) {
+            return buildEmptyOrderSuggest();
+        }
+        java.time.LocalDateTime[] timeRange = buildCurrentWeekRange();
+        ShopOrderAnalysisVO analysis = orderMapper.selectShopOrderAnalysis(shopId, BUSINESS_ORDER_STATUSES, timeRange[0], timeRange[1]);
+        ShopOrderSuggestVO suggest = buildEmptyOrderSuggest();
+        suggest.setWeekOrders(analysis == null || analysis.getTotalOrders() == null ? 0 : analysis.getTotalOrders());
+        suggest.setHotProducts(fillProductNames(orderMapper.selectShopHotProducts(shopId, BUSINESS_ORDER_STATUSES, timeRange[0], timeRange[1], 3)));
+        suggest.setSlowProducts(fillProductNames(orderMapper.selectShopSlowProducts(shopId, BUSINESS_ORDER_STATUSES, timeRange[0], timeRange[1], 3)));
+        normalizeOrderSuggest(suggest);
+        return suggest;
+    }
+
+    private java.time.LocalDateTime[] parseBusinessTimeRange(String startTime, String endTime) {
+        if (startTime == null || endTime == null || startTime.isBlank() || endTime.isBlank()) {
+            throw new BusinessException("startTime and endTime are required");
+        }
+        try {
+            java.time.LocalDateTime start = java.time.LocalDateTime.parse(startTime, BUSINESS_TIME_FORMATTER);
+            java.time.LocalDateTime end = java.time.LocalDateTime.parse(endTime, BUSINESS_TIME_FORMATTER);
+            if (end.isBefore(start)) {
+                throw new BusinessException("endTime must be greater than or equal to startTime");
+            }
+            return new java.time.LocalDateTime[]{start, end};
+        } catch (java.time.format.DateTimeParseException ex) {
+            throw new BusinessException("invalid time range format");
+        }
+    }
+
+    private java.time.LocalDateTime[] buildCurrentWeekRange() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDate weekStart = now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        return new java.time.LocalDateTime[]{weekStart.atStartOfDay(), now};
+    }
+
+    private List<ProductSalesVO> fillProductNames(List<ProductSalesVO> products) {
+        if (products == null || products.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Long> productIds = products.stream()
+                .map(ProductSalesVO::getProductId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        if (productIds.isEmpty()) {
+            return products;
+        }
+        java.util.List<ProductDTO> productList = remoteProductService.getProductListByIds(productIds);
+        java.util.Map<Long, String> productNameMap = productList == null ? new java.util.HashMap<>() : productList.stream()
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toMap(ProductDTO::getId, product -> product.getName() == null ? "" : product.getName(), (left, right) -> left));
+        products.forEach(product -> {
+            product.setProductName(productNameMap.getOrDefault(product.getProductId(), ""));
+            if (product.getSalesCount() == null) {
+                product.setSalesCount(0L);
+            }
+        });
+        return products;
+    }
+
+    private ShopOrderAnalysisVO buildEmptyOrderAnalysis() {
+        return new ShopOrderAnalysisVO(0, java.math.BigDecimal.ZERO, 0, new ArrayList<>());
+    }
+
+    private ShopOrderSuggestVO buildEmptyOrderSuggest() {
+        return new ShopOrderSuggestVO(0, new ArrayList<>(), new ArrayList<>());
+    }
+
+    private void normalizeOrderAnalysis(ShopOrderAnalysisVO analysis) {
+        if (analysis.getTotalOrders() == null) {
+            analysis.setTotalOrders(0);
+        }
+        if (analysis.getTotalRevenue() == null) {
+            analysis.setTotalRevenue(java.math.BigDecimal.ZERO);
+        }
+        if (analysis.getRepurchaseCount() == null) {
+            analysis.setRepurchaseCount(0);
+        }
+        if (analysis.getHotProducts() == null) {
+            analysis.setHotProducts(new ArrayList<>());
+        }
+    }
+
+    private void normalizeOrderSuggest(ShopOrderSuggestVO suggest) {
+        if (suggest.getWeekOrders() == null) {
+            suggest.setWeekOrders(0);
+        }
+        if (suggest.getHotProducts() == null) {
+            suggest.setHotProducts(new ArrayList<>());
+        }
+        if (suggest.getSlowProducts() == null) {
+            suggest.setSlowProducts(new ArrayList<>());
+        }
     }
 
     /**

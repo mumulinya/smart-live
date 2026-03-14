@@ -16,4 +16,14 @@ public class MerchantChatDTO implements Serializable {
     private String type;
 
     private String message;
+
+    private String rawMessage;
+
+    private String instruction;
+
+    private Long productId;
+
+    private Long reviewId;
+
+    private String dateRange;
 }

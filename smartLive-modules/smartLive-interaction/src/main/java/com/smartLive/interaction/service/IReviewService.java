@@ -2,7 +2,10 @@ package com.smartLive.interaction.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.interaction.domain.Review;
+import com.smartLive.interaction.domain.VO.BadReviewVO;
 import com.smartLive.interaction.domain.VO.ReviewVO;
+import com.smartLive.interaction.domain.VO.ShopReviewAnalysisVO;
+import com.smartLive.interaction.domain.VO.ShopReviewSuggestVO;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +24,7 @@ public interface IReviewService extends IService<Review> {
      * @param id 评价主键
      * @return 评价实体
      */
-    Review selectReviewById(Long id);
+    ReviewVO selectReviewById(Long id);
 
     /**
      * 按条件查询评价列表（管理端）。
@@ -209,4 +212,7 @@ public interface IReviewService extends IService<Review> {
      * @return 发布结果
      */
     String publish(String[] ids);
+    ShopReviewAnalysisVO getShopReviewAnalysis(Long shopId, String startTime, String endTime);
+
+    ShopReviewSuggestVO getShopReviewSuggest(Long shopId);
 }

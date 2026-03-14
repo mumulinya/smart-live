@@ -1,166 +1,59 @@
 package com.smartLive.order.service;
 
-import java.util.List;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.common.core.web.domain.Result;
-import com.smartLive.order.domain.VO.OrderVO;
 import com.smartLive.order.domain.Order;
+import com.smartLive.order.domain.VO.OrderVO;
+import com.smartLive.order.domain.VO.ProductSalesVO;
 import com.smartLive.order.domain.VO.ProductSoldVO;
+import com.smartLive.order.domain.VO.ShopOrderAnalysisVO;
+import com.smartLive.order.domain.VO.ShopOrderSuggestVO;
 
-/**
- * 订单表Service接口
- * 
- * @author mumulin
- * @date 2025-09-21
- */
-public interface IOrderService  extends IService<Order>
-{
-    /**
-     * 查询订单表
-     * 
-     * @param id 订单表主键
-     * @return 订单表
-     */
-     Order selectOrderById(Long id);
+import java.util.List;
 
-    /**
-     * 查询订单表列表
-     * 
-     * @param order 订单表
-     * @return 订单表集合
-     */
-     List<Order> selectOrderList(Order order);
+public interface IOrderService extends IService<Order> {
+    Order selectOrderById(Long id);
 
-    /**
-     * 新增订单表
-     * 
-     * @param order 订单表
-     * @return 结果
-     */
-     int insertOrder(Order order);
+    List<Order> selectOrderList(Order order);
 
-    /**
-     * 修改订单表
-     * 
-     * @param order 订单表
-     * @return 结果
-     */
-     int updateOrder(Order order);
+    int insertOrder(Order order);
 
-    /**
-     * 批量删除订单表
-     * 
-     * @param ids 需要删除的订单表主键集合
-     * @return 结果
-     */
-     int deleteOrderByIds(Long[] ids);
+    int updateOrder(Order order);
 
-    /**
-     * 删除订单表信息
-     * 
-     * @param id 订单表主键
-     * @return 结果
-     */
-     int deleteOrderById(Long id);
+    int deleteOrderByIds(Long[] ids);
 
-    /**
-     *实现一人一单
-     * @param order
-     * @return
-     */
+    int deleteOrderById(Long id);
+
     void createOrder(Order order);
 
-    /**
-     * 获取当前用户订单列表
-     * @return
-     */
-    List<OrderVO> queryMyOrderList(Order order,Integer current);
+    List<OrderVO> queryMyOrderList(Order order, Integer current);
 
-    /**
-     * 支付订单
-     * @param id
-     * @param
-     * @return
-     */
-    Integer pay(Long id );
+    Integer pay(Long id);
 
-    /**
-     * 取消订单
-     * @param id
-     * @param
-     * @return
-     */
     Integer cancel(Long id);
 
-    /**
-     * 退款订单
-     * @param id
-     * @param
-     * @return
-     */
     Integer refund(Long id);
 
-    /**
-     * 使用订单 (核销)
-     * @param id 订单ID
-     * @param verifyShopId 核销的门店ID
-     * @return 影响行数
-     */
     Integer use(Long id, Long verifyShopId);
 
-    /**
-     * 获取订单数量
-     * @param userId
-     * @return
-     */
     Integer getOrderCount(Long userId);
-    
-    /**
-     * 获取订单总数
-     * @return
-     */
+
     Integer getOrderTotal();
-    
-    /**
-     * 根据id获取订单详情
-     * @param id
-     * @return
-     */
+
     OrderVO getOrderById(Long id);
-    
-    /**
-     * 修改订单评价状态
-     * @param orderId
-     * @param reviewId
-     * @param reviewTime
-     * @return
-     */
+
     Integer updateOrderReviewStatus(Long orderId, Long reviewId, java.util.Date reviewTime);
 
-    /**
-     * 支付成功更新订单状态
-     * @param orderId 订单ID
-     * @param payType 支付方式
-     * @return 影响行数
-     */
     Integer paySuccess(Long orderId, Integer payType);
-    /**
-     * 获取订单状态
-     * @param id 订单ID
-     * @return 订单状态
-     */
+
     String getOrderStatus(Long id);
-    /**
-     * 获取商品销售统计
-     * @return
-     */
+
     List<ProductSoldVO> countProductSold();
 
     Integer countWeekOrders(Long shopId);
-    /**
-     * 订单过期
-     * @param id
-     * @return
-     */
+
+    ShopOrderAnalysisVO getShopOrderAnalysis(Long shopId, String startTime, String endTime);
+
+    ShopOrderSuggestVO getShopOrderSuggest(Long shopId);
+
     Integer expired(Long id);
 }

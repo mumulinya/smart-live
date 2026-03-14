@@ -5,6 +5,8 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.shop.domain.Shop;
+import com.smartLive.shop.domain.VO.ShopAnalysisVO;
+import com.smartLive.shop.domain.VO.ShopSuggestVO;
 import com.smartLive.shop.domain.VO.ShopVO;
 
 /**
@@ -201,5 +203,7 @@ public interface IShopService extends IService<Shop> {
      * @return
      */
     List<Shop> selectShopListByUserId(Long userId, Shop shop);
-}
+    ShopAnalysisVO getShopAnalysis(Long shopId, String timeRange);
 
+    ShopSuggestVO getShopSuggest(Long shopId);
+}
