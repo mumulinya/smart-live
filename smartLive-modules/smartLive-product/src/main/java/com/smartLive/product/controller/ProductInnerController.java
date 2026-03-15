@@ -2,18 +2,20 @@ package com.smartLive.product.controller;
 
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.product.domain.Product;
-import com.smartLive.product.domain.VO.ProductVO;
 import com.smartLive.product.service.IProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-/**
- * 商品模块内部 RPC 接口控制器
- * 供其他微服务（如 Order, AI, Search）通过 Feign 进行跨模块调用
- */
 @RestController
 @RequestMapping("/inner/product")
 public class ProductInnerController extends BaseController {
@@ -21,145 +23,91 @@ public class ProductInnerController extends BaseController {
     @Autowired
     private IProductService productService;
 
-    /**
-     * 跨模块购买商品（统一入口）
-     * 常由 AI 模块在会话中直接触发抢购时调用
-     */
-    @PostMapping("/purchase")
-    public Long purchaseProduct(@RequestParam("id") Long productId, @RequestParam("userId") Long userId) {
-        return productService.purchaseProduct(productId, userId);
+    @GetMapping("/{id}")
+    public Product getProductEntityById(@PathVariable("id") Long productId) {
+        return productService.selectProductEntityById(productId);
     }
 
-    /**
-     * 扣减库存（由 OrderService 订单生成流程中调用）
-     *
-     * @param productId 商品 ID
-     * @return 是否扣减成功
-     */
-    @PostMapping("/deductStock/{id}")
-    public Boolean deductStock(@PathVariable("id") Long productId) {
+    @GetMapping("/getProductById/{id}")
+    public Product getProductById(@PathVariable("id") Long productId) {
+        return productService.selectProductEntityById(productId);
+    }
+
+    @PostMapping("/deductStock/{productId}")
+    public Boolean deductStock(@PathVariable("productId") Long productId) {
         return productService.deductStock(productId);
     }
 
-    /**
-     * 恢复库存（发生退款或订单取消时调用）
-     */
-    @PostMapping("/recoverStock/{id}")
-    public Boolean recoverStock(@PathVariable("id") Long productId,@RequestParam(value = "userId", required = false) Long userId) {
-        return productService.recoverStock(productId,userId);
+    @PostMapping("/recoverStock")
+    public Boolean recoverStock(@RequestParam("productId") Long productId,
+                                @RequestParam(value = "userId", required = false) Long userId) {
+        return productService.recoverStock(productId, userId);
     }
 
-    /**
-     * 恢复 Redis 中的秒杀库存及用户购买资格 (内部调用)
-     */
     @PostMapping("/recoverRedisStockAndEligibility")
-    public Boolean recoverRedisStockAndEligibility(@RequestParam("productId") Long productId, @RequestParam(value = "userId", required = false) Long userId) {
+    public Boolean recoverRedisStockAndEligibility(@RequestParam("productId") Long productId,
+                                                   @RequestParam(value = "userId", required = false) Long userId) {
         return productService.recoverRedisStockAndEligibility(productId, userId);
     }
 
-    /**
-     * 批量查询商品详情列表（内部）
-     */
-    @PostMapping("/listProduct")
-    public List<Product> listProduct(@RequestBody Product product) {
-        return productService.selectProductEntityList(product);
-    }
-
-    @GetMapping("/listAllProduct")
-    public List<Product> listAllProduct() {
-        return productService.listProduct();
-    }
-
-    /**
-     * 获取商品总数。
-     */
-    @GetMapping("/total")
+    @GetMapping("/getProductTotal")
     public Integer getProductTotal() {
         return productService.getProductTotal();
     }
 
-    /**
-     * 根据 ID 列表获取商品。
-     */
+    @PostMapping("/purchaseProduct")
+    public Long purchaseProduct(@RequestParam("productId") Long productId,
+                                @RequestParam("userId") Long userId) {
+        return productService.purchaseProduct(productId, userId);
+    }
+
     @GetMapping("/getProductListByIds")
     public List<Product> getProductListByIds(@RequestParam("sourceIdList") List<Long> sourceIdList) {
         return productService.getProductListByIds(sourceIdList);
     }
 
-    /**
-     * 根据 ID 获取商品。
-     */
-    @GetMapping("/{id}")
-    public Product getProductById(@PathVariable("id") Long productId) {
-        return productService.selectProductEntityById(productId);
-    }
-
-    /**
-     * 批量更新商品收藏数。
-     */
     @PostMapping("/updateStarCountBatch")
-    Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap) {
+    public Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap) {
         return productService.updateStarCountBatch(updateMap);
     }
 
-    /**
-     * 批量更新商品粉丝数。
-     */
     @PostMapping("/updateFansCountBatch")
-    Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap) {
+    public Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap) {
         return productService.updateFansCountBatch(updateMap);
     }
 
-    /**
-     * 获取商品收藏数。
-     */
     @GetMapping("/getProductStarCount")
-    Integer getProductStarCount(@RequestParam("sourceId") Long sourceId) {
+    public Integer getProductStarCount(@RequestParam("sourceId") Long sourceId) {
         return productService.getProductStarCount(sourceId);
     }
 
-    /**
-     * 批量更新商品评价数。
-     */
     @PostMapping("/updateReviewCountBatch")
-    Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap) {
+    public Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap) {
         return productService.updateReviewCountBatch(updateMap);
     }
 
-    /**
-     * 更新商品状态。
-     */
     @PostMapping("/updateProductStatus")
-    Boolean updateProductStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason) {
+    public Boolean updateProductStatus(@RequestParam("id") Long id,
+                                       @RequestParam("status") Integer status,
+                                       @RequestParam(value = "reason", required = false) String reason) {
         return productService.updateProductStatus(id, status, reason);
     }
 
-    /**
-     * 批量更新销量 (Feign 内部调用)
-     */
     @PostMapping("/updateSoldBatch")
     public Boolean updateSoldBatch(@RequestBody Map<Long, Integer> updateMap) {
         return productService.updateSoldBatch(updateMap);
     }
 
-    /**
-     * 获取指定 ID 的销量 (Feign 内部调用)
-     */
     @GetMapping("/getSold/{id}")
     public Integer getSold(@PathVariable("id") Long id) {
-        ProductVO product = productService.getProductById(id);
+        Product product = productService.selectProductEntityById(id);
         return product != null ? product.getSold() : 0;
     }
 
-    /**
-     * 获取全部商品ID列表
-     * 专门供给热榜模块在凌晨进行全量重建时调用，以最小开销获取所有合法的商品ID。
-     * @return ID 列表
-     */
     @GetMapping("/getAllProductIds")
     public List<Long> getAllProductIds() {
         return productService.list().stream()
                 .map(Product::getId)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 }

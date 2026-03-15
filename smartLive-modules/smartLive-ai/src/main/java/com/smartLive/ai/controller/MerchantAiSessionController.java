@@ -2,7 +2,7 @@ package com.smartLive.ai.controller;
 
 import com.smartLive.ai.domain.DTO.CreateSessionDTO;
 import com.smartLive.ai.domain.DTO.UpdateSessionTitleDTO;
-import com.smartLive.ai.service.merchant.IAiMerchantSessionService;
+import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
 import com.smartLive.common.security.utils.SecurityUtils;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MerchantAiSessionController extends BaseController {
 
     @Autowired
-    private IAiMerchantSessionService sessionService;
+    private IMerchantAiSessionService sessionService;
 
     @PostMapping
     public AjaxResult create(@RequestBody CreateSessionDTO dto) {

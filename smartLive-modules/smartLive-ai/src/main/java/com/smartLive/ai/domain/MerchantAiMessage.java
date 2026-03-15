@@ -10,8 +10,8 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
-@TableName("ai_merchant_message")
-public class AiMerchantMessage implements Serializable {
+@TableName("merchant_ai_message")
+public class MerchantAiMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

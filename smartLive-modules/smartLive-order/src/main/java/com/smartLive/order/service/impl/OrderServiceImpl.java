@@ -1,10 +1,11 @@
 package com.smartLive.order.service.impl;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
@@ -49,7 +50,7 @@ import com.smartLive.common.core.constant.mq.ProductMqConstants;
 import jakarta.annotation.Resource;
 
 /**
- * 订单表Service业务层处理
+ * 鐠併垹宕熺悰鈯縠rvice娑撴艾濮熺仦鍌氼槱閻?
  *
  * @author mumulin
  * @date 2025-09-21
@@ -58,8 +59,8 @@ import jakarta.annotation.Resource;
 @Slf4j
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrderService
 {
-    private static final java.time.format.DateTimeFormatter BUSINESS_TIME_FORMATTER = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final java.util.List<Integer> BUSINESS_ORDER_STATUSES = java.util.List.of(OrderStatusConstants.PAID, OrderStatusConstants.VERIFIED);
+    private static final DateTimeFormatter BUSINESS_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final List<Integer> BUSINESS_ORDER_STATUSES = List.of(OrderStatusConstants.PAID, OrderStatusConstants.VERIFIED);
     @Autowired
     private OrderMapper orderMapper;
 
@@ -85,7 +86,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
     /**
-     * 释放锁脚本初始化
+     * 闁插﹥鏂侀柨浣藉壖閺堫剙鍨垫慨瀣
      */
     static {
         SECKILL_SCRIPT = new DefaultRedisScript<>();
@@ -95,10 +96,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private IOrderService proxy;
 
     /**
-     * 查询订单表
+     * 閺屻儴顕楃拋銏犲礋鐞?
      *
-     * @param id 订单表主键
-     * @return 订单表
+     * @param id 鐠併垹宕熺悰銊ゅ瘜闁?
+     * @return 鐠併垹宕熺悰?
      */
     @Override
     public Order selectOrderById(Long id)
@@ -108,10 +109,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 查询订单表列表
+     * 閺屻儴顕楃拋銏犲礋鐞涖劌鍨悰?
      *
-     * @param order 订单表
-     * @return 订单表
+     * @param order 鐠併垹宕熺悰?
+     * @return 鐠併垹宕熺悰?
      */
     @Override
     public List<Order> selectOrderList(Order order)
@@ -136,10 +137,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 新增订单表
+     * 閺傛澘顤冪拋銏犲礋鐞?
      *
-     * @param order 订单表
-     * @return 结果
+     * @param order 鐠併垹宕熺悰?
+     * @return 缂佹挻鐏?
      */
     @Override
     public int insertOrder(Order order)
@@ -149,10 +150,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 修改订单表
+     * 娣囶喗鏁肩拋銏犲礋鐞?
      *
-     * @param order 订单表
-     * @return 结果
+     * @param order 鐠併垹宕熺悰?
+     * @return 缂佹挻鐏?
      */
     @Override
     public int updateOrder(Order order)
@@ -162,10 +163,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 批量删除订单表
+     * 閹靛綊鍣洪崚鐘绘珟鐠併垹宕熺悰?
      *
-     * @param ids 需要删除的订单表主键
-     * @return 结果
+     * @param ids 闂団偓鐟曚礁鍨归梽銈囨畱鐠併垹宕熺悰銊ゅ瘜闁?
+     * @return 缂佹挻鐏?
      */
     @Override
     public int deleteOrderByIds(Long[] ids)
@@ -174,10 +175,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 删除订单表信息
+     * 閸掔娀娅庣拋銏犲礋鐞涖劋淇婇幁?
      *
-     * @param id 订单表主键
-     * @return 结果
+     * @param id 鐠併垹宕熺悰銊ゅ瘜闁?
+     * @return 缂佹挻鐏?
      */
     @Override
     public int deleteOrderById(Long id)
@@ -186,77 +187,77 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 处理订单
+     * 婢跺嫮鎮婄拋銏犲礋
      * @param order
      */
 
     public void handleOrder(Order order) {
-        //获取事务代理对象
+        //閼惧嘲褰囨禍瀣娴狅絿鎮婄€电钖?
         proxy= (IOrderService) AopContext.currentProxy();
 
-        //1。获取用户id
+        //1閵嗗倽骞忛崣鏍暏閹寸d
         Long userId = order.getUserId();
-        //2.获取redisson锁对象
+        //2.閼惧嘲褰噐edisson闁夸礁顕挒?
         RLock lock = redissonClient.getLock("order:" + userId);
-        //3.获取锁
+        //3.閼惧嘲褰囬柨?
         boolean isLock = lock.tryLock();
-        //判断锁是否获取成功
+        //閸掋倖鏌囬柨浣规Ц閸氾箒骞忛崣鏍ㄥ灇閸?
         if(!isLock){
-            //获取锁失败,返回错误信息
-            log.error("不允许重复下单");
+            //閼惧嘲褰囬柨浣搞亼鐠?鏉╂柨娲栭柨娆掝嚖娣団剝浼?
+            log.error("failed to acquire order lock");
             return;
         }
         try {
             proxy.createOrder(order);
         }catch (Exception e){
-            log.error("创建订单失败",e);
+            log.error("create order failed", e);
         }finally {
-            //释放锁
+            //闁插﹥鏂侀柨?
             lock.unlock();
         }
 
     }
 
     /**
-     *实现一人一单
+     *鐎圭偟骞囨稉鈧禍杞扮閸?
      * @param order
      * @return
      */
     public  void createOrder(Order order) {
-        //获取当前用户id
+        //閼惧嘲褰囪ぐ鎾冲閻劍鍩沬d
         Long userId = order.getUserId();
-        //判断当前用户是否购买过
+        //閸掋倖鏌囪ぐ鎾冲閻劍鍩涢弰顖氭儊鐠愵厺鎷辨潻?
         Integer count = query()
                 .eq("user_id", userId)
                 .eq("source_id", order.getSourceId())
                 .notIn("status",
-                        OrderStatusConstants.EXPIRED,   // 过期
-                        OrderStatusConstants.CANCELLED, // 取消
-                        OrderStatusConstants.REFUNDED   // 退款
+                        OrderStatusConstants.EXPIRED,   // 鏉╁洦婀?
+                        OrderStatusConstants.CANCELLED, // 閸欐牗绉?
+                        OrderStatusConstants.REFUNDED   // 闁偓濞?
                 ).count().intValue();
         if(count>0){
-            //用户已经购买过了
-            log.error("用户已经购买过了，触发 Redis 回退");
-            // 特殊处理：如果是秒杀场景，虽然数据库挡住了，但 Lua 脚本可能已经扣了预库存，这里尝试回滚
+            //閻劍鍩涘鑼病鐠愵厺鎷辨潻鍥︾啊
+            log.error("閻劍鍩涘鑼病鐠愵厺鎷辨潻鍥︾啊閿涘矁袝閸?Redis 閸ョ偤鈧偓");
+            // 閻楄鐣╂径鍕倞閿涙艾顩ч弸婊勬Ц缁夋帗娼冮崷鐑樻珯閿涘矁娅ч悞鑸垫殶閹诡喖绨遍幐鈥茬秶娴滃棴绱濇担?Lua 閼存碍婀伴崣顖濆厴瀹歌尙绮￠幍锝勭啊妫板嫬绨辩€涙﹫绱濇潻娆撳櫡鐏忔繆鐦崶鐐寸泊
             remoteProductService.recoverRedisStockAndEligibility(order.getSourceId(), null);
             redisService.deleteObject("order:status:" + order.getId());
             return;
         }
-        // 7.创建订单
+        // 7.閸掓稑缂撶拋銏犲礋
         boolean save = save(order);
         if(!save){
-            //创建失败
-            log.error("创建订单保存数据库失败，触发 Redis 回退");
+            //閸掓稑缂撴径杈Е
+            log.error("閸掓稑缂撶拋銏犲礋娣囨繂鐡ㄩ弫鐗堝祦鎼存挸銇戠拹銉礉鐟欙箑褰?Redis 閸ョ偤鈧偓");
             remoteProductService.recoverRedisStockAndEligibility(order.getSourceId(), userId);
             redisService.deleteObject("order:status:" + order.getId());
         }else{
-            log.info("订单已创建，ID={}，数量={}，发送 MQ 异步扣库指令...", order.getId(), order.getAmount());
+            log.info("鐠併垹宕熷鎻掑灡瀵ょ尨绱滻D={}閿涘本鏆熼柌?{}閿涘苯褰傞柅?MQ 瀵倹顒為幍锝呯氨閹稿洣鎶?..", order.getId(), order.getAmount());
 
-            // 构建并发送异步库存扣减消息给商品模块
+            // 閺嬪嫬缂撻獮璺哄絺闁礁绱撳銉ョ氨鐎涙ɑ澧搁崙蹇旂Х閹垳绮伴崯鍡楁惂濡€虫健
             StockDeductMessage msg = new StockDeductMessage();
             msg.setProductId(order.getSourceId());
             msg.setOrderId(order.getId());
-            msg.setCount(order.getAmount() != null ? order.getAmount() : 1); // 扣减实际购买数量
+            msg.setCount(order.getAmount() != null ? order.getAmount() : 1); // 閹碉絽鍣虹€圭偤妾拹顓濇嫳閺佷即鍣?
 
             mqMessageSendUtils.sendMqMessage(
                 ProductMqConstants.PRODUCT_STOCK_EXCHANGE,
@@ -265,28 +266,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 0
             );
 
-            // 创建成功，删除 Redis 占位符
+            // 閸掓稑缂撻幋鎰閿涘苯鍨归梽?Redis 閸楃姳缍呯粭?
             redisService.deleteObject("order:status:" + order.getId());
-            // 发送延迟消息，检测订单支付状态
+            // 閸欐垿鈧礁娆㈡潻鐔哥Х閹垽绱濆Λ鈧ù瀣吂閸楁洘鏁禒妯煎Ц閹?
             mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE,OrderMqConstants.ORDER_DELAY_ROUTING_KEY,order.getId(),(OrderMqConstants.DELAY_TIME));
         }
     }
 
     /**
-     * 增加商品及其对应店铺的销量
-     * 采用“三级回退”策略保证数据初始化：
-     * 1. 检查 Redis 计数器；
-     * 2. 若 Redis 为空，通过 Feign 调用源模块（Product/Shop）获取已落库数值；
-     * 3. 若源模块数值仍不可信或为初始化，则在本模块数据库汇总所有历史订单完成数。
+     * 婢х偛濮為崯鍡楁惂閸欏﹤鍙剧€电懓绨叉惔妤呮懙閻ㄥ嫰鏀㈤柌?
+     * 闁插洨鏁ら垾婊€绗佺痪褍娲栭柅鈧垾婵堢摜閻ｃ儰绻氱拠浣规殶閹诡喖鍨垫慨瀣閿?
+     * 1. 濡偓閺?Redis 鐠佲剝鏆熼崳顭掔幢
+     * 2. 閼?Redis 娑撹櫣鈹栭敍宀勨偓姘崇箖 Feign 鐠嬪啰鏁ゅ┃鎰侀崸妤嬬礄Product/Shop閿涘骞忛崣鏍у嚒閽€钘夌氨閺佹澘鈧》绱?
+     * 3. 閼汇儲绨Ο鈥虫健閺佹澘鈧棿绮涙稉宥呭讲娣団剝鍨ㄦ稉鍝勫灥婵瀵查敍灞藉灟閸︺劍婀板Ο鈥虫健閺佺増宓佹惔鎾寸湽閹粯澧嶉張澶婂坊閸欒尪顓归崡鏇炵暚閹存劖鏆熼妴?
      * 
-     * @param order 订单实体
+     * @param order 鐠併垹宕熺€圭偘缍?
      */
     private void incrementSales(Order order) {
         if (order == null || order.getSourceId() == null) {
             return;
         }
 
-        // 处理商品销量累加
+        // 婢跺嫮鎮婇崯鍡楁惂闁库偓闁插繒鐤崝?
         String productCountKey = SalesTypeEnum.PRODUCT_SALES.getCountKeyPrefix() + order.getSourceId();
         if (Boolean.FALSE.equals(redisService.hasKey(productCountKey))) {
             initSalesCount(SalesTypeEnum.PRODUCT_SALES, order.getSourceId());
@@ -297,10 +298,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 增加对应店铺的销量 (仅在订单实际被核销使用时调用)
+     * 婢х偛濮炵€电懓绨叉惔妤呮懙閻ㄥ嫰鏀㈤柌?(娴犲懎婀拋銏犲礋鐎圭偤妾悮顐ｇ壋闁库偓娴ｈ法鏁ら弮鎯扮殶閻?
      */
     private void incrementShopSales(Order order) {
-        log.info("订单已核销，开始累加店铺销量...{}", order);
+        log.info("鐠併垹宕熷鍙夌壋闁库偓閿涘苯绱戞慨瀣柈閸旂姴绨甸柧娲敘闁?..{}", order);
         if (order == null || order.getVerifyShopId() == null) {
             return;
         }
@@ -315,10 +316,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 回退商品及店铺销量 (订单取消或退款时调用)
+     * 閸ョ偤鈧偓閸熷棗鎼ч崣濠傜暗闁炬椽鏀㈤柌?(鐠併垹宕熼崣鏍ㄧХ閹存牠鈧偓濞嗙偓妞傜拫鍐暏)
      *
-     * @param order 订单实体
-     * @param decrementShop 是否需要同时回退店铺销量
+     * @param order 鐠併垹宕熺€圭偘缍?
+     * @param decrementShop 閺勵垰鎯侀棁鈧憰浣告倱閺冭泛娲栭柅鈧惔妤呮懙闁库偓闁?
      */
     private void decrementSales(Order order, boolean decrementShop) {
         if (order == null || order.getSourceId() == null) {
@@ -326,14 +327,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         long amount = order.getAmount() != null ? order.getAmount() : 1;
 
-        // 1. 回退商品销量
+        // 1. 閸ョ偤鈧偓閸熷棗鎼ч柨鈧柌?
         String productCountKey = SalesTypeEnum.PRODUCT_SALES.getCountKeyPrefix() + order.getSourceId();
         if (Boolean.TRUE.equals(redisService.hasKey(productCountKey))) {
             redisService.decrementCacheValue(productCountKey, amount);
             redisService.setCacheSet(SalesTypeEnum.PRODUCT_SALES.getDirtyKey(), order.getSourceId().toString());
         }
 
-        // 2. 回退店铺销量 (仅当订单已被核销，且有对应 shopId 时)
+        // 2. 閸ョ偤鈧偓鎼存鎽甸柨鈧柌?(娴犲懎缍嬬拋銏犲礋瀹歌尪顫﹂弽鎼佹敘閿涘奔绗栭張澶婎嚠鎼?shopId 閺?
         if (decrementShop && order.getVerifyShopId() != null) {
             Long shopId = order.getVerifyShopId();
             String shopCountKey = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix() + shopId;
@@ -345,7 +346,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 初始化销量计数器（三级策略）
+     * 閸掓繂顫愰崠鏍敘闁插繗顓搁弫鏉挎珤閿涘牅绗佺痪褏鐡ラ悾銉礆
      */
     private void initSalesCount(SalesTypeEnum type, Long id) {
         Integer baseline = 0;
@@ -353,26 +354,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         String countKey = type.getCountKeyPrefix() + id;
 
         if (type == SalesTypeEnum.PRODUCT_SALES) {
-            // 从商品模块获取已持久化的销量基数
+            // 娴犲骸鏅㈤崫浣鼓侀崸妤勫箯閸欐牕鍑￠幐浣风畽閸栨牜娈戦柨鈧柌蹇撶唨閺?
             baseline = remoteProductService.getSold(id);
-            // 从订单库获取全部已确认/支付的订单总量（兜底全量初始化）
+            // 娴犲氦顓归崡鏇炵氨閼惧嘲褰囬崗銊╁劥瀹歌尙鈥樼拋?閺€顖欑帛閻ㄥ嫯顓归崡鏇熲偓濠氬櫤閿涘牆鍘规惔鏇炲弿闁插繐鍨垫慨瀣閿?
             totalOrders = orderMapper.sumSoldBySourceId(id);
         } else if (type == SalesTypeEnum.SHOP_SALES) {
-            // 从店铺模块获取已持久化的销量基数
+            // 娴犲骸绨甸柧鐑樐侀崸妤勫箯閸欐牕鍑￠幐浣风畽閸栨牜娈戦柨鈧柌蹇撶唨閺?
             baseline = remoteShopService.getSold(id);
-            // 从订单库获取该店铺全部销量
+            // 娴犲氦顓归崡鏇炵氨閼惧嘲褰囩拠銉ョ暗闁惧搫鍙忛柈銊╂敘闁?
             totalOrders = orderMapper.sumSoldByShopId(id);
         }
 
-        // 逻辑：如果基数已经包含了订单库的历史数据，则直接用基数；
-        // 初始化时应确保 Redis 中是当前最准确的【全量总数】。
-        // 根据要求：“先去源模块获取数据，然后再去本模块查询”，这里取两者之和。
+        // 闁槒绶敍姘洤閺嬫粌鐔€閺佹澘鍑＄紒蹇撳瘶閸氼偂绨＄拋銏犲礋鎼存挾娈戦崢鍡楀蕉閺佺増宓侀敍灞藉灟閻╁瓨甯撮悽銊ョ唨閺佸府绱?
+        // 閸掓繂顫愰崠鏍ㄦ鎼存梻鈥樻穱?Redis 娑擃厽妲歌ぐ鎾冲閺堚偓閸戝棛鈥橀惃鍕┾偓鎰弿闁插繑鈧粯鏆熼妴鎴欌偓?
+        // 閺嶈宓佺憰浣圭湴閿涙埃鈧粌鍘涢崢缁樼爱濡€虫健閼惧嘲褰囬弫鐗堝祦閿涘瞼鍔ч崥搴″晙閸樼粯婀板Ο鈥虫健閺屻儴顕楅垾婵撶礉鏉╂瑩鍣烽崣鏍﹁⒈閼板懍绠ｉ崪灞烩偓?
         int initialCount = (baseline != null ? baseline : 0) + (totalOrders != null ? totalOrders : 0);
         redisService.setCacheObject(countKey, initialCount);
     }
 
     /**
-     * 获取当前用户订单列表
+     * 閼惧嘲褰囪ぐ鎾冲閻劍鍩涚拋銏犲礋閸掓銆?
      *
      * @param order
      * @return
@@ -405,7 +406,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 支付订单
+     * 閺€顖欑帛鐠併垹宕?
      *
      * @param id
      * @param
@@ -416,31 +417,31 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Order order = getById(id);
         if(order==null){
 
-            throw new BusinessException("订单不存在");
+            throw new BusinessException("order not found");
         }
         order.setPayTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.PAID);
         order.setPayType(PayTypeConstants.BALANCE);
         updateExpireTimeAfterPayment(order);
-        // 支付成功，累加商品销量统计
+        // 閺€顖欑帛閹存劕濮涢敍宀€鐤崝鐘叉櫌閸濅線鏀㈤柌蹇曠埠鐠?
         incrementSales(order);
         return updateOrder(order);
     }
 
     /**
-     * 支付成功更新订单状态（内部调用，支持多种支付方式）
+     * 閺€顖欑帛閹存劕濮涢弴瀛樻煀鐠併垹宕熼悩鑸碘偓渚婄礄閸愬懘鍎寸拫鍐暏閿涘本鏁幐浣割樋缁夊秵鏁禒妯绘煙瀵骏绱?
      *
-     * @param orderId 订单ID
-     * @param payType 支付方式: 1=余额 2=支付宝 3=微信
-     * @return 影响行数
+     * @param orderId 鐠併垹宕烮D
+     * @param payType 閺€顖欑帛閺傜懓绱? 1=娴ｆ瑩顤?2=閺€顖欑帛鐎?3=瀵邦喕淇?
+     * @return 瑜板崬鎼风悰灞炬殶
      */
     @Override
     public Integer paySuccess(Long orderId, Integer payType) {
         Order order = getById(orderId);
         if (order == null) {
-            throw new BusinessException("订单不存在");
+            throw new BusinessException("order not found");
         }
-        // 幂等校验：已支付则跳过
+        // 楠炲倻鐡戦弽锟犵崣閿涙艾鍑￠弨顖欑帛閸掓瑨鐑︽潻?
         if (order.getStatus() == OrderStatusConstants.PAID) {
             return 1;
         }
@@ -448,16 +449,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setStatus(OrderStatusConstants.PAID);
         order.setPayType(payType);
         updateExpireTimeAfterPayment(order);
-        // 支付成功，累加商品销量统计
+        // 閺€顖欑帛閹存劕濮涢敍宀€鐤崝鐘叉櫌閸濅線鏀㈤柌蹇曠埠鐠?
         incrementSales(order);
         return updateOrder(order);
     }
 
     /**
-     * 支付成功后（或付款瞬间），为特定商品类型计算真正的有效期截止时间。
-     * 避免因支付倒计时（如15分钟）导致用户亏损使用期。
+     * 閺€顖欑帛閹存劕濮涢崥搴礄閹存牔绮▎鍓х仜闂傝揪绱氶敍灞艰礋閻楃懓鐣鹃崯鍡楁惂缁鐎风拋锛勭暬閻喐顒滈惃鍕箒閺佸牊婀￠幋顏咁剾閺冨爼妫块妴?
+     * 闁灝鍘ら崶鐘虫暜娴犳ê鈧帟顓搁弮璁圭礄婵?5閸掑棝鎸撻敍澶婎嚤閼峰鏁ら幋铚傜碍閹圭喍濞囬悽銊︽埂閵?
      *
-     * @param order 订单
+     * @param order 鐠併垹宕?
      */
     private void updateExpireTimeAfterPayment(Order order) {
         if (order == null || order.getSourceId() == null) {
@@ -466,12 +467,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         ProductDTO productDTO = remoteProductService.getProductById(order.getSourceId());
         if (productDTO != null && productDTO.getValidityType() != null) {
             Date now = DateUtils.getNowDate();
-            // “购买后 N 天内有效”：支付成功这一刻起算
+            // 閳ユ粏鍠樻稊鏉挎倵 N 婢垛晛鍞撮張澶嬫櫏閳ユ繐绱伴弨顖欑帛閹存劕濮涙潻娆庣閸掓槒鎹ｇ粻?
             if (productDTO.getValidityType() == 2 && productDTO.getValidDays() != null) {
                 order.setValidStartTime(now);
                 order.setExpireTime(DateUtils.addDays(now, productDTO.getValidDays()));
             }
-            // 固定有效期
+            // 閸ュ搫鐣鹃張澶嬫櫏閺?
             else if (productDTO.getValidityType() == 1) {
                 if (productDTO.getUseStartTime() != null) {
                     order.setValidStartTime(productDTO.getUseStartTime());
@@ -484,7 +485,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 取消订单
+     * 閸欐牗绉风拋銏犲礋
      *
      * @param id
      * @param
@@ -494,7 +495,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer cancel(Long id) {
         Order order = getById(id);
         if(order==null){
-            throw new BusinessException("订单不存在");
+            throw new BusinessException("order not found");
         }
         Integer oldStatus = order.getStatus();
         order.setStatus(OrderStatusConstants.CANCELLED);
@@ -502,14 +503,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
             if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
-                log.info("秒杀商品取消,准备恢复库存");
-                // 恢复库存
+                log.info("cancel order recovers stock for product activity");
+                // 閹垹顦叉惔鎾崇摠
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
-            // 订单取消。如果是已支付订单取消（例如管理员操作），则回退商品销量 (未核销过，不需要回退店铺销量)
+            // 鐠併垹宕熼崣鏍ㄧХ閵嗗倸顩ч弸婊勬Ц瀹稿弶鏁禒妯款吂閸楁洖褰囧☉鍫礄娓氬顩х粻锛勬倞閸涙ɑ鎼锋担婊愮礆閿涘苯鍨崶鐐衡偓鈧崯鍡楁惂闁库偓闁?(閺堫亝鐗抽柨鈧潻鍥风礉娑撳秹娓剁憰浣告礀闁偓鎼存鎽甸柨鈧柌?
             if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
                 decrementSales(order, false);
-                // 发送MQ消息通知钱包模块，将退款金额退回到用户余额
+                // 閸欐垿鈧府Q濞戝牊浼呴柅姘辩叀闁藉崬瀵樺Ο鈥虫健閿涘苯鐨㈤柅鈧▎楣冨櫨妫版繈鈧偓閸ョ偛鍩岄悽銊﹀煕娴ｆ瑩顤?
                 sendRefundMessage(order);
             }
         }
@@ -517,7 +518,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 退款订单
+     * 闁偓濞嗘崘顓归崡?
      *
      * @param id
      * @param
@@ -527,7 +528,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer refund(Long id) {
         Order order = getById(id);
         if(order==null){
-            throw new BusinessException("订单不存在");
+            throw new BusinessException("order not found");
         }
         Integer oldStatus = order.getStatus();
         order.setRefundTime(DateUtils.getNowDate());
@@ -536,14 +537,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
             if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
-                log.info("秒杀商品退款,准备恢复库存");
+                log.info("refund order recovers stock for product activity");
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
-            // 订单退款。如果是已支付订单（status >= PAID）退款，回滚商品销量。若处于已核销状态退款，同时回退店铺销量
+            // 鐠併垹宕熼柅鈧▎淇扁偓鍌氼洤閺嬫粍妲稿鍙夋暜娴犳顓归崡鏇礄status >= PAID閿涘鈧偓濞嗘拝绱濋崶鐐寸泊閸熷棗鎼ч柨鈧柌蹇嬧偓鍌濆婢跺嫪绨鍙夌壋闁库偓閻樿埖鈧線鈧偓濞嗘拝绱濋崥灞炬閸ョ偤鈧偓鎼存鎽甸柨鈧柌?
             if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
                 boolean wasVerified = (oldStatus == OrderStatusConstants.VERIFIED);
                 decrementSales(order, wasVerified);
-                // 发送MQ消息通知钱包模块，将退款金额退回到用户余额
+                // 閸欐垿鈧府Q濞戝牊浼呴柅姘辩叀闁藉崬瀵樺Ο鈥虫健閿涘苯鐨㈤柅鈧▎楣冨櫨妫版繈鈧偓閸ョ偛鍩岄悽銊﹀煕娴ｆ瑩顤?
                 sendRefundMessage(order);
             }
         }
@@ -551,9 +552,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 发送退款消息到钱包模块（所有支付方式均退款至余额）
+     * 閸欐垿鈧線鈧偓濞嗙偓绉烽幁顖氬煂闁藉崬瀵樺Ο鈥虫健閿涘牊澧嶉張澶嬫暜娴犳ɑ鏌熷蹇撴綆闁偓濞嗘崘鍤︽担娆擃杺閿?
      *
-     * @param order 订单
+     * @param order 鐠併垹宕?
      */
     private void sendRefundMessage(Order order) {
         OrderRefundMessage msg = new OrderRefundMessage();
@@ -566,24 +567,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 OrderMqConstants.ORDER_REFUND_ROUTING_KEY,
                 msg
         );
-        log.info("已发送退款MQ消息, orderId={}, userId={}, amount={}", order.getId(), order.getUserId(), order.getPayAmount());
+        log.info("瀹告彃褰傞柅渚€鈧偓濞嗙锭Q濞戝牊浼? orderId={}, userId={}, amount={}", order.getId(), order.getUserId(), order.getPayAmount());
     }
 
     /**
-     * 使用订单 (核销)
+     * 娴ｈ法鏁ょ拋銏犲礋 (閺嶆悂鏀?
      *
-     * @param id 订单ID
-     * @param verifyShopId 核销的门店ID
-     * @return 影响行数
+     * @param id 鐠併垹宕烮D
+     * @param verifyShopId 閺嶆悂鏀㈤惃鍕，鎼存“D
+     * @return 瑜板崬鎼风悰灞炬殶
      */
     @Override
     public Integer use(Long id, Long verifyShopId) {
         Order order = getById(id);
         if(order==null){
-            throw new BusinessException("订单不存在");
+            throw new BusinessException("order not found");
         }
         if (verifyShopId == null) {
-            throw new BusinessException("核销门店不能为空");
+            throw new BusinessException("閺嶆悂鏀㈤梻銊ョ暗娑撳秷鍏樻稉铏光敄");
         }
         String availableShopIds = order.getShopId();
         if (availableShopIds != null && !availableShopIds.isEmpty()) {
@@ -595,7 +596,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 }
             }
             if (!matched) {
-                throw new BusinessException("核销门店不在可用门店范围内");
+                throw new BusinessException("verify shop is not allowed for this order");
             }
         }
         order.setUseTime(DateUtils.getNowDate());
@@ -603,9 +604,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setVerifyShopId(verifyShopId);
         int i = updateOrder(order);
         if (i > 0) {
-            // 核销成功，增加门店销量
+            // 閺嶆悂鏀㈤幋鎰閿涘苯顤冮崝鐘绘，鎼存鏀㈤柌?
             incrementShopSales(order);
-            // 订单核销成功，发送MQ消息异步奖励积分（积分 = 实付金额）
+            // 鐠併垹宕熼弽鎼佹敘閹存劕濮涢敍灞藉絺闁府Q濞戝牊浼呭鍌涱劄婵傛牕濮崇粔顖氬瀻閿涘牏袧閸?= 鐎圭偘绮柌鎴︻杺閿?
             if (order.getPayAmount() != null && order.getPayAmount().intValue() > 0) {
                 OrderPointsMessage pointsMsg = new OrderPointsMessage();
                 pointsMsg.setOrderId(order.getId());
@@ -616,14 +617,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         PointsMqConstants.POINTS_ORDER_ROUTING_KEY,
                         pointsMsg
                 );
-                log.info("已发送积分奖励MQ消息, orderId={}, userId={}, payAmount={}", order.getId(), order.getUserId(), order.getPayAmount());
+                log.info("瀹告彃褰傞柅浣盒濋崚鍡楊殯閸旂洝Q濞戝牊浼? orderId={}, userId={}, payAmount={}", order.getId(), order.getUserId(), order.getPayAmount());
             }
         }
         return i;
     }
 
     /**
-     * 获取订单数量
+     * 閼惧嘲褰囩拋銏犲礋閺佷即鍣?
      *
      * @param userId
      * @return
@@ -631,12 +632,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     public Integer getOrderCount(Long userId) {
         int orderCount = query().eq("user_id", userId).count().intValue();
-        System.out.println("订单数量为:"+orderCount);
+        System.out.println("鐠併垹宕熼弫浼村櫤娑?"+orderCount);
         return orderCount;
     }
 
     /**
-     * 获取订单总数
+     * 閼惧嘲褰囩拋銏犲礋閹粯鏆?
      *
      * @return
      */
@@ -645,7 +646,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return query().count().intValue();
     }
     /**
-     * 根据id查询订单
+     * 閺嶈宓乮d閺屻儴顕楃拋銏犲礋
      *
      * @param id
      * @return
@@ -671,7 +672,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 修改订单评价状态
+     * 娣囶喗鏁肩拋銏犲礋鐠囧嫪鐜悩鑸碘偓?
      *
      * @param orderId
      * @param reviewId
@@ -693,26 +694,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public String getOrderStatus(Long id) {
-        // 1. 先查 Redis 里的标识 key (e.g. "order:status:" + id)
-        //    假设前端传过来的 id 其实是 snowflake id 或者某种业务 id,
-        //    在创建订单前，已经由前端或网关生成并存入 Redis marked as "CREATING"
+        // 1. 閸忓牊鐓?Redis 闁插瞼娈戦弽鍥槕 key (e.g. "order:status:" + id)
+        //    閸嬪洩顔曢崜宥囶伂娴肩姾绻冮弶銉ф畱 id 閸忚泛鐤勯弰?snowflake id 閹存牞鈧懏鐓囩粔宥勭瑹閸?id,
+        //    閸︺劌鍨卞楦款吂閸楁洖澧犻敍灞藉嚒缂佸繒鏁遍崜宥囶伂閹存牜缍夐崗宕囨晸閹存劕鑻熺€涙ê鍙?Redis marked as "CREATING"
         String key = "order:status:" + id;
         if (redisService.hasKey(key)) {
             return "PENDING";
         }
 
-        // 2. Redis 没 key 了，说明要么失败要么成功，查数据库
+        // 2. Redis 濞?key 娴滃棴绱濈拠瀛樻鐟曚椒绠炴径杈Е鐟曚椒绠為幋鎰閿涘本鐓￠弫鐗堝祦鎼?
         Order order = getById(id);
         if (order != null) {
             return "SUCCESS";
         }
 
-        // 3. 既没 key 也没库记录 -> 失败
+        // 3. 閺冦垺鐥?key 娑旂喐鐥呮惔鎾诡唶瑜?-> 婢惰精瑙?
         return "FAILED";
     }
 
     /**
-     * 获取商品销售统计
+     * 閼惧嘲褰囬崯鍡楁惂闁库偓閸烆喚绮虹拋?
      *
      * @return
      */
@@ -745,16 +746,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     @Override
-    public ShopOrderSuggestVO getShopOrderSuggest(Long shopId) {
+    public ShopOrderSuggestVO getShopOrderSuggest(Long shopId, String timeRange) {
         if (shopId == null) {
             return buildEmptyOrderSuggest();
         }
-        java.time.LocalDateTime[] timeRange = buildCurrentWeekRange();
-        ShopOrderAnalysisVO analysis = orderMapper.selectShopOrderAnalysis(shopId, BUSINESS_ORDER_STATUSES, timeRange[0], timeRange[1]);
+        LocalDateTime[] suggestRange = buildOrderSuggestRange(timeRange);
+        ShopOrderAnalysisVO analysis = orderMapper.selectShopOrderAnalysis(shopId, BUSINESS_ORDER_STATUSES, suggestRange[0], suggestRange[1]);
         ShopOrderSuggestVO suggest = buildEmptyOrderSuggest();
         suggest.setWeekOrders(analysis == null || analysis.getTotalOrders() == null ? 0 : analysis.getTotalOrders());
-        suggest.setHotProducts(fillProductNames(orderMapper.selectShopHotProducts(shopId, BUSINESS_ORDER_STATUSES, timeRange[0], timeRange[1], 3)));
-        suggest.setSlowProducts(fillProductNames(orderMapper.selectShopSlowProducts(shopId, BUSINESS_ORDER_STATUSES, timeRange[0], timeRange[1], 3)));
+        suggest.setHotProducts(fillProductNames(orderMapper.selectShopHotProducts(shopId, BUSINESS_ORDER_STATUSES, suggestRange[0], suggestRange[1], 3)));
+        suggest.setSlowProducts(fillProductNames(orderMapper.selectShopSlowProducts(shopId, BUSINESS_ORDER_STATUSES, suggestRange[0], suggestRange[1], 3)));
         normalizeOrderSuggest(suggest);
         return suggest;
     }
@@ -775,10 +776,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
-    private java.time.LocalDateTime[] buildCurrentWeekRange() {
+    private java.time.LocalDateTime[] buildOrderSuggestRange(String timeRange) {
+        String normalized = timeRange == null || timeRange.isBlank() ? "week" : timeRange.trim().toLowerCase(java.util.Locale.ROOT);
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        java.time.LocalDate weekStart = now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
-        return new java.time.LocalDateTime[]{weekStart.atStartOfDay(), now};
+        return switch (normalized) {
+            case "month" -> new java.time.LocalDateTime[]{now.withDayOfMonth(1).toLocalDate().atStartOfDay(), now};
+            case "quarter" -> new java.time.LocalDateTime[]{now.minusDays(90), now};
+            case "week" -> new java.time.LocalDateTime[]{now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).atStartOfDay(), now};
+            default -> throw new BusinessException("unsupported timeRange");
+        };
     }
 
     private List<ProductSalesVO> fillProductNames(List<ProductSalesVO> products) {
@@ -793,10 +799,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (productIds.isEmpty()) {
             return products;
         }
-        java.util.List<ProductDTO> productList = remoteProductService.getProductListByIds(productIds);
-        java.util.Map<Long, String> productNameMap = productList == null ? new java.util.HashMap<>() : productList.stream()
-                .filter(java.util.Objects::nonNull)
-                .collect(java.util.stream.Collectors.toMap(ProductDTO::getId, product -> product.getName() == null ? "" : product.getName(), (left, right) -> left));
+        List<ProductDTO> productList = remoteProductService.getProductListByIds(productIds);
+        Map<Long, String> productNameMap = productList == null ? new java.util.HashMap<>() : productList.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(ProductDTO::getId, product -> product.getName() == null ? "" : product.getName(), (left, right) -> left));
         products.forEach(product -> {
             product.setProductName(productNameMap.getOrDefault(product.getProductId(), ""));
             if (product.getSalesCount() == null) {
@@ -842,7 +848,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 订单过期
+     * 鐠併垹宕熸潻鍥ㄦ埂
      *
      * @param id
      * @return
@@ -851,7 +857,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer expired(Long id) {
         Order order = getById(id);
         if(order==null){
-            throw new BusinessException("订单不存在");
+            throw new BusinessException("order not found");
         }
         Integer oldStatus = order.getStatus();
         order.setStatus(OrderStatusConstants.EXPIRED);
@@ -859,14 +865,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
             if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
-                log.info("秒杀商品订单过期,准备恢复库存");
-                // 恢复库存
+                log.info("expired order recovers stock for product activity");
+                // 閹垹顦叉惔鎾崇摠
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
-            // 订单取消。如果是已支付订单取消（例如管理员操作），则回退商品销量 (未核销过，不需要回退店铺销量)
+            // 鐠併垹宕熼崣鏍ㄧХ閵嗗倸顩ч弸婊勬Ц瀹稿弶鏁禒妯款吂閸楁洖褰囧☉鍫礄娓氬顩х粻锛勬倞閸涙ɑ鎼锋担婊愮礆閿涘苯鍨崶鐐衡偓鈧崯鍡楁惂闁库偓闁?(閺堫亝鐗抽柨鈧潻鍥风礉娑撳秹娓剁憰浣告礀闁偓鎼存鎽甸柨鈧柌?
             if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
                 decrementSales(order, false);
-                // 发送MQ消息通知钱包模块，将退款金额退回到用户余额
+                // 閸欐垿鈧府Q濞戝牊浼呴柅姘辩叀闁藉崬瀵樺Ο鈥虫健閿涘苯鐨㈤柅鈧▎楣冨櫨妫版繈鈧偓閸ョ偛鍩岄悽銊﹀煕娴ｆ瑩顤?
                 sendRefundMessage(order);
             }
         }

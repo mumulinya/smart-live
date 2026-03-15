@@ -33,6 +33,9 @@ public class ProductReviewStrategy implements ReviewStrategy {
         //获取源id集合
         List<Long> list = reviewVOs.stream().map(ReviewVO::getSourceId).distinct().toList();
         List<ProductDTO> productList = remoteProductService.getProductListByIds(list);
+        if(productList.isEmpty()){
+            return reviewVOs;
+        }
         //将源id和源名称对应起来
         Map<Long, String> result = productList.stream()
                 .collect(Collectors.toMap(

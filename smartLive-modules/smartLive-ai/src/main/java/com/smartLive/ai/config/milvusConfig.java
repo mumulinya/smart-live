@@ -55,6 +55,11 @@ public class milvusConfig {
         return buildVectorStore("product", embeddingModel);
     }
 
+    @Bean
+    public VectorStore blogVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
+        return buildVectorStore("blog", embeddingModel);
+    }
+
     private VectorStore buildVectorStore(String collectionName, EmbeddingModel embeddingModel) {
         MilvusServiceClient milvusClient = getMilvusClientOrNull();
         if (milvusClient == null) {

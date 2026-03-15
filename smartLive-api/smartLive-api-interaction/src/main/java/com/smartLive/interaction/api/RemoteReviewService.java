@@ -22,7 +22,9 @@ public interface RemoteReviewService {
     Boolean isReview(@SpringQueryMap ReviewDTO reviewDTO);
 
     @PostMapping("/inner/review/updateReviewStatus")
-    Boolean updateReviewStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason);
+    Boolean updateReviewStatus(@RequestParam("id") Long id,
+                               @RequestParam("status") Integer status,
+                               @RequestParam(value = "reason", required = false) String reason);
 
     @PostMapping("/inner/review/saveAiCreateReview")
     Boolean saveAiCreateReview(@RequestBody List<ReviewDTO> reviews);
@@ -33,5 +35,9 @@ public interface RemoteReviewService {
                                                 @RequestParam("endTime") String endTime);
 
     @GetMapping("/inner/review/suggest/{shopId}")
-    ShopReviewSuggestDTO getShopReviewSuggest(@PathVariable("shopId") Long shopId);
+    ShopReviewSuggestDTO getShopReviewSuggest(@PathVariable("shopId") Long shopId,
+                                              @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
+
+    @GetMapping("/inner/review/getReviewById/{id}")
+    ReviewDTO getReviewById(@PathVariable("id") Long id);
 }

@@ -1,5 +1,5 @@
 -- AI Session Table
-CREATE TABLE `ai_session` (
+CREATE TABLE `user_ai_session` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'Session ID',
   `user_id` bigint(20) NOT NULL COMMENT 'User ID',
   `title` varchar(50) DEFAULT NULL COMMENT 'Session Title',
@@ -13,7 +13,7 @@ CREATE TABLE `ai_session` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI Chat Session';
 
 -- AI Message Table
-CREATE TABLE `ai_message` (
+CREATE TABLE `user_ai_message` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'Message ID',
   `session_id` bigint(20) NOT NULL COMMENT 'Session ID',
   `role` varchar(20) NOT NULL COMMENT 'Role (user/assistant/system)',

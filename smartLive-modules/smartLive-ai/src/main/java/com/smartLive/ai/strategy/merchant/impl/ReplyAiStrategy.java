@@ -1,12 +1,12 @@
 package com.smartLive.ai.strategy.merchant.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smartLive.ai.domain.AiMerchantSession;
+import com.smartLive.ai.domain.MerchantAiSession;
 import com.smartLive.ai.domain.DTO.MerchantChatDTO;
 import com.smartLive.ai.entity.vo.ReviewVO;
 import com.smartLive.ai.service.chat.support.MerchantMessageChatMemoryManager;
-import com.smartLive.ai.service.merchant.IAiMerchantMessageService;
-import com.smartLive.ai.service.merchant.IAiMerchantSessionService;
+import com.smartLive.ai.service.merchant.IMerchantAiMessageService;
+import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
 import com.smartLive.ai.service.rag.IReviewRagService;
 import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.AbstractMerchantAiStrategy;
@@ -25,8 +25,8 @@ public class ReplyAiStrategy extends AbstractMerchantAiStrategy {
     private final RemoteOrderService remoteOrderService;
 
     public ReplyAiStrategy(@Qualifier("merchantStrategyChatClient") ChatClient merchantStrategyChatClient,
-                           IAiMerchantSessionService merchantSessionService,
-                           IAiMerchantMessageService merchantMessageService,
+                           IMerchantAiSessionService merchantSessionService,
+                           IMerchantAiMessageService merchantMessageService,
                            MerchantMessageChatMemoryManager memoryManager,
                            RemoteShopService remoteShopService,
                            IShopRagService shopRagService,
@@ -40,14 +40,14 @@ public class ReplyAiStrategy extends AbstractMerchantAiStrategy {
     }
 
     @Override
-    protected void validateSceneInput(MerchantChatDTO dto, AiMerchantSession session) {
+    protected void validateSceneInput(MerchantChatDTO dto, MerchantAiSession session) {
         if (dto.getReviewId() == null) {
             throw new ServiceException("Review id is required");
         }
     }
 
     @Override
-    protected String buildScenePrompt(MerchantChatDTO dto, AiMerchantSession session) {
+    protected String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session) {
         ReviewVO review = reviewRagService.getReviewById(dto.getReviewId(), session.getShopId());
         if (review == null) {
             throw new ServiceException("Review not found");
@@ -59,39 +59,38 @@ public class ReplyAiStrategy extends AbstractMerchantAiStrategy {
         }
 
         return """
-                场景 1：评价回复 REVIEW_REPLY
+                SCENE: REVIEW_REPLY
 
-                当前任务：为商家生成一条可直接发布的评价回复。
+                You are replying to a customer review on behalf of the merchant.
 
-                【店铺信息】
-                店铺名称：%s
-                店铺类型：%s
+                Shop:
+                - name: %s
+                - type: %s
 
-                【评价信息】
-                评价ID：%s
-                评分：%s
-                评价时间：%s
-                评价对象类型：%s
-                评价对象名称：%s
-                评价内容：%s
+                Review:
+                - id: %s
+                - score: %s
+                - createdAt: %s
+                - sourceType: %s
+                - sourceName: %s
+                - content: %s
 
-                【用户信息】
-                昵称：%s
-                用户标签：暂无数据
-                历史消费次数：%s
+                Customer:
+                - nickname: %s
+                - orderCount: %s
 
-                【商家补充要求】
+                Extra instruction:
                 %s
 
-                【输出要求】
-                1. 只输出最终回复正文，不要标题，不要“建议回复”，不要加引号。
-                2. 字数控制在 30-80 字。
-                3. 评分 4-5 分时，以感谢、认可、欢迎再次光临为主。
-                4. 评分 3 分时，兼顾感谢与改进态度。
-                5. 评分 1-2 分时，先真诚致歉，再表达重视和后续改进态度。
-                6. 如果评价提到具体问题，回复中要轻微回应该问题，但不要逐字复述差评内容。
-                7. 不得承诺退款、赔偿、赠品、私下联系方式，除非数据中明确提供。
-                8. 优先使用“我们”，语气自然、像真人商家回复。
+                Requirements:
+                1. Output language: Simplified Chinese.
+                2. Write one direct merchant reply only.
+                3. Length: 30 to 80 Chinese characters.
+                4. If score is 4-5, thank the customer and reinforce the positive points.
+                5. If score is 3, acknowledge the issue and show willingness to improve.
+                6. If score is 1-2, apologize sincerely, address the problem and provide a calm follow-up tone.
+                7. Do not argue with the customer and do not invent compensation details.
+                8. Do not output JSON or markdown.
                 """.formatted(
                 shopContext.getShopName(),
                 shopContext.getShopType(),
@@ -109,17 +108,17 @@ public class ReplyAiStrategy extends AbstractMerchantAiStrategy {
 
     private String resolveSourceTypeName(Integer sourceType) {
         if (sourceType == null) {
-            return "暂无数据";
+            return "unknown";
         }
         if (GlobalBizTypeEnum.SHOP.getCode().equals(sourceType)) {
-            return "店铺";
+            return "shop";
         }
         if (GlobalBizTypeEnum.PRODUCT.getCode().equals(sourceType)) {
-            return "商品";
+            return "product";
         }
         if (GlobalBizTypeEnum.REVIEW.getCode().equals(sourceType)) {
-            return "评价";
+            return "review";
         }
-        return "其他";
+        return "other";
     }
 }

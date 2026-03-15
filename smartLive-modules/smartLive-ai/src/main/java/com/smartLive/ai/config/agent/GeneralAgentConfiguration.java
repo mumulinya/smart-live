@@ -3,6 +3,7 @@ package com.smartLive.ai.config.agent;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.serializer.plain_text.jackson.SpringAIJacksonStateSerializer;
+import com.smartLive.ai.tools.BlogTools;
 import com.smartLive.ai.tools.ProductTools;
 import com.smartLive.ai.tools.ReviewTools;
 import com.smartLive.ai.tools.ShopTools;
@@ -11,17 +12,18 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * 通用兜底 Agent 配置。
- */
 @Configuration
 public class GeneralAgentConfiguration {
 
     private static final String GENERAL_AGENT_INSTRUCTION = """
-            你是 SmartLive 通用兜底 Agent。
-            始终使用中文回答。
-            你负责处理宽泛的问题、跨领域的总结以及兜底回复。
-            优先使用工具返回的结果，严禁虚构事实。
+            You are the SmartLive general agent.
+            Default output language: Simplified Chinese.
+            Route your reasoning through the available tools when the user asks about shops, products, reviews or blogs.
+            For a specific shop and questions such as "how is this shop" or "what is good there", prefer `getShopInsight`.
+            If the user explicitly wants blog notes or visit content, use `getShopBlogSummary` or `searchShopBlogs`.
+            If the user asks about products or vouchers, use product tools.
+            If the user asks about reputation or review sentiment, use review tools.
+            Keep the final answer concise and grounded in tool output.
             """;
 
     @Bean("generalAgent")
@@ -29,17 +31,18 @@ public class GeneralAgentConfiguration {
             @Qualifier("frameworkChatModel") ChatModel chatModel,
             ShopTools shopTools,
             ProductTools productTools,
-            ReviewTools reviewTools
+            ReviewTools reviewTools,
+            BlogTools blogTools
     ) {
         SpringAIJacksonStateSerializer serializer = new SpringAIJacksonStateSerializer(OverAllState::new);
 
         return ReactAgent.builder()
                 .name("general_agent")
-                .description("通用兜底和跨领域整合专家")
+                .description("Handle mixed user requests with the full SmartLive toolset.")
                 .instruction(GENERAL_AGENT_INSTRUCTION)
                 .model(chatModel)
                 .stateSerializer(serializer)
-                .methodTools(shopTools, productTools, reviewTools)
+                .methodTools(shopTools, productTools, reviewTools, blogTools)
                 .build();
     }
 }

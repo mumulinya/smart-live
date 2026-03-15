@@ -118,7 +118,7 @@ public class RemoteShopFallbackFactory implements FallbackFactory<RemoteShopServ
             }
 
             @Override
-            public AjaxResult getShopSuggest(Long shopId) {
+            public AjaxResult getShopSuggest(Long shopId, String timeRange) {
                 log.error("Get shop suggest failed: {}", cause.getMessage());
                 return AjaxResult.success(new ShopSuggestDTO());
             }

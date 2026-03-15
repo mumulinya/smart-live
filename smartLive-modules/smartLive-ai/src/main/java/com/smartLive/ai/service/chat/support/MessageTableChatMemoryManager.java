@@ -3,8 +3,8 @@ package com.smartLive.ai.service.chat.support;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.ai.config.memory.ChatMemoryConfiguration;
-import com.smartLive.ai.domain.Message;
-import com.smartLive.ai.mapper.MessageMapper;
+import com.smartLive.ai.domain.UserAiMessage;
+import com.smartLive.ai.mapper.UserAiMessageMapper;
 import com.smartLive.common.redis.service.RedisService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -37,7 +37,7 @@ public class MessageTableChatMemoryManager {
     private static final String REDIS_KEY_PREFIX = "ai:chat:memory:list:";
     private static final long REDIS_TTL_DAYS = 7L;
 
-    private final MessageMapper messageMapper;
+    private final UserAiMessageMapper messageMapper;
     private final RecommendationCardHelper recommendationCardHelper;
     private final ChatMemory chatMemory;
     private final RedisService redisService;
@@ -65,7 +65,7 @@ public class MessageTableChatMemoryManager {
     /**
      * 当前轮落库后，把消息摘要追加到 Redis List，Redis 自动维护窗口。
      */
-    public void appendMessageToCache(Message message) {
+    public void appendMessageToCache(UserAiMessage message) {
         if (message == null || message.getSessionId() == null) {
             return;
         }
@@ -137,20 +137,20 @@ public class MessageTableChatMemoryManager {
 
     private List<CachedMessage> loadMessagesFromDb(Long sessionId) {
         // 按窗口上限读取最近历史，查出后再反转成模型需要的时间正序。
-        Page<Message> page = new Page<>(1, ChatMemoryConfiguration.MAX_MESSAGES, false);
-        LambdaQueryWrapper<Message> queryWrapper = new LambdaQueryWrapper<Message>()
-                .eq(Message::getSessionId, sessionId)
-                .orderByDesc(Message::getCreateTime)
-                .orderByDesc(Message::getId);
+        Page<UserAiMessage> page = new Page<>(1, ChatMemoryConfiguration.MAX_MESSAGES, false);
+        LambdaQueryWrapper<UserAiMessage> queryWrapper = new LambdaQueryWrapper<UserAiMessage>()
+                .eq(UserAiMessage::getSessionId, sessionId)
+                .orderByDesc(UserAiMessage::getCreateTime)
+                .orderByDesc(UserAiMessage::getId);
 
-        List<Message> records = messageMapper.selectPage(page, queryWrapper).getRecords();
+        List<UserAiMessage> records = messageMapper.selectPage(page, queryWrapper).getRecords();
         if (records.isEmpty()) {
             return List.of();
         }
 
         Collections.reverse(records);
         List<CachedMessage> historyMessages = new ArrayList<>(records.size());
-        for (Message record : records) {
+        for (UserAiMessage record : records) {
             CachedMessage memoryMessage = toCachedMessage(record);
             if (memoryMessage != null) {
                 historyMessages.add(memoryMessage);
@@ -197,7 +197,7 @@ public class MessageTableChatMemoryManager {
         return messages;
     }
 
-    private CachedMessage toCachedMessage(Message record) {
+    private CachedMessage toCachedMessage(UserAiMessage record) {
         String role = normalizeRole(record.getRole());
         String content = normalizeContent(role, record.getContent());
         if (!hasText(content)) {

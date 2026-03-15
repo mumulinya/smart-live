@@ -2,6 +2,7 @@ package com.smartLive.interaction.controller.inner;
 
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.interaction.domain.Review;
+import com.smartLive.interaction.domain.VO.ReviewVO;
 import com.smartLive.interaction.domain.VO.ShopReviewAnalysisVO;
 import com.smartLive.interaction.domain.VO.ShopReviewSuggestVO;
 import com.smartLive.interaction.service.IReviewService;
@@ -29,7 +30,9 @@ public class ReviewInnerController extends BaseController {
     }
 
     @PostMapping("/updateReviewStatus")
-    Boolean updateReviewStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason) {
+    Boolean updateReviewStatus(@RequestParam("id") Long id,
+                               @RequestParam("status") Integer status,
+                               @RequestParam(value = "reason", required = false) String reason) {
         return reviewService.updateReviewStatus(id, status, reason);
     }
 
@@ -46,7 +49,13 @@ public class ReviewInnerController extends BaseController {
     }
 
     @GetMapping("/suggest/{shopId}")
-    public ShopReviewSuggestVO getShopReviewSuggest(@PathVariable("shopId") Long shopId) {
-        return reviewService.getShopReviewSuggest(shopId);
+    public ShopReviewSuggestVO getShopReviewSuggest(@PathVariable("shopId") Long shopId,
+                                                    @RequestParam(value = "timeRange", defaultValue = "week") String timeRange) {
+        return reviewService.getShopReviewSuggest(shopId, timeRange);
+    }
+
+    @GetMapping("/getReviewById/{id}")
+    public ReviewVO getReviewById(@PathVariable("id") Long id) {
+        return reviewService.getReviewById(id);
     }
 }

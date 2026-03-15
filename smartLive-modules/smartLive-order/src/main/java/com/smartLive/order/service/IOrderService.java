@@ -53,7 +53,7 @@ public interface IOrderService extends IService<Order> {
 
     ShopOrderAnalysisVO getShopOrderAnalysis(Long shopId, String startTime, String endTime);
 
-    ShopOrderSuggestVO getShopOrderSuggest(Long shopId);
+    ShopOrderSuggestVO getShopOrderSuggest(Long shopId, String timeRange);
 
     Integer expired(Long id);
 }

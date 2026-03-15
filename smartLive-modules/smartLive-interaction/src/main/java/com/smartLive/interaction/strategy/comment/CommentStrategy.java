@@ -1,5 +1,9 @@
 package com.smartLive.interaction.strategy.comment;
 
+import com.smartLive.interaction.domain.VO.CommentVO;
+import com.smartLive.interaction.domain.VO.ReviewVO;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,6 +16,13 @@ public interface CommentStrategy {
      * 获取策略类型 (对应 ResourceTypeEnum 的 code)
      */
     Integer getType();
+
+    /**
+     * 设置评价来源名称
+     * @param reviewVO
+     * @return
+     */
+    List<CommentVO> setSourceName(List<CommentVO> reviewVOs);
 
     /**
      * 批量同步点赞数到数据库

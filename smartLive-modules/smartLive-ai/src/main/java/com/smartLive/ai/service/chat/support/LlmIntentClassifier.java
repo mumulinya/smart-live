@@ -6,8 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
- * 智能意图分类器。
- * 专为项目第二套（原生自建体系）提供基于大模型的智能路由决策。
+ * LLM based intent classifier.
  */
 @Slf4j
 @Component
@@ -31,8 +30,7 @@ public class LlmIntentClassifier {
         while (attempt < maxRetries) {
             try {
                 attempt++;
-                log.info("智能路由大模型决策请求第 {} 次尝试", attempt);
-                // 1. 调用专用的智能路由 ChatClient 进行判断
+                log.info("Intent classification attempt {}", attempt);
                 String result = intentRouterChatClient.prompt()
                         .user(userMessage)
                         .call()
@@ -42,27 +40,28 @@ public class LlmIntentClassifier {
                     return AgentType.GENERAL;
                 }
 
-                String msgResult = result.trim().toUpperCase();
-                log.info("自建 Agent 智能路由大模型决策结果: {}", msgResult);
+                String normalized = result.trim().toUpperCase();
+                log.info("Intent classifier result: {}", normalized);
 
-                // 2. 解析大模型吐出的意图标签
-                if (msgResult.contains("SHOP")) {
+                if (normalized.contains("SHOP")) {
                     return AgentType.SHOP;
-                } else if (msgResult.contains("PRODUCT")) {
+                }
+                if (normalized.contains("PRODUCT")) {
                     return AgentType.PRODUCT;
-                } else if (msgResult.contains("REVIEW")) {
+                }
+                if (normalized.contains("REVIEW")) {
                     return AgentType.REVIEW;
                 }
-
                 return AgentType.GENERAL;
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 lastException = e;
-                log.warn("自建 Agent 智能路由大模型调用异常 (尝试 {}/{})", attempt, maxRetries, e);
-                // 等待一小段时间后再重试 (例如 500ms)
+                log.warn("Intent classification failed, retrying... ({}/{})", attempt, maxRetries, e);
                 if (attempt < maxRetries) {
                     try {
                         Thread.sleep(500);
-                    } catch (InterruptedException ie) {
+                    }
+                    catch (InterruptedException interruptedException) {
                         Thread.currentThread().interrupt();
                         break;
                     }
@@ -70,18 +69,41 @@ public class LlmIntentClassifier {
             }
         }
 
-        log.warn("自建 Agent 智能路由大模型在 {} 次重试后仍然失败，降级为正则表达式匹配", maxRetries, lastException);
-        // 降级保护：如果大模型超时或报错，使用正则兜底
+        log.warn("Intent classification failed after {} attempts, fallback to keyword rules", maxRetries, lastException);
         String msg = userMessage.toLowerCase();
-        
-        if (msg.contains("shop") || msg.contains("店铺") || msg.contains("商家")) {
-            return AgentType.SHOP;
-        }
-        if (msg.contains("product") || msg.contains("商品") || msg.contains("价格") || msg.contains("优惠") || msg.contains("买")) {
+
+        if (msg.contains("product")
+                || msg.contains("\u5546\u54c1")
+                || msg.contains("\u56e2\u8d2d")
+                || msg.contains("\u5957\u9910")
+                || msg.contains("\u4f18\u60e0\u5238")
+                || msg.contains("\u5238")
+                || msg.contains("\u4e0b\u5355")
+                || msg.contains("\u8d2d\u4e70")
+                || msg.contains("\u5e93\u5b58")
+                || msg.contains("\u4ef7\u683c")) {
             return AgentType.PRODUCT;
         }
-        if (msg.contains("review") || msg.contains("评价") || msg.contains("质量") || msg.contains("差评") || msg.contains("好评")) {
+        if (msg.contains("review")
+                || msg.contains("\u8bc4\u4ef7")
+                || msg.contains("\u8bc4\u8bba")
+                || msg.contains("\u53e3\u7891")
+                || msg.contains("\u8bc4\u5206")
+                || msg.contains("\u597d\u8bc4")
+                || msg.contains("\u5dee\u8bc4")) {
             return AgentType.REVIEW;
+        }
+        if (msg.contains("shop")
+                || msg.contains("\u5e97\u94fa")
+                || msg.contains("\u5546\u5bb6")
+                || msg.contains("\u9910\u5385")
+                || msg.contains("\u597d\u5403")
+                || msg.contains("\u63a8\u8350")
+                || msg.contains("\u63a2\u5e97")
+                || msg.contains("\u79cd\u8349")
+                || msg.contains("\u7b14\u8bb0")
+                || msg.contains("\u535a\u5ba2")) {
+            return AgentType.SHOP;
         }
 
         return AgentType.GENERAL;

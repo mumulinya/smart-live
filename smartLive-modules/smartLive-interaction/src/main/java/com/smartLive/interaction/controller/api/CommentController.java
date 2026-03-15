@@ -9,6 +9,7 @@ import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.interaction.domain.Comment;
+import com.smartLive.interaction.domain.VO.CommentVO;
 import com.smartLive.interaction.service.ICommentService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,7 @@ public class CommentController extends BaseController
     public TableDataInfo list(Comment comment)
     {
         startPage();
-        List<Comment> list = commentService.selectCommentList(comment);
+        List<CommentVO> list = commentService.selectCommentList(comment);
         return getDataTable(list);
     }
 
@@ -52,8 +53,8 @@ public class CommentController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, Comment comment)
     {
-        List<Comment> list = commentService.selectCommentList(comment);
-        ExcelUtil<Comment> util = new ExcelUtil<Comment>(Comment.class);
+        List<CommentVO> list = commentService.selectCommentList(comment);
+        ExcelUtil<CommentVO> util = new ExcelUtil<CommentVO>(CommentVO.class);
         util.exportExcel(response, list, "评论数据");
     }
 

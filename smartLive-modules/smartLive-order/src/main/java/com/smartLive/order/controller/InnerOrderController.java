@@ -61,7 +61,8 @@ public class InnerOrderController extends BaseController {
     }
 
     @GetMapping("/suggest/{shopId}")
-    public ShopOrderSuggestVO getShopOrderSuggest(@PathVariable("shopId") Long shopId) {
-        return orderService.getShopOrderSuggest(shopId);
+    public ShopOrderSuggestVO getShopOrderSuggest(@PathVariable("shopId") Long shopId,
+                                                  @RequestParam(value = "timeRange", defaultValue = "week") String timeRange) {
+        return orderService.getShopOrderSuggest(shopId, timeRange);
     }
 }

@@ -1,7 +1,7 @@
 package com.smartLive.ai.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.smartLive.ai.domain.Message;
+import com.smartLive.ai.domain.UserAiMessage;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -10,5 +10,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author smartLive
  */
 @Mapper
-public interface MessageMapper extends BaseMapper<Message> {
+public interface UserAiMessageMapper extends BaseMapper<UserAiMessage> {
 }

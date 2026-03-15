@@ -26,11 +26,15 @@ import com.smartLive.interaction.domain.AIGenerateRequest;
 import com.smartLive.interaction.domain.BO.AuditCommentBO;
 import com.smartLive.interaction.domain.Comment;
 import com.smartLive.interaction.domain.VO.CommentVO;
+import com.smartLive.interaction.domain.VO.ReviewVO;
 import com.smartLive.interaction.mapper.CommentMapper;
 import com.smartLive.interaction.service.ICommentService;
 import com.smartLive.interaction.service.ILikeService;
+import com.smartLive.interaction.strategy.comment.CommentStrategy;
+import com.smartLive.interaction.strategy.factory.CommentStrategyFactory;
 import com.smartLive.interaction.strategy.factory.ResourceStrategyFactory;
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
+import com.smartLive.interaction.strategy.review.ReviewStrategy;
 import com.smartLive.user.api.RemoteAppUserService;
 import org.springframework.beans.BeanUtils;
 import com.smartLive.user.api.domain.UserDTO;
@@ -79,12 +83,15 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
     private ExecutorService executorService;
 
     private ResourceStrategyFactory resourceStrategyFactory;
+
+    private CommentStrategyFactory commentStrategyFactory;
     private ILikeService likeService;
 
     @Autowired
-    public CommentServiceImpl(@Lazy ILikeService iLikeService, @Lazy ResourceStrategyFactory resourceStrategyFactory) {
+    public CommentServiceImpl(@Lazy ILikeService iLikeService, @Lazy ResourceStrategyFactory resourceStrategyFactory, @Lazy CommentStrategyFactory commentStrategyFactory) {
         this.likeService = iLikeService;
         this.resourceStrategyFactory = resourceStrategyFactory;
+        this.commentStrategyFactory = commentStrategyFactory;
     }
 
     /**
@@ -129,8 +136,21 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
      * @return 评论集合
      */
     @Override
-    public List<Comment> selectCommentList(Comment comment) {
-        return commentMapper.selectCommentList(comment);
+    public List<CommentVO> selectCommentList(Comment comment) {
+        List<Comment> commentList = commentMapper.selectCommentList(comment);
+        List<CommentVO> commentVOList = convertToCommentVOList(commentList);
+        // 根据资源类型进行分组
+        Map<Integer, List<CommentVO>> reviewMap = commentVOList.stream()
+                .collect(Collectors.groupingBy(CommentVO::getSourceType));
+        List<CommentVO> result = new ArrayList<>();
+        // 遍历资源类型进行分组
+        reviewMap.forEach((sourceType, commentVOS) -> {
+            CommentStrategy commentStrategy = commentStrategyFactory.getStrategy(sourceType);
+            List<CommentVO> re = commentStrategy.setSourceName(commentVOS);
+            result.addAll(re);
+        });
+        queryCommentListUserMessage(result);
+        return result;
     }
 
     /**

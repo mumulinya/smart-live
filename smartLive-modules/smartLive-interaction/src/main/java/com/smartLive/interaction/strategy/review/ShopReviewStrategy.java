@@ -33,6 +33,9 @@ public class ShopReviewStrategy implements ReviewStrategy {
         //获取源id集合
         List<Long> list = reviewVOs.stream().map(ReviewVO::getSourceId).distinct().toList();
         List<ShopDTO> productList = remoteShopService.getShopList(list);
+        if(productList.isEmpty()){
+            return reviewVOs;
+        }
         //
         Map<Long, String> result = productList.stream()
                 .collect(Collectors.toMap(

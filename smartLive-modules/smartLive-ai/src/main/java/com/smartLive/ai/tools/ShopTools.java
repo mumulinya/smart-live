@@ -1,9 +1,10 @@
 package com.smartLive.ai.tools;
 
-import com.smartLive.ai.entity.query.ShopQuery;
 import com.smartLive.ai.entity.vo.ShopVO;
+import com.smartLive.ai.service.rag.IBlogRagService;
+import com.smartLive.ai.service.rag.IReviewRagService;
 import com.smartLive.ai.service.rag.IShopRagService;
-import io.swagger.v3.oas.annotations.Parameter;
+import com.smartLive.common.core.constant.ResourceTypeConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
@@ -14,53 +15,31 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-/**
- * 店铺查询相关 AI 工具集
- * 供 AI Agent 调用，支持按类目、地理位置及详细信息的检索
- *
- * @author smartLive
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class ShopTools {
 
     private final IShopRagService shopRagService;
+    private final IReviewRagService reviewRagService;
+    private final IBlogRagService blogRagService;
 
-    /**
-     * 根据店铺类型搜索店铺，支持位置和价格条件。
-     *
-     * @param userMessage 用户原始问题，原样传入不要修改
-     * @param typeId 店铺类型ID，必须按语义映射：美食=1，KTV=2，丽人=3，运动健身=5，酒吧=8
-     * @param area 商圈或区域关键词，如：万达、天河城、北京路，用户没提就传null
-     * @param address 用户提及的具体街道或地址，如：中山大道88号，用户没提就传null
-     * @param district 用户所在行政区，如：天河区、南海区、三水区，从用户问题中提取，提取不到就传null
-     * @param x 用户当前位置的经度，必须是Double数字如113.0528，绝对禁止传文字，获取不到传null
-     * @param y 用户当前位置的纬度，必须是Double数字如23.1428，绝对禁止传文字，获取不到传null
-     * @return 符合条件的店铺列表
-     */
-    @Tool(description = "根据店铺类型搜索店铺，支持位置和价格条件。")
+    @Tool(description = "Search shops by category, user intent and optional location filters.")
     public List<ShopVO> searchShopsByCategory(
-        @ToolParam(description = "用户原始问题，原样传入不要修改", required = false)
-        String userMessage,
-
-        @ToolParam(description = "店铺类型ID，必须按语义映射：美食=1，KTV=2，丽人=3，运动健身=5，酒吧=8", required = true)
-        Long typeId,
-
-        @ToolParam(description = "商圈或区域关键词，如：万达、天河城、北京路，用户没提就传null", required = false)
-        String area,
-
-        @ToolParam(description = "用户提及的具体街道或地址，如：中山大道88号，用户没提就传null", required = false)
-        String address,
-
-        @ToolParam(description = "用户所在行政区，如：天河区、南海区、三水区，从用户问题中提取，提取不到就传null", required = false)
-        String district,
-
-        @ToolParam(description = "用户当前位置的经度，必须是Double数字如113.0528，绝对禁止传文字，获取不到传null", required = false)
-        Double x,
-
-        @ToolParam(description = "用户当前位置的纬度，必须是Double数字如23.1428，绝对禁止传文字，获取不到传null", required = false)
-        Double y
+            @ToolParam(description = "Original user message.", required = false)
+            String userMessage,
+            @ToolParam(description = "Shop category id.", required = true)
+            Long typeId,
+            @ToolParam(description = "Area name.", required = false)
+            String area,
+            @ToolParam(description = "Address keyword.", required = false)
+            String address,
+            @ToolParam(description = "District name.", required = false)
+            String district,
+            @ToolParam(description = "Longitude.", required = false)
+            Double x,
+            @ToolParam(description = "Latitude.", required = false)
+            Double y
     ) {
         log.info("Calling searchShopsByCategory | category={}, area={}, userMessage={}, district={}, x={}, y={}",
                 typeId, area, userMessage, district, x, y);
@@ -72,36 +51,27 @@ public class ShopTools {
         shopQuery.setDistrict(district);
         shopQuery.setX(x);
         shopQuery.setY(y);
-
-        ShopQuery.Sort sort = new ShopQuery.Sort();
-        sort.setAsc(true);
-        return this.shopRagService.getShopList(shopQuery, userMessage);
+        return shopRagService.getShopList(shopQuery, userMessage);
     }
 
-    /**
-     * 获取单个店铺的深度详情
-     * 用于在用户明确指定店铺名称或从搜索列表中二次确认时调用
-     */
-    @Tool(name = "getShopDetails", description = "获取单个店铺详情，包含营业时间、评分、地址等。")
+    @Tool(name = "getShopDetails", description = "Get detailed information for a shop by id or name.")
     public ShopVO getShopDetails(
-            @ToolParam(description = "店铺id", required = false)
+            @ToolParam(description = "Shop id.", required = false)
             Long id,
-            @ToolParam(description = "店铺名称", required = false)
+            @ToolParam(description = "Shop name.", required = false)
             String name,
-            @ToolParam(description = "是否包含评论", required = false)
+            @ToolParam(description = "Whether to include review context.", required = false)
             Boolean includeReviews,
-            @ToolParam(description = "用户所在地区", required = false)
+            @ToolParam(description = "District name.", required = false)
             String district,
-            @ToolParam(description = "用户经度", required = false)
+            @ToolParam(description = "Longitude.", required = false)
             Double x,
-            @ToolParam(description = "用户纬度", required = false)
+            @ToolParam(description = "Latitude.", required = false)
             Double y,
-            @ToolParam(description = "用户原始问题", required = false)
+            @ToolParam(description = "Original user message.", required = false)
             String userMessage
     ) throws ExecutionException, InterruptedException, TimeoutException {
-        boolean incRev = Boolean.TRUE.equals(includeReviews);
-        log.info("🔍 执行获取店铺详情工具 | id={}, name={}, x={}, y={}",
-                id, name, x, y);
+        log.info("Calling getShopDetails | id={}, name={}, x={}, y={}", id, name, x, y);
 
         ShopVO shopVO = new ShopVO();
         shopVO.setId(id);
@@ -109,7 +79,71 @@ public class ShopTools {
         shopVO.setDistrict(district);
         shopVO.setX(x);
         shopVO.setY(y);
+        return shopRagService.getShopDetails(shopVO, userMessage);
+    }
 
-        return this.shopRagService.getShopDetails(shopVO, userMessage);
+    @Tool(name = "getShopInsight", description = "Get a combined shop insight with shop details, review summary and blog summary.")
+    public String getShopInsight(
+            @ToolParam(description = "Shop id. Preferred when available.", required = false)
+            Long id,
+            @ToolParam(description = "Shop name.", required = false)
+            String name,
+            @ToolParam(description = "District name.", required = false)
+            String district,
+            @ToolParam(description = "Longitude.", required = false)
+            Double x,
+            @ToolParam(description = "Latitude.", required = false)
+            Double y,
+            @ToolParam(description = "Original user message.", required = false)
+            String userMessage
+    ) {
+        log.info("Calling getShopInsight | id={}, name={}", id, name);
+
+        String safeUserMessage = (userMessage == null || userMessage.isBlank())
+                ? (name == null || name.isBlank() ? "shop insight" : name)
+                : userMessage;
+
+        ShopVO query = new ShopVO();
+        query.setId(id);
+        query.setName(name);
+        query.setDistrict(district);
+        query.setX(x);
+        query.setY(y);
+
+        ShopVO shop = shopRagService.getShopDetails(query, safeUserMessage);
+        if (shop == null) {
+            return "Shop not found.";
+        }
+
+        String reviewSummary = reviewRagService.getReviewSummary(
+                ResourceTypeConstants.SHOP_CODE,
+                shop.getId(),
+                null,
+                null,
+                safeUserMessage
+        );
+        String blogSummary = blogRagService.getShopBlogSummary(shop.getId(), safeUserMessage, 5);
+
+        StringBuilder context = new StringBuilder("Shop insight\n");
+        appendLine(context, "Shop", shop.getName());
+        if (shop.getScore() > 0) {
+            appendLine(context, "Score", String.valueOf(shop.getScore()));
+        }
+        if (shop.getAvgPrice() != null) {
+            appendLine(context, "Average price", String.valueOf(shop.getAvgPrice()));
+        }
+        appendLine(context, "Address", shop.getAddress());
+        appendLine(context, "Open hours", shop.getOpenHours());
+        appendLine(context, "Distance", shop.getDistanceText());
+        context.append("Review summary: ").append(reviewSummary).append('\n');
+        context.append("Blog summary: ").append(blogSummary);
+        return context.toString();
+    }
+
+    private void appendLine(StringBuilder builder, String label, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+        builder.append(label).append(": ").append(value).append('\n');
     }
 }

@@ -188,7 +188,6 @@
             coalesce(sum(coalesce(amount, 1)), 0) as salesCount
         from `order`
         where FIND_IN_SET(#{shopId}, shop_id)
-          and source_type = 2
           and status in
           <foreach collection="statusList" item="statusItem" open="(" separator="," close=")">
               #{statusItem}
@@ -206,7 +205,6 @@
             coalesce(sum(coalesce(amount, 1)), 0) as salesCount
         from `order`
         where FIND_IN_SET(#{shopId}, shop_id)
-          and source_type = 2
           and status in
           <foreach collection="statusList" item="statusItem" open="(" separator="," close=")">
               #{statusItem}

@@ -1,7 +1,8 @@
 package com.smartLive.product.service.strategy.impl;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
-import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.product.ProductEnum;
+import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.order.api.DTO.OrderDTO;
 import com.smartLive.product.domain.Product;
@@ -55,7 +56,7 @@ public class NormalPurchaseStrategy implements PurchaseStrategy {
         OrderDTO orderDTO = new OrderDTO();
         orderDTO.setId(orderId);
         orderDTO.setUserId(userId);
-        orderDTO.setSourceType(GlobalBizTypeEnum.PRODUCT.getCode());
+        orderDTO.setSourceType(resolveOrderSourceType(product));
         orderDTO.setSourceId(product.getId());
         orderDTO.setPayAmount(product.getPrice());
         orderDTO.setShopId(product.getShopId());
@@ -74,5 +75,12 @@ public class NormalPurchaseStrategy implements PurchaseStrategy {
         });
 
         return orderId;
+    }
+    private Integer resolveOrderSourceType(Product product) {
+        Integer category = product == null ? null : product.getCategory();
+        if (ProductEnum.VOUCHER.getCode().equals(category) || ProductEnum.SET_MEAL.getCode().equals(category)) {
+            return category;
+        }
+        throw new BusinessException("unsupported product category");
     }
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,9 +18,11 @@ public class ShopSuggestDTO implements Serializable {
 
     private Integer weekOrders = 0;
 
-    private Integer badReviewCount = 0;
+    private Integer pendingReviewCount = 0;
 
-    private List<BadReviewDTO> badReviewList = new ArrayList<>();
+    private BigDecimal avgScore = BigDecimal.ZERO;
+
+    private Integer badReviewCount = 0;
 
     private List<ProductSalesDTO> hotProducts = new ArrayList<>();
 

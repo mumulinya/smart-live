@@ -1,13 +1,13 @@
 package com.smartLive.ai.strategy.merchant;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smartLive.ai.domain.AiMerchantMessage;
-import com.smartLive.ai.domain.AiMerchantSession;
+import com.smartLive.ai.domain.MerchantAiMessage;
+import com.smartLive.ai.domain.MerchantAiSession;
 import com.smartLive.ai.domain.DTO.MerchantChatDTO;
 import com.smartLive.ai.entity.vo.ShopVO;
 import com.smartLive.ai.service.chat.support.MerchantMessageChatMemoryManager;
-import com.smartLive.ai.service.merchant.IAiMerchantMessageService;
-import com.smartLive.ai.service.merchant.IAiMerchantSessionService;
+import com.smartLive.ai.service.merchant.IMerchantAiMessageService;
+import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
 import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.support.MerchantAiPromptConstants;
 import com.smartLive.common.core.exception.ServiceException;
@@ -39,16 +39,16 @@ public abstract class AbstractMerchantAiStrategy {
     private static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private final ChatClient merchantStrategyChatClient;
-    protected final IAiMerchantSessionService merchantSessionService;
-    protected final IAiMerchantMessageService merchantMessageService;
+    protected final IMerchantAiSessionService merchantSessionService;
+    protected final IMerchantAiMessageService merchantMessageService;
     protected final MerchantMessageChatMemoryManager memoryManager;
     protected final RemoteShopService remoteShopService;
     protected final IShopRagService shopRagService;
     private final ObjectMapper objectMapper;
 
     protected AbstractMerchantAiStrategy(@Qualifier("merchantStrategyChatClient") ChatClient merchantStrategyChatClient,
-                                         IAiMerchantSessionService merchantSessionService,
-                                         IAiMerchantMessageService merchantMessageService,
+                                         IMerchantAiSessionService merchantSessionService,
+                                         IMerchantAiMessageService merchantMessageService,
                                          MerchantMessageChatMemoryManager memoryManager,
                                          RemoteShopService remoteShopService,
                                          IShopRagService shopRagService,
@@ -64,14 +64,14 @@ public abstract class AbstractMerchantAiStrategy {
 
     public final Flux<String> execute(Long userId, MerchantChatDTO dto) {
         validateInput(userId, dto);
-        AiMerchantSession session = merchantSessionService.getAndCheckSession(userId, dto.getSessionId());
+        MerchantAiSession session = merchantSessionService.getAndCheckSession(userId, dto.getSessionId());
         validateSession(dto, session);
         validateSceneInput(dto, session);
 
         String conversationId = buildConversationId(dto.getSessionId());
         memoryManager.rebuildConversationMemory(conversationId, dto.getSessionId());
 
-        AiMerchantMessage userRecord = merchantMessageService.saveMessage(
+        MerchantAiMessage userRecord = merchantMessageService.saveMessage(
                 dto.getSessionId(),
                 "user",
                 resolveRawUserMessage(dto),
@@ -102,9 +102,9 @@ public abstract class AbstractMerchantAiStrategy {
                 .doOnError(ex -> log.error("Merchant AI chat failed, sessionId={}", dto.getSessionId(), ex));
     }
 
-    protected abstract String buildScenePrompt(MerchantChatDTO dto, AiMerchantSession session);
+    protected abstract String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session);
 
-    protected void validateSceneInput(MerchantChatDTO dto, AiMerchantSession session) {
+    protected void validateSceneInput(MerchantChatDTO dto, MerchantAiSession session) {
     }
 
     protected final String resolveInstruction(MerchantChatDTO dto) {
@@ -230,7 +230,7 @@ public abstract class AbstractMerchantAiStrategy {
         if (!StringUtils.hasText(content)) {
             return;
         }
-        AiMerchantMessage assistantRecord = merchantMessageService.saveMessage(
+        MerchantAiMessage assistantRecord = merchantMessageService.saveMessage(
                 dto.getSessionId(),
                 "assistant",
                 content,
@@ -243,7 +243,7 @@ public abstract class AbstractMerchantAiStrategy {
     }
 
     private void touchSession(Long sessionId) {
-        AiMerchantSession session = new AiMerchantSession();
+        MerchantAiSession session = new MerchantAiSession();
         session.setId(sessionId);
         session.setUpdateTime(new Date());
         merchantSessionService.updateById(session);
@@ -258,7 +258,7 @@ public abstract class AbstractMerchantAiStrategy {
         }
     }
 
-    private void validateSession(MerchantChatDTO dto, AiMerchantSession session) {
+    private void validateSession(MerchantChatDTO dto, MerchantAiSession session) {
         if (!dto.getShopId().equals(session.getShopId())) {
             throw new ServiceException("Session and shop mismatch");
         }

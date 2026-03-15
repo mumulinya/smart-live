@@ -17,14 +17,6 @@ import reactor.core.publisher.SynchronousSink;
 
 import java.util.List;
 
-/**
- * 基于 Spring AI Alibaba Agent 框架的路由服务。
- * <p>
- * 这是项目中的【第一套 Agent 方案】：
- * 1. 架构：基于 Spring AI Alibaba 的图（Graph）工作流和 LlmRoutingAgent 实现。
- * 2. 职责：利用阿里框架的自动化路由能力，动态分发请求给各个专家 Agent（Shop, Product, Review）。
- * 3. 地位：作为系统的主选路由引擎，具备更强的扩展性和框架级支持。
- */
 @Slf4j
 @Service
 public class FrameworkRoutingStrategy implements AgentChatStrategy {
@@ -121,15 +113,15 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
                 .subAgents(subAgents)
                 .fallbackAgent(GENERAL_AGENT_NAME)
                 .systemPrompt("""
-                                你是 SmartLive 路由协调员。
-                                请将每个用户请求分发给最合适的专家 Agent。
+                                You are the SmartLive routing coordinator.
+                                Choose the most appropriate sub-agent for each request.
                                 """)
                 .instruction("""
-                                选择最合适的 Agent 名称列表。
-                                规则：
-                                1) 优先选择一个 Agent。
-                                2) 仅在明显的跨领域请求时才使用多个 Agent。
-                                3) 只能从可用的 Agent 名称中进行选择。
+                                Routing rules:
+                                1. Choose the shop agent for shops, restaurants, nearby food, store visits, blog notes and recommendations.
+                                2. Choose the product agent for vouchers, products, group-buy items, prices, stock and orders.
+                                3. Choose the review agent for reviews, comments, reputation and score analysis.
+                                4. Choose the general agent for mixed or unclear requests.
                                 """)
                 .build();
     }

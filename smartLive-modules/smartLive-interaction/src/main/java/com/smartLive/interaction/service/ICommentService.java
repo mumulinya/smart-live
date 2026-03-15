@@ -28,7 +28,7 @@ public interface ICommentService extends IService<Comment> {
      * @param comment 评论
      * @return 评论集合
      */
-     List<Comment> selectCommentList(Comment comment);
+     List<CommentVO> selectCommentList(Comment comment);
 
     /**
      * 新增评论

@@ -61,7 +61,7 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
             }
 
             @Override
-            public ShopOrderSuggestDTO getShopOrderSuggest(Long shopId) {
+            public ShopOrderSuggestDTO getShopOrderSuggest(Long shopId, String timeRange) {
                 log.error("get shop order suggest failed: {}", cause.getMessage());
                 return new ShopOrderSuggestDTO(0, new ArrayList<>(), new ArrayList<>());
             }

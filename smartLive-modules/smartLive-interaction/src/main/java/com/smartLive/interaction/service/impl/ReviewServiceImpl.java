@@ -319,7 +319,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     public List<ReviewVO> listReview(Review review, Integer current, String sort) {
         ReviewTypeEnum reviewType = ReviewTypeEnum.getByCode(review.getSourceType());
         if (reviewType == null) {
-            log.error("参数错误：未知的评价类型");
+            log.error("invalid review type");
             return Collections.emptyList();
         }
         RankRedisEnum hotRankRedisEnum = RankRedisEnum.getByCategoryAndCode("REVIEW", reviewType.getCode());
@@ -1119,13 +1119,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             }
             int finalPage = page;
             executorService.submit(() -> {
-                log.info("线程{}，开始发布第{}页评价数据", Thread.currentThread().getName(), finalPage);
+                log.info("async sync review batch thread={}, page={}", Thread.currentThread().getName(), finalPage);
                 sendReviewMilvusBatchMessage(reviews);
-                log.info("线程{}，发布第{}页完成，数量={}", Thread.currentThread().getName(), finalPage, reviews.size());
+                log.info("缂傚倷鐒﹀畷妯衡枖閺囥垹鐓濈紒鍗炴櫒闂備焦瀵х粙鎴︽嚐椤栨縿浜归柛灞剧矋閺嗘粓鏌涢幇鍏告喚闁稿孩鍟坿濠碉紕鍋戦崐婵嗩焽瑜旈幃楣冾敆閸曨偆顓洪梺瑙勬緲婢у海绮堟径鎰厸濞达絽鍢插畵鍡涙煕?{}", Thread.currentThread().getName(), finalPage, reviews.size());
             });
             page++;
         }
-        return "数据发布完成";
+        return "review sync task submitted";
     }
 
     /**
@@ -1137,14 +1137,14 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Override
     public String publish(String[] ids) {
         if (ids == null || ids.length == 0) {
-            return "参数为空";
+            return "ids are required";
         }
         List<Long> idList = Arrays.stream(ids)
                 .map(Long::valueOf)
                 .collect(Collectors.toList());
 
         executorService.submit(() -> {
-            log.info("线程{}，开始发布指定评价：{}", Thread.currentThread().getName(), idList);
+            log.info("缂傚倷鐒﹀畷妯衡枖閺囥垹鐓濈紒鍗炴櫒闂備焦瀵х粙鎴︽嚐椤栨粍顫曢柟瀵稿仦閸欏繘鎮楅敐搴濈盎缂佸弶妞介幃浠嬵敍濮橆剚娈查柣搴＄仛濮樸劑鍩€椤掑喚娼愬ǎ鍥ㄦそ閹焦鎯旈姀銏╂祫闂佸憡鍨崐妤冪玻濮婄＂", Thread.currentThread().getName(), idList);
             List<Review> reviews = query()
                     .in("id", idList)
                     .eq("status", ContentStatusEnum.PUBLISHED.getCode())
@@ -1154,7 +1154,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 sendReviewMilvusBatchMessage(reviews);
             }
         });
-        return "发布成功";
+        return "publish task submitted";
     }
 
     /**
@@ -1308,15 +1308,24 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     @Override
-    public ShopReviewSuggestVO getShopReviewSuggest(Long shopId) {
+    public ShopReviewSuggestVO getShopReviewSuggest(Long shopId, String timeRange) {
         if (shopId == null) {
             return buildEmptyShopReviewSuggest();
         }
-        java.time.LocalDateTime[] timeRange = buildCurrentWeekReviewRange();
-        ShopReviewAnalysisVO analysis = reviewMapper.selectShopReviewAnalysis(shopId, AuditStatusEnum.PASS.getCode(), timeRange[0], timeRange[1]);
+        java.time.LocalDateTime[] suggestRange = buildReviewSuggestRange(timeRange);
+        ShopReviewAnalysisVO analysis = reviewMapper.selectShopReviewAnalysis(shopId, AuditStatusEnum.PASS.getCode(), suggestRange[0], suggestRange[1]);
+        long pendingReviewCount = query()
+                .eq("shop_id", shopId)
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                .eq("reply_count", 0)
+                .ge("create_time", java.sql.Timestamp.valueOf(suggestRange[0]))
+                .le("create_time", java.sql.Timestamp.valueOf(suggestRange[1]))
+                .count();
         ShopReviewSuggestVO suggest = buildEmptyShopReviewSuggest();
+        suggest.setAvgScore(analysis == null || analysis.getAvgScore() == null ? java.math.BigDecimal.ZERO : analysis.getAvgScore().setScale(1, java.math.RoundingMode.HALF_UP));
         suggest.setBadReviewCount(analysis == null || analysis.getBadReviewCount() == null ? 0 : analysis.getBadReviewCount());
-        suggest.setBadReviewList(normalizeBadReviewList(reviewMapper.selectBadReviewList(shopId, AuditStatusEnum.PASS.getCode(), timeRange[0], timeRange[1], 1, 3, 10)));
+        suggest.setPendingReviewCount(Long.valueOf(pendingReviewCount).intValue());
+        suggest.setBadReviewList(normalizeBadReviewList(reviewMapper.selectBadReviewList(shopId, AuditStatusEnum.PASS.getCode(), suggestRange[0], suggestRange[1], 1, 3, 10)));
         normalizeShopReviewSuggest(suggest);
         return suggest;
     }
@@ -1337,10 +1346,15 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
     }
 
-    private java.time.LocalDateTime[] buildCurrentWeekReviewRange() {
+    private java.time.LocalDateTime[] buildReviewSuggestRange(String timeRange) {
+        String normalized = timeRange == null || timeRange.isBlank() ? "week" : timeRange.trim().toLowerCase(java.util.Locale.ROOT);
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        java.time.LocalDate weekStart = now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
-        return new java.time.LocalDateTime[]{weekStart.atStartOfDay(), now};
+        return switch (normalized) {
+            case "month" -> new java.time.LocalDateTime[]{now.withDayOfMonth(1).toLocalDate().atStartOfDay(), now};
+            case "quarter" -> new java.time.LocalDateTime[]{now.minusDays(90), now};
+            case "week" -> new java.time.LocalDateTime[]{now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).atStartOfDay(), now};
+            default -> throw new com.smartLive.common.core.exception.BusinessException("unsupported timeRange");
+        };
     }
 
     private ShopReviewAnalysisVO buildEmptyShopReviewAnalysis() {
@@ -1348,7 +1362,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     private ShopReviewSuggestVO buildEmptyShopReviewSuggest() {
-        return new ShopReviewSuggestVO(0, new ArrayList<>());
+        return new ShopReviewSuggestVO(java.math.BigDecimal.ZERO, 0, 0, new ArrayList<>());
     }
 
     private void normalizeShopReviewAnalysis(ShopReviewAnalysisVO analysis) {
@@ -1361,8 +1375,14 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     private ShopReviewSuggestVO normalizeShopReviewSuggest(ShopReviewSuggestVO suggest) {
+        if (suggest.getAvgScore() == null) {
+            suggest.setAvgScore(java.math.BigDecimal.ZERO);
+        }
         if (suggest.getBadReviewCount() == null) {
             suggest.setBadReviewCount(0);
+        }
+        if (suggest.getPendingReviewCount() == null) {
+            suggest.setPendingReviewCount(0);
         }
         if (suggest.getBadReviewList() == null) {
             suggest.setBadReviewList(new ArrayList<>());
@@ -1421,7 +1441,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Override
     public Boolean saveAiCreateReview(List<Review> reviews) {
         if (reviews.size() == 0) {
-            throw new RuntimeException("评价列表不能为空");
+            throw new RuntimeException("reviews must not be empty");
         }
         redisService.deleteObject(redisService.keys(RedisConstants.CACHE_AI_REVIEW_KEY + "*"));
         reviews.forEach(reviewDTO -> {

@@ -43,5 +43,6 @@ public interface RemoteOrderService {
                                               @RequestParam("endTime") String endTime);
 
     @GetMapping("/inner/order/suggest/{shopId}")
-    ShopOrderSuggestDTO getShopOrderSuggest(@PathVariable("shopId") Long shopId);
+    ShopOrderSuggestDTO getShopOrderSuggest(@PathVariable("shopId") Long shopId,
+                                            @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
 }

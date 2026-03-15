@@ -2,11 +2,11 @@ package com.smartLive.ai.service.merchant.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.smartLive.ai.domain.AiMerchantMessage;
-import com.smartLive.ai.domain.AiMerchantSession;
-import com.smartLive.ai.mapper.AiMerchantSessionMapper;
-import com.smartLive.ai.service.merchant.IAiMerchantMessageService;
-import com.smartLive.ai.service.merchant.IAiMerchantSessionService;
+import com.smartLive.ai.domain.MerchantAiMessage;
+import com.smartLive.ai.domain.MerchantAiSession;
+import com.smartLive.ai.mapper.MerchantAiSessionMapper;
+import com.smartLive.ai.service.merchant.IMerchantAiMessageService;
+import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
 import com.smartLive.common.core.exception.ServiceException;
 import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.system.api.RemoteUserService;
@@ -18,15 +18,15 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionMapper, AiMerchantSession>
-        implements IAiMerchantSessionService {
+public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionMapper, MerchantAiSession>
+        implements IMerchantAiSessionService {
 
     private static final Set<String> SUPPORTED_TYPES = Set.of("reply", "analysis", "copywrite", "suggest");
 
-    private final IAiMerchantMessageService messageService;
+    private final IMerchantAiMessageService messageService;
     private final RemoteUserService remoteUserService;
 
-    public AiMerchantSessionServiceImpl(IAiMerchantMessageService messageService, RemoteUserService remoteUserService) {
+    public MerchantAiSessionServiceImpl(IMerchantAiMessageService messageService, RemoteUserService remoteUserService) {
         this.messageService = messageService;
         this.remoteUserService = remoteUserService;
     }
@@ -36,7 +36,7 @@ public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionM
         checkShopPermission(userId, shopId);
         String normalizedType = normalizeAndCheckType(type);
         Date now = new Date();
-        AiMerchantSession session = new AiMerchantSession();
+        MerchantAiSession session = new MerchantAiSession();
         session.setUserId(userId);
         session.setShopId(shopId);
         session.setType(normalizedType);
@@ -48,15 +48,15 @@ public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionM
     }
 
     @Override
-    public List<AiMerchantSession> listByUserAndShop(Long userId, Long shopId, String type) {
+    public List<MerchantAiSession> listByUserAndShop(Long userId, Long shopId, String type) {
         checkShopPermission(userId, shopId);
         String normalizedType = normalizeAndCheckType(type);
-        LambdaQueryWrapper<AiMerchantSession> wrapper = new LambdaQueryWrapper<AiMerchantSession>()
-                .eq(AiMerchantSession::getUserId, userId)
-                .eq(AiMerchantSession::getShopId, shopId)
-                .eq(AiMerchantSession::getType, normalizedType)
-                .orderByDesc(AiMerchantSession::getUpdateTime)
-                .orderByDesc(AiMerchantSession::getId);
+        LambdaQueryWrapper<MerchantAiSession> wrapper = new LambdaQueryWrapper<MerchantAiSession>()
+                .eq(MerchantAiSession::getUserId, userId)
+                .eq(MerchantAiSession::getShopId, shopId)
+                .eq(MerchantAiSession::getType, normalizedType)
+                .orderByDesc(MerchantAiSession::getUpdateTime)
+                .orderByDesc(MerchantAiSession::getId);
         return this.list(wrapper);
     }
 
@@ -65,7 +65,7 @@ public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionM
         if (!StringUtils.hasText(title)) {
             throw new ServiceException("Title cannot be blank");
         }
-        AiMerchantSession session = getAndCheckSession(userId, sessionId);
+        MerchantAiSession session = getAndCheckSession(userId, sessionId);
         session.setTitle(title.trim());
         session.setUpdateTime(new Date());
         this.updateById(session);
@@ -74,19 +74,19 @@ public class AiMerchantSessionServiceImpl extends ServiceImpl<AiMerchantSessionM
     @Override
     public void deleteSession(Long userId, Long sessionId) {
         getAndCheckSession(userId, sessionId);
-        messageService.remove(new LambdaQueryWrapper<AiMerchantMessage>().eq(AiMerchantMessage::getSessionId, sessionId));
+        messageService.remove(new LambdaQueryWrapper<MerchantAiMessage>().eq(MerchantAiMessage::getSessionId, sessionId));
         this.removeById(sessionId);
     }
 
     @Override
-    public List<AiMerchantMessage> getMessages(Long userId, Long sessionId) {
+    public List<MerchantAiMessage> getMessages(Long userId, Long sessionId) {
         getAndCheckSession(userId, sessionId);
         return messageService.listBySessionId(sessionId);
     }
 
     @Override
-    public AiMerchantSession getAndCheckSession(Long userId, Long sessionId) {
-        AiMerchantSession session = this.getById(sessionId);
+    public MerchantAiSession getAndCheckSession(Long userId, Long sessionId) {
+        MerchantAiSession session = this.getById(sessionId);
         if (session == null) {
             throw new ServiceException("Session not found");
         }

@@ -1,7 +1,7 @@
 package com.smartLive.ai.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.smartLive.ai.domain.Session;
+import com.smartLive.ai.domain.UserAiSession;
 import java.util.List;
 
 /**
@@ -9,7 +9,7 @@ import java.util.List;
  *
  * @author smartLive
  */
-public interface ISessionService extends IService<Session> {
+public interface IUserAiSessionService extends IService<UserAiSession> {
 
     /**
      * Create a new session
@@ -25,7 +25,7 @@ public interface ISessionService extends IService<Session> {
      * @param session Query parameters
      * @return List of sessions
      */
-    List<Session> selectSessionList(Integer current);
+    List<UserAiSession> selectSessionList(Integer current);
     /**
      * Search sessions by keyword
      *
@@ -35,7 +35,7 @@ public interface ISessionService extends IService<Session> {
      * @param pageSize Page size
      * @return List of sessions
      */
-    List<Session> searchByKeyword(String keyword, Integer current);
+    List<UserAiSession> searchByKeyword(String keyword, Integer current);
 
     /**
      * Delete session and associated messages

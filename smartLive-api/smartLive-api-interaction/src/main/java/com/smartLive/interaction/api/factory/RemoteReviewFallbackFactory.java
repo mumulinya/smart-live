@@ -15,37 +15,44 @@ import java.util.List;
 @Component
 @Slf4j
 public class RemoteReviewFallbackFactory implements FallbackFactory<RemoteReviewService> {
+
     @Override
     public RemoteReviewService create(Throwable throwable) {
         return new RemoteReviewService() {
             @Override
             public Boolean isReview(ReviewDTO reviewDTO) {
-                log.error("check review status failed: {}", throwable.getMessage());
+                log.error("Check review status failed: {}", throwable.getMessage());
                 return false;
             }
 
             @Override
             public Boolean updateReviewStatus(Long id, Integer status, String reason) {
-                log.error("update review status failed: {}", throwable.getMessage());
+                log.error("Update review status failed: {}", throwable.getMessage());
                 return false;
             }
 
             @Override
             public Boolean saveAiCreateReview(List<ReviewDTO> reviews) {
-                log.error("save ai reviews failed: {}", throwable.getMessage());
+                log.error("Save AI reviews failed: {}", throwable.getMessage());
                 return false;
             }
 
             @Override
             public ShopReviewAnalysisDTO getShopReviewAnalysis(Long shopId, String startTime, String endTime) {
-                log.error("get shop review analysis failed: {}", throwable.getMessage());
+                log.error("Get shop review analysis failed: {}", throwable.getMessage());
                 return new ShopReviewAnalysisDTO(BigDecimal.ZERO, 0);
             }
 
             @Override
-            public ShopReviewSuggestDTO getShopReviewSuggest(Long shopId) {
-                log.error("get shop review suggest failed: {}", throwable.getMessage());
-                return new ShopReviewSuggestDTO(0, new ArrayList<>());
+            public ShopReviewSuggestDTO getShopReviewSuggest(Long shopId, String timeRange) {
+                log.error("Get shop review suggest failed: {}", throwable.getMessage());
+                return new ShopReviewSuggestDTO(BigDecimal.ZERO, 0, 0, new ArrayList<>());
+            }
+
+            @Override
+            public ReviewDTO getReviewById(Long id) {
+                log.error("Get review by id failed: {}", throwable.getMessage());
+                return null;
             }
         };
     }

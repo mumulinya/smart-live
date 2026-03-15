@@ -214,5 +214,5 @@ public interface IReviewService extends IService<Review> {
     String publish(String[] ids);
     ShopReviewAnalysisVO getShopReviewAnalysis(Long shopId, String startTime, String endTime);
 
-    ShopReviewSuggestVO getShopReviewSuggest(Long shopId);
+    ShopReviewSuggestVO getShopReviewSuggest(Long shopId, String timeRange);
 }

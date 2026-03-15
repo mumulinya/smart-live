@@ -2,7 +2,7 @@ package com.smartLive.ai.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.ai.domain.DTO.MessageDTO;
-import com.smartLive.ai.domain.Message;
+import com.smartLive.ai.domain.UserAiMessage;
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Flux;
 
@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author smartLive
  */
-public interface IMessageService extends IService<Message> {
+public interface IUserAiMessageService extends IService<UserAiMessage> {
 
     /**
      * Get message list by session ID
@@ -21,7 +21,7 @@ public interface IMessageService extends IService<Message> {
      * @param sessionId Session ID
      * @return List of messages
      */
-    List<Message> selectMessageList(Integer current,Long sessionId);
+    List<UserAiMessage> selectMessageList(Integer current,Long sessionId);
 
     /**
      * Save a message
@@ -31,7 +31,7 @@ public interface IMessageService extends IService<Message> {
      * @param content Content
      * @return Saved message
      */
-    Message saveMessage(Long sessionId, String role, String content);
+    UserAiMessage saveMessage(Long sessionId, String role, String content);
     /**
      * AI Chat
      *

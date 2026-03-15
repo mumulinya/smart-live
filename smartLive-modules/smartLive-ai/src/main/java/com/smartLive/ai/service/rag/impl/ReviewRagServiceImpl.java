@@ -3,6 +3,8 @@ package com.smartLive.ai.service.rag.impl;
 import com.smartLive.ai.entity.vo.ReviewVO;
 import com.smartLive.ai.service.rag.IReviewRagService;
 import com.smartLive.ai.utils.RagMetadataValueUtils;
+import com.smartLive.interaction.api.DTO.ReviewDTO;
+import com.smartLive.interaction.api.RemoteReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +25,13 @@ import java.util.Map;
 public class ReviewRagServiceImpl implements IReviewRagService {
 
     private final VectorStore reviewVectorStore;
+    private final RemoteReviewService remoteReviewService;
 
     @Autowired
-    public ReviewRagServiceImpl(@Qualifier("reviewVectorStore") VectorStore vectorStore) {
+    public ReviewRagServiceImpl(@Qualifier("reviewVectorStore") VectorStore vectorStore,
+                                RemoteReviewService remoteReviewService) {
         this.reviewVectorStore = vectorStore;
+        this.remoteReviewService = remoteReviewService;
     }
 
     @Override
@@ -33,12 +39,12 @@ public class ReviewRagServiceImpl implements IReviewRagService {
                                    Integer minScore, Integer maxScore, String userMessage) {
         String baseFilter = buildSourceFilter(sourceType, sourceId);
         String scoreFilter = buildScoreFilter(minScore, maxScore);
-        String query = StringUtils.hasText(userMessage) ? userMessage : "店铺评价摘要";
+        String query = StringUtils.hasText(userMessage) ? userMessage : "review summary";
         List<Document> docs = searchReviewDocs(query, baseFilter, scoreFilter, 15);
         if (docs.isEmpty()) {
-            return "暂无评价数据";
+            return "No review data.";
         }
-        StringBuilder context = new StringBuilder("评价摘要参考：\n");
+        StringBuilder context = new StringBuilder("Review summary reference:\n");
         docs.forEach(doc -> context.append("- ").append(doc.getText()).append('\n'));
         return context.toString();
     }
@@ -48,7 +54,7 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         if (shopId == null) {
             return List.of();
         }
-        String safeQuery = StringUtils.hasText(query) ? query : "店铺评价";
+        String safeQuery = StringUtils.hasText(query) ? query : "shop reviews";
         List<Document> docs = searchReviewDocs(safeQuery, buildShopFilter(shopId), null, 15);
         return convertDocumentsToReviewVo(docs);
     }
@@ -58,7 +64,7 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         if (shopId == null) {
             return List.of();
         }
-        List<Document> docs = searchReviewDocs("低分评价", buildShopFilter(shopId), buildScoreFilter(minScore, maxScore), 20);
+        List<Document> docs = searchReviewDocs("low score reviews", buildShopFilter(shopId), buildScoreFilter(minScore, maxScore), 20);
         return convertDocumentsToReviewVo(docs);
     }
 
@@ -67,14 +73,14 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         if (reviewId == null) {
             return null;
         }
-        List<String> filters = new ArrayList<>();
-        filters.add("id == " + reviewId);
-        if (shopId != null) {
-            filters.add("shopId == " + shopId);
+        ReviewDTO reviewDTO = remoteReviewService.getReviewById(reviewId);
+        if (reviewDTO == null) {
+            return null;
         }
-        List<Document> docs = searchReviewDocs("评价详情", String.join(" && ", filters), null, 1);
-        List<ReviewVO> reviews = convertDocumentsToReviewVo(docs);
-        return reviews.isEmpty() ? null : reviews.get(0);
+        if (shopId != null && !shopId.equals(reviewDTO.getShopId())) {
+            return null;
+        }
+        return convertReviewDtoToReviewVo(reviewDTO);
     }
 
     private List<Document> searchReviewDocs(String query, String baseFilter, String scoreFilter, int topK) {
@@ -130,6 +136,45 @@ public class ReviewRagServiceImpl implements IReviewRagService {
             return "score <= " + maxScore;
         }
         return "";
+    }
+
+    private ReviewVO convertReviewDtoToReviewVo(ReviewDTO reviewDTO) {
+        ReviewVO reviewVO = new ReviewVO();
+        reviewVO.setId(reviewDTO.getId());
+        reviewVO.setUserId(reviewDTO.getUserId());
+        reviewVO.setShopId(reviewDTO.getShopId());
+        reviewVO.setOrderId(reviewDTO.getOrderId());
+        reviewVO.setSourceType(reviewDTO.getSourceType());
+        reviewVO.setSourceName(reviewDTO.getSourceName());
+        reviewVO.setSourceId(reviewDTO.getSourceId());
+        reviewVO.setContent(reviewDTO.getContent());
+        reviewVO.setImages(splitImages(reviewDTO.getImages()));
+        reviewVO.setLiked(reviewDTO.getLiked());
+        reviewVO.setReplyCount(reviewDTO.getReplyCount());
+        reviewVO.setStared(reviewDTO.getStared());
+        reviewVO.setStatus(reviewDTO.getStatus());
+        reviewVO.setScore(reviewDTO.getScore());
+        reviewVO.setServiceScore(reviewDTO.getServiceScore());
+        reviewVO.setTasteScore(reviewDTO.getTasteScore());
+        reviewVO.setEnvScore(reviewDTO.getEnvScore());
+        reviewVO.setIsAnonymous(reviewDTO.getIsAnonymous());
+        reviewVO.setIsAIGenerated(reviewDTO.getIsAIGenerated());
+        reviewVO.setNickName(reviewDTO.getNickName());
+        reviewVO.setUserIcon(reviewDTO.getUserIcon());
+        reviewVO.setCreateTime(reviewDTO.getCreateTime());
+        reviewVO.setIsLike(reviewDTO.getIsLike());
+        reviewVO.setIsStared(reviewDTO.getIsStared());
+        return reviewVO;
+    }
+
+    private List<String> splitImages(String images) {
+        if (!StringUtils.hasText(images)) {
+            return null;
+        }
+        return Arrays.stream(images.split(","))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .toList();
     }
 
     private List<ReviewVO> convertDocumentsToReviewVo(List<Document> documents) {

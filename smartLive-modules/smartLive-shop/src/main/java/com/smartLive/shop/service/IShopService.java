@@ -10,138 +10,131 @@ import com.smartLive.shop.domain.VO.ShopSuggestVO;
 import com.smartLive.shop.domain.VO.ShopVO;
 
 /**
- * 店铺业务契约接口
- * 定义了店铺的基础维护、多级缓存管理（含穿透/击穿解决）、热门排行榜计算及地理位置检索逻辑。
- * 
+ * 搴楅摵涓氬姟濂戠害鎺ュ彛
+ * 瀹氫箟浜嗗簵閾虹殑鍩虹缁存姢銆佸绾х紦瀛樼鐞嗭紙鍚┛閫?鍑荤┛瑙ｅ喅锛夈€佺儹闂ㄦ帓琛屾璁＄畻鍙婂湴鐞嗕綅缃绱㈤€昏緫銆? * 
  * @author smartLive
  * @date 2026-03-11
  */
 public interface IShopService extends IService<Shop> {
     /**
-     * 查询店铺
+     * 鏌ヨ搴楅摵
      *
-     * @param id 店铺主键
-     * @return 店铺
+     * @param id 搴楅摵涓婚敭
+     * @return 搴楅摵
      */
     Shop selectShopById(String id);
 
     /**
-     * 查询店铺列表
+     * 鏌ヨ搴楅摵鍒楄〃
      *
-     * @param shop 店铺
-     * @return 店铺集合
+     * @param shop 搴楅摵
+     * @return 搴楅摵闆嗗悎
      */
     List<Shop> selectShopList(Shop shop);
 
     /**
-     * 新增店铺
+     * 鏂板搴楅摵
      *
-     * @param shop 店铺
-     * @return 结果
+     * @param shop 搴楅摵
+     * @return 缁撴灉
      */
     int insertShop(Shop shop);
 
     /**
-     * 修改店铺
+     * 淇敼搴楅摵
      *
-     * @param shop 店铺
-     * @return 结果
+     * @param shop 搴楅摵
+     * @return 缁撴灉
      */
     int updateShop(Shop shop);
 
     /**
-     * 批量删除店铺
+     * 鎵归噺鍒犻櫎搴楅摵
      *
-     * @param ids 需要删除的店铺主键集合
-     * @return 结果
+     * @param ids 闇€瑕佸垹闄ょ殑搴楅摵涓婚敭闆嗗悎
+     * @return 缁撴灉
      */
     int deleteShopByIds(String[] ids);
 
     /**
-     * 删除店铺信息
+     * 鍒犻櫎搴楅摵淇℃伅
      *
-     * @param id 店铺主键
-     * @return 结果
+     * @param id 搴楅摵涓婚敭
+     * @return 缁撴灉
      */
     int deleteShopById(String id);
 
 
     /**
-     * 根据主键查询商铺详情 (整合缓存逻辑)
-     * 支持通过逻辑过期及互斥锁策略解决高并发下的缓存击穿问题。
-     *
-     * @param id 商铺 ID
-     * @return 商铺详情 VO (含收藏、关注状态)
+     * 鏍规嵁涓婚敭鏌ヨ鍟嗛摵璇︽儏 (鏁村悎缂撳瓨閫昏緫)
+     * 鏀寔閫氳繃閫昏緫杩囨湡鍙婁簰鏂ラ攣绛栫暐瑙ｅ喅楂樺苟鍙戜笅鐨勭紦瀛樺嚮绌块棶棰樸€?     *
+     * @param id 鍟嗛摵 ID
+     * @return 鍟嗛摵璇︽儏 VO (鍚敹钘忋€佸叧娉ㄧ姸鎬?
      */
     ShopVO queryById(Long id);
 
     /**
-     * 根据商铺名称查询商铺信息
+     * 鏍规嵁鍟嗛摵鍚嶇О鏌ヨ鍟嗛摵淇℃伅
      *
-     * @param shopName 商铺名称
-     * @return 商铺详情
+     * @param shopName 鍟嗛摵鍚嶇О
+     * @return 鍟嗛摵璇︽儏
      */
     ShopVO getShopByShopName(String shopName);
 
     /**
-     * 根据条件查询商铺信息
+     * 鏍规嵁鏉′欢鏌ヨ鍟嗛摵淇℃伅
      *
-     * @param shop 搜索条件
-     * @return 搜索结果
+     * @param shop 鎼滅储鏉′欢
+     * @return 鎼滅储缁撴灉
      */
     List<ShopVO> getShopByCondition(Shop shop);
 
     /**
-     * 根据商铺id列表查询商铺信息列表
+     * 鏍规嵁鍟嗛摵id鍒楄〃鏌ヨ鍟嗛摵淇℃伅鍒楄〃
      *
-     * @param ids 商铺id列表
-     * @return 商铺列表
+     * @param ids 鍟嗛摵id鍒楄〃
+     * @return 鍟嗛摵鍒楄〃
      */
     List<ShopVO> getShopList(List<Long> ids);
 
     /**
-     * 手动重置并刷新商铺全量缓存
-     * 包含店铺基本信息缓存及地理位置 (GEO) 索引缓存。
-     *
-     * @return 执行结果描述
+     * 鎵嬪姩閲嶇疆骞跺埛鏂板晢閾哄叏閲忕紦瀛?     * 鍖呭惈搴楅摵鍩烘湰淇℃伅缂撳瓨鍙婂湴鐞嗕綅缃?(GEO) 绱㈠紩缂撳瓨銆?     *
+     * @return 鎵ц缁撴灉鎻忚堪
      */
     String flushCache();
 
     /**
-     * 全部发布店铺
+     * 鍏ㄩ儴鍙戝竷搴楅摵
      *
-     * @return 全部发布结果
+     * @return 鍏ㄩ儴鍙戝竷缁撴灉
      */
     String allPublish();
 
     /**
-     * 批量发布店铺至ES和Milvus索引
+     * 鎵归噺鍙戝竷搴楅摵鑷矱S鍜孧ilvus绱㈠紩
      *
-     * @param ids 店铺ID数组
-     * @return 发布结果
+     * @param ids 搴楅摵ID鏁扮粍
+     * @return 鍙戝竷缁撴灉
      */
     String publish(String[] ids);
 
     /**
-     * 获取商铺总数
+     * 鑾峰彇鍟嗛摵鎬绘暟
      *
-     * @return 商铺总数
+     * @return 鍟嗛摵鎬绘暟
      */
     Integer getShopTotal();
 
     /**
-     * 获取最近商铺
-     *
-     * @param limit 获取数量
-     * @return 最近商铺
-     */
+     * 鑾峰彇鏈€杩戝晢閾?     *
+     * @param limit 鑾峰彇鏁伴噺
+     * @return 鏈€杩戝晢閾?     */
     List<ShopVO> getRecentShops(Integer limit);
 
     /**
-     * 批量更新商铺收藏数
-     *
-     * @param updateMap 商铺id和收藏数
-     * @return 更新结果
+     * 鎵归噺鏇存柊鍟嗛摵鏀惰棌鏁?     *
+     * @param updateMap 鍟嗛摵id鍜屾敹钘忔暟
+     * @return 鏇存柊缁撴灉
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
 
@@ -154,56 +147,48 @@ public interface IShopService extends IService<Shop> {
     Boolean updateFansCountBatch(Map<Long, Integer> updateMap);
 
     /**
-     * 批量更新商铺评价数
-     *
-     * @param updateMap 商铺id和评价数
-     * @return 批量更新结果
+     * 鎵归噺鏇存柊鍟嗛摵璇勪环鏁?     *
+     * @param updateMap 鍟嗛摵id鍜岃瘎浠锋暟
+     * @return 鎵归噺鏇存柊缁撴灉
      */
     Boolean updateReviewCountBatch(Map<Long, Integer> updateMap);
 
     /**
-     * 更新店铺状态
-     *
-     * @param id     店铺ID
-     * @param status 状态
-     * @param reason 拒绝原因（通过时为null）
-     * @return 结果
+     * 鏇存柊搴楅摵鐘舵€?     *
+     * @param id     搴楅摵ID
+     * @param status 鐘舵€?     * @param reason 鎷掔粷鍘熷洜锛堥€氳繃鏃朵负null锛?     * @return 缁撴灉
      */
     Boolean updateShopStatus(Long id, Integer status, String reason);
 
     /**
-     * 获取热门店铺排行榜
-     * 结合 Redis 热度分序列与用户地理位置 (x,y) 计算综合排名。
-     *
-     * @param current 页码
-     * @param size    每页数量
-     * @param x       用户当前经度 (可选)
-     * @param y       用户当前纬度 (可选)
-     * @return 包含热度评分与距离信息的店铺 VO 列表
+     * 鑾峰彇鐑棬搴楅摵鎺掕姒?     * 缁撳悎 Redis 鐑害鍒嗗簭鍒椾笌鐢ㄦ埛鍦扮悊浣嶇疆 (x,y) 璁＄畻缁煎悎鎺掑悕銆?     *
+     * @param current 椤电爜
+     * @param size    姣忛〉鏁伴噺
+     * @param x       鐢ㄦ埛褰撳墠缁忓害 (鍙€?
+     * @param y       鐢ㄦ埛褰撳墠绾害 (鍙€?
+     * @return 鍖呭惈鐑害璇勫垎涓庤窛绂讳俊鎭殑搴楅摵 VO 鍒楄〃
      */
     List<ShopVO> getHotShopRank(Integer current, Integer size, Double x, Double y);
 
     /**
-     * 批量更新销量
-     *
-     * @param updateMap 店铺id和销量
-     * @return 结果
+     * 鎵归噺鏇存柊閿€閲?     *
+     * @param updateMap 搴楅摵id鍜岄攢閲?     * @return 缁撴灉
      */
     Boolean updateSoldBatch(Map<Long, Integer> updateMap);
 
     /**
-     * 同步销量数据从 Redis 到数据库
+     * 鍚屾閿€閲忔暟鎹粠 Redis 鍒版暟鎹簱
      */
     void syncSalesData();
 
     /**
-     * 根据用户id查询所属店铺
-     * @param userId
+     * 鏍规嵁鐢ㄦ埛id鏌ヨ鎵€灞炲簵閾?     * @param userId
      * @param shop
      * @return
      */
     List<Shop> selectShopListByUserId(Long userId, Shop shop);
     ShopAnalysisVO getShopAnalysis(Long shopId, String timeRange);
 
-    ShopSuggestVO getShopSuggest(Long shopId);
+    ShopSuggestVO getShopSuggest(Long shopId, String timeRange);
+    List<ShopVO> searchShops(String keyword);
 }

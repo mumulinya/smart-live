@@ -70,5 +70,6 @@ public interface RemoteShopService {
                                @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
 
     @GetMapping("/shop/suggest/{shopId}")
-    AjaxResult getShopSuggest(@PathVariable("shopId") Long shopId);
+    AjaxResult getShopSuggest(@PathVariable("shopId") Long shopId,
+                              @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
 }

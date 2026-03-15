@@ -3,8 +3,8 @@ package com.smartLive.ai.service.chat.support;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.ai.config.memory.ChatMemoryConfiguration;
-import com.smartLive.ai.domain.AiMerchantMessage;
-import com.smartLive.ai.mapper.AiMerchantMessageMapper;
+import com.smartLive.ai.domain.MerchantAiMessage;
+import com.smartLive.ai.mapper.MerchantAiMessageMapper;
 import com.smartLive.common.redis.service.RedisService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,11 +30,11 @@ public class MerchantMessageChatMemoryManager {
     private static final String REDIS_KEY_PREFIX = "ai:merchant:chat:memory:list:";
     private static final long REDIS_TTL_DAYS = 7L;
 
-    private final AiMerchantMessageMapper messageMapper;
+    private final MerchantAiMessageMapper messageMapper;
     private final ChatMemory chatMemory;
     private final RedisService redisService;
 
-    public MerchantMessageChatMemoryManager(AiMerchantMessageMapper messageMapper,
+    public MerchantMessageChatMemoryManager(MerchantAiMessageMapper messageMapper,
                                             ChatMemory chatMemory,
                                             RedisService redisService) {
         this.messageMapper = messageMapper;
@@ -55,7 +55,7 @@ public class MerchantMessageChatMemoryManager {
         chatMemory.add(conversationId, historyMessages);
     }
 
-    public void appendMessageToCache(AiMerchantMessage message) {
+    public void appendMessageToCache(MerchantAiMessage message) {
         if (message == null || message.getSessionId() == null) {
             return;
         }
@@ -114,20 +114,20 @@ public class MerchantMessageChatMemoryManager {
     }
 
     private List<CachedMessage> loadMessagesFromDb(Long sessionId) {
-        Page<AiMerchantMessage> page = new Page<>(1, ChatMemoryConfiguration.MAX_MESSAGES, false);
-        LambdaQueryWrapper<AiMerchantMessage> queryWrapper = new LambdaQueryWrapper<AiMerchantMessage>()
-                .eq(AiMerchantMessage::getSessionId, sessionId)
-                .orderByDesc(AiMerchantMessage::getCreateTime)
-                .orderByDesc(AiMerchantMessage::getId);
+        Page<MerchantAiMessage> page = new Page<>(1, ChatMemoryConfiguration.MAX_MESSAGES, false);
+        LambdaQueryWrapper<MerchantAiMessage> queryWrapper = new LambdaQueryWrapper<MerchantAiMessage>()
+                .eq(MerchantAiMessage::getSessionId, sessionId)
+                .orderByDesc(MerchantAiMessage::getCreateTime)
+                .orderByDesc(MerchantAiMessage::getId);
 
-        List<AiMerchantMessage> records = messageMapper.selectPage(page, queryWrapper).getRecords();
+        List<MerchantAiMessage> records = messageMapper.selectPage(page, queryWrapper).getRecords();
         if (records.isEmpty()) {
             return List.of();
         }
 
         Collections.reverse(records);
         List<CachedMessage> historyMessages = new ArrayList<>(records.size());
-        for (AiMerchantMessage record : records) {
+        for (MerchantAiMessage record : records) {
             CachedMessage cachedMessage = toCachedMessage(record);
             if (cachedMessage != null) {
                 historyMessages.add(cachedMessage);
@@ -171,7 +171,7 @@ public class MerchantMessageChatMemoryManager {
         return messages;
     }
 
-    private CachedMessage toCachedMessage(AiMerchantMessage message) {
+    private CachedMessage toCachedMessage(MerchantAiMessage message) {
         String content = normalizeContent(message.getContent());
         if (!hasText(content)) {
             return null;

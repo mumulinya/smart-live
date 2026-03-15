@@ -1,7 +1,7 @@
 package com.smartLive.ai.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.smartLive.ai.domain.Session;
+import com.smartLive.ai.domain.UserAiSession;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -10,5 +10,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author smartLive
  */
 @Mapper
-public interface SessionMapper extends BaseMapper<Session> {
+public interface UserAiSessionMapper extends BaseMapper<UserAiSession> {
 }
