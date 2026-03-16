@@ -70,7 +70,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         delete from user where id = #{id}
     </delete>
 
-    <delete id="deleteUserByIds" parameterType="String">
+    <delete id="deleteUserByIds" parameterType="Long">
         delete from user where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

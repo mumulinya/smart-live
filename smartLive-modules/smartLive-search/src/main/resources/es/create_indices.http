@@ -1,0 +1,209 @@
+### smartLive search indices
+### Requires the Elasticsearch analysis-ik plugin to be installed and healthy.
+### Run in Kibana Dev Tools or any HTTP client that supports Elasticsearch APIs.
+
+DELETE /shop_index?ignore_unavailable=true
+
+PUT /shop_index
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "dynamic": false,
+    "properties": {
+      "id": { "type": "long" },
+      "name": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "typeId": { "type": "long" },
+      "images": { "type": "keyword", "index": false },
+      "shopLogo": { "type": "keyword", "index": false },
+      "area": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "address": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "x": { "type": "double" },
+      "y": { "type": "double" },
+      "avgPrice": { "type": "integer" },
+      "sold": { "type": "integer" },
+      "comments": { "type": "integer" },
+      "score": { "type": "integer" },
+      "openHours": { "type": "keyword", "ignore_above": 256 },
+      "distance": { "type": "double" },
+      "location": { "type": "geo_point" },
+      "actionType": { "type": "keyword", "ignore_above": 64 },
+      "sourceType": { "type": "integer" },
+      "sourceId": { "type": "long" },
+      "createTime": { "type": "date", "format": "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis" }
+    }
+  }
+}
+
+DELETE /blog_index?ignore_unavailable=true
+
+PUT /blog_index
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "dynamic": false,
+    "properties": {
+      "id": { "type": "long" },
+      "typeId": { "type": "long" },
+      "title": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "images": { "type": "keyword", "index": false },
+      "content": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart"
+      },
+      "liked": { "type": "integer" },
+      "createTime": { "type": "date", "format": "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis" },
+      "icon": { "type": "keyword", "index": false },
+      "name": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "actionType": { "type": "keyword", "ignore_above": 64 },
+      "sourceType": { "type": "integer" },
+      "sourceId": { "type": "long" }
+    }
+  }
+}
+
+DELETE /user_index?ignore_unavailable=true
+
+PUT /user_index
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "dynamic": false,
+    "properties": {
+      "id": { "type": "long" },
+      "nickName": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "icon": { "type": "keyword", "index": false },
+      "isFollow": { "type": "boolean" },
+      "introduce": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart"
+      },
+      "city": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "createTime": { "type": "date", "format": "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis" }
+    }
+  }
+}
+
+DELETE /product_index?ignore_unavailable=true
+
+PUT /product_index
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "dynamic": false,
+    "properties": {
+      "id": { "type": "long" },
+      "shopId": { "type": "keyword", "ignore_above": 256 },
+      "name": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "subTitle": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart"
+      },
+      "category": { "type": "integer" },
+      "activityType": { "type": "integer" },
+      "rulesJson": { "type": "text", "index": false },
+      "price": { "type": "scaled_float", "scaling_factor": 100 },
+      "originalPrice": { "type": "scaled_float", "scaling_factor": 100 },
+      "stock": { "type": "integer" },
+      "sold": { "type": "integer" },
+      "reviews": { "type": "integer" },
+      "fans": { "type": "integer" },
+      "stars": { "type": "integer" },
+      "status": { "type": "integer" },
+      "validityType": { "type": "integer" },
+      "useStartTime": { "type": "date", "format": "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis" },
+      "useEndTime": { "type": "date", "format": "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis" },
+      "validDays": { "type": "integer" },
+      "coverImg": { "type": "keyword", "index": false },
+      "beginTime": { "type": "date", "format": "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis" },
+      "endTime": { "type": "date", "format": "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis" },
+      "shopName": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "shopLogo": { "type": "keyword", "index": false },
+      "shopImages": { "type": "keyword", "index": false },
+      "isStar": { "type": "boolean" },
+      "isFollow": { "type": "boolean" },
+      "createTime": { "type": "date", "format": "yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis" },
+      "typeId": { "type": "long" },
+      "actionType": { "type": "keyword", "ignore_above": 64 },
+      "sourceType": { "type": "integer" },
+      "sourceId": { "type": "long" }
+    }
+  }
+}

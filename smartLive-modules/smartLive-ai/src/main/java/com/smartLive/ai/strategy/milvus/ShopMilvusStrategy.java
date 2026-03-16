@@ -12,16 +12,18 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 @Component
 public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
+
     @Autowired
     @Qualifier("shopVectorStore")
     private VectorStore shopVectorStore;
-    /**
-     * 获取策略支持的数据类型
-     */
+
     @Override
     public Integer getType() {
         return GlobalBizTypeEnum.SHOP.getCode();
@@ -29,85 +31,107 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
 
     @Override
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
-        // 1. 策略自己知道要把 Map 转成什么实体类，Listener 不需要知道
         ShopDoc doc = EsTool.convertToObject((Map) rawData, ShopDoc.class);
-        // 删除旧数据 (精准匹配 id 元数据)
         delete(id);
-        
-        Document document = null;
-        if (doc != null) {
-            document = createDocument(doc);
+        if (doc == null) {
+            return true;
         }
+        Document document = createDocument(doc);
         if (document != null) {
-            List<Document> list = new ArrayList<>();
-            list.add(document);
-            shopVectorStore.add(list);
+            shopVectorStore.add(List.of(document));
         }
         return true;
     }
 
     @Override
     public boolean batchInsert(List<Object> rawDataList) throws IOException {
-        List<ShopDoc> list = EsTool.convertList(rawDataList, ShopDoc.class);
-        // 分批处理，每批10个
+        List<ShopDoc> shops = deduplicateById(EsTool.convertList(rawDataList, ShopDoc.class));
         int batchSize = 10;
-        for (int i = 0; i < list.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, list.size());
-            List<ShopDoc> batch = list.subList(i, end);
-
-            // 提取这一批的所有 id，用 in 表达式提前删除旧数据
-            List<String> idList = batch.stream()
-                    .map(shop -> String.valueOf(shop.getId()))
-                    .toList();
-            if (!idList.isEmpty()) {
-                String inExpr = String.join(", ", idList);
-                String filterExpr = String.format("id in [%s]", inExpr);
-                shopVectorStore.delete(filterExpr);
-            }
-
-            // 转换为Document并添加元数据
+        for (int i = 0; i < shops.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, shops.size());
+            List<ShopDoc> batch = shops.subList(i, end);
+            deleteBatch(batch.stream().map(shop -> String.valueOf(shop.getId())).toList());
             List<Document> documents = batch.stream()
                     .map(this::createDocument)
+                    .filter(Objects::nonNull)
                     .toList();
-            System.out.println("写入第 " + (i / batchSize + 1) + " 批数据，数量: " + documents.size());
-            shopVectorStore.add(documents);
+            if (!documents.isEmpty()) {
+                shopVectorStore.add(documents);
+            }
         }
         return true;
     }
 
     @Override
     public boolean delete(String id) throws IOException {
-        // 1. 构建Spring AI的过滤条件（匹配元数据中的id）
-        // 语法与你查询时的filterExpression一致：数值类型直接写，字符串用单引号
-        String filterExpr = String.format("id == %s", id);
-
-        // 2. 执行删除（Spring AI VectorStore的delete方法）
-        // Spring AI 2.x的MilvusVectorStore.delete支持过滤表达式/String类型的filter
-        shopVectorStore.delete(filterExpr);
+        deleteById(id);
         return true;
     }
+
     @Override
     public Document createDocument(ShopDoc shop) {
-        String content = String.format("%s %s %s",
-                shop.getName(), shop.getArea(), shop.getAddress());
-
+        if (shop == null || shop.getId() == null) {
+            return null;
+        }
         Map<String, Object> metadata = new HashMap<>();
         putIfNotNull(metadata, "id", shop.getId());
         putIfNotNull(metadata, "name", shop.getName());
+        putIfNotNull(metadata, "typeId", shop.getTypeId());
+        putIfNotNull(metadata, "images", shop.getImages());
+        putIfNotNull(metadata, "shopLogo", shop.getShopLogo());
         putIfNotNull(metadata, "area", shop.getArea());
         putIfNotNull(metadata, "address", shop.getAddress());
         putIfNotNull(metadata, "x", shop.getX());
         putIfNotNull(metadata, "y", shop.getY());
+        putIfNotNull(metadata, "avgPrice", shop.getAvgPrice());
         putIfNotNull(metadata, "sold", shop.getSold());
         putIfNotNull(metadata, "comments", shop.getComments());
-        putIfNotNull(metadata, "openHours", shop.getOpenHours());
-        putIfNotNull(metadata, "shopLogo", shop.getShopLogo());
-        putIfNotNull(metadata, "typeId", shop.getTypeId());
-        putIfNotNull(metadata, "avgPrice", shop.getAvgPrice());
         putIfNotNull(metadata, "score", shop.getScore());
+        putIfNotNull(metadata, "openHours", shop.getOpenHours());
 
-        return new Document(content, metadata);
+        return Document.builder()
+                .id(String.valueOf(shop.getId()))
+                .text(buildContent(shop.getName(), shop.getArea(), shop.getAddress()))
+                .metadata(metadata)
+                .build();
     }
+
+    private List<ShopDoc> deduplicateById(List<ShopDoc> rawList) {
+        if (rawList == null || rawList.isEmpty()) {
+            return List.of();
+        }
+        Map<String, ShopDoc> unique = new LinkedHashMap<>();
+        for (ShopDoc shop : rawList) {
+            if (shop != null && shop.getId() != null) {
+                unique.put(String.valueOf(shop.getId()), shop);
+            }
+        }
+        return new ArrayList<>(unique.values());
+    }
+
+    private void deleteBatch(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        shopVectorStore.delete(ids);
+        shopVectorStore.delete(String.format("id in [%s]", String.join(", ", ids)));
+    }
+
+    private void deleteById(String id) {
+        shopVectorStore.delete(List.of(id));
+        shopVectorStore.delete(String.format("id == %s", id));
+    }
+
+    private String buildContent(String... values) {
+        List<String> segments = new ArrayList<>();
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                segments.add(value.trim());
+            }
+        }
+        return segments.isEmpty() ? "shop" : String.join(" ", segments);
+    }
+
     private void putIfNotNull(Map<String, Object> map, String key, Object value) {
         if (value != null) {
             map.put(key, value);

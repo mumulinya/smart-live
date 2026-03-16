@@ -108,18 +108,6 @@ public class ProductDoc extends BaseEntity implements Serializable
     
     /** 冗余存储店铺名称 */
     private String shopName;
-    
-    /** 冗余存储店铺 Logo */
-    private String shopLogo;
-    
-    /** 冗余存储店铺图片 */
-    private String shopImages;
-    
-    /** 当前用户是否已收藏 */
-    private Boolean isStar;
-    
-    /** 当前用户是否已关注该店 */
-    private Boolean IsFollow;
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

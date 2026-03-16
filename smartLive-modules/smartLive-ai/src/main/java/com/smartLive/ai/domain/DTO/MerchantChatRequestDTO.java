@@ -23,7 +23,7 @@ public class MerchantChatRequestDTO implements Serializable {
 
     private String reviewId;
 
-    private String dateRange;
+    private String timeRange;
 
     public MerchantChatDTO toMerchantChatDTO() {
         MerchantChatDTO dto = new MerchantChatDTO();
@@ -34,7 +34,7 @@ public class MerchantChatRequestDTO implements Serializable {
         dto.setRawMessage(dto.getMessage());
         dto.setProductId(parseOptionalLong(productId, "productId"));
         dto.setReviewId(parseOptionalLong(reviewId, "reviewId"));
-        dto.setDateRange(StringUtils.hasText(dateRange) ? dateRange.trim() : null);
+        dto.setTimeRange(StringUtils.hasText(timeRange) ? timeRange.trim() : null);
         return dto;
     }
 

@@ -4,36 +4,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.common.core.constant.EsIndexNameConstants;
 import com.smartLive.common.core.constant.ResourceTypeConstants;
 import com.smartLive.search.domain.BlogDoc;
+import com.smartLive.search.domain.ProductDoc;
 import com.smartLive.search.domain.ShopDoc;
 import com.smartLive.search.domain.UserDoc;
-import com.smartLive.search.domain.ProductDoc;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * ES 搜索引擎核心工具类
- * 提供 Java 对象与 ES JSON Map 之间的双向转换，以及基于索引类型的搜索字段动态获取。
- * 
- * @author smartLive
- * @date 2026-03-11
+ * Helper methods for Elasticsearch document conversion.
  */
 public class EsTool {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private EsTool() {}
+    private EsTool() {
+    }
 
     /**
-     * 将业务领域对象 (BlogDoc, ShopDoc, etc.) 适配为 ES 索引要求的 JSON Map。
-     * 包含对地理位置坐标 (location) 和时间戳 (TimeMillis) 的特殊转换。
-     * 
-     * @param data 原始实体对象
-     * @return 符合 ES Mapping 的 Map 格式
+     * Convert a document object to the JSON map expected by Elasticsearch.
      */
-   public static Map<String, Object> convertToJsonMap(Object data) {
+    public static Map<String, Object> convertToJsonMap(Object data) {
         Map<String, Object> jsonMap = new HashMap<>();
 
         if (data instanceof BlogDoc) {
@@ -44,37 +42,50 @@ public class EsTool {
             jsonMap.put("images", blog.getImages());
             jsonMap.put("content", blog.getContent());
             jsonMap.put("liked", blog.getLiked());
+            jsonMap.put("icon", blog.getIcon());
+            jsonMap.put("name", blog.getName());
+            jsonMap.put("actionType", blog.getActionType());
+            jsonMap.put("sourceType", blog.getSourceType());
+            jsonMap.put("sourceId", blog.getSourceId());
             if (blog.getCreateTime() != null) {
                 jsonMap.put("createTime", blog.getCreateTime().getTime());
             }
-            jsonMap.put("icon", blog.getIcon());
-            jsonMap.put("name", blog.getName());
+            return jsonMap;
+        }
 
-        } else if (data instanceof ShopDoc) {
+        if (data instanceof ShopDoc) {
             ShopDoc shop = (ShopDoc) data;
             jsonMap.put("id", shop.getId());
             jsonMap.put("name", shop.getName());
             jsonMap.put("typeId", shop.getTypeId());
+            jsonMap.put("images", shop.getImages());
             jsonMap.put("shopLogo", shop.getShopLogo());
             jsonMap.put("area", shop.getArea());
             jsonMap.put("address", shop.getAddress());
-            // LBS 特殊映射：将 x/y 坐标包装为 ES 的 geo_point 对象
+            jsonMap.put("x", shop.getX());
+            jsonMap.put("y", shop.getY());
+            jsonMap.put("avgPrice", shop.getAvgPrice());
+            jsonMap.put("sold", shop.getSold());
+            jsonMap.put("comments", shop.getComments());
+            jsonMap.put("score", shop.getScore());
+            jsonMap.put("openHours", shop.getOpenHours());
+            jsonMap.put("distance", shop.getDistance());
+            jsonMap.put("actionType", shop.getActionType());
+            jsonMap.put("sourceType", shop.getSourceType());
+            jsonMap.put("sourceId", shop.getSourceId());
             if (shop.getX() != null && shop.getY() != null) {
                 Map<String, Double> location = new HashMap<>();
                 location.put("lat", shop.getY());
                 location.put("lon", shop.getX());
                 jsonMap.put("location", location);
             }
-            jsonMap.put("avgPrice", shop.getAvgPrice());
-            jsonMap.put("sold", shop.getSold());
-            jsonMap.put("comments", shop.getComments());
-            jsonMap.put("score", shop.getScore());
-            jsonMap.put("openHours", shop.getOpenHours());
             if (shop.getCreateTime() != null) {
                 jsonMap.put("createTime", shop.getCreateTime().getTime());
             }
+            return jsonMap;
+        }
 
-        } else if (data instanceof UserDoc) {
+        if (data instanceof UserDoc) {
             UserDoc user = (UserDoc) data;
             jsonMap.put("id", user.getId());
             jsonMap.put("nickName", user.getNickName());
@@ -85,58 +96,82 @@ public class EsTool {
             if (user.getCreateTime() != null) {
                 jsonMap.put("createTime", user.getCreateTime().getTime());
             }
+            return jsonMap;
+        }
 
-        } else if (data instanceof ProductDoc) {
+        if (data instanceof ProductDoc) {
             ProductDoc product = (ProductDoc) data;
             jsonMap.put("id", product.getId());
             if (product.getShopId() != null && !product.getShopId().isEmpty()) {
-                jsonMap.put("shopId", Long.valueOf(product.getShopId().split(",")[0]));
+                jsonMap.put("shopId", product.getShopId().split(",")[0]);
             }
             jsonMap.put("name", product.getName());
             jsonMap.put("subTitle", product.getSubTitle());
+            jsonMap.put("category", product.getCategory());
+            jsonMap.put("activityType", product.getActivityType());
             jsonMap.put("rulesJson", product.getRulesJson());
             jsonMap.put("price", product.getPrice());
             jsonMap.put("originalPrice", product.getOriginalPrice());
-            jsonMap.put("activityType", product.getActivityType());
-            jsonMap.put("status", product.getStatus());
             jsonMap.put("stock", product.getStock());
+            jsonMap.put("sold", product.getSold());
+            jsonMap.put("reviews", product.getReviews());
+            jsonMap.put("fans", product.getFans());
+            jsonMap.put("stars", product.getStars());
+            jsonMap.put("status", product.getStatus());
+            jsonMap.put("validityType", product.getValidityType());
+            jsonMap.put("validDays", product.getValidDays());
+            jsonMap.put("coverImg", product.getCoverImg());
+            jsonMap.put("shopName", product.getShopName());
+            jsonMap.put("typeId", product.getTypeId());
+            jsonMap.put("actionType", product.getActionType());
+            jsonMap.put("sourceType", product.getSourceType());
+            jsonMap.put("sourceId", product.getSourceId());
+            if (product.getUseStartTime() != null) {
+                jsonMap.put("useStartTime", product.getUseStartTime().getTime());
+            }
+            if (product.getUseEndTime() != null) {
+                jsonMap.put("useEndTime", product.getUseEndTime().getTime());
+            }
             if (product.getBeginTime() != null) {
                 jsonMap.put("beginTime", product.getBeginTime().getTime());
             }
             if (product.getEndTime() != null) {
                 jsonMap.put("endTime", product.getEndTime().getTime());
             }
-            jsonMap.put("shopName", product.getShopName());
-            jsonMap.put("typeId", product.getTypeId());
             if (product.getCreateTime() != null) {
                 jsonMap.put("createTime", product.getCreateTime().getTime());
             }
+            return jsonMap;
         }
+
         return jsonMap;
     }
 
-    /**
-     * 根据业务类型代码获取需要参与搜索匹配的字段列表
-     */
     public static String[] getDefaultSearchFields(Integer type) {
         switch (type) {
-            case ResourceTypeConstants.BLOG_CODE: return new String[]{"title", "content", "name"};
-            case ResourceTypeConstants.SHOP_CODE: return new String[]{"name", "area", "address"};
-            case ResourceTypeConstants.USER_CODE: return new String[]{"nickName", "introduce", "city","id"};
-            case ResourceTypeConstants.PRODUCT_CODE: return new String[]{"name", "subTitle", "shopName"};
-            default: return new String[]{};
+            case ResourceTypeConstants.BLOG_CODE:
+                return new String[]{"title", "content", "name"};
+            case ResourceTypeConstants.SHOP_CODE:
+                return new String[]{"name", "area", "address"};
+            case ResourceTypeConstants.USER_CODE:
+                return new String[]{"nickName", "introduce", "city", "id"};
+            case ResourceTypeConstants.PRODUCT_CODE:
+                return new String[]{"name", "subTitle", "shopName"};
+            default:
+                return new String[]{};
         }
     }
 
-    /**
-     * 自动解析搜索响应并转换为强类型列表
-     */
     public static List<? extends Object> convertSearchResult(Integer type, SearchResponse response) throws Exception {
         switch (type) {
-            case ResourceTypeConstants.BLOG_CODE: return ResponseConverter.convertToBlogList(response);
-            case ResourceTypeConstants.SHOP_CODE: return ResponseConverter.convertToShopList(response, null);
-            case ResourceTypeConstants.USER_CODE: return ResponseConverter.convertToUserList(response);
-            case ResourceTypeConstants.PRODUCT_CODE: return ResponseConverter.convertToProductList(response);
+            case ResourceTypeConstants.BLOG_CODE:
+                return ResponseConverter.convertToBlogList(response);
+            case ResourceTypeConstants.SHOP_CODE:
+                return ResponseConverter.convertToShopList(response, null);
+            case ResourceTypeConstants.USER_CODE:
+                return ResponseConverter.convertToUserList(response);
+            case ResourceTypeConstants.PRODUCT_CODE:
+                return ResponseConverter.convertToProductList(response);
             default:
                 List<Map<String, Object>> result = new ArrayList<>();
                 for (SearchHit hit : response.getHits().getHits()) {
@@ -146,21 +181,21 @@ public class EsTool {
         }
     }
 
-    /**
-     * 根据索引名称获取其默认的全文检索字段
-     */
     public static String[] getDefaultSearchFields(String indexName) {
         switch (indexName) {
-            case EsIndexNameConstants.BLOG_INDEX_NAME: return new String[]{"title", "content", "name"};
-            case EsIndexNameConstants.SHOP_INDEX_NAME: return new String[]{"name", "area", "address"};
-            case EsIndexNameConstants.USER_INDEX_NAME: return new String[]{"nickName", "introduce","id"};
-            case EsIndexNameConstants.PRODUCT_INDEX_NAME: return new String[]{"name", "subTitle", "shopName"};
-            default: return new String[]{};
+            case EsIndexNameConstants.BLOG_INDEX_NAME:
+                return new String[]{"title", "content", "name"};
+            case EsIndexNameConstants.SHOP_INDEX_NAME:
+                return new String[]{"name", "area", "address"};
+            case EsIndexNameConstants.USER_INDEX_NAME:
+                return new String[]{"nickName", "introduce", "id"};
+            case EsIndexNameConstants.PRODUCT_INDEX_NAME:
+                return new String[]{"name", "subTitle", "shopName"};
+            default:
+                return new String[]{};
         }
     }
-    /**
-     * 将搜索结果转换为对象列表
-     */
+
     public static List<? extends Object> convertSearchResult(String indexName, SearchResponse response) throws Exception {
         switch (indexName) {
             case EsIndexNameConstants.BLOG_INDEX_NAME:
@@ -172,7 +207,6 @@ public class EsTool {
             case EsIndexNameConstants.PRODUCT_INDEX_NAME:
                 return ResponseConverter.convertToProductList(response);
             default:
-                // 返回原始命中数据
                 List<Map<String, Object>> result = new ArrayList<>();
                 for (SearchHit hit : response.getHits().getHits()) {
                     result.add(hit.getSourceAsMap());
@@ -181,18 +215,20 @@ public class EsTool {
         }
     }
 
-    /**
-     * 批量转换 Map 列表到特定 Doc 类型
-     * 兼容 LinkedHashMap (Jackson 默认) 和强类型实体。
-     */
     @SuppressWarnings("unchecked")
     public static <T> List<T> convertList(List<Object> dataList, Class<T> targetClass) {
-        if (dataList == null) return new ArrayList<>();
+        if (dataList == null) {
+            return new ArrayList<>();
+        }
         return dataList.stream()
                 .map(item -> {
                     try {
-                        if (item instanceof LinkedHashMap) return convertToObject((LinkedHashMap<String, Object>) item, targetClass);
-                        else if (targetClass.isInstance(item)) return (T) item;
+                        if (item instanceof LinkedHashMap) {
+                            return convertToObject((LinkedHashMap<String, Object>) item, targetClass);
+                        }
+                        if (targetClass.isInstance(item)) {
+                            return (T) item;
+                        }
                         return null;
                     } catch (Exception e) {
                         return null;
@@ -202,12 +238,9 @@ public class EsTool {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 将单条 Map 数据映射为 Java Bean
-     */
     public static <T> T convertToObject(Map<String, Object> map, Class<T> targetClass) {
         try {
-            return objectMapper.convertValue(map, targetClass);
+            return OBJECT_MAPPER.convertValue(map, targetClass);
         } catch (Exception e) {
             return null;
         }

@@ -42,7 +42,7 @@
             <if test="pin != null"> and pin = #{pin}</if> </where>
         order by pin desc, create_time desc </select>
 
-    <select id="selectBlogById" parameterType="String" resultMap="BlogResult">
+    <select id="selectBlogById" parameterType="Long" resultMap="BlogResult">
         <include refid="selectBlogVo"/>
         where id = #{id}
     </select>
@@ -108,7 +108,7 @@
         delete from blog where id = #{id}
     </delete>
 
-    <delete id="deleteBlogByIds" parameterType="String">
+    <delete id="deleteBlogByIds" parameterType="Long">
         delete from blog where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

@@ -40,7 +40,7 @@ public class OrderController extends BaseController
     public TableDataInfo list(Order order)
     {
         startPage();
-        List<Order> list = orderService.selectOrderList(order);
+        List<OrderVO> list = orderService.selectOrderList(order);
         return getDataTable(list);
     }
 
@@ -52,8 +52,8 @@ public class OrderController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, Order order)
     {
-        List<Order> list = orderService.selectOrderList(order);
-        ExcelUtil<Order> util = new ExcelUtil<Order>(Order.class);
+        List<OrderVO> list = orderService.selectOrderList(order);
+        ExcelUtil<OrderVO> util = new ExcelUtil<OrderVO>(OrderVO.class);
         util.exportExcel(response, list, "订单表数据");
     }
 

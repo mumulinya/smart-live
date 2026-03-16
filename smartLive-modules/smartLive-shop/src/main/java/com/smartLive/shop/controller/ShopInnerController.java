@@ -13,6 +13,8 @@ import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.shop.domain.Shop;
+import com.smartLive.shop.domain.VO.ShopAnalysisVO;
+import com.smartLive.shop.domain.VO.ShopSuggestVO;
 import com.smartLive.shop.domain.VO.ShopVO;
 import com.smartLive.shop.service.IShopService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -164,5 +166,23 @@ public class ShopInnerController extends BaseController {
     public Integer getSold(@PathVariable("id") Long id){
         Shop shop = shopService.getById(id);
         return shop != null ? shop.getSold() : 0;
+    }
+    /**
+     * 获取商铺分析数据
+     */
+
+    @GetMapping("/analysis")
+    public ShopAnalysisVO getShopAnalysis(@RequestParam("shopId") Long shopId,
+                                          @RequestParam(value = "timeRange", defaultValue = "week") String timeRange) {
+        return shopService.getShopAnalysis(shopId, timeRange);
+    }
+    /**
+     * 获取商铺经营建议
+     */
+
+    @GetMapping("/suggest")
+    public ShopSuggestVO getShopSuggest(@RequestParam("shopId") Long shopId,
+                                        @RequestParam(value = "timeRange", defaultValue = "week") String timeRange) {
+        return shopService.getShopSuggest(shopId, timeRange);
     }
 }

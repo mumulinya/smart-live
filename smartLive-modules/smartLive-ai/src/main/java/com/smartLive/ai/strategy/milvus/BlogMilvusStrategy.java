@@ -13,8 +13,10 @@ import org.springframework.util.StringUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
@@ -32,40 +34,27 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
         BlogDoc doc = convertRawData(rawData);
         delete(id);
-
         if (doc == null) {
             return true;
         }
-
         Document document = createDocument(doc);
         if (document != null) {
-            List<Document> list = new ArrayList<>();
-            list.add(document);
-            blogVectorStore.add(list);
+            blogVectorStore.add(List.of(document));
         }
         return true;
     }
 
     @Override
     public boolean batchInsert(List<Object> rawDataList) throws IOException {
-        List<BlogDoc> list = EsTool.convertList(rawDataList, BlogDoc.class);
+        List<BlogDoc> blogs = deduplicateById(EsTool.convertList(rawDataList, BlogDoc.class));
         int batchSize = 10;
-        for (int i = 0; i < list.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, list.size());
-            List<BlogDoc> batch = list.subList(i, end);
-
-            List<String> idList = batch.stream()
-                    .map(blog -> String.valueOf(blog.getId()))
-                    .toList();
-            if (!idList.isEmpty()) {
-                String inExpr = String.join(", ", idList);
-                String filterExpr = String.format("id in [%s]", inExpr);
-                blogVectorStore.delete(filterExpr);
-            }
-
+        for (int i = 0; i < blogs.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, blogs.size());
+            List<BlogDoc> batch = blogs.subList(i, end);
+            deleteBatch(batch.stream().map(blog -> String.valueOf(blog.getId())).toList());
             List<Document> documents = batch.stream()
                     .map(this::createDocument)
-                    .filter(document -> document != null)
+                    .filter(Objects::nonNull)
                     .toList();
             if (!documents.isEmpty()) {
                 blogVectorStore.add(documents);
@@ -76,15 +65,15 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
 
     @Override
     public boolean delete(String id) throws IOException {
-        String filterExpr = String.format("id == %s", id);
-        blogVectorStore.delete(filterExpr);
+        deleteById(id);
         return true;
     }
 
     @Override
     public Document createDocument(BlogDoc blog) {
-        String content = buildContent(blog);
-
+        if (blog == null || blog.getId() == null) {
+            return null;
+        }
         Map<String, Object> metadata = new HashMap<>();
         putIfNotNull(metadata, "id", blog.getId());
         putIfNotNull(metadata, "shopId", blog.getShopId());
@@ -101,19 +90,49 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
             metadata.put("createTime", blog.getCreateTime().getTime());
         }
 
-        return new Document(content, metadata);
+        return Document.builder()
+                .id(String.valueOf(blog.getId()))
+                .text(buildContent(blog))
+                .metadata(metadata)
+                .build();
+    }
+
+    private List<BlogDoc> deduplicateById(List<BlogDoc> rawList) {
+        if (rawList == null || rawList.isEmpty()) {
+            return List.of();
+        }
+        Map<String, BlogDoc> unique = new LinkedHashMap<>();
+        for (BlogDoc blog : rawList) {
+            if (blog != null && blog.getId() != null) {
+                unique.put(String.valueOf(blog.getId()), blog);
+            }
+        }
+        return new ArrayList<>(unique.values());
+    }
+
+    private void deleteBatch(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        blogVectorStore.delete(ids);
+        blogVectorStore.delete(String.format("id in [%s]", String.join(", ", ids)));
+    }
+
+    private void deleteById(String id) {
+        blogVectorStore.delete(List.of(id));
+        blogVectorStore.delete(String.format("id == %s", id));
     }
 
     private String buildContent(BlogDoc blog) {
         List<String> segments = new ArrayList<>();
         if (StringUtils.hasText(blog.getTitle())) {
-            segments.add(blog.getTitle());
+            segments.add(blog.getTitle().trim());
         }
         if (StringUtils.hasText(blog.getContent())) {
-            segments.add(blog.getContent());
+            segments.add(blog.getContent().trim());
         }
         if (StringUtils.hasText(blog.getName())) {
-            segments.add(blog.getName());
+            segments.add(blog.getName().trim());
         }
         if (segments.isEmpty()) {
             return String.valueOf(blog.getId());
@@ -126,6 +145,7 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
             map.put(key, value);
         }
     }
+
     private BlogDoc convertRawData(Object rawData) {
         if (rawData instanceof BlogDoc blogDoc) {
             return blogDoc;

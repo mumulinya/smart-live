@@ -1,6 +1,5 @@
 package com.smartlive.chat.controller;
 
-import com.smartLive.common.core.domain.R;
 import com.smartlive.chat.domain.ChatMessages;
 import com.smartlive.chat.domain.UserSessions;
 import com.smartlive.chat.service.IChatMessagesService;

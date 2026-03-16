@@ -57,7 +57,7 @@
         delete from user_sessions where id = #{id}
     </delete>
 
-    <delete id="deleteUserSessionsByIds" parameterType="String">
+    <delete id="deleteUserSessionsByIds" parameterType="Long">
         delete from user_sessions where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

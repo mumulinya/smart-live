@@ -14,6 +14,7 @@ import com.smartLive.interaction.api.RemoteReviewService;
 import com.smartLive.shop.api.DTO.ProductSalesDTO;
 import com.smartLive.shop.api.DTO.ShopSuggestDTO;
 import com.smartLive.shop.api.RemoteShopService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component("suggestStrategy")
+@Slf4j
 public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
 
     private final RemoteReviewService remoteReviewService;
@@ -42,13 +44,8 @@ public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
 
     @Override
     protected String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session) {
-        String normalizedDateRange = normalizeDateRange(dto.getDateRange());
-        ShopSuggestDTO suggest = convertAjaxData(
-                remoteShopService.getShopSuggest(session.getShopId(), normalizedDateRange),
-                ShopSuggestDTO.class,
-                new ShopSuggestDTO()
-        );
-        ShopReviewSuggestDTO reviewSuggest = remoteReviewService.getShopReviewSuggest(session.getShopId(), normalizedDateRange);
+        ShopSuggestDTO suggest = remoteShopService.getShopSuggest(session.getShopId(), dto.getTimeRange());
+        ShopReviewSuggestDTO reviewSuggest = remoteReviewService.getShopReviewSuggest(session.getShopId(), dto.getTimeRange());
         if (reviewSuggest == null) {
             reviewSuggest = new ShopReviewSuggestDTO();
         }

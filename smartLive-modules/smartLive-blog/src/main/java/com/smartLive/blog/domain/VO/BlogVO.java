@@ -71,6 +71,10 @@ public class BlogVO implements Serializable
      * 用户姓名
      */
     private String name;
+
+    private String userName;
+
+    private String shopName;
     
     /**
      * 是否点赞过了

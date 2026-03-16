@@ -4,12 +4,10 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.context.UserContextHolder;
-import com.smartLive.common.core.domain.R;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartlive.chat.domain.UserSessions;
-import com.smartlive.chat.mapper.UserSessionsMapper;
 import com.smartlive.chat.service.IUserSessionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;

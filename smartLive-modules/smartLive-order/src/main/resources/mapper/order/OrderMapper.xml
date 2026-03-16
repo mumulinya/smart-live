@@ -220,7 +220,7 @@
         delete from `order` where id = #{id}
     </delete>
 
-    <delete id="deleteOrderByIds" parameterType="String">
+    <delete id="deleteOrderByIds" parameterType="Long">
         delete from `order` where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

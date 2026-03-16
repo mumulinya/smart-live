@@ -123,4 +123,8 @@ public class OrderVO extends BaseEntity implements Serializable
     /** 订单有效期截止时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date expireTime;
+
+    private String productName;
+    private String shopName;
+    private String userName;
 }

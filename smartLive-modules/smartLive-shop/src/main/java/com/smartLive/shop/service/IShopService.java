@@ -11,7 +11,8 @@ import com.smartLive.shop.domain.VO.ShopVO;
 
 /**
  * 搴楅摵涓氬姟濂戠害鎺ュ彛
- * 瀹氫箟浜嗗簵閾虹殑鍩虹缁存姢銆佸绾х紦瀛樼鐞嗭紙鍚┛閫?鍑荤┛瑙ｅ喅锛夈€佺儹闂ㄦ帓琛屾璁＄畻鍙婂湴鐞嗕綅缃绱㈤€昏緫銆? * 
+ * 定义了店铺的基础维护、多级缓存管理（含穿透、击穿解决）、热门排行榜计算及地理位置检索逻辑。
+ *
  * @author smartLive
  * @date 2026-03-11
  */
@@ -22,7 +23,7 @@ public interface IShopService extends IService<Shop> {
      * @param id 搴楅摵涓婚敭
      * @return 搴楅摵
      */
-    Shop selectShopById(String id);
+    Shop selectShopById(Long id);
 
     /**
      * 鏌ヨ搴楅摵鍒楄〃
@@ -54,7 +55,7 @@ public interface IShopService extends IService<Shop> {
      * @param ids 闇€瑕佸垹闄ょ殑搴楅摵涓婚敭闆嗗悎
      * @return 缁撴灉
      */
-    int deleteShopByIds(String[] ids);
+    int deleteShopByIds(Long[] ids);
 
     /**
      * 鍒犻櫎搴楅摵淇℃伅
@@ -62,7 +63,7 @@ public interface IShopService extends IService<Shop> {
      * @param id 搴楅摵涓婚敭
      * @return 缁撴灉
      */
-    int deleteShopById(String id);
+    int deleteShopById(Long id);
 
 
     /**

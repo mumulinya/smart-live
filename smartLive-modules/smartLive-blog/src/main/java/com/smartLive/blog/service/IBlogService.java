@@ -31,6 +31,10 @@ public interface IBlogService extends IService<Blog>
      */
      List<Blog> selectBlogList(Blog blog);
 
+     BlogVO selectBlogVoById(Long id);
+
+     List<BlogVO> selectBlogVoList(Blog blog);
+
     /**
      * 閺傛澘顤冮崡姘吂
      * 

@@ -58,7 +58,7 @@
         delete from chat_sessions where id = #{id}
     </delete>
 
-    <delete id="deleteChatSessionsByIds" parameterType="String">
+    <delete id="deleteChatSessionsByIds" parameterType="Long">
         delete from chat_sessions where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

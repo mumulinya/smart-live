@@ -26,7 +26,7 @@ CREATE TABLE `order`  (
   `user_id` bigint UNSIGNED NOT NULL COMMENT '下单的用户id',
   `source_type` smallint NULL DEFAULT NULL COMMENT '购买的类型',
   `source_id` bigint UNSIGNED NOT NULL COMMENT '购买的源id',
-  `pay_amount` bigint UNSIGNED NOT NULL DEFAULT 0 COMMENT '实付金额(单位:分)',
+  `pay_amount` bigint UNSIGNED NOT NULL DEFAULT 0 COMMENT '实付金额(单位:元)',
   `amount` int UNSIGNED NULL DEFAULT 1 COMMENT '购买数量',
   `pay_type` tinyint UNSIGNED NOT NULL DEFAULT 1 COMMENT '支付方式 1：余额支付；2：支付宝；3：微信',
   `out_trade_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '第三方支付流水号',

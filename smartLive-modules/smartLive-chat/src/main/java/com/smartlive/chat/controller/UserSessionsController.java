@@ -1,8 +1,6 @@
 package com.smartlive.chat.controller;
 
 import java.util.List;
-import java.io.IOException;
-import jakarta.servlet.http.HttpServletResponse;
 
 import com.smartLive.common.core.web.domain.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +12,6 @@ import com.smartlive.chat.domain.UserSessions;
 import com.smartlive.chat.service.IUserSessionsService;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
-import com.smartLive.common.core.utils.poi.ExcelUtil;
-import com.smartLive.common.core.web.page.TableDataInfo;
 
 /**
  * 用户会话列表Controller

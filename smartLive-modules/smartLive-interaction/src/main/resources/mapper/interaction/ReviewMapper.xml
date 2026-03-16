@@ -167,7 +167,7 @@
         delete from review where id = #{id}
     </delete>
 
-    <delete id="deleteReviewByIds" parameterType="String">
+    <delete id="deleteReviewByIds" parameterType="Long">
         delete from review where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

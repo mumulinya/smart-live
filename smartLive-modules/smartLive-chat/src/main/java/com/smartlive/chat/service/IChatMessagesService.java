@@ -1,10 +1,7 @@
 package com.smartlive.chat.service;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
-import cn.hutool.db.DaoTemplate;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartlive.chat.domain.ChatMessages;
 

@@ -25,5 +25,5 @@ public class MerchantChatDTO implements Serializable {
 
     private Long reviewId;
 
-    private String dateRange;
+    private String timeRange;
 }

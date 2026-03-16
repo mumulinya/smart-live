@@ -87,6 +87,7 @@ public abstract class AbstractMerchantAiStrategy {
                 new SystemMessage(buildScenePrompt(dto, session)),
                 new UserMessage(resolveInstruction(dto))
         ));
+        log.info("prompt:{}", prompt);
         StringBuilder aiReply = new StringBuilder();
 
         return merchantStrategyChatClient.prompt(prompt)
@@ -112,25 +113,6 @@ public abstract class AbstractMerchantAiStrategy {
         return StringUtils.hasText(value) ? value.trim() : DEFAULT_INSTRUCTION;
     }
 
-    protected final String normalizeDateRange(String dateRange) {
-        if (!StringUtils.hasText(dateRange)) {
-            return "week";
-        }
-        String normalized = dateRange.trim().toLowerCase(Locale.ROOT);
-        if ("month".equals(normalized) || "quarter".equals(normalized)) {
-            return normalized;
-        }
-        return "week";
-    }
-
-    protected final String formatDateRangeLabel(String dateRange) {
-        return switch (normalizeDateRange(dateRange)) {
-            case "month" -> "month";
-            case "quarter" -> "quarter";
-            default -> "week";
-        };
-    }
-
     protected final String formatDate(Date date) {
         return date == null ? "No data" : DATE_TIME_FORMAT.format(date);
     }
@@ -149,22 +131,6 @@ public abstract class AbstractMerchantAiStrategy {
 
     protected final String defaultDecimal(BigDecimal value) {
         return value == null ? "0" : value.stripTrailingZeros().toPlainString();
-    }
-
-    protected final <T> T convertAjaxData(AjaxResult ajaxResult, Class<T> targetClass, T defaultValue) {
-        if (ajaxResult == null || !ajaxResult.isSuccess()) {
-            return defaultValue;
-        }
-        Object data = ajaxResult.get(AjaxResult.DATA_TAG);
-        if (data == null) {
-            return defaultValue;
-        }
-        try {
-            return objectMapper.convertValue(data, targetClass);
-        } catch (IllegalArgumentException ex) {
-            log.warn("Convert AjaxResult data to {} failed: {}", targetClass.getSimpleName(), ex.getMessage());
-            return defaultValue;
-        }
     }
 
     protected final ShopPromptContext getShopPromptContext(Long shopId) {
@@ -211,7 +177,7 @@ public abstract class AbstractMerchantAiStrategy {
         if (!"analysis".equals(normalizedType)) {
             return null;
         }
-        return normalizeDateRange(dto.getDateRange());
+        return dto.getTimeRange();
     }
 
     protected final String firstNonBlank(String... values) {

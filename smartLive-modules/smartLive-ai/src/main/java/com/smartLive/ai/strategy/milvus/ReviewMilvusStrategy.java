@@ -12,8 +12,10 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
@@ -30,100 +32,113 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
     @Override
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
         ReviewDTO doc = EsTool.convertToObject((Map) rawData, ReviewDTO.class);
-
-        // 删除旧数据
         delete(id);
-
-        Document document = null;
-        if (doc != null) {
-            document = createDocument(doc);
+        if (doc == null) {
+            return true;
         }
+        Document document = createDocument(doc);
         if (document != null) {
-            List<Document> list = new ArrayList<>();
-            list.add(document);
-            reviewVectorStore.add(list);
+            reviewVectorStore.add(List.of(document));
         }
         return true;
     }
 
     @Override
     public boolean batchInsert(List<Object> rawDataList) throws IOException {
-        List<ReviewDTO> list = EsTool.convertList(rawDataList, ReviewDTO.class);
-
+        List<ReviewDTO> reviews = deduplicateById(EsTool.convertList(rawDataList, ReviewDTO.class));
         int batchSize = 10;
-        for (int i = 0; i < list.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, list.size());
-            List<ReviewDTO> batch = list.subList(i, end);
-
-            // 提取这一批的所有 id，提前删除
-            List<String> idList = batch.stream()
-                    .map(review -> String.valueOf(review.getId()))
-                    .toList();
-            if (!idList.isEmpty()) {
-                String inExpr = String.join(", ", idList);
-                String filterExpr = String.format("id in [%s]", inExpr);
-                reviewVectorStore.delete(filterExpr);
-            }
-
+        for (int i = 0; i < reviews.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, reviews.size());
+            List<ReviewDTO> batch = reviews.subList(i, end);
+            deleteBatch(batch.stream().map(review -> String.valueOf(review.getId())).toList());
             List<Document> documents = batch.stream()
                     .map(this::createDocument)
+                    .filter(Objects::nonNull)
                     .toList();
-            System.out.println("写入第 " + (i / batchSize + 1) + " 批评论数据，数量: " + documents.size());
-            reviewVectorStore.add(documents);
+            if (!documents.isEmpty()) {
+                reviewVectorStore.add(documents);
+            }
         }
         return true;
     }
 
     @Override
     public boolean delete(String id) throws IOException {
-        String filterExpr = String.format("id == %s", id);
-        reviewVectorStore.delete(filterExpr);
+        deleteById(id);
         return true;
     }
 
     @Override
     public Document createDocument(ReviewDTO review) {
-        String content = String.format("%s", review.getContent());
-
+        if (review == null || review.getId() == null) {
+            return null;
+        }
         Map<String, Object> metadata = new HashMap<>();
-
-        // === 基础字段（必需）===
         putIfNotNull(metadata, "id", review.getId());
         putIfNotNull(metadata, "userId", review.getUserId());
         putIfNotNull(metadata, "shopId", review.getShopId());
+        putIfNotNull(metadata, "orderId", review.getOrderId());
         putIfNotNull(metadata, "sourceId", review.getSourceId());
         putIfNotNull(metadata, "sourceType", review.getSourceType());
-
-        // === 过滤字段 ===
         putIfNotNull(metadata, "status", review.getStatus());
         putIfNotNull(metadata, "isAIGenerated", review.getIsAIGenerated());
-
-        // === 评分字段（用于排序和推荐） ===
         putIfNotNull(metadata, "score", review.getScore());
         putIfNotNull(metadata, "serviceScore", review.getServiceScore());
         putIfNotNull(metadata, "tasteScore", review.getTasteScore());
         putIfNotNull(metadata, "envScore", review.getEnvScore());
-
-        // === 热度指标（用于排序） ===
         metadata.put("liked", review.getLiked() != null ? review.getLiked() : 0);
         metadata.put("replyCount", review.getReplyCount() != null ? review.getReplyCount() : 0);
         metadata.put("stared", review.getStared() != null ? review.getStared() : 0);
-
-        // === 展示字段 ===
         putIfNotNull(metadata, "nickName", review.getNickName());
         putIfNotNull(metadata, "userIcon", review.getUserIcon());
         putIfNotNull(metadata, "images", review.getImages());
-
-        // === 时间戳（用于排序） ===
-        metadata.put("createTime", review.getCreateTime() != null ?
-                review.getCreateTime().getTime() : System.currentTimeMillis());
-
-        // === 其他信息 ===
+        metadata.put("createTime", review.getCreateTime() != null ? review.getCreateTime().getTime() : System.currentTimeMillis());
         metadata.put("isAnonymous", review.getIsAnonymous() != null ? review.getIsAnonymous() : false);
         putIfNotNull(metadata, "sourceName", review.getSourceName());
 
-        return new Document(content, metadata);
+        return Document.builder()
+                .id(String.valueOf(review.getId()))
+                .text(buildContent(review))
+                .metadata(metadata)
+                .build();
     }
+
+    private List<ReviewDTO> deduplicateById(List<ReviewDTO> rawList) {
+        if (rawList == null || rawList.isEmpty()) {
+            return List.of();
+        }
+        Map<String, ReviewDTO> unique = new LinkedHashMap<>();
+        for (ReviewDTO review : rawList) {
+            if (review != null && review.getId() != null) {
+                unique.put(String.valueOf(review.getId()), review);
+            }
+        }
+        return new ArrayList<>(unique.values());
+    }
+
+    private void deleteBatch(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        reviewVectorStore.delete(ids);
+        reviewVectorStore.delete(String.format("id in [%s]", String.join(", ", ids)));
+    }
+
+    private void deleteById(String id) {
+        reviewVectorStore.delete(List.of(id));
+        reviewVectorStore.delete(String.format("id == %s", id));
+    }
+
+    private String buildContent(ReviewDTO review) {
+        if (review.getContent() != null && !review.getContent().isBlank()) {
+            return review.getContent().trim();
+        }
+        if (review.getSourceName() != null && !review.getSourceName().isBlank()) {
+            return review.getSourceName().trim();
+        }
+        return String.valueOf(review.getId());
+    }
+
     private void putIfNotNull(Map<String, Object> map, String key, Object value) {
         if (value != null) {
             map.put(key, value);

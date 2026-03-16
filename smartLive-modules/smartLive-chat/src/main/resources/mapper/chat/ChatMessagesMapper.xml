@@ -73,7 +73,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         delete from chat_messages where id = #{id}
     </delete>
 
-    <delete id="deleteChatMessagesByIds" parameterType="String">
+    <delete id="deleteChatMessagesByIds" parameterType="Long">
         delete from chat_messages where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

@@ -27,15 +27,15 @@ public class AiSuggestQuestionController extends BaseController {
     private IAiSuggestQuestionService suggestQuestionService;
 
     /**
-     * 鑾峰彇闅忔満鎺ㄨ崘闂
-     * 闅忔満鎶藉彇 3 涓璁剧殑 AI 瀵硅瘽寮曞闂锛屾樉绀哄湪鍓嶇鎼滅储妗嗘垨鑱婂ぉ鐣岄潰涓嬫柟
+     * 获取随机推荐问题
+     * 随机抽取 3 个预设的 AI 对话引导问题，显示在前端搜索框或聊天界面下方
      *
-     * @return 鍖呭惈闂鍐呭鍒楄〃鐨?Result
+     * @return 包含问题内容列表的 Result
      */
     @GetMapping
     public Result getSuggestions() {
         List<AiSuggestQuestion> list = suggestQuestionService.getRandomSuggestions(3);
-        // 浠呰繑鍥炲唴瀹瑰瓧绗︿覆鍒楄〃锛岀鍚堝墠绔?UI 娓叉煋閫昏緫
+        // 仅返回内容字符串列表，符合前端 UI 渲染逻辑
         List<String> contents = list.stream().map(AiSuggestQuestion::getContent).collect(Collectors.toList());
         return Result.ok(contents);
     }

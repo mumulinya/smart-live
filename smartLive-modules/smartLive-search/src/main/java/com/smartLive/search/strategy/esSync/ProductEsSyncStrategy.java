@@ -26,6 +26,7 @@ import org.elasticsearch.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class ProductEsSyncStrategy implements EsSyncStrategy {
         ProductDoc doc = EsTool.convertToObject((Map) data, ProductDoc.class);
         validateProduct(doc);
         
-        String json = objectMapper.writeValueAsString(data);
+        String json = objectMapper.writeValueAsString(EsTool.convertToJsonMap(doc));
         IndexRequest request = new IndexRequest(indexName)
                 .id(id)
                 .source(json, XContentType.JSON);
@@ -85,7 +86,7 @@ public class ProductEsSyncStrategy implements EsSyncStrategy {
      */
     @Override
     public boolean batchInsert(String indexName, List<Object> dataList) throws IOException {
-        List<ProductDoc> docList = new java.util.ArrayList<>();
+        List<ProductDoc> docList = new ArrayList<>();
         for (Object data : dataList) {
             docList.add(EsTool.convertToObject((Map) data, ProductDoc.class));
         }
@@ -94,7 +95,7 @@ public class ProductEsSyncStrategy implements EsSyncStrategy {
         BulkRequest bulkRequest = new BulkRequest();
         for (ProductDoc data : docList) {
             validateProduct(data);
-            String json = objectMapper.writeValueAsString(data);
+            String json = objectMapper.writeValueAsString(EsTool.convertToJsonMap(data));
             bulkRequest.add(new IndexRequest(indexName).id(data.getId().toString()).source(json, XContentType.JSON));
         }
         
@@ -138,7 +139,7 @@ public class ProductEsSyncStrategy implements EsSyncStrategy {
         Map<String, Object> params = new HashMap<>();
         if (product.getName() != null) params.put("name", product.getName());
         if (product.getSubTitle() != null) params.put("subTitle", product.getSubTitle());
-        if (product.getShopName() != null) params.put("Shopname", product.getShopName());
+        if (product.getShopName() != null) params.put("ShopName", product.getShopName());
         if (product.getPrice() != null) params.put("price", product.getPrice());
         if (product.getRulesJson() != null) params.put("rulesJson", product.getRulesJson());
         if (product.getStatus() != null) params.put("status", product.getStatus());

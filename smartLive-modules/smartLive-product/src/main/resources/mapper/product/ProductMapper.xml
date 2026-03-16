@@ -155,7 +155,7 @@
         delete from product where id = #{id}
     </delete>
 
-    <delete id="deleteProductByIds" parameterType="String">
+    <delete id="deleteProductByIds" parameterType="Long">
         delete from product where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

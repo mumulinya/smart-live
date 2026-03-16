@@ -2,7 +2,9 @@ package com.smartLive.shop.api;
 
 import com.smartLive.common.core.constant.ServiceNameConstants;
 import com.smartLive.common.core.web.domain.AjaxResult;
+import com.smartLive.shop.api.DTO.ShopAnalysisDTO;
 import com.smartLive.shop.api.DTO.ShopDTO;
+import com.smartLive.shop.api.DTO.ShopSuggestDTO;
 import com.smartLive.shop.api.DTO.ShopTypeDTO;
 import com.smartLive.shop.api.factory.RemoteShopFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -65,11 +67,11 @@ public interface RemoteShopService {
     @GetMapping("/inner/shop/getSold/{id}")
     Integer getSold(@PathVariable("id") Long id);
 
-    @GetMapping("/shop/analysis/{shopId}")
-    AjaxResult getShopAnalysis(@PathVariable("shopId") Long shopId,
-                               @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
+    @GetMapping("/inner/shop/analysis")
+    ShopAnalysisDTO getShopAnalysis(@RequestParam("shopId") Long shopId,
+                                    @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
 
-    @GetMapping("/shop/suggest/{shopId}")
-    AjaxResult getShopSuggest(@PathVariable("shopId") Long shopId,
-                              @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
+    @GetMapping("/inner/shop/suggest")
+    ShopSuggestDTO getShopSuggest(@RequestParam("shopId") Long shopId,
+                                  @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
 }

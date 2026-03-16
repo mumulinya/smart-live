@@ -1162,7 +1162,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      *
      * @param reviews 评价列表
      */
-    private void sendReviewMilvusBatchMessage(List<?> reviews) {
+private void sendReviewMilvusBatchMessage(List<?> reviews) {
         if (CollUtil.isEmpty(reviews)) {
             return;
         }

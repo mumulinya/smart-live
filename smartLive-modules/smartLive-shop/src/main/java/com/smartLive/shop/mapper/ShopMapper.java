@@ -22,7 +22,7 @@ public interface ShopMapper extends BaseMapper<Shop>
      * @param id 店铺主键
      * @return 店铺
      */
-    public Shop selectShopById(String id);
+    public Shop selectShopById(Long id);
 
     /**
      * 查询店铺列表
@@ -54,7 +54,7 @@ public interface ShopMapper extends BaseMapper<Shop>
      * @param id 店铺主键
      * @return 结果
      */
-    public int deleteShopById(String id);
+    public int deleteShopById(Long id);
 
     /**
      * 批量删除店铺
@@ -62,7 +62,7 @@ public interface ShopMapper extends BaseMapper<Shop>
      * @param ids 需要删除的数据主键集合
      * @return 结果
      */
-    public int deleteShopByIds(String[] ids);
+    public int deleteShopByIds(Long[] ids);
     /**
      * 批量更新店铺的评价数
      * @param updateMap

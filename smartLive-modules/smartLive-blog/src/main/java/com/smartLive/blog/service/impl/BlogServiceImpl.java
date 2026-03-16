@@ -138,6 +138,27 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return blogMapper.selectBlogList(blog);
     }
 
+    @Override
+    public BlogVO selectBlogVoById(Long id)
+    {
+        Blog blog = blogMapper.selectBlogById(id);
+        BlogVO blogVO = convertToBlogVO(blog);
+        if (blogVO == null) {
+            return null;
+        }
+        fillBlogAdminNames(Collections.singletonList(blogVO));
+        return blogVO;
+    }
+
+    @Override
+    public List<BlogVO> selectBlogVoList(Blog blog)
+    {
+        List<Blog> blogList = blogMapper.selectBlogList(blog);
+        List<BlogVO> blogVOList = convertToBlogVOList(blogList);
+        fillBlogAdminNames(blogVOList);
+        return blogVOList;
+    }
+
     /**
      * 闂傚倷绀侀幖顐﹀磹閻熼偊鐔嗘慨妞诲亾鐠侯垶鏌涢幇闈涙灈缁绢厸鍋撴繝娈垮枟閿曗晠宕滈敃鍌氳Е?
      * 
@@ -582,38 +603,80 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param blogList
      */
     private void queryBlogListUserMessage(List<BlogVO> blogVOList) {
+        fillBlogUserNames(blogVOList);
+    }
+
+    private void fillBlogAdminNames(List<BlogVO> blogVOList) {
+        fillBlogUserNames(blogVOList);
+        fillBlogShopNames(blogVOList);
+    }
+
+    private void fillBlogUserNames(List<BlogVO> blogVOList) {
         if (CollUtil.isEmpty(blogVOList)) {
             return;
         }
-        // Query userId list
-        List<Long> userIds = blogVOList.stream()
+        List<BlogVO> validBlogVOList = blogVOList.stream()
+                .filter(Objects::nonNull)
+                .toList();
+        if (CollUtil.isEmpty(validBlogVOList)) {
+            return;
+        }
+        List<Long> userIds = validBlogVOList.stream()
                 .map(BlogVO::getUserId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-
         if (CollUtil.isEmpty(userIds)) {
             return;
         }
-
-        // Batch query user info
         List<com.smartLive.user.api.domain.UserDTO> userList = remoteAppUserService.getUserList(userIds);
-        
         if (CollUtil.isEmpty(userList)) {
             return;
         }
-
         Map<Long, com.smartLive.user.api.domain.UserDTO> userMap = userList.stream().collect(Collectors.toMap(
                 com.smartLive.user.api.domain.UserDTO::getId,
                 Function.identity(),
                 (v1, v2) -> v1
         ));
-
-        blogVOList.forEach(vo -> {
+        validBlogVOList.forEach(vo -> {
             com.smartLive.user.api.domain.UserDTO user = userMap.get(vo.getUserId());
             if (user != null) {
-                vo.setName(user.getNickName());
+                String nickName = user.getNickName() == null ? "" : user.getNickName();
+                vo.setName(nickName);
+                vo.setUserName(nickName);
                 vo.setIcon(user.getIcon());
+            }
+        });
+    }
+
+    private void fillBlogShopNames(List<BlogVO> blogVOList) {
+        if (CollUtil.isEmpty(blogVOList)) {
+            return;
+        }
+        List<BlogVO> validBlogVOList = blogVOList.stream()
+                .filter(Objects::nonNull)
+                .toList();
+        if (CollUtil.isEmpty(validBlogVOList)) {
+            return;
+        }
+        List<Long> shopIds = validBlogVOList.stream()
+                .map(BlogVO::getShopId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(shopIds)) {
+            return;
+        }
+        List<ShopDTO> shopList = remoteShopService.getShopList(shopIds);
+        if (CollUtil.isEmpty(shopList)) {
+            return;
+        }
+        Map<Long, String> shopNameMap = shopList.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(ShopDTO::getId, shop -> shop.getName() == null ? "" : shop.getName(), (left, right) -> left));
+        validBlogVOList.forEach(vo -> {
+            if (vo.getShopId() != null) {
+                vo.setShopName(shopNameMap.getOrDefault(vo.getShopId(), ""));
             }
         });
     }
@@ -991,13 +1054,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param blogVO
      */
     private void queryBlogUser(BlogVO blogVO){
-        Long userId = blogVO.getUserId();
-        //闂傚倷绀侀幖顐ょ矓閻戞枻缍栧璺猴功閺嗐倕銆掑锝呬壕闂佽鍠曠划娆愪繆閹间焦鏅濋柍褜鍓熼幃锟犲及閻偊姊绘担绋挎倯闁稿孩濞婂畷鏌ユ嚑闊弓姹楅梺鎼炲労閸撴岸宕戦妸鈺傜厪濠电姴绻掗悾閬嶆煟閹惧瓨绀€閼挎劙鏌涢妷顖滃埌濠⒀勫絻闇?
-        com.smartLive.user.api.domain.UserDTO user= remoteAppUserService.queryUserById(userId);
-        if (user != null) {
-            blogVO.setName(user.getNickName());
-            blogVO.setIcon(user.getIcon());
+        if (blogVO == null) {
+            return;
         }
+        fillBlogUserNames(Collections.singletonList(blogVO));
     }
     /**
      * 闂傚倷绀侀幉锛勬暜閸ヮ剙纾归柡宥庡幖閽冪喖鏌涢妷顔荤暗濞存粌缍婇弻鐔煎箚瑜嶉弳杈ㄣ亜閵堝懏鍤囬柡宀嬬秮閿濈偤顢楅埀顒佷繆娴犲鐓曢柍鍝勫€诲ú瀵糕偓娈垮枙閸楁娊銆佸☉姗嗘僵妞ゆ挾鍋涙晶楣冩煟鎼淬値娼愰柣鈩冩礈娴滅鈻庨幋婵嗙亰闂佽法鍠撴慨鐢稿磹妞嬪海妫い鎾跺仦閸ｈ姤銇?

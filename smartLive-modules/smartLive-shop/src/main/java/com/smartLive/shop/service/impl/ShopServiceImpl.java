@@ -157,7 +157,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 闂傚倸鍊风粈浣革耿闁秴鍌ㄧ憸鏃堝箖濞差亜惟闁崇懓绨遍崑鎾诲礃閳哄啰鐦堥梺鎼炲劀閸滀礁鏅?
      */
     @Override
-    public Shop selectShopById(String id) {
+    public Shop selectShopById(Long id) {
         return shopMapper.selectShopById(id);
     }
 
@@ -248,7 +248,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int deleteShopByIds(String[] ids) {
+    public int deleteShopByIds(Long[] ids) {
         if (ids == null || ids.length == 0) {
             return 0;
         }
@@ -276,16 +276,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                     throw new BusinessException("failed to delete user-shop relations");
                 }
             }
-            for (String id : ids) {
+            for (Long id : ids) {
                 executorService.submit(() -> {
                     log.info("async delete shop thread={}, shopId={}", Thread.currentThread().getName(), id);
-                    Long shopId;
-                    try {
-                        shopId = Long.valueOf(id);
-                    } catch (NumberFormatException e) {
-                        log.warn("闂傚倸鍊搁崐椋庣矆娓氣偓楠炲鏁嶉崟顒佹闂佺粯鍔曢顓犵不妤ｅ啯鐓冪憸婊堝礈濮樿鲸宕叉繛鎴欏灩瀹告繃銇勯幘璺哄壉闁告柨顦靛铏规嫚閳ュ磭浠梺鍝勮閸斿繘鎮橀崘顔解拺闁告稑锕ｇ欢閬嶆煕閻樻剚娈滅€规洜鏁诲畷濂稿Ψ閿旇瀚奸梻浣告啞缁嬫垿鏁冮妸锔剧彾婵せ鍋撻柡宀嬬節瀹曞ジ顢曢姀鐘嫬婵＄偑鍊戦崹娲€冩繝鍥х畺婵炲棗绶烽崷顓涘亾閿濆骸浜芥繛鍏兼濮婄粯鎷呯粙娆炬闂佺顑呭Λ婵嗙暦閺夋鍚嬮柛銉厛濞肩喖姊洪崫鍕枆闁告ü绮欓幃鈥斥槈閵忥紕鍘遍梺閫涘嵆濞佳囩嵁濡ゅ啰妫い鎾跺仜閳锋梻绱掓潏銊ユ诞濠碘剝鐡曢ˇ鎶芥煛閸♀晛澧撮柡宀嬬磿娴狅箓鎮㈤柨瀣婵犳鍣崜鐔煎蓟閻旂厧鍨傛い鎰靛亝閻や線姊洪崫鍕槵闁逞屽墯閸撴岸宕ョ€ｎ喗鐓曢柕澶嬪灥閸熲晝鍒掗婊呯＝闁稿本鐟ч崝宥夋煕閻愯泛鍚归柟骞垮灩閳规垿宕伴鐣屾创鐎规洘锕㈤、娆撴寠婢跺棗浜鹃柣鎴ｅГ閸婄敻鏌涢…鎴濅簼闁稿濞€閺? {}", id);
-                        return;
-                    }
+                    Long shopId = id;
                     ContentSyncMessage contentSyncMessage = new ContentSyncMessage();
                     contentSyncMessage.setId(shopId);
                     contentSyncMessage.setIndexName(EsIndexNameConstants.SHOP_INDEX_NAME);
@@ -296,13 +290,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                     mqMessageSendUtils.sendMqMessage(SearchMqConstants.MILVUS_SYNC_EXCHANGE, SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY, contentSyncMessage);
                 });
             }
-            Arrays.stream(ids).forEach(shopId -> {
-                try {
-                    flashShopRedisCache(Long.valueOf(shopId));
-                } catch (NumberFormatException e) {
-                    log.warn("闂傚倸鍊搁崐椋庣矆娓氣偓楠炲鏁嶉崟顒佹闂佺粯鍔曢顓犵不妤ｅ啯鐓冪憸婊堝礈濮樿鲸宕叉繛鎴欏灩瀹告繃銇勯幘璺哄壉闁告柨顦靛铏规嫚閳ュ磭浠梺鍝勮閸斿繘鎮橀崘顔解拺闁告稑锕ｇ欢閬嶆煕閻樻剚娈滅€规洜鏁诲畷濂稿閵忣澁绱抽梻浣侯焾閺堫剟鎳濇ィ鍐ㄧ劦妞ゆ巻鍋撶紓宥咃躬閻涱噣骞囬弶璺啇婵炶揪绲块幊鎾寸闁秵鈷戦梻鍫熷崟閸儱鐤炬繛鎴炴皑鐏忕數鈧箍鍎遍ˇ浼村磻閿濆憘鏃堟晜閽樺鍤嬪銈呯箳婵炩偓闁哄矉绻濆畷鍗烆潨閸℃鏉规繝娈垮枛閿曘儱顪冮挊澶屾殾婵犲﹤妫Σ鎯р攽闄囩亸娆忣瀶閹惰姤鈷掗柛灞剧懅椤︼箓鏌熺喊鍗炰簽缂侇喗妫冨畷濂稿即閻愭彃浜堕柣鐔哥矊缁绘劕宓勯梺瑙勫婢ф寮查幖浣圭厽婵☆垵顕ф晶顖涗繆椤愩垹鏆ｆ慨濠呮缁辨帒螣閸濆嫷娼撴俊鐐€栧ú锕傚矗閸愨晙绻? {}", shopId);
-                }
-            });
+            Arrays.stream(ids)
+                    .filter(Objects::nonNull)
+                    .forEach(this::flashShopRedisCache);
             shops.stream()
                     .map(Shop::getTypeId)
                     .filter(Objects::nonNull)
@@ -320,21 +310,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int deleteShopById(String id) {
+    public int deleteShopById(Long id) {
         Shop shop = shopMapper.selectShopById(id);
         int i = shopMapper.deleteShopById(id);
         if (i > 0) {
-            Long shopId = null;
-            if (shop != null && shop.getId() != null) {
-                shopId = shop.getId();
-                flashShopRedisCache(shop.getId());
-            } else {
-                try {
-                    shopId = Long.valueOf(id);
-                    flashShopRedisCache(shopId);
-                } catch (NumberFormatException e) {
-                    log.warn("闂傚倸鍊搁崐椋庣矆娓氣偓楠炲鏁嶉崟顒佹闂佺粯鍔曢顓犵不妤ｅ啯鐓冪憸婊堝礈濮樿鲸宕叉繛鎴欏灩瀹告繃銇勯幘璺哄壉闁告柨顦靛铏规嫚閳ュ磭浠梺鍝勮閸斿繘鎮橀崘顔解拺闁告稑锕ｇ欢閬嶆煕閻樻剚娈滅€规洜鏁诲畷濂稿閵忣澁绱抽梻浣侯焾閺堫剟鎳濇ィ鍐ㄧ劦妞ゆ巻鍋撶紓宥咃躬閻涱噣骞囬弶璺啇婵炶揪绲块幊鎾寸闁秵鈷戦梻鍫熷崟閸儱鐤炬繛鎴炴皑鐏忕數鈧箍鍎遍ˇ浼村磻閿濆憘鏃堟晜閽樺鍤嬪銈呯箳婵炩偓闁哄矉绻濆畷鍗烆潨閸℃鏉规繝娈垮枛閿曘儱顪冮挊澶屾殾婵犲﹤妫Σ鎯р攽闄囩亸娆忣瀶閹惰姤鈷掗柛灞剧懅椤︼箓鏌熺喊鍗炰簽缂侇喗妫冨畷濂稿即閻愭彃浜堕柣鐔哥矊缁绘劕宓勯梺瑙勫婢ф寮查幖浣圭厽婵☆垵顕ф晶顖涗繆椤愩垹鏆ｆ慨濠呮缁辨帒螣閸濆嫷娼撴俊鐐€栧ú锕傚矗閸愨晙绻? {}", id);
-                }
+            Long shopId = shop != null ? shop.getId() : id;
+            if (shopId != null) {
+                flashShopRedisCache(shopId);
             }
 
             if (shopId != null) {
@@ -1205,13 +1187,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     /**
      * 闂傚倸鍊搁崐椋庣矆娓氣偓楠炴牠顢曢妶鍥╃厠闂佺粯鍨堕弸鑽ょ礊閺嵮岀唵閻犺櫣灏ㄩ崝鐔兼煛閸℃劕鈧洟濡撮幒鎴僵闁挎繂鎳嶆竟鏇㈡⒒娴ｇ瓔鍤冮柛鐘虫礈閸掓帒鈻庨幇顏嗙畾闂佸綊妫块悞锕傚疾濠靛鐓冪憸婊堝礈閻旂厧绠栭柨鐔哄Т閸欏﹪鏌ｉ鍛喊婵﹦绮幏鍛村川婵犲啫鍓甸梺鑽ゅ仦閸戝綊宕戞繝鍌滄殾闁哄洢鍨圭粻缁樸亜閺囩偞鍣洪柡鍜佷簻閳规垶骞婇柛濠冩礋楠炲﹥鎯旈敐鍥︾瑝闂侀潧顦弲婊堟偂閸愵亝鍠愭繝濠傜墕缁€鍫熺箾閹寸偟鎳呮い鈺冨厴閺屻劑寮撮悙娴嬪亾瑜版帒纾归柣鎴ｅГ閻撶姷鐥弶鍨埞濠⒀屽灡缁绘盯宕奸顫枈濠?
      *
-     * @param userId
-     * @param shop
+     * @param
+     * @param
      * @return
      */
     @Override
     public ShopAnalysisVO getShopAnalysis(Long shopId, String timeRange) {
-        requireShopPermission(shopId);
+        log.info("查询周期为:{}", timeRange);
         LocalDateTime[] range = buildShopAnalysisRange(timeRange);
         String startTime = formatShopAnalysisTime(range[0]);
         String endTime = formatShopAnalysisTime(range[1]);
@@ -1232,7 +1214,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Override
     public ShopSuggestVO getShopSuggest(Long shopId, String timeRange) {
-        requireShopPermission(shopId);
+        log.info("time:{}", timeRange);
         ShopOrderSuggestDTO orderSuggest = remoteOrderService.getShopOrderSuggest(shopId, timeRange);
         ShopReviewSuggestDTO reviewSuggest = remoteReviewService.getShopReviewSuggest(shopId, timeRange);
         ShopSuggestVO result = buildEmptyShopSuggest();
@@ -1249,27 +1231,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         normalizeShopSuggest(result);
         return result;
     }
-
-    private void requireShopPermission(Long shopId) {
-        if (shopId == null) {
-            throw new BusinessException("shopId is required");
-        }
-        if (getById(shopId) == null) {
-            throw new BusinessException("shop does not exist");
-        }
-        Long currentUserId = SecurityUtils.getUserId();
-        if (currentUserId == null) {
-            throw new BusinessException("user not logged in");
-        }
-        if (SecurityUtils.isAdmin(currentUserId)) {
-            return;
-        }
-        List<Long> shopIds = remoteUserService.getShopIdsByUserId(currentUserId);
-        if (CollUtil.isEmpty(shopIds) || !shopIds.contains(shopId)) {
-            throw new BusinessException("no permission for this shop");
-        }
-    }
-
     private LocalDateTime[] buildShopAnalysisRange(String timeRange) {
         String normalized = StrUtil.isBlank(timeRange) ? "week" : timeRange.trim().toLowerCase(Locale.ROOT);
         LocalDateTime now = LocalDateTime.now();

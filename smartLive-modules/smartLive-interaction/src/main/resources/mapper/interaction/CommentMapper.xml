@@ -102,7 +102,7 @@
         delete from comment where id = #{id}
     </delete>
 
-    <delete id="deleteCommentByIds" parameterType="String">
+    <delete id="deleteCommentByIds" parameterType="Long">
         delete from comment where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}

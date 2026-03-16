@@ -12,6 +12,7 @@ import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.AbstractMerchantAiStrategy;
 import com.smartLive.shop.api.DTO.ShopAnalysisDTO;
 import com.smartLive.shop.api.RemoteShopService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component("analysisStrategy")
+@Slf4j
 public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
 
     private final IReviewRagService reviewRagService;
@@ -40,12 +42,8 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
 
     @Override
     protected String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session) {
-        String normalizedDateRange = normalizeDateRange(dto.getDateRange());
-        ShopAnalysisDTO analysis = convertAjaxData(
-                remoteShopService.getShopAnalysis(session.getShopId(), normalizedDateRange),
-                ShopAnalysisDTO.class,
-                new ShopAnalysisDTO()
-        );
+        ShopAnalysisDTO analysis = remoteShopService.getShopAnalysis(session.getShopId(), dto.getTimeRange());
+        log.info("查询的周期为:{},店铺的 analysis: {}",dto.getTimeRange(), analysis);
         List<ReviewVO> badReviews = reviewRagService.getReviewsByScore(session.getShopId(), 1, 3);
         ShopPromptContext shopContext = getShopPromptContext(session.getShopId());
 
@@ -81,7 +79,7 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
                 """.formatted(
                 shopContext.getShopName(),
                 shopContext.getShopType(),
-                formatDateRangeLabel(normalizedDateRange),
+                dto.getTimeRange(),
                 defaultNumber(analysis.getTotalOrders()),
                 defaultDecimal(analysis.getTotalRevenue()),
                 defaultDecimal(analysis.getAvgScore()),

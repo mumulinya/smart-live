@@ -52,7 +52,7 @@ public class UserEsSyncStrategy implements EsSyncStrategy {
         UserDoc doc = EsTool.convertToObject((Map) data, UserDoc.class);
         validateUser(doc);
         
-        String json = objectMapper.writeValueAsString(data);
+        String json = objectMapper.writeValueAsString(EsTool.convertToJsonMap(doc));
         IndexRequest request = new IndexRequest(indexName)
                 .id(id)
                 .source(json, XContentType.JSON);
@@ -76,7 +76,7 @@ public class UserEsSyncStrategy implements EsSyncStrategy {
         BulkRequest bulkRequest = new BulkRequest();
         for (UserDoc data : docList) {
             validateUser(data);
-            String json = objectMapper.writeValueAsString(data);
+            String json = objectMapper.writeValueAsString(EsTool.convertToJsonMap(data));
             bulkRequest.add(new IndexRequest(indexName).id(data.getId().toString()).source(json, XContentType.JSON));
         }
         BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);

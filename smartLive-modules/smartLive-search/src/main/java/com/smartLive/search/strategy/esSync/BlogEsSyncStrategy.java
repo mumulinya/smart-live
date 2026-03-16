@@ -60,7 +60,7 @@ public class BlogEsSyncStrategy implements EsSyncStrategy {
         BlogDoc doc = EsTool.convertToObject((Map) data, BlogDoc.class);
         validateBlog(doc);
         
-        String json = objectMapper.writeValueAsString(data);
+        String json = objectMapper.writeValueAsString(EsTool.convertToJsonMap(doc));
         IndexRequest request = new IndexRequest(indexName)
                 .id(id)
                 .source(json, XContentType.JSON);
@@ -93,7 +93,7 @@ public class BlogEsSyncStrategy implements EsSyncStrategy {
         BulkRequest bulkRequest = new BulkRequest();
         for (BlogDoc data : docList) {
             validateBlog(data);
-            String json = objectMapper.writeValueAsString(data);
+            String json = objectMapper.writeValueAsString(EsTool.convertToJsonMap(data));
             bulkRequest.add(new IndexRequest(indexName).id(data.getId().toString()).source(json, XContentType.JSON));
         }
         
@@ -135,7 +135,7 @@ public class BlogEsSyncStrategy implements EsSyncStrategy {
         doc.setSourceId(userResourceMessage.getSourceId());
         doc.setActionType(userResourceMessage.getActionType());
         
-        String json = objectMapper.writeValueAsString(doc);
+        String json = objectMapper.writeValueAsString(EsTool.convertToJsonMap(doc));
         IndexRequest request = new IndexRequest(userResourceMessage.getIndexName())
                 .id(userResourceMessage.getId())
                 .source(json, XContentType.JSON);

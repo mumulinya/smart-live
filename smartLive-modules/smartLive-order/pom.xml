@@ -11,7 +11,7 @@
 
     <artifactId>smartLive-modules-order</artifactId>
     <description>
-        smartLive-modules-order订单模块
+        smartLive-modules-order閻犱降鍨瑰畷鐔肺熼垾铏仴
     </description>
 
     <dependencies>
@@ -102,6 +102,10 @@
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-system</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-user</artifactId>
         </dependency>
         <dependency>
             <groupId>com.smartLive</groupId>
