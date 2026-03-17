@@ -13,10 +13,16 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
         DataSourceTransactionManagerAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class
 })
+/**
+ * AI 模块启动类。
+ */
 @EnableCustomConfig
 @EnableRyFeignClients
 public class SmartLiveAiApplication {
 
+    /**
+     * 启动 AI 模块应用。
+     */
     public static void main(String[] args) {
         SpringApplication.run(SmartLiveAiApplication.class, args);
         System.out.println("(♥◠‿◠)ﾉﾞ  AI服务模块启动成功   ლ(´ڡ`ლ)ﾞ  \n" +

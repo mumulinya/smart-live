@@ -23,11 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 店铺服务内部 RPC 接口
- * 专门用于微服务集群内部其他模块（如订单、商品、互动、AI 模块）通过 Feign 进行调用的同步/查询接口。
- * 
- * @author smartLive
- * @date 2026-03-11
+ * 店铺内部接口控制器。
  */
 @RestController
 @RequestMapping("/inner/shop")
@@ -35,96 +31,73 @@ public class ShopInnerController extends BaseController {
     @Autowired
     private IShopService shopService;
 
+    /**
+     * 根据店铺名称查询店铺。
+     */
     @GetMapping("/{shopName}")
     public ShopVO getShopByShopName(@PathVariable("shopName") String shopName){
         return shopService.getShopByShopName(shopName);
     }
 
     /**
-     * 根据条件查询商家信息
+     * 根据条件查询店铺。
      */
     @PostMapping("/getShopList")
     public List<ShopVO> getShopByCondition(@RequestBody Shop shop){
         return shopService.getShopByCondition(shop);
     }
     /**
-     * 根据id查询商家信息
-     * 根据 ID 获取店铺详情 (Feign 内部调用)
-     *
-     * @param shopId 店铺 ID
-     * @return 店铺 VO
+     * 根据ID获取店铺详情。
      */
     @GetMapping("/getShopById/{shopId}")
     public ShopVO getShopById(@PathVariable("shopId") Long shopId ){
         return shopService.queryById(shopId);
     }
     /**
-     * 根据多个 ID 批量获取店铺详情列表 (Feign 内部调用)
-     *
-     * @param shopIdList 店铺 ID 集合
-     * @return 店铺 VO 列表
+     * 根据ID集合批量查询店铺。
      */
     @GetMapping("/shopListByIds")
-     public List<ShopVO> listShopByIds(@RequestParam("shopIdList") List<Long> shopIdList){
+      public List<ShopVO> listShopByIds(@RequestParam("shopIdList") List<Long> shopIdList){
         return shopService.getShopList(shopIdList);
     }
     /**
-     * 获取店铺总数 (Feign 内部调用)
-     *
-     * @return 店铺总数
+     * 获取店铺总数。
      */
     @GetMapping("/getShopTotal")
     public Integer getShopTotal() {
         return shopService.getShopTotal();
     }
     /**
-     * 获取最近创建的店铺列表 (Feign 内部调用)
-     *
-     * @param limit 限制数量
-     * @return 店铺 VO 列表
+     * 获取最近新增的店铺。
      */
     @GetMapping("/getRecentShops")
     public List<ShopVO> getRecentShops(@RequestParam("limit") Integer limit){
         return shopService.getRecentShops(limit);
     }
-    /**
-     * 批量更新店铺评论数 (Feign 内部调用)
-     *
-     * @param updateMap 包含店铺 ID 和评论数增量的 Map
-     * @return 更新是否成功
-     */
+   /**
+    * 批量更新店铺评价数。
+    */
     @PostMapping("/updateReviewCountBatch")
    public Boolean updateReviewCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return shopService.updateReviewCountBatch(updateMap);
     }
-    /**
-     * 批量更新店铺收藏数 (Feign 内部调用)
-     *
-     * @param updateMap 包含店铺 ID 和收藏数增量的 Map
-     * @return 更新是否成功
-     */
+   /**
+    * 批量更新店铺收藏数。
+    */
     @PostMapping("/updateStarCountBatch")
    public Boolean updateStarCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return shopService.updateStarCountBatch(updateMap);
     }
-    /**
-     * 批量更新店铺粉丝数 (Feign 内部调用)
-     *
-     * @param updateMap 包含店铺 ID 和粉丝数增量的 Map
-     * @return 更新是否成功
-     */
+   /**
+    * 批量更新店铺粉丝数。
+    */
     @PostMapping("/updateFansCountBatch")
    public Boolean updateFansCountBatch(@RequestBody Map<Long, Integer> updateMap){
         return shopService.updateFansCountBatch(updateMap);
     }
 
     /**
-     * 更新店铺状态 (Feign 内部调用)
-     *
-     * @param id 店铺 ID
-     * @param status 新状态
-     * @param reason 更新原因 (可选)
-     * @return 更新是否成功
+     * 更新店铺状态。
      */
     @PostMapping("/updateShopStatus")
     Boolean updateShopStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status, @RequestParam(value = "reason", required = false) String reason){
@@ -132,9 +105,7 @@ public class ShopInnerController extends BaseController {
     }
 
     /**
-     * 获取全部店铺 ID 列表 (热榜全量重建或搜索引擎增量统计使用)
-     *
-     * @return 所有有效的店铺 ID 集合
+     * 获取全部店铺ID列表。
      */
     @GetMapping("/getAllShopIds")
     public List<Long> getAllShopIds() {
@@ -144,10 +115,7 @@ public class ShopInnerController extends BaseController {
     }
 
     /**
-     * 批量更新销量 (Feign 内部调用)
-     *
-     * @param updateMap 包含店铺 ID 和销量增量的 Map
-     * @return 更新是否成功
+     * 批量更新店铺销量。
      */
     @PostMapping("/updateSoldBatch")
     public Boolean updateSoldBatch(@RequestBody Map<Long, Integer> updateMap){
@@ -155,22 +123,11 @@ public class ShopInnerController extends BaseController {
     }
 
     /**
-     * 获取指定 ID 的销量 (Feign 内部调用)
-     *
-     * @param id 店铺 ID
-     * @return 店铺销量，如果店铺不存在则返回 0
+     * 获取店铺销量。
      */
     @GetMapping("/getSold/{id}")
     public Integer getSold(@PathVariable("id") Long id){
         Shop shop = shopService.getById(id);
         return shop != null ? shop.getSold() : 0;
     }
-    /**
-     * 获取商铺分析数据
-     */
-
-    /**
-     * 获取商铺经营建议
-     */
-
 }

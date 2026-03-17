@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// 示例：ShopVO.java
+// 店铺视图对象。
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

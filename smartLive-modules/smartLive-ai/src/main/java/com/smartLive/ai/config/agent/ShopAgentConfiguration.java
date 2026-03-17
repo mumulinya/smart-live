@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 店铺智能体配置类。
+ */
 @Configuration
 public class ShopAgentConfiguration {
 
@@ -27,6 +30,9 @@ public class ShopAgentConfiguration {
             If you return a shop recommendation card, output valid JSON only with `type`, `replyText`, and `recommendations`.
             """;
 
+    /**
+     * 获取 ReAct 智能体。
+     */
     @Bean("shopAgent")
     public ReactAgent shopAgent(
             @Qualifier("frameworkChatModel") ChatModel chatModel,

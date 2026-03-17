@@ -12,8 +12,8 @@ import java.util.Date;
 /**
  * 用户对象 tb_user
  * 
- * @author mumulin
- * @date 2025-09-21
+ * 作者：mumulin
+ * 创建日期：2025-09-21
  */
 @Data
 @AllArgsConstructor

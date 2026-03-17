@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * 商品 RAG 服务实现类。
+ */
 @Service
 @Slf4j
 public class ProductRagService implements IProductRagService {
@@ -27,6 +30,9 @@ public class ProductRagService implements IProductRagService {
     private final VectorStore productVectorStore;
     private final RemoteProductService remoteProductService;
 
+    /**
+     * 构造商品 RAG 服务实现类。
+     */
     @Autowired
     public ProductRagService(@Qualifier("productVectorStore") VectorStore vectorStore,
                              RemoteProductService remoteProductService) {
@@ -34,6 +40,9 @@ public class ProductRagService implements IProductRagService {
         this.remoteProductService = remoteProductService;
     }
 
+    /**
+     * 获取商品列表。
+     */
     @Override
     public List<ProductVO> getProductList(ProductVO productVo, String userMessage) {
         if (productVo != null && productVo.getId() != null) {
@@ -60,6 +69,9 @@ public class ProductRagService implements IProductRagService {
         return convertDocumentsToProductVO(results);
     }
 
+    /**
+     * 获取字符串结果。
+     */
     @Override
     public String orderProduct(ProductVO productVo) {
         Long productId = productVo.getId();
@@ -77,6 +89,9 @@ public class ProductRagService implements IProductRagService {
         }
     }
 
+    /**
+     * 获取结果。
+     */
     private boolean matchesRpcProductFilter(ProductVO product, ProductVO query) {
         if (product == null || query == null) {
             return false;
@@ -96,6 +111,9 @@ public class ProductRagService implements IProductRagService {
         return true;
     }
 
+    /**
+     * 构建过滤表达式。
+     */
     private String buildFilterExpression(ProductVO productVO) {
         List<String> filters = new ArrayList<>();
         if (productVO != null) {
@@ -118,10 +136,16 @@ public class ProductRagService implements IProductRagService {
         return String.join(" && ", filters);
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String escapeForFilter(String input) {
         return input.replace("'", "\\'");
     }
 
+    /**
+     * 转换商品数据传输对象商品视图对象。
+     */
     private ProductVO convertProductDtoToProductVo(ProductDTO productDTO) {
         if (productDTO == null) {
             return null;
@@ -148,6 +172,9 @@ public class ProductRagService implements IProductRagService {
         return product;
     }
 
+    /**
+     * 将文档列表转换为商品对象。
+     */
     private List<ProductVO> convertDocumentsToProductVO(List<Document> documents) {
         if (documents == null || documents.isEmpty()) {
             return List.of();
@@ -158,6 +185,9 @@ public class ProductRagService implements IProductRagService {
                 .toList();
     }
 
+    /**
+     * 将文档转换为商品对象。
+     */
     private ProductVO convertDocumentToProductVO(Document document) {
         try {
             Map<String, Object> metadata = document.getMetadata();

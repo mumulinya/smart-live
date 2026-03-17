@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 评价智能体配置类。
+ */
 @Configuration
 public class ReviewAgentConfiguration {
 
@@ -23,6 +26,9 @@ public class ReviewAgentConfiguration {
             Keep the answer factual and based on tool results.
             """;
 
+    /**
+     * 获取 ReAct 智能体。
+     */
     @Bean("reviewAgent")
     public ReactAgent reviewAgent(
             @Qualifier("frameworkChatModel") ChatModel chatModel,

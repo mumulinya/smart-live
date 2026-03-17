@@ -15,12 +15,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * <p>
- *  服务实现类
- * </p>
- *
- * @author 木木林
- * @since 2021-12-22
+ * 店铺类型服务实现类。
  */
 @Service
 public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> implements IShopTypeService {
@@ -28,9 +23,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
     private RedisService redisService;
 
     /**
-     * 查询所有商铺类型
-     *
-     * @return 商铺类型列表
+     * 查询店铺类型列表。
      */
     @Override
     public Result queryList() {

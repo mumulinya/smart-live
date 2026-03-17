@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * 博客Milvus策略类。
+ */
 @Component
 public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
 
@@ -25,11 +28,17 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
     @Qualifier("blogVectorStore")
     private VectorStore blogVectorStore;
 
+    /**
+     * 获取类型。
+     */
     @Override
     public Integer getType() {
         return GlobalBizTypeEnum.BLOG.getCode();
     }
 
+    /**
+     * 获取结果。
+     */
     @Override
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
         BlogDoc doc = convertRawData(rawData);
@@ -44,6 +53,9 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
         return true;
     }
 
+    /**
+     * 获取结果。
+     */
     @Override
     public boolean batchInsert(List<Object> rawDataList) throws IOException {
         List<BlogDoc> blogs = deduplicateById(EsTool.convertList(rawDataList, BlogDoc.class));
@@ -63,12 +75,18 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
         return true;
     }
 
+    /**
+     * 删除结果。
+     */
     @Override
     public boolean delete(String id) throws IOException {
         deleteById(id);
         return true;
     }
 
+    /**
+     * 创建文档。
+     */
     @Override
     public Document createDocument(BlogDoc blog) {
         if (blog == null || blog.getId() == null) {
@@ -97,6 +115,9 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
                 .build();
     }
 
+    /**
+     * 获取博客文档列表。
+     */
     private List<BlogDoc> deduplicateById(List<BlogDoc> rawList) {
         if (rawList == null || rawList.isEmpty()) {
             return List.of();
@@ -110,6 +131,9 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
         return new ArrayList<>(unique.values());
     }
 
+    /**
+     * 批量删除数据。
+     */
     private void deleteBatch(List<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return;
@@ -118,11 +142,17 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
         blogVectorStore.delete(String.format("id in [%s]", String.join(", ", ids)));
     }
 
+    /**
+     * 按ID删除数据。
+     */
     private void deleteById(String id) {
         blogVectorStore.delete(List.of(id));
         blogVectorStore.delete(String.format("id == %s", id));
     }
 
+    /**
+     * 构建内容。
+     */
     private String buildContent(BlogDoc blog) {
         List<String> segments = new ArrayList<>();
         if (StringUtils.hasText(blog.getTitle())) {
@@ -140,12 +170,18 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
         return String.join(" ", segments);
     }
 
+    /**
+     * 处理 putIfNotNull 逻辑。
+     */
     private void putIfNotNull(Map<String, Object> map, String key, Object value) {
         if (value != null) {
             map.put(key, value);
         }
     }
 
+    /**
+     * 转换rawdata。
+     */
     private BlogDoc convertRawData(Object rawData) {
         if (rawData instanceof BlogDoc blogDoc) {
             return blogDoc;

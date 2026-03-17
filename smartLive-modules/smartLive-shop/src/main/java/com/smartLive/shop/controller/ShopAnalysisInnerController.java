@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 店铺经营分析内部接口控制器。
+ */
 @RestController
 @RequestMapping("/inner/shop/analysis")
 public class ShopAnalysisInnerController {
@@ -16,12 +19,18 @@ public class ShopAnalysisInnerController {
     @Autowired
     private IShopAnalysisService shopAnalysisService;
 
+    /**
+     * 获取店铺经营分析数据。
+     */
     @GetMapping
     public ShopAnalysisVO getShopAnalysis(@RequestParam("shopId") Long shopId,
                                           @RequestParam(value = "timeRange", defaultValue = "week") String timeRange) {
         return shopAnalysisService.getShopAnalysis(shopId, timeRange);
     }
 
+    /**
+     * 获取店铺经营分析记录。
+     */
     @GetMapping("/record/{analysisRecordId}")
     public ShopAnalysisVO getShopAnalysisRecord(@PathVariable("analysisRecordId") Long analysisRecordId,
                                                 @RequestParam("shopId") Long shopId) {

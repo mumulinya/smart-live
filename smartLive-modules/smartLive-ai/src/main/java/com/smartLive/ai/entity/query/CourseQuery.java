@@ -5,6 +5,9 @@ import org.springframework.ai.tool.annotation.ToolParam;
 
 import java.util.List;
 
+/**
+ * 课程查询条件对象。
+ */
 @Data
 public class CourseQuery {
     @ToolParam(required = false, description = "课程类型：编程、设计、自媒体、其它")
@@ -14,6 +17,9 @@ public class CourseQuery {
     @ToolParam(required = false, description = "排序方式")
     private List<Sort> sorts;
 
+    /**
+     * sort类。
+     */
     @Data
     public static class Sort {
         @ToolParam(required = false, description = "排序字段: price或duration")

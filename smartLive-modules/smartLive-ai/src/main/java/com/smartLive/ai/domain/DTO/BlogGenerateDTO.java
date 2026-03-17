@@ -3,17 +3,17 @@ package com.smartLive.ai.domain.DTO;
 import lombok.Data;
 
 /**
- * Blog Generate DTO
+ * 博客生成数据传输对象。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Data
 public class BlogGenerateDTO {
 
-    /** Shop id. */
+    /** 店铺 ID。 */
     private Long shopId;
 
-    /** Additional user requirement. */
+    /** 用户补充要求。 */
     private String description;
 
     /** Style: 0=natural, 1=refined, 2=humorous. */

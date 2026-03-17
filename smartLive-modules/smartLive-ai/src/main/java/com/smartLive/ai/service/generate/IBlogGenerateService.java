@@ -6,7 +6,7 @@ import com.smartLive.ai.entity.vo.BlogGenerateVO;
 /**
  * AI Blog Generate Service Interface
  *
- * @author smartLive
+ * 作者：smartLive
  */
 public interface IBlogGenerateService {
 

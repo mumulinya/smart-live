@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * 店铺工具集。
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -140,6 +143,9 @@ public class ShopTools {
         return context.toString();
     }
 
+    /**
+     * 追加一行上下文内容。
+     */
     private void appendLine(StringBuilder builder, String label, String value) {
         if (value == null || value.isBlank()) {
             return;

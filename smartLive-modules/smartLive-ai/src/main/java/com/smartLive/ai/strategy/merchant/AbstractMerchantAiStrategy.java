@@ -5,9 +5,9 @@ import com.smartLive.ai.domain.MerchantAiMessage;
 import com.smartLive.ai.domain.MerchantAiSession;
 import com.smartLive.ai.domain.DTO.MerchantChatDTO;
 import com.smartLive.ai.entity.vo.ShopVO;
-import com.smartLive.ai.service.chat.support.MerchantMessageChatMemoryManager;
 import com.smartLive.ai.service.merchant.IMerchantAiMessageService;
 import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
+import com.smartLive.ai.service.merchant.support.MerchantMessageChatMemoryManager;
 import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.support.MerchantAiPromptConstants;
 import com.smartLive.common.core.exception.ServiceException;
@@ -31,6 +31,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * 商家 AI 抽象策略基类。
+ */
 @Slf4j
 public abstract class AbstractMerchantAiStrategy {
 
@@ -62,6 +65,9 @@ public abstract class AbstractMerchantAiStrategy {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     public final Flux<String> execute(Long userId, MerchantChatDTO dto) {
         validateInput(userId, dto);
         MerchantAiSession session = merchantSessionService.getAndCheckSession(userId, dto.getSessionId());
@@ -104,36 +110,63 @@ public abstract class AbstractMerchantAiStrategy {
                 .doOnError(ex -> log.error("Merchant AI chat failed, sessionId={}", dto.getSessionId(), ex));
     }
 
+    /**
+     * 构建场景提示词。
+     */
     protected abstract String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session);
 
+    /**
+     * 校验场景入参。
+     */
     protected void validateSceneInput(MerchantChatDTO dto, MerchantAiSession session) {
     }
 
+    /**
+     * 解析指令。
+     */
     protected final String resolveInstruction(MerchantChatDTO dto) {
         String value = firstNonBlank(dto.getInstruction(), dto.getRawMessage(), dto.getMessage());
         return StringUtils.hasText(value) ? value.trim() : DEFAULT_INSTRUCTION;
     }
 
+    /**
+     * 获取字符串结果。
+     */
     protected final String formatDate(Date date) {
         return date == null ? "No data" : DATE_TIME_FORMAT.format(date);
     }
 
+    /**
+     * 获取字符串结果。
+     */
     protected final String defaultText(String value) {
         return StringUtils.hasText(value) ? value.trim() : "No data";
     }
 
+    /**
+     * 获取字符串结果。
+     */
     protected final String defaultNumber(Integer value) {
         return value == null ? "0" : String.valueOf(value);
     }
 
+    /**
+     * 获取字符串结果。
+     */
     protected final String defaultLongNumber(Long value) {
         return value == null ? "0" : String.valueOf(value);
     }
 
+    /**
+     * 获取字符串结果。
+     */
     protected final String defaultDecimal(BigDecimal value) {
         return value == null ? "0" : value.stripTrailingZeros().toPlainString();
     }
 
+    /**
+     * 获取店铺提示词上下文。
+     */
     protected final ShopPromptContext getShopPromptContext(Long shopId) {
         ShopDTO shopDTO = remoteShopService.getShopById(shopId);
         ShopVO query = new ShopVO();
@@ -156,6 +189,9 @@ public abstract class AbstractMerchantAiStrategy {
         return new ShopPromptContext(shopId, defaultText(shopName), defaultText(shopType), shopDTO, ragShop);
     }
 
+    /**
+     * 解析原始用户消息。
+     */
     protected final String resolveRawUserMessage(MerchantChatDTO dto) {
         String value = firstNonBlank(dto.getInstruction(), dto.getRawMessage(), dto.getMessage());
         if (StringUtils.hasText(value)) {
@@ -170,6 +206,9 @@ public abstract class AbstractMerchantAiStrategy {
         };
     }
 
+    /**
+     * 解析消息时间范围。
+     */
     protected final String resolveMessageTimeRange(MerchantChatDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getType())) {
             return null;
@@ -181,6 +220,9 @@ public abstract class AbstractMerchantAiStrategy {
         return dto.getTimeRange();
     }
 
+    /**
+     * 解析消息分析记录 ID。
+     */
     protected final Long resolveMessageAnalysisRecordId(MerchantChatDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getType())) {
             return null;
@@ -192,6 +234,9 @@ public abstract class AbstractMerchantAiStrategy {
         return dto.getAnalysisRecordId();
     }
 
+    /**
+     * 获取字符串结果。
+     */
     protected final String firstNonBlank(String... values) {
         if (values == null) {
             return null;
@@ -204,6 +249,9 @@ public abstract class AbstractMerchantAiStrategy {
         return null;
     }
 
+    /**
+     * 保存助手消息。
+     */
     private void saveAssistantMessage(MerchantChatDTO dto, String content) {
         if (!StringUtils.hasText(content)) {
             return;
@@ -221,6 +269,9 @@ public abstract class AbstractMerchantAiStrategy {
         touchSession(dto.getSessionId());
     }
 
+    /**
+     * 刷新会话时间。
+     */
     private void touchSession(Long sessionId) {
         MerchantAiSession session = new MerchantAiSession();
         session.setId(sessionId);
@@ -228,6 +279,9 @@ public abstract class AbstractMerchantAiStrategy {
         merchantSessionService.updateById(session);
     }
 
+    /**
+     * 校验输入参数。
+     */
     private void validateInput(Long userId, MerchantChatDTO dto) {
         if (userId == null) {
             throw new ServiceException("User not logged in");
@@ -237,6 +291,9 @@ public abstract class AbstractMerchantAiStrategy {
         }
     }
 
+    /**
+     * 校验会话。
+     */
     private void validateSession(MerchantChatDTO dto, MerchantAiSession session) {
         if (!dto.getShopId().equals(session.getShopId())) {
             throw new ServiceException("Session and shop mismatch");
@@ -246,10 +303,16 @@ public abstract class AbstractMerchantAiStrategy {
         }
     }
 
+    /**
+     * 构建会话 ID。
+     */
     private String buildConversationId(Long sessionId) {
         return "merchant::session::" + sessionId;
     }
 
+    /**
+     * 解析店铺类型名称。
+     */
     private String resolveShopTypeName(Long typeId) {
         if (typeId == null) {
             return null;
@@ -266,6 +329,9 @@ public abstract class AbstractMerchantAiStrategy {
         return null;
     }
 
+    /**
+     * 店铺提示词上下文类。
+     */
     @Getter
     protected static final class ShopPromptContext {
 
@@ -275,6 +341,9 @@ public abstract class AbstractMerchantAiStrategy {
         private final ShopDTO shopDTO;
         private final ShopVO ragShop;
 
+        /**
+         * 构造店铺提示词上下文。
+         */
         private ShopPromptContext(Long shopId, String shopName, String shopType, ShopDTO shopDTO, ShopVO ragShop) {
             this.shopId = shopId;
             this.shopName = shopName;

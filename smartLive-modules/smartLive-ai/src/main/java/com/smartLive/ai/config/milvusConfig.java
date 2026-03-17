@@ -16,6 +16,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
+/**
+ * Milvus 配置类。
+ */
 @Configuration
 @ConfigurationProperties(prefix = "spring.ai.vectorstore.milvus")
 @Data
@@ -32,34 +35,49 @@ public class milvusConfig {
     private Boolean initializeSchema;
 
     /**
-     * Set false to skip Milvus and always use in-memory vector store.
+     * 设置为 false 时跳过 Milvus，始终使用内存向量存储。
      */
     private Boolean enabled = true;
 
     private transient volatile MilvusServiceClient cachedMilvusClient;
     private transient volatile boolean milvusClientInitAttempted;
 
+    /**
+     * 构建向量存储。
+     */
     @Bean
     public VectorStore reviewVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
         return buildVectorStore("review", embeddingModel);
     }
 
+    /**
+     * 构建向量存储。
+     */
     @Bean
     public VectorStore shopVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
         return buildVectorStore("shop", embeddingModel);
     }
 
+    /**
+     * 构建向量存储。
+     */
     @Bean
     public VectorStore productVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
-        // Changed collection name to 'product'
+        // 将集合名称调整为 product
         return buildVectorStore("product", embeddingModel);
     }
 
+    /**
+     * 构建向量存储。
+     */
     @Bean
     public VectorStore blogVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
         return buildVectorStore("blog", embeddingModel);
     }
 
+    /**
+     * 构建向量存储。
+     */
     private VectorStore buildVectorStore(String collectionName, EmbeddingModel embeddingModel) {
         MilvusServiceClient milvusClient = getMilvusClientOrNull();
         if (milvusClient == null) {
@@ -71,6 +89,9 @@ public class milvusConfig {
                 .build();
     }
 
+    /**
+     * 获取 Milvus 客户端，未启用时返回 null。
+     */
     private MilvusServiceClient getMilvusClientOrNull() {
         if (Boolean.FALSE.equals(enabled)) {
             log.info("Milvus is disabled by config: spring.ai.vectorstore.milvus.enabled=false");
@@ -118,6 +139,9 @@ public class milvusConfig {
         }
     }
 
+    /**
+     * 获取Milvus向量存储构建器。
+     */
     public MilvusVectorStore.Builder getMilvusVectorStoreBuilder(
             MilvusServiceClient milvusClient,
             EmbeddingModel embeddingModel

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
- * LLM based intent classifier.
+ * 基于 LLM 的意图分类器。
  */
 @Slf4j
 @Component
@@ -14,10 +14,16 @@ public class LlmIntentClassifier {
 
     private final ChatClient intentRouterChatClient;
 
+    /**
+     * 构造 LLM 意图分类器。
+     */
     public LlmIntentClassifier(@Qualifier("intentRouterChatClient") ChatClient intentRouterChatClient) {
         this.intentRouterChatClient = intentRouterChatClient;
     }
 
+    /**
+     * 分类智能体类型。
+     */
     public AgentType classify(String userMessage) {
         if (userMessage == null || userMessage.trim().isEmpty()) {
             return AgentType.GENERAL;

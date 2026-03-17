@@ -14,15 +14,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 系统模块
- * 
- * @author smartLive
+ * 商铺模块启动类。
  */
 @EnableCustomConfig
 @EnableRyFeignClients
 @SpringBootApplication
 public class SmartLiveShopApplication
 {
+    /**
+     * 启动商铺模块。
+     */
     public static void main(String[] args)
     {
         SpringApplication.run(SmartLiveShopApplication.class, args);

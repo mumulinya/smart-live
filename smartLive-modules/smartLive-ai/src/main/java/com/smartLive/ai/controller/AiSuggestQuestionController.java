@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * AI Suggestion Controller
+ * AI 推荐问题控制器。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Slf4j
 @RestController

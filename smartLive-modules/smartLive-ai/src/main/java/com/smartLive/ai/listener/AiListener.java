@@ -20,6 +20,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * AI 监听器。
+ */
 @Component
 @Slf4j
 public class AiListener {
@@ -31,7 +34,7 @@ public class AiListener {
     private RedisService redisService;
 
     /**
-     * 监听AI创建评论队列，处理AI生成评论任务
+     * 监听 AI 创建评论队列，处理 AI 生成评论任务。
      */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(name = AiAuditMqConstants.AI_COMMENT_QUEUE, declare = "true",
@@ -43,6 +46,9 @@ public class AiListener {
             exchange = @Exchange(name = AiAuditMqConstants.AI_EXCHANGE_NAME),
             key = AiAuditMqConstants.AI_COMMENT_ROUTING
     ))
+    /**
+     * 处理 AI 创建评论消息。
+     */
     public void handleAiCreateComment(List<AIGenerateRequest> list, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (list == null || list.isEmpty()) {
             channel.basicAck(deliveryTag, false);
@@ -81,13 +87,16 @@ public class AiListener {
     }
 
     /**
-     * 监听AI执行异常后的死信队列
+     * 监听 AI 执行异常后的死信队列。
      */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = AiAuditMqConstants.AI_DEAD_LETTER_QUEUE, durable = "true"),
             exchange = @Exchange(value = AiAuditMqConstants.AI_DEAD_LETTER_EXCHANGE_NAME),
             key = AiAuditMqConstants.AI_DEAD_LETTER_ROUTING
     ))
+    /**
+     * 处理 AI 死信消息。
+     */
     public void handleAiDeadLetter(org.springframework.amqp.core.Message message) {
         log.error("ai dead letter received: {}", new String(message.getBody(), java.nio.charset.StandardCharsets.UTF_8));
     }

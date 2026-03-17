@@ -12,11 +12,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 店铺分类实体类
- * 对应数据库 shop_type 表，定义了美食、娱乐、酒店等商铺的分类属性及图标。
- *
- * @author smartLive
- * @since 2026-03-11
+ * 店铺类型实体。
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

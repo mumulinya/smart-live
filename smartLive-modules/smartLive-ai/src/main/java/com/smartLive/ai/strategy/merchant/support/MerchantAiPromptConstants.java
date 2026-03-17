@@ -1,7 +1,13 @@
 package com.smartLive.ai.strategy.merchant.support;
 
+/**
+ * 商家 AI 提示词常量类。
+ */
 public final class MerchantAiPromptConstants {
 
+    /**
+     * 构造商家 AI 提示词常量。
+     */
     private MerchantAiPromptConstants() {
     }
 

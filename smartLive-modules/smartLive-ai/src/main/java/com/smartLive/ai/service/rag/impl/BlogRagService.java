@@ -20,6 +20,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 博客 RAG 服务实现类。
+ */
 @Service
 @Slf4j
 public class BlogRagService implements IBlogRagService {
@@ -31,12 +34,18 @@ public class BlogRagService implements IBlogRagService {
     private final VectorStore blogVectorStore;
     private final RemoteBlogService remoteBlogService;
 
+    /**
+     * 构造博客 RAG 服务实现类。
+     */
     public BlogRagService(@Qualifier("blogVectorStore") VectorStore vectorStore,
                           RemoteBlogService remoteBlogService) {
         this.blogVectorStore = vectorStore;
         this.remoteBlogService = remoteBlogService;
     }
 
+    /**
+     * 获取店铺博客摘要。
+     */
     @Override
     public String getShopBlogSummary(Long shopId, String userMessage, Integer limit) {
         List<BlogVO> blogs = searchBlogs(userMessage, shopId, limit);
@@ -69,6 +78,9 @@ public class BlogRagService implements IBlogRagService {
         return context.toString();
     }
 
+    /**
+     * 搜索博客。
+     */
     @Override
     public List<BlogVO> searchBlogs(String query, Long shopId, Integer limit) {
         String safeQuery = StringUtils.hasText(query) ? query : "store visit recommendation taste environment service";
@@ -77,6 +89,9 @@ public class BlogRagService implements IBlogRagService {
         return convertDocumentsToBlogVo(docs);
     }
 
+    /**
+     * 按 ID 获取博客。
+     */
     @Override
     public BlogVO getBlogById(Long blogId, Long shopId) {
         if (blogId == null) {
@@ -92,6 +107,9 @@ public class BlogRagService implements IBlogRagService {
         return convertBlogDtoToBlogVo(blogDTO);
     }
 
+    /**
+     * 搜索博客文档。
+     */
     private List<Document> searchBlogDocs(String query, String filterExpression, int topK) {
         try {
             SearchRequest.Builder builder = SearchRequest.builder()
@@ -109,6 +127,9 @@ public class BlogRagService implements IBlogRagService {
         }
     }
 
+    /**
+     * 转换博客数据传输对象博客视图对象。
+     */
     private BlogVO convertBlogDtoToBlogVo(BlogDTO blogDTO) {
         if (blogDTO == null) {
             return null;
@@ -128,6 +149,9 @@ public class BlogRagService implements IBlogRagService {
         return blogVO;
     }
 
+    /**
+     * 将文档列表转换为博客视图对象。
+     */
     private List<BlogVO> convertDocumentsToBlogVo(List<Document> documents) {
         if (documents == null || documents.isEmpty()) {
             return List.of();
@@ -142,6 +166,9 @@ public class BlogRagService implements IBlogRagService {
         return list;
     }
 
+    /**
+     * 将文档转换为博客视图对象。
+     */
     private BlogVO convertDocumentToBlogVo(Document document) {
         if (document == null) {
             return null;
@@ -178,10 +205,16 @@ public class BlogRagService implements IBlogRagService {
         }
     }
 
+    /**
+     * 构建店铺过滤条件。
+     */
     private String buildShopFilter(Long shopId) {
         return shopId == null ? "" : "shopId == " + shopId;
     }
 
+    /**
+     * 规范化限制数量。
+     */
     private int normalizeLimit(Integer limit) {
         if (limit == null || limit <= 0) {
             return DEFAULT_LIMIT;
@@ -189,10 +222,16 @@ public class BlogRagService implements IBlogRagService {
         return Math.min(limit, MAX_LIMIT);
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String defaultText(String value, String defaultValue) {
         return StringUtils.hasText(value) ? value : defaultValue;
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String cleanContent(String value) {
         if (!StringUtils.hasText(value)) {
             return null;
@@ -200,6 +239,9 @@ public class BlogRagService implements IBlogRagService {
         return value.replaceAll("\\s+", " ").trim();
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String abbreviate(String value, int maxLength) {
         if (!StringUtils.hasText(value) || value.length() <= maxLength) {
             return value;

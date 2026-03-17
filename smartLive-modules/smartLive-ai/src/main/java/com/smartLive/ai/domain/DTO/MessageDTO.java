@@ -8,35 +8,35 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * AI Chat Message DTO
+ * AI 聊天消息数据传输对象。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Data
 @ToString(callSuper = true)
 public class MessageDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** Message ID */
+    /** 消息 ID。 */
     private Long id;
 
-    /** Session ID */
+    /** 会话 ID。 */
     private Long sessionId;
 
-    /** Role (user/assistant/system) */
+    /** 角色（user / assistant / system）。 */
     private String role;
 
-    /** Message Content */
+    /** 消息内容。 */
     private String message;
 
     private Long userId;
-    // 浣嶇疆淇℃伅
+    // 位置信息
     private String region;
     private Double x;
     private Double y;
-    /** 鏄惁浣跨敤涓婁笅鏂?*/
+    /** 是否使用上下文*/
     private Boolean contextMode;
-    /** Message Type (text/image/tool) */
+    /** 消息类型（text / image / tool）。 */
     private String type;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

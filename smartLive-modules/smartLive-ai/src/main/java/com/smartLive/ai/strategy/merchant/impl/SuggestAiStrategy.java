@@ -3,9 +3,9 @@ package com.smartLive.ai.strategy.merchant.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.ai.domain.MerchantAiSession;
 import com.smartLive.ai.domain.DTO.MerchantChatDTO;
-import com.smartLive.ai.service.chat.support.MerchantMessageChatMemoryManager;
 import com.smartLive.ai.service.merchant.IMerchantAiMessageService;
 import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
+import com.smartLive.ai.service.merchant.support.MerchantMessageChatMemoryManager;
 import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.AbstractMerchantAiStrategy;
 import com.smartLive.common.core.exception.ServiceException;
@@ -20,10 +20,16 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 推荐 AI 策略类。
+ */
 @Component("suggestStrategy")
 @Slf4j
 public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
 
+    /**
+     * 构造推荐 AI 策略类。
+     */
     public SuggestAiStrategy(@Qualifier("merchantStrategyChatClient") ChatClient merchantStrategyChatClient,
                              IMerchantAiSessionService merchantSessionService,
                              IMerchantAiMessageService merchantMessageService,
@@ -35,6 +41,9 @@ public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
                 remoteShopService, shopRagService, objectMapper);
     }
 
+    /**
+     * 校验场景入参。
+     */
     @Override
     protected void validateSceneInput(MerchantChatDTO dto, MerchantAiSession session) {
         if (dto == null || dto.getShopSuggestData() == null) {
@@ -42,6 +51,9 @@ public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
         }
     }
 
+    /**
+     * 构建场景提示词。
+     */
     @Override
     protected String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session) {
         ShopSuggestDTO suggest = dto.getShopSuggestData();
@@ -86,6 +98,9 @@ public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
         );
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String formatProductSales(List<ProductSalesDTO> products) {
         if (products == null || products.isEmpty()) {
             return "No data";
@@ -100,6 +115,9 @@ public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
         return items.isEmpty() ? "No data" : String.join("; ", items);
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String formatKeywords(List<String> keywords) {
         if (keywords == null || keywords.isEmpty()) {
             return "No data";

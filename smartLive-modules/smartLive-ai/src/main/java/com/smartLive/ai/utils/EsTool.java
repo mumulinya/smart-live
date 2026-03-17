@@ -9,17 +9,23 @@ import com.smartLive.ai.entity.DOC.ProductDoc;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * ES工具类。
+ */
 public class EsTool {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
 
+    /**
+     * 构造 ES 工具类。
+     */
     private EsTool() {
 
     }
 
     /**
-     * 将数据对象转换为JSON格式的Map
+     * 将数据对象转换为 JSON 格式的 Map。
      */
    public static Map<String, Object> convertToJsonMap(Object data) {
        System.out.println("进入转换格式："+data);
@@ -95,7 +101,7 @@ public class EsTool {
             jsonMap.put("status", product.getStatus());
             jsonMap.put("stock", product.getStock());
             jsonMap.put("coverImg", product.getCoverImg());
-            // Time fields
+            // 时间字段
             if (product.getBeginTime() != null) {
                 jsonMap.put("beginTime", product.getBeginTime());
             }
@@ -103,7 +109,7 @@ public class EsTool {
                 jsonMap.put("endTime", product.getEndTime());
             }
 
-            // New fields
+            // 新增字段
             jsonMap.put("validityType", product.getValidityType());
             jsonMap.put("validDays", product.getValidDays());
             if (product.getUseStartTime() != null) {
@@ -117,7 +123,7 @@ public class EsTool {
         return jsonMap;
     }
     /**
-     * 批量转换LinkedHashMap列表到指定类型
+     * 批量转换 LinkedHashMap 列表到指定类型。
      */
     @SuppressWarnings("unchecked")
     public static <T> List<T> convertList(List<Object> dataList, Class<T> targetClass) {
@@ -129,7 +135,7 @@ public class EsTool {
                 .map(item -> {
                     try {
                         if (item instanceof LinkedHashMap) {
-                            // 处理Feign传输的LinkedHashMap
+                            // 处理 Feign 传输的 LinkedHashMap
                             return convertToObject((LinkedHashMap<String, Object>) item, targetClass);
                         } else if (targetClass.isInstance(item)) {
                             // 如果已经是目标类型，直接返回
@@ -148,7 +154,7 @@ public class EsTool {
     }
 
     /**
-     * 将LinkedHashMap转换为特定类型的对象
+     * 将 LinkedHashMap 转换为特定类型的对象。
      */
     @SuppressWarnings("unchecked")
     public static <T> T convertToObject(Map<String, Object> map, Class<T> targetClass) {

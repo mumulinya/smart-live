@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 通用智能体配置类。
+ */
 @Configuration
 public class GeneralAgentConfiguration {
 
@@ -26,6 +29,9 @@ public class GeneralAgentConfiguration {
             Keep the final answer concise and grounded in tool output.
             """;
 
+    /**
+     * 获取 ReAct 智能体。
+     */
     @Bean("generalAgent")
     public ReactAgent generalAgent(
             @Qualifier("frameworkChatModel") ChatModel chatModel,

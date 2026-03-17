@@ -5,9 +5,9 @@ import com.smartLive.ai.domain.UserAiMessage;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * AI Message Mapper
+ * 用户 AI 消息数据访问层接口。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Mapper
 public interface UserAiMessageMapper extends BaseMapper<UserAiMessage> {

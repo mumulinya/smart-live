@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 差评信息视图对象。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

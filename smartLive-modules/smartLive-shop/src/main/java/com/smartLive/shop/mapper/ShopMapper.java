@@ -9,63 +9,41 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
 /**
- * 店铺Mapper接口
- * 
- * @author mumulin
- * @date 2025-09-21
+ * 店铺数据访问接口。
  */
 public interface ShopMapper extends BaseMapper<Shop>
 {
     /**
-     * 查询店铺
-     * 
-     * @param id 店铺主键
-     * @return 店铺
+     * 根据ID查询店铺实体。
      */
     public Shop selectShopById(Long id);
 
     /**
-     * 查询店铺列表
-     * 
-     * @param shop 店铺
-     * @return 店铺集合
+     * 查询店铺实体列表。
      */
     public List<Shop> selectShopList(Shop shop);
 
     /**
-     * 新增店铺
-     * 
-     * @param shop 店铺
-     * @return 结果
+     * 新增店铺。
      */
     public int insertShop(Shop shop);
 
     /**
-     * 修改店铺
-     * 
-     * @param shop 店铺
-     * @return 结果
+     * 更新店铺。
      */
     public int updateShop(Shop shop);
 
     /**
-     * 删除店铺
-     * 
-     * @param id 店铺主键
-     * @return 结果
+     * 根据ID删除店铺。
      */
     public int deleteShopById(Long id);
 
     /**
-     * 批量删除店铺
-     * 
-     * @param ids 需要删除的数据主键集合
-     * @return 结果
+     * 批量删除店铺。
      */
     public int deleteShopByIds(Long[] ids);
     /**
-     * 批量更新店铺的评价数
-     * @param updateMap
+     * 批量更新店铺评价数。
      */
     @Update("<script>" +
             "UPDATE shop " +
@@ -82,8 +60,7 @@ public interface ShopMapper extends BaseMapper<Shop>
             "</script>")
     void updateReviewCountBatch(@Param("map") Map<Long, Integer> updateMap);
     /**
-     * 批量更新店铺的收藏数
-     * @param
+     * 批量更新店铺收藏数。
      */
     @Update("<script>" +
             "UPDATE shop " +
@@ -101,7 +78,7 @@ public interface ShopMapper extends BaseMapper<Shop>
     void updateStarCountBatch(@Param("map")Map<Long, Integer> batchMap);
 
     /**
-     * 批量更新店铺的粉丝数
+     * 批量更新店铺粉丝数。
      */
     @Update("<script>" +
             "UPDATE shop " +
@@ -119,8 +96,7 @@ public interface ShopMapper extends BaseMapper<Shop>
     void updateFansCountBatch(@Param("map") Map<Long, Integer> batchMap);
 
     /**
-     * 批量更新店铺销量统计 (数据库原子更新)
-     * @param updateMap 店铺ID与销量数值的映射
+     * 批量更新店铺销量统计。
      */
     @Update("<script>" +
             "UPDATE shop " +
@@ -138,7 +114,7 @@ public interface ShopMapper extends BaseMapper<Shop>
     void updateSoldBatch(@Param("map") Map<Long, Integer> updateMap);
 
     /**
-     * 根据店铺ID集合和条件查询店铺列表
+     * 根据店铺ID集合和条件查询店铺列表。
      */
     List<Shop> selectShopListByIdsAndCondition(@Param("shopIds") List<Long> shopIds, @Param("shop") Shop shop);
 }

@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 店铺经营建议控制器。
+ */
 @RestController
 @RequestMapping("/shop/suggest")
 public class ShopSuggestController extends BaseController {
@@ -21,18 +24,27 @@ public class ShopSuggestController extends BaseController {
     private final IShopSuggestService shopSuggestService;
     private final RemoteUserService remoteUserService;
 
+    /**
+     * 构造店铺经营建议控制器。
+     */
     public ShopSuggestController(IShopSuggestService shopSuggestService,
                                  RemoteUserService remoteUserService) {
         this.shopSuggestService = shopSuggestService;
         this.remoteUserService = remoteUserService;
     }
 
+    /**
+     * 获取店铺经营建议。
+     */
     @GetMapping("/{shopId}")
     public AjaxResult getShopSuggest(@PathVariable("shopId") Long shopId) {
         validateShopPermission(shopId);
         return success(shopSuggestService.getShopSuggest(shopId));
     }
 
+    /**
+     * 校验当前用户是否有店铺访问权限。
+     */
     private void validateShopPermission(Long shopId) {
         if (shopId == null) {
             throw new ServiceException("shopId cannot be blank");

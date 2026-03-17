@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.ExecutorService;
 
 /**
- * 店铺销量同步定时任务 (XXL-JOB)
+ * 店铺销量同步定时任务。
  */
 @Component
 @Slf4j
@@ -23,7 +23,7 @@ public class ShopSalesSyncJob {
     private ExecutorService executorService;
 
     /**
-     * 定时同步店铺销量数据从 Redis 到数据库
+     * 执行店铺销量同步任务。
      */
     @XxlJob("shopSalesSyncJob")
     public ReturnT<String> executeSalesSync() {

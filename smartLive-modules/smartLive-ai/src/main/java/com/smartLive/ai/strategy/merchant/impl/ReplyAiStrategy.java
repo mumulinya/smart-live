@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.ai.domain.MerchantAiSession;
 import com.smartLive.ai.domain.DTO.MerchantChatDTO;
 import com.smartLive.ai.entity.vo.ReviewVO;
-import com.smartLive.ai.service.chat.support.MerchantMessageChatMemoryManager;
 import com.smartLive.ai.service.merchant.IMerchantAiMessageService;
 import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
+import com.smartLive.ai.service.merchant.support.MerchantMessageChatMemoryManager;
 import com.smartLive.ai.service.rag.IReviewRagService;
 import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.AbstractMerchantAiStrategy;
@@ -18,12 +18,18 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+/**
+ * 回复 AI 策略类。
+ */
 @Component("replyStrategy")
 public class ReplyAiStrategy extends AbstractMerchantAiStrategy {
 
     private final IReviewRagService reviewRagService;
     private final RemoteOrderService remoteOrderService;
 
+    /**
+     * 构造回复 AI 策略类。
+     */
     public ReplyAiStrategy(@Qualifier("merchantStrategyChatClient") ChatClient merchantStrategyChatClient,
                            IMerchantAiSessionService merchantSessionService,
                            IMerchantAiMessageService merchantMessageService,
@@ -39,6 +45,9 @@ public class ReplyAiStrategy extends AbstractMerchantAiStrategy {
         this.remoteOrderService = remoteOrderService;
     }
 
+    /**
+     * 校验场景入参。
+     */
     @Override
     protected void validateSceneInput(MerchantChatDTO dto, MerchantAiSession session) {
         if (dto.getReviewId() == null) {
@@ -46,6 +55,9 @@ public class ReplyAiStrategy extends AbstractMerchantAiStrategy {
         }
     }
 
+    /**
+     * 构建场景提示词。
+     */
     @Override
     protected String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session) {
         ReviewVO review = reviewRagService.getReviewById(dto.getReviewId(), session.getShopId());
@@ -106,6 +118,9 @@ public class ReplyAiStrategy extends AbstractMerchantAiStrategy {
         );
     }
 
+    /**
+     * 解析来源类型名称。
+     */
     private String resolveSourceTypeName(Integer sourceType) {
         if (sourceType == null) {
             return "unknown";

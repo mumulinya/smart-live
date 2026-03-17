@@ -7,6 +7,9 @@ import org.springframework.ai.tool.annotation.ToolParam;
 
 import java.util.List;
 
+/**
+ * 店铺查询条件对象。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,6 +36,9 @@ public class ShopQuery {
     private String openHours;
     @ToolParam(required = false, description = "排序方式")
     private List<ShopQuery.Sort> sorts;
+    /**
+     * sort类。
+     */
     @Data
     public static class Sort {
         @ToolParam(required = false, description = "排序字段: score或comments或sold或sold")

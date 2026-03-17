@@ -3,26 +3,26 @@ package com.smartLive.ai.domain.DTO;
 import lombok.Data;
 
 /**
- * Review Generate DTO
+ * 评价生成数据传输对象。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Data
 public class ReviewGenerateDTO {
 
-    /** Shop id. */
+    /** 店铺 ID。 */
     private Long shopId;
 
-    /** Order id. */
+    /** 订单 ID。 */
     private Long orderId;
 
-    /** Source type: 2=shop, 3=blog, 4=product. */
+    /** 来源类型：2=店铺，3=博客，4=商品。 */
     private Integer sourceType;
 
     /** Source id. */
     private Long sourceId;
 
-    /** Overall score, range 1-5. */
+    /** 总评分，范围 1-5。 */
     private Integer score;
 
     /** Service score. */
@@ -34,6 +34,6 @@ public class ReviewGenerateDTO {
     /** Environment score. */
     private Short envScore;
 
-    /** Additional user description. */
+    /** 用户补充描述。 */
     private String description;
 }

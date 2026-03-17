@@ -4,15 +4,24 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 智能体路由器类。
+ */
 @Component
 public class AgentRouter {
 
     private final LlmIntentClassifier intentClassifier;
 
+    /**
+     * 构造智能体路由器。
+     */
     public AgentRouter(LlmIntentClassifier intentClassifier) {
         this.intentClassifier = intentClassifier;
     }
 
+    /**
+     * 路由决策。
+     */
     public AgentRoutingDecision routeDecision(String userMessage) {
         if (userMessage == null) {
             return new AgentRoutingDecision(false, AgentType.GENERAL, List.of(AgentType.GENERAL));

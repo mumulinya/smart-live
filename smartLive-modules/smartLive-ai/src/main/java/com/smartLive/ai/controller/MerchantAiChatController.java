@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
+/**
+ * 商家 AI 聊天控制器。
+ */
 @RestController
 @RequestMapping("/merchant")
 public class MerchantAiChatController extends BaseController {
@@ -20,6 +23,9 @@ public class MerchantAiChatController extends BaseController {
     @Autowired
     private AiStrategyFactory aiStrategyFactory;
 
+    /**
+     * 处理聊天字符串数据流。
+     */
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat(@RequestBody MerchantChatRequestDTO requestDTO) {
         Long userId = SecurityUtils.getUserId();

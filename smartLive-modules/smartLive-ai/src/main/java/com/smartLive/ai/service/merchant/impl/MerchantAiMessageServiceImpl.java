@@ -9,10 +9,16 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 商家 AI 消息服务实现类。
+ */
 @Service
 public class MerchantAiMessageServiceImpl extends ServiceImpl<MerchantAiMessageMapper, MerchantAiMessage>
         implements IMerchantAiMessageService {
 
+    /**
+     * 保存消息。
+     */
     @Override
     public MerchantAiMessage saveMessage(Long sessionId, String role, String content,
                                          Long reviewId, Long productId, String timeRange, Long analysisRecordId) {
@@ -29,6 +35,9 @@ public class MerchantAiMessageServiceImpl extends ServiceImpl<MerchantAiMessageM
         return message;
     }
 
+    /**
+     * 按会话 ID 查询商家 AI 消息列表。
+     */
     @Override
     public List<MerchantAiMessage> listBySessionId(Long sessionId) {
         return baseMapper.selectBySessionId(sessionId);

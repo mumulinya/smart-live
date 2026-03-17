@@ -10,6 +10,9 @@ import lombok.ToString;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 用户 AI 消息实体类。
+ */
 @Data
 @ToString(callSuper = true)
 @TableName("user_ai_message")

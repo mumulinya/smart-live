@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 店铺经营分析视图对象。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

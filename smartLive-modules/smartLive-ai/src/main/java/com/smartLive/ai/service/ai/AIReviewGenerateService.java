@@ -17,7 +17,7 @@ import java.util.List;
  * AI 评价生成服务
  * 负责批量生成 AI 探店评价，并调用远程服务进行保存
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Slf4j
 @Service
@@ -27,6 +27,9 @@ public class AIReviewGenerateService {
     private final IReviewRagService reviewRagService;
     private final RemoteReviewService remoteReviewService;
 
+    /**
+     * 构造评价生成服务。
+     */
     public AIReviewGenerateService(
             @Qualifier("generalChatClient") ChatClient chatClient,
             IReviewRagService reviewRagService,
@@ -41,7 +44,7 @@ public class AIReviewGenerateService {
      * 批量创建 AI 评价
      * 遍历请求列表，为每个来源（如店铺、商品）生成 AI 评价并统一保存
      *
-     * @param list 包含来源类型和来源 ID 列表的请求对象
+     * @param 列表 包含来源类型和来源 ID 列表的请求对象
      */
     public void aiCreateReview(List<AIGenerateRequest> list) {
         List<ReviewDTO> reviews = new ArrayList<>();
@@ -98,6 +101,9 @@ public class AIReviewGenerateService {
         return reviewDTO;
     }
 
+    /**
+     * 构建摘要提示词。
+     */
     private String buildSummaryPrompt(List<ReviewDTO> reviews) {
         StringBuilder promptBuilder = new StringBuilder();
 

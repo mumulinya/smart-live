@@ -10,6 +10,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
+/**
+ * 店铺经营分析记录实体。
+ */
 @Data
 @TableName("shop_analysis_record")
 public class ShopAnalysisRecord implements Serializable {

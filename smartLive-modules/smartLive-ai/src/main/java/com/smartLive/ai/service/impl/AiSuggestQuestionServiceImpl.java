@@ -9,13 +9,16 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * AI Suggest Question Service Implementation
+ * AI 推荐问题服务实现类。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Service
 public class AiSuggestQuestionServiceImpl extends ServiceImpl<AiSuggestQuestionMapper, AiSuggestQuestion> implements IAiSuggestQuestionService {
 
+    /**
+     * 获取随机推荐问题。
+     */
     @Override
     public List<AiSuggestQuestion> getRandomSuggestions(int count) {
         if (count <= 0) {

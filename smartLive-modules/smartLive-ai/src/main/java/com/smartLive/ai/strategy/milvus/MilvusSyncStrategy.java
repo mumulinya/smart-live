@@ -6,6 +6,9 @@ import org.springframework.ai.document.Document;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Milvus同步策略类。
+ */
 public interface MilvusSyncStrategy<T> {
 
     /**

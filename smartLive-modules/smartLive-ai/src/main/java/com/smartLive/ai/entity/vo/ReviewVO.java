@@ -6,6 +6,9 @@ import lombok.Data;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 评价视图对象。
+ */
 @Data
 public class ReviewVO {
 
@@ -60,7 +63,7 @@ public class ReviewVO {
     private Boolean isLike;
     private Boolean isStared;
 
-    // ===== 查询条件字段（用于Service层）=====
+    // ===== 查询条件字段（用于 Service 层）=====
     /** 最低评分过滤 */
     private Integer minScore;
     /** 分页/限制返回数量 */

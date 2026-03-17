@@ -3,9 +3,9 @@ package com.smartLive.ai.service.generate;
 import com.smartLive.ai.domain.DTO.ReviewGenerateDTO;
 
 /**
- * AI Review Generate Service Interface
+ * AI 评价生成服务接口。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 public interface IReviewGenerateService {
 

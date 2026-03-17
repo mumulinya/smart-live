@@ -6,17 +6,17 @@ import com.smartLive.ai.domain.AiSuggestQuestion;
 import java.util.List;
 
 /**
- * AI Suggest Question Service Interface
+ * AI 推荐问题服务接口。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 public interface IAiSuggestQuestionService extends IService<AiSuggestQuestion> {
 
     /**
-     * Get a list of random active suggested questions
+     * 获取随机启用的推荐问题列表。
      *
      * @param count count of questions to return
-     * @return list of questions
+     * @return 推荐问题列表
      */
     List<AiSuggestQuestion> getRandomSuggestions(int count);
 }

@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * AI 鍐呭鐢熸垚 Controller
+ * AI 内容生成控制器。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Slf4j
 @RestController
@@ -31,11 +31,11 @@ public class AiGenerateController extends BaseController {
     private IReviewGenerateService reviewGenerateService;
 
     /**
-     * AI 鐢熸垚鍗氬姝ｆ枃
-     * 鏍规嵁搴楅摵 ID 鍜岄鏍煎亸濂斤紝鐢熸垚閫傚悎灏忕孩涔︾瓑骞冲彴鐨勬帰搴楁枃妗?
+     * AI 生成博客正文。
+     * 根据店铺 ID 和风格偏好，生成适合小红书等平台的探店文案。
      *
-     * @param dto 鍗氬鐢熸垚璇锋眰鍙傛暟锛屽寘鍚?shopId銆佹弿杩板拰椋庢牸
-     * @return 鍖呭惈鏍囬鍒楄〃鍜屾鏂囧唴瀹圭殑 Result
+     * @param dto 博客生成请求参数，包含 shopId、描述和风格。
+     * @return 包含标题列表和正文内容的结果对象
      */
     @PostMapping("/blog")
     public Result generateBlog(@RequestBody BlogGenerateDTO dto) {
@@ -52,11 +52,11 @@ public class AiGenerateController extends BaseController {
     }
 
     /**
-     * AI 鐢熸垚璇勪环鍐呭
-     * 妯℃嫙鐢ㄦ埛鍙ｅ惢锛屾牴鎹簵閾虹壒鑹茬敓鎴愮湡瀹炵殑娑堣垂璇勪环
+     * AI 生成评价内容。
+     * 模拟用户口吻，根据店铺特色生成真实自然的消费评价。
      *
-     * @param dto 璇勪环鐢熸垚璇锋眰鍙傛暟锛屽寘鍚?shopId 鍜岀浉鍏虫弿杩?
-     * @return 鐢熸垚鐨勮瘎浠锋枃鏈唴瀹?
+     * @param dto 评价生成请求参数，包含 shopId 和相关描述。
+     * @return 生成后的评价文本
      */
     @PostMapping("/review")
     public Result generateReview(@RequestBody ReviewGenerateDTO dto) {

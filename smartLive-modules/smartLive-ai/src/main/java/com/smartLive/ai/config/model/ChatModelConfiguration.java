@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * ChatModel resolution and registration.
+ * ChatModel 解析与注册配置。
  * <p>
- * Priority:
+ * 优先级：
  * 1) smartlive.ai.chat-model-bean
  * 2) API key based candidates (OpenAI/Zhipu)
  * 3) auto-discovered ChatModel beans
@@ -25,7 +25,7 @@ import java.util.Set;
 public class ChatModelConfiguration {
 
     /**
-     * Primary model used by framework agents.
+     * 框架智能体使用的主模型。
      */
     @Primary
     @Bean("frameworkChatModel")
@@ -33,6 +33,9 @@ public class ChatModelConfiguration {
         return resolveChatModel(applicationContext, environment);
     }
 
+    /**
+     * 解析聊天模型。
+     */
     private ChatModel resolveChatModel(ApplicationContext applicationContext, Environment environment) {
         String configuredBeanRaw = trimToNull(environment.getProperty("smartlive.ai.chat-model-bean"));
         String configuredBean = normalizeChatModelBeanName(configuredBeanRaw);
@@ -83,6 +86,9 @@ public class ChatModelConfiguration {
         );
     }
 
+    /**
+     * 获取聊天模型。
+     */
     private ChatModel tryGetChatModel(ApplicationContext applicationContext, String beanName, List<String> errors) {
         if (!hasText(beanName) || !applicationContext.containsBean(beanName)) {
             return null;
@@ -95,6 +101,9 @@ public class ChatModelConfiguration {
         }
     }
 
+    /**
+     * 补充配置项声明的候选模型。
+     */
     private void addConfiguredCandidates(Set<String> candidates, String configuredBeanRaw, String configuredBean) {
         if (hasText(configuredBeanRaw)) {
             candidates.add(configuredBeanRaw);
@@ -111,6 +120,9 @@ public class ChatModelConfiguration {
         }
     }
 
+    /**
+     * 补充自动发现的候选模型。
+     */
     private void addDiscoveredCandidates(
             ApplicationContext applicationContext,
             Set<String> candidates,
@@ -130,6 +142,9 @@ public class ChatModelConfiguration {
         }
     }
 
+    /**
+     * 规范化聊天模型 Bean 名称。
+     */
     private String normalizeChatModelBeanName(String beanName) {
         if (!hasText(beanName)) {
             return null;
@@ -140,27 +155,48 @@ public class ChatModelConfiguration {
         return beanName;
     }
 
+    /**
+     * 判断是否为 OpenAI 候选模型。
+     */
     private boolean isOpenAiCandidate(String beanName) {
         return "openAiChatModel".equals(beanName);
     }
 
+    /**
+     * 判断是否为智谱候选模型。
+     */
     private boolean isZhipuCandidate(String beanName) {
         return "zhiPuAiChatModel".equals(beanName) || "zhipuAiChatModel".equals(beanName);
     }
 
+    /**
+     * 判断是否存在 OpenAI Key。
+     */
     private boolean hasOpenAiKey(Environment environment) {
         return hasText(environment.getProperty("spring.ai.openai.api-key"))
+                /**
+                 * 判断文本是否存在。
+                 */
                 || hasText(environment.getProperty("spring.ai.openai.chat.api-key"));
     }
 
+    /**
+     * 判断是否存在智谱 AI Key。
+     */
     private boolean hasZhipuAiKey(Environment environment) {
         return hasText(environment.getProperty("spring.ai.zhipuai.api-key"));
     }
 
+    /**
+     * 判断文本是否存在。
+     */
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
     }
 
+    /**
+     * 裁剪空白字符串并在为空时返回 null。
+     */
     private String trimToNull(String value) {
         if (value == null) {
             return null;
@@ -169,6 +205,9 @@ public class ChatModelConfiguration {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String rootCauseMessage(Throwable throwable) {
         Throwable current = throwable;
         while (current.getCause() != null) {

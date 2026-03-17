@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * 博客工具集。
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -17,6 +20,9 @@ public class BlogTools {
 
     private final IBlogRagService blogRagService;
 
+    /**
+     * 获取店铺博客摘要。
+     */
     @Tool(description = "Get a blog summary for a specific shop.")
     public String getShopBlogSummary(
             @ToolParam(description = "Shop id.", required = false)
@@ -30,6 +36,9 @@ public class BlogTools {
         return blogRagService.getShopBlogSummary(shopId, userMessage, limit);
     }
 
+    /**
+     * 搜索店铺博客。
+     */
     @Tool(description = "Search blog notes for a specific shop.")
     public List<BlogVO> searchShopBlogs(
             @ToolParam(description = "Shop id.", required = false)

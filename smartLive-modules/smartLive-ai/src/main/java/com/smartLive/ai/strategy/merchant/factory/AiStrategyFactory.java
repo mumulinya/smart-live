@@ -7,6 +7,9 @@ import org.springframework.util.StringUtils;
 
 import java.util.Map;
 
+/**
+ * AI 策略工厂类。
+ */
 @Component
 public class AiStrategyFactory {
 
@@ -19,10 +22,16 @@ public class AiStrategyFactory {
 
     private final Map<String, AbstractMerchantAiStrategy> strategyMap;
 
+    /**
+     * 构造 AI 策略工厂。
+     */
     public AiStrategyFactory(Map<String, AbstractMerchantAiStrategy> strategyMap) {
         this.strategyMap = strategyMap;
     }
 
+    /**
+     * 获取策略。
+     */
     public AbstractMerchantAiStrategy getStrategy(String type) {
         if (!StringUtils.hasText(type)) {
             throw new ServiceException("AI type cannot be empty");

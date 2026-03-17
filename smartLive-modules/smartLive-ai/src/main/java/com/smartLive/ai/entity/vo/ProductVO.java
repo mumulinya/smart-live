@@ -16,8 +16,8 @@ import java.util.Date;
 /**
  * 商品对象
  * 
- * @author ruoyi
- * @date 2026-02-18
+ * 作者：ruoyi
+ * 创建日期：2026-02-18
  */
 @Data
 @AllArgsConstructor

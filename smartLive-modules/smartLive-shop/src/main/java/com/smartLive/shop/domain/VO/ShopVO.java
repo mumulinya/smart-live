@@ -9,11 +9,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 店铺返回对象 (View Object)
- * 用于前端展示店铺详情
- * 
- * @author mumulin
- * @date 2025-09-21
+ * 店铺视图对象。
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
@@ -61,7 +57,7 @@ public class ShopVO implements Serializable
     /** 收藏数量 */
     private Integer stared;
     
-    /** fans count */
+    /** 粉丝数量 */
     private Integer fans;
 
     /** 评分，1~5分，乘10保存，避免小数 */

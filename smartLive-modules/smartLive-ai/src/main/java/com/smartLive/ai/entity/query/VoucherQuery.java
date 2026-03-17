@@ -5,6 +5,9 @@ import lombok.Data;
 import org.springframework.ai.tool.annotation.ToolParam;
 
 import java.time.LocalDateTime;
+/**
+ * 代金券查询条件对象。
+ */
 @Data
 public class VoucherQuery {
 

@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+/**
+ * 博客生成服务实现类。
+ */
 @Slf4j
 @Service
 public class BlogGenerateServiceImpl implements IBlogGenerateService {
@@ -24,6 +27,9 @@ public class BlogGenerateServiceImpl implements IBlogGenerateService {
     private final IReviewRagService reviewRagService;
     private final IBlogRagService blogRagService;
 
+    /**
+     * 构造博客生成服务实现。
+     */
     @Autowired
     public BlogGenerateServiceImpl(
             @Qualifier("generalChatClient") ChatClient chatClient,
@@ -36,6 +42,9 @@ public class BlogGenerateServiceImpl implements IBlogGenerateService {
         this.blogRagService = blogRagService;
     }
 
+    /**
+     * 生成博客生成。
+     */
     @Override
     public BlogGenerateVO generate(BlogGenerateDTO dto) {
         ShopVO searchVo = new ShopVO();

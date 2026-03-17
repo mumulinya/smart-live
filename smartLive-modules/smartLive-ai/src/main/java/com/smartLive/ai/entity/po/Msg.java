@@ -8,6 +8,9 @@ import org.springframework.ai.chat.messages.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * msg类。
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -17,6 +20,9 @@ public class Msg {
     Map<String, Object> metadata;
     List<AssistantMessage.ToolCall> toolCalls;
 
+    /**
+     * 构造msg。
+     */
     public Msg(Message message) {
         this.messageType = message.getMessageType();
         this.text = message.getText();
@@ -26,6 +32,9 @@ public class Msg {
         }
     }
 
+    /**
+     * 转换为消息。
+     */
     public Message toMessage() {
         return switch (messageType) {
             case SYSTEM -> new SystemMessage(text);

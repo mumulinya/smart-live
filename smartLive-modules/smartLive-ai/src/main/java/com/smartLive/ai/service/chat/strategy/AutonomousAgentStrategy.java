@@ -63,6 +63,9 @@ public class AutonomousAgentStrategy implements AgentChatStrategy {
     private final IShopRagService shopRagService;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 构造自主智能体策略。
+     */
     public AutonomousAgentStrategy(
             @Qualifier("generalChatClient") ChatClient generalChatClient,
             IProductRagService productRagService,
@@ -75,6 +78,9 @@ public class AutonomousAgentStrategy implements AgentChatStrategy {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     @Override
     public Flux<String> streamChat(AIChatRequest chatRequest) {
         String chatId = resolveChatId(chatRequest);

@@ -17,6 +17,9 @@ import reactor.core.publisher.SynchronousSink;
 
 import java.util.List;
 
+/**
+ * 框架路由策略类。
+ */
 @Slf4j
 @Service
 public class FrameworkRoutingStrategy implements AgentChatStrategy {
@@ -34,6 +37,9 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
 
     private volatile LlmRoutingAgent routingAgent;
 
+    /**
+     * 构造框架路由策略。
+     */
     public FrameworkRoutingStrategy(
             Environment environment,
             @Qualifier("frameworkChatModel") ChatModel frameworkChatModel,
@@ -51,6 +57,9 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
         this.stateSerializer = new SpringAIJacksonStateSerializer(OverAllState::new);
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     @Override
     public Flux<String> streamChat(AIChatRequest chatRequest) {
         LlmRoutingAgent agent = getOrCreateRoutingAgent();
@@ -71,6 +80,9 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
                 }));
     }
 
+    /**
+     * 获取消息数据流。
+     */
     private Flux<Message> streamFrameworkMessages(LlmRoutingAgent agent, String userMessage) {
         try {
             return agent.streamMessages(userMessage);
@@ -79,6 +91,9 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
         }
     }
 
+    /**
+     * 获取create路由智能体。
+     */
     private LlmRoutingAgent getOrCreateRoutingAgent() {
         LlmRoutingAgent cached = this.routingAgent;
         if (cached != null) {
@@ -102,6 +117,9 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
         }
     }
 
+    /**
+     * 构建路由智能体。
+     */
     private LlmRoutingAgent buildRoutingAgent() {
         List<Agent> subAgents = List.of(shopAgent, productAgent, reviewAgent, generalAgent);
 
@@ -126,6 +144,9 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
                 .build();
     }
 
+    /**
+     * 判断文本是否存在。
+     */
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
     }

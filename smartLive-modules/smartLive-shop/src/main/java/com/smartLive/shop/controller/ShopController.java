@@ -23,16 +23,17 @@ import com.smartLive.common.core.web.domain.AjaxResult;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.page.TableDataInfo;
 
+/**
+ * 店铺管理控制器。
+ */
 @RestController
-
 @RequestMapping("/shop")
 public class ShopController extends BaseController {
     @Autowired
     private IShopService shopService;
     /**
-     * 分页查询商铺列表
+     * 分页查询店铺列表。
      */
-
     @RequiresPermissions("business:shop:list")
     @GetMapping("/list")
     public TableDataInfo list(Shop shop) {
@@ -41,16 +42,15 @@ public class ShopController extends BaseController {
         return getDataTable(list);
     }
     /**
-     * 查询商铺列表详情
+     * 查询店铺列表详情。
      */
-
     @GetMapping("/shopList")
     public AjaxResult shopList(Shop shop) {
         List<Shop> list = shopService.selectShopList(shop);
         return success(list);
     }
     /**
-     * 修改商铺
+     * 修改店铺信息。
      */
     @RequiresPermissions("business:shop:edit")
     @Log(title = "shop", businessType = BusinessType.UPDATE)
@@ -59,7 +59,7 @@ public class ShopController extends BaseController {
         return toAjax(shopService.updateShop(shop));
     }
     /**
-     * 根据ID获取商铺详情
+     * 根据ID获取店铺详情。
      */
     @RequiresPermissions("business:shop:query")
     @GetMapping(value = "/{id}")
@@ -67,9 +67,8 @@ public class ShopController extends BaseController {
         return success(shopService.selectShopById(id));
     }
     /**
-     * 新增商铺
+     * 新增店铺信息。
      */
-
     @RequiresPermissions("business:shop:add")
     @Log(title = "shop", businessType = BusinessType.INSERT)
     @PostMapping
@@ -77,9 +76,8 @@ public class ShopController extends BaseController {
         return toAjax(shopService.insertShop(shop));
     }
     /**
-     * 删除商铺
+     * 删除店铺信息。
      */
-
     @RequiresPermissions("business:shop:remove")
     @Log(title = "shop", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
@@ -87,9 +85,8 @@ public class ShopController extends BaseController {
         return toAjax(shopService.deleteShopByIds(ids));
     }
     /**
-     * 根据商铺名称模糊查询
+     * 根据名称和区域分页查询店铺。
      */
-
     @GetMapping("/of/name")
     public Result queryShopByName(
             @RequestParam(value = "name", required = false) String name,
@@ -102,35 +99,31 @@ public class ShopController extends BaseController {
                 .eq("status", 1)
                 .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        // 闁哄鏅滈弻銊ッ洪弽顓炴瀬闁绘鐗嗙粊?
         return Result.ok(page.getRecords());
     }
     /**
-     * 清除商铺缓存
+     * 刷新店铺缓存。
      */
-
     @GetMapping("/flushCache")
     public AjaxResult flushCache() {
         return success(shopService.flushCache());
     }
     /**
-     * 全量发布商铺到搜索引擎
+     * 发布店铺数据到搜索服务。
      */
-
     @PostMapping("/allPublish")
     public AjaxResult allPublish() {
         return success(shopService.allPublish());
     }
     /**
-     * 全量发布商铺到搜索引擎
+     * 按ID发布店铺数据到搜索服务。
      */
-
     @PostMapping("/publish/{ids}")
     public AjaxResult allPublish(@PathVariable("ids") String[] ids) {
         return success(shopService.publish(ids));
     }
     /**
-     * 获取热门店铺排行榜(带距离信息)
+     * 获取热门店铺排行榜。
      */
     @GetMapping("/hot/rank")
     public Result getHotShopRank(
@@ -141,9 +134,8 @@ public class ShopController extends BaseController {
         return Result.ok(shopService.getHotShopRank(current, size, x, y));
     }
     /**
-     * 根据ID获取商铺详情
+     * 根据ID获取店铺详情。
      */
-
     @GetMapping("/getShopById/{id}")
     public Result getShopById(@PathVariable("id") Long id) {
         ShopVO shop = shopService.queryById(id);
@@ -153,9 +145,8 @@ public class ShopController extends BaseController {
         return Result.ok(shop);
     }
     /**
-     * 根据ID集合批量查询商铺
+     * 根据ID集合批量查询店铺。
      */
-
     @GetMapping("/listByIds")
     public Result queryShopByIds(@RequestParam("ids") String ids) {
         if (StrUtil.isBlank(ids)) {
@@ -178,13 +169,8 @@ public class ShopController extends BaseController {
         return Result.ok(shops);
     }
     /**
-     * 获取商铺分析数据
+     * 按关键词搜索店铺。
      */
-
-    /**
-     * 获取商铺经营建议
-     */
-
     @GetMapping("/search")
     public Result searchShops(@RequestParam(name = "keyword", required = false) String keyword) {
         return Result.ok(shopService.searchShops(keyword));

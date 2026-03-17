@@ -17,6 +17,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * 商家 AI 会话服务实现类。
+ */
 @Service
 public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionMapper, MerchantAiSession>
         implements IMerchantAiSessionService {
@@ -26,11 +29,17 @@ public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionM
     private final IMerchantAiMessageService messageService;
     private final RemoteUserService remoteUserService;
 
+    /**
+     * 构造商家 AI 会话服务实现类。
+     */
     public MerchantAiSessionServiceImpl(IMerchantAiMessageService messageService, RemoteUserService remoteUserService) {
         this.messageService = messageService;
         this.remoteUserService = remoteUserService;
     }
 
+    /**
+     * 创建会话。
+     */
     @Override
     public Long createSession(Long userId, Long shopId, String type) {
         checkShopPermission(userId, shopId);
@@ -47,6 +56,9 @@ public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionM
         return session.getId();
     }
 
+    /**
+     * 按用户和店铺查询商家 AI 会话列表。
+     */
     @Override
     public List<MerchantAiSession> listByUserAndShop(Long userId, Long shopId, String type) {
         checkShopPermission(userId, shopId);
@@ -60,6 +72,9 @@ public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionM
         return this.list(wrapper);
     }
 
+    /**
+     * 更新标题。
+     */
     @Override
     public void updateTitle(Long userId, Long sessionId, String title) {
         if (!StringUtils.hasText(title)) {
@@ -71,6 +86,9 @@ public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionM
         this.updateById(session);
     }
 
+    /**
+     * 删除会话。
+     */
     @Override
     public void deleteSession(Long userId, Long sessionId) {
         getAndCheckSession(userId, sessionId);
@@ -78,12 +96,18 @@ public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionM
         this.removeById(sessionId);
     }
 
+    /**
+     * 查询消息列表。
+     */
     @Override
     public List<MerchantAiMessage> getMessages(Long userId, Long sessionId) {
         getAndCheckSession(userId, sessionId);
         return messageService.listBySessionId(sessionId);
     }
 
+    /**
+     * 获取并校验会话。
+     */
     @Override
     public MerchantAiSession getAndCheckSession(Long userId, Long sessionId) {
         MerchantAiSession session = this.getById(sessionId);
@@ -97,6 +121,9 @@ public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionM
         return session;
     }
 
+    /**
+     * 校验店铺权限。
+     */
     @Override
     public void checkShopPermission(Long userId, Long shopId) {
         if (userId == null) {
@@ -114,6 +141,9 @@ public class MerchantAiSessionServiceImpl extends ServiceImpl<MerchantAiSessionM
         }
     }
 
+    /**
+     * 规范化check类型。
+     */
     private String normalizeAndCheckType(String type) {
         if (!StringUtils.hasText(type)) {
             throw new ServiceException("Session type cannot be blank");

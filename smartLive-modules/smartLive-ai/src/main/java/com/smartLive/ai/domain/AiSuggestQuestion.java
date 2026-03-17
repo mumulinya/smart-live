@@ -10,9 +10,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * AI Suggest Question Entity
+ * AI 推荐问题实体类。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Data
 @TableName("ai_suggest_question")
@@ -20,7 +20,7 @@ public class AiSuggestQuestion implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * ID
+     * 主键 ID
      */
     @TableId(type = IdType.AUTO)
     private Long id;

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartLive.ai.domain.MerchantAiSession;
 import com.smartLive.ai.domain.DTO.MerchantChatDTO;
 import com.smartLive.ai.entity.vo.ReviewVO;
-import com.smartLive.ai.service.chat.support.MerchantMessageChatMemoryManager;
 import com.smartLive.ai.service.merchant.IMerchantAiMessageService;
 import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
+import com.smartLive.ai.service.merchant.support.MerchantMessageChatMemoryManager;
 import com.smartLive.ai.service.rag.IReviewRagService;
 import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.AbstractMerchantAiStrategy;
@@ -23,12 +23,18 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 分析 AI 策略类。
+ */
 @Component("analysisStrategy")
 @Slf4j
 public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
 
     private final IReviewRagService reviewRagService;
 
+    /**
+     * 构造分析 AI 策略类。
+     */
     public AnalysisAiStrategy(@Qualifier("merchantStrategyChatClient") ChatClient merchantStrategyChatClient,
                               IMerchantAiSessionService merchantSessionService,
                               IMerchantAiMessageService merchantMessageService,
@@ -42,6 +48,9 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
         this.reviewRagService = reviewRagService;
     }
 
+    /**
+     * 校验场景入参。
+     */
     @Override
     protected void validateSceneInput(MerchantChatDTO dto, MerchantAiSession session) {
         if (dto.getAnalysisRecordId() == null) {
@@ -49,6 +58,9 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
         }
     }
 
+    /**
+     * 构建场景提示词。
+     */
     @Override
     protected String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session) {
         ShopAnalysisDTO analysis = remoteShopService.getShopAnalysisRecord(dto.getAnalysisRecordId(), session.getShopId());
@@ -104,6 +116,9 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
         );
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String formatProductSales(List<ProductSalesDTO> products) {
         if (products == null || products.isEmpty()) {
             return "No data";
@@ -118,6 +133,9 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
         return items.isEmpty() ? "No data" : String.join("; ", items);
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String formatBadReviewSamples(List<ReviewVO> reviews) {
         if (reviews == null || reviews.isEmpty()) {
             return "No data";

@@ -12,16 +12,25 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * 商家 AI 关键词控制器。
+ */
 @RestController
 @RequestMapping("/merchant")
 public class MerchantAiKeywordController {
 
     private final ChatClient chatClient;
 
+    /**
+     * 构造商家 AI 关键词控制器。
+     */
     public MerchantAiKeywordController(@Qualifier("keywordChatClient") ChatClient chatClient) {
         this.chatClient = chatClient;
     }
 
+    /**
+     * 提取关键词。
+     */
     @PostMapping("/keywords")
     public List<String> extractKeywords(@RequestBody List<String> contents) {
         List<String> normalizedContents = contents == null
@@ -47,6 +56,9 @@ public class MerchantAiKeywordController {
         return normalizeKeywords(result);
     }
 
+    /**
+     * 规范化关键词。
+     */
     private List<String> normalizeKeywords(String result) {
         if (result == null || result.isBlank()) {
             return new ArrayList<>();

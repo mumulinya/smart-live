@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+/**
+ * 商品文档对象。
+ */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段
 public class ProductDoc implements Serializable {

@@ -5,9 +5,9 @@ import com.smartLive.ai.domain.UserAiSession;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * AI Session Mapper
+ * 用户 AI 会话数据访问层接口。
  *
- * @author smartLive
+ * 作者：smartLive
  */
 @Mapper
 public interface UserAiSessionMapper extends BaseMapper<UserAiSession> {

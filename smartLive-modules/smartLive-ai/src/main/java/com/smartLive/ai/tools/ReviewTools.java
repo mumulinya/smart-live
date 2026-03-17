@@ -7,6 +7,9 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
+/**
+ * 评价工具集。
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j

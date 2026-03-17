@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.util.Date;
 
+/**
+ * 博客视图对象。
+ */
 @Data
 public class BlogVO {
 

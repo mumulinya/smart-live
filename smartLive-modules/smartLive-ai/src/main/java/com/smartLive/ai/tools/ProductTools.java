@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * 商品工具集。
+ */
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -38,6 +41,9 @@ public class ProductTools {
         return productList;
     }
 
+    /**
+     * 获取字符串结果。
+     */
     @Tool(name = "orderProduct", description = "Create an order for a selected product.")
     public String orderProduct(
             @ToolParam(description = "Product id.") Long productId,

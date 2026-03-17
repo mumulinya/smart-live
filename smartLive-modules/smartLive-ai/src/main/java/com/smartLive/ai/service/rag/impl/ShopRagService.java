@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * 店铺 RAG 服务实现类。
+ */
 @Service
 @Slf4j
 public class ShopRagService implements IShopRagService {
@@ -25,12 +28,18 @@ public class ShopRagService implements IShopRagService {
     private final VectorStore shopVectorStore;
     private final RemoteShopService remoteShopService;
 
+    /**
+     * 构造店铺 RAG 服务实现类。
+     */
     public ShopRagService(@Qualifier("shopVectorStore") VectorStore vectorStore,
                           RemoteShopService remoteShopService) {
         this.shopVectorStore = vectorStore;
         this.remoteShopService = remoteShopService;
     }
 
+    /**
+     * 获取店铺列表。
+     */
     @Override
     public List<ShopVO> getShopList(ShopVO shopVo, String userMessage) {
         String ragQuery = (userMessage == null || userMessage.isBlank()) ? "food restaurant" : userMessage;
@@ -54,6 +63,9 @@ public class ShopRagService implements IShopRagService {
         return shopVOS;
     }
 
+    /**
+     * 获取店铺详情。
+     */
     @Override
     public ShopVO getShopDetails(ShopVO shopVo, String userMessage) {
         if (shopVo == null) {
@@ -96,6 +108,9 @@ public class ShopRagService implements IShopRagService {
         return applyDistance(shops.get(0), shopVo.getX(), shopVo.getY());
     }
 
+    /**
+     * 转换店铺数据传输对象店铺。
+     */
     private ShopVO convertShopDtoToShopVO(ShopDTO shopDTO) {
         if (shopDTO == null) {
             return null;
@@ -118,6 +133,9 @@ public class ShopRagService implements IShopRagService {
         return shopVO;
     }
 
+    /**
+     * 应用距离信息。
+     */
     private ShopVO applyDistance(ShopVO shopVO, Double userX, Double userY) {
         if (shopVO == null) {
             return null;
@@ -141,6 +159,9 @@ public class ShopRagService implements IShopRagService {
         return shopVO;
     }
 
+    /**
+     * 获取距离值。
+     */
     private Double getDistance(Double x, Double y, Double shopVoX, Double shopVoY) {
         if (x == null || y == null || shopVoX == null || shopVoY == null) {
             return -1.0;
@@ -166,16 +187,25 @@ public class ShopRagService implements IShopRagService {
         return Math.round(distance * 100.0) / 100.0;
     }
 
+    /**
+     * 判断坐标是否有效。
+     */
     private boolean isValidCoordinate(Double lng, Double lat) {
         return lng != null && lat != null
                 && lng >= -180 && lng <= 180
                 && lat >= -90 && lat <= 90;
     }
 
+    /**
+     * 判断坐标对是否有效。
+     */
     private boolean hasValidCoordinatePair(Double x, Double y) {
         return x != null && y != null && isValidCoordinate(x, y);
     }
 
+    /**
+     * 构建过滤表达式。
+     */
     private String buildFilterExpression(ShopVO shopVo) {
         List<String> filters = new ArrayList<>();
         if (shopVo.getId() != null) {
@@ -196,6 +226,9 @@ public class ShopRagService implements IShopRagService {
         return filters.isEmpty() ? "" : String.join(" && ", filters);
     }
 
+    /**
+     * 将文档列表转换为店铺对象。
+     */
     private List<ShopVO> convertDocumentsToShopVO(List<Document> documents) {
         return documents.stream()
                 .map(this::convertDocumentToShopVO)
@@ -203,6 +236,9 @@ public class ShopRagService implements IShopRagService {
                 .toList();
     }
 
+    /**
+     * 将文档转换为店铺对象。
+     */
     private ShopVO convertDocumentToShopVO(Document document) {
         try {
             Map<String, Object> metadata = document.getMetadata();

@@ -24,6 +24,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.springframework.util.DigestUtils;
 
+/**
+ * Milvus 同步监听器。
+ */
 @Component
 @Slf4j
 public class MilvusSyncListener {
@@ -47,6 +50,9 @@ public class MilvusSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.MILVUS_SYNC_EXCHANGE),
                     key = SearchMqConstants.MILVUS_SYNC_INSERT_ROUTING_KEY)
     })
+    /**
+     * 处理单条插入同步。
+     */
     public void handleSingleInsert(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getId() == null) {
             channel.basicAck(deliveryTag, false);
@@ -100,6 +106,9 @@ public class MilvusSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.MILVUS_SYNC_EXCHANGE),
                     key = SearchMqConstants.MILVUS_SYNC_BATCH_INSERT_ROUTING_KEY)
     })
+    /**
+     * 处理批量插入同步。
+     */
     public void handleBatchInsert(ContentBatchSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getData() == null) {
             channel.basicAck(deliveryTag, false);
@@ -154,6 +163,9 @@ public class MilvusSyncListener {
                     exchange = @Exchange(name = SearchMqConstants.MILVUS_SYNC_EXCHANGE),
                     key = SearchMqConstants.MILVUS_SYNC_DELETE_ROUTING_KEY)
     })
+    /**
+     * 处理删除同步。
+     */
     public void handleDelete(ContentSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
         if (request == null || request.getId() == null) {
             channel.basicAck(deliveryTag, false);
@@ -194,6 +206,9 @@ public class MilvusSyncListener {
         }
     }
 
+    /**
+     * 判断是否为默认策略。
+     */
     private boolean isDefaultStrategy(MilvusSyncStrategy strategy) {
         return strategy == null || Integer.valueOf(-1).equals(strategy.getType());
     }
@@ -206,6 +221,9 @@ public class MilvusSyncListener {
             exchange = @Exchange(value = SearchMqConstants.SEARCH_DLX_EXCHANGE),
             key = SearchMqConstants.SEARCH_DLQ_ROUTING_KEY
     ))
+    /**
+     * 处理 Milvus 死信消息。
+     */
     public void handleMilvusDeadLetter(org.springframework.amqp.core.Message message) {
         log.error("milvus dead letter received: {}", new String(message.getBody(), java.nio.charset.StandardCharsets.UTF_8));
     }

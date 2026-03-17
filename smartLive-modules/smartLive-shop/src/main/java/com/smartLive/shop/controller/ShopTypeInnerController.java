@@ -13,12 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * <p>
- * 前端控制器
- * </p>
- *
- * @author 木木林
- * @since 2021-12-2
+ * 店铺类型内部接口控制器。
  */
 @RestController
 @RequestMapping("/inner/shop/shop-type")
@@ -26,7 +21,7 @@ public class ShopTypeInnerController {
     @Resource
     private IShopTypeService typeService;
     /**
-     * 查询商铺类型列表
+     * 获取店铺类型列表。
      */
     @GetMapping("/getShopListByType")
     public List<ShopType> getShopTypeList(){

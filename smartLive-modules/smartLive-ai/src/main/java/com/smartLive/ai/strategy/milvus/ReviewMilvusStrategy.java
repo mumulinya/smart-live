@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * 评价Milvus策略类。
+ */
 @Component
 public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
 
@@ -24,11 +27,17 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
     @Qualifier("reviewVectorStore")
     private VectorStore reviewVectorStore;
 
+    /**
+     * 获取类型。
+     */
     @Override
     public Integer getType() {
         return GlobalBizTypeEnum.REVIEW.getCode();
     }
 
+    /**
+     * 获取结果。
+     */
     @Override
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
         ReviewDTO doc = EsTool.convertToObject((Map) rawData, ReviewDTO.class);
@@ -43,6 +52,9 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
         return true;
     }
 
+    /**
+     * 获取结果。
+     */
     @Override
     public boolean batchInsert(List<Object> rawDataList) throws IOException {
         List<ReviewDTO> reviews = deduplicateById(EsTool.convertList(rawDataList, ReviewDTO.class));
@@ -62,12 +74,18 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
         return true;
     }
 
+    /**
+     * 删除结果。
+     */
     @Override
     public boolean delete(String id) throws IOException {
         deleteById(id);
         return true;
     }
 
+    /**
+     * 创建文档。
+     */
     @Override
     public Document createDocument(ReviewDTO review) {
         if (review == null || review.getId() == null) {
@@ -103,6 +121,9 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
                 .build();
     }
 
+    /**
+     * 获取评价列表。
+     */
     private List<ReviewDTO> deduplicateById(List<ReviewDTO> rawList) {
         if (rawList == null || rawList.isEmpty()) {
             return List.of();
@@ -116,6 +137,9 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
         return new ArrayList<>(unique.values());
     }
 
+    /**
+     * 批量删除数据。
+     */
     private void deleteBatch(List<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return;
@@ -124,11 +148,17 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
         reviewVectorStore.delete(String.format("id in [%s]", String.join(", ", ids)));
     }
 
+    /**
+     * 按ID删除数据。
+     */
     private void deleteById(String id) {
         reviewVectorStore.delete(List.of(id));
         reviewVectorStore.delete(String.format("id == %s", id));
     }
 
+    /**
+     * 构建内容。
+     */
     private String buildContent(ReviewDTO review) {
         if (review.getContent() != null && !review.getContent().isBlank()) {
             return review.getContent().trim();
@@ -139,6 +169,9 @@ public class ReviewMilvusStrategy implements MilvusSyncStrategy<ReviewDTO> {
         return String.valueOf(review.getId());
     }
 
+    /**
+     * 处理 putIfNotNull 逻辑。
+     */
     private void putIfNotNull(Map<String, Object> map, String key, Object value) {
         if (value != null) {
             map.put(key, value);

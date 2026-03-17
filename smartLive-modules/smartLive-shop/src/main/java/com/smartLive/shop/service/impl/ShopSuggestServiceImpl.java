@@ -28,6 +28,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/**
+ * 店铺经营建议服务实现类。
+ */
 @Service
 @Slf4j
 public class ShopSuggestServiceImpl implements IShopSuggestService {
@@ -39,6 +42,9 @@ public class ShopSuggestServiceImpl implements IShopSuggestService {
     private final RemoteAiMerchantService remoteAiMerchantService;
     private final ExecutorService executorService;
 
+    /**
+     * 构造店铺经营建议服务实现类。
+     */
     public ShopSuggestServiceImpl(RemoteReviewService remoteReviewService,
                                   RemoteOrderService remoteOrderService,
                                   RemoteAiMerchantService remoteAiMerchantService,
@@ -49,18 +55,27 @@ public class ShopSuggestServiceImpl implements IShopSuggestService {
         this.executorService = executorService;
     }
 
+    /**
+     * 获取店铺经营建议。
+     */
     @Override
     public ShopSuggestVO getShopSuggest(Long shopId) {
         validateShopId(shopId);
         return buildShopSuggest(shopId);
     }
 
+    /**
+     * 获取店铺经营建议。
+     */
     @Override
     public ShopSuggestVO getShopSuggestInner(Long shopId) {
         validateShopId(shopId);
         return buildShopSuggest(shopId);
     }
 
+    /**
+     * 构建店铺经营建议结果。
+     */
     private ShopSuggestVO buildShopSuggest(Long shopId) {
         CompletableFuture<ShopReviewSuggestDTO> reviewSuggestFuture = supplyAsync(
                 () -> remoteReviewService.getShopReviewSuggest(shopId, SHOP_SUGGEST_TIME_RANGE),
@@ -104,6 +119,9 @@ public class ShopSuggestServiceImpl implements IShopSuggestService {
         return result;
     }
 
+    /**
+     * 异步执行任务并提供默认值。
+     */
     private <T> CompletableFuture<T> supplyAsync(Supplier<T> supplier, T defaultValue, String taskName) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -115,12 +133,18 @@ public class ShopSuggestServiceImpl implements IShopSuggestService {
         }, executorService);
     }
 
+    /**
+     * 校验店铺ID参数。
+     */
     private void validateShopId(Long shopId) {
         if (shopId == null) {
             throw new ServiceException("shopId cannot be blank");
         }
     }
 
+    /**
+     * 提取差评关键词。
+     */
     private List<String> extractKeywords(List<BadReviewDTO> badReviewList) {
         if (CollUtil.isEmpty(badReviewList)) {
             return new ArrayList<>();
@@ -157,6 +181,9 @@ public class ShopSuggestServiceImpl implements IShopSuggestService {
         return new ArrayList<>(uniqueKeywords);
     }
 
+    /**
+     * 将商品销量数据转换为视图对象列表。
+     */
     private List<ProductSalesVO> toProductSalesVOList(List<ProductSalesDTO> products) {
         if (products == null) {
             return new ArrayList<>();
@@ -170,6 +197,9 @@ public class ShopSuggestServiceImpl implements IShopSuggestService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 规范化百分比数值。
+     */
     private BigDecimal normalizePercent(BigDecimal value) {
         if (value == null) {
             return BigDecimal.ZERO;
@@ -177,14 +207,23 @@ public class ShopSuggestServiceImpl implements IShopSuggestService {
         return value.setScale(2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * 返回默认整数值。
+     */
     private Integer defaultInteger(Integer value) {
         return value == null ? 0 : value;
     }
 
+    /**
+     * 构建空的经营建议结果。
+     */
     private ShopSuggestVO buildEmptyShopSuggest() {
         return new ShopSuggestVO(0, 0, BigDecimal.ZERO, new ArrayList<>(), new ArrayList<>());
     }
 
+    /**
+     * 规范化经营建议结果。
+     */
     private void normalizeShopSuggest(ShopSuggestVO result) {
         if (result.getPendingReviewCount() == null) {
             result.setPendingReviewCount(0);

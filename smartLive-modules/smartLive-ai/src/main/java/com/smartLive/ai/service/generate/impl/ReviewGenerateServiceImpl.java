@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * 评价生成服务实现类。
+ */
 @Slf4j
 @Service
 public class ReviewGenerateServiceImpl implements IReviewGenerateService {
@@ -22,6 +25,9 @@ public class ReviewGenerateServiceImpl implements IReviewGenerateService {
     private final IShopRagService shopRagService;
     private final IProductRagService productRagService;
 
+    /**
+     * 构造评价生成服务实现。
+     */
     @Autowired
     public ReviewGenerateServiceImpl(
             @Qualifier("generalChatClient") ChatClient chatClient,
@@ -32,6 +38,9 @@ public class ReviewGenerateServiceImpl implements IReviewGenerateService {
         this.productRagService = productRagService;
     }
 
+    /**
+     * 生成字符串结果。
+     */
     @Override
     public String generate(ReviewGenerateDTO dto) {
         String shopDetails = "No shop information";

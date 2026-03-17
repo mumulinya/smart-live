@@ -15,6 +15,9 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * 直接路由策略类。
+ */
 @Slf4j
 @Service
 public class DirectRoutingStrategy implements AgentChatStrategy {
@@ -42,6 +45,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
         this.reviewAgentChatClient = reviewAgentChatClient;
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     @Override
     public Flux<String> streamChat(AIChatRequest request) {
         String chatId = resolveChatId(request);
@@ -60,6 +66,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 .onErrorResume(ex -> fallbackToGeneral(decision.getPrimaryAgent(), enrichedMessage, chatId, ex));
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Flux<String> streamSingleAgent(AgentType agentType, String userMessage, String chatId) {
         ChatClient selectedClient = selectChatClient(agentType);
         log.info("Routing chat request: chatId={}, mode=single, agentType={}", chatId, agentType);
@@ -68,6 +77,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 .onErrorResume(primaryEx -> fallbackToGeneral(agentType, userMessage, chatId, primaryEx));
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Mono<String> collaborativeCall(AgentRoutingDecision decision, String userMessage, String chatId) {
         return Flux.fromIterable(decision.getExecutionOrder())
                 .concatMap(agentType -> callSpecialist(agentType, userMessage, chatId)
@@ -80,6 +92,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 .flatMap(answers -> synthesizeCollaborativeAnswer(decision, userMessage, chatId, answers));
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Mono<String> callSpecialist(AgentType agentType, String userMessage, String chatId) {
         ChatClient chatClient = selectChatClient(agentType);
         String prompt = """
@@ -93,6 +108,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
         return callAsMono(chatClient, prompt, chatId);
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Mono<String> synthesizeCollaborativeAnswer(
             AgentRoutingDecision decision,
             String userMessage,
@@ -111,6 +129,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
         return callAsMono(generalChatClient, synthesisPrompt, chatId);
     }
 
+    /**
+     * 构建综合提示词。
+     */
     private String buildSynthesisPrompt(AgentRoutingDecision decision, String userMessage, List<AgentAnswer> answers) {
         StringBuilder sb = new StringBuilder();
         sb.append("You are the coordinator agent in a multi-agent workflow.\n");
@@ -134,6 +155,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
         return sb.toString();
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Mono<String> callAsMono(ChatClient chatClient, String prompt, String chatId) {
         return streamWithRetryInternal(chatClient, prompt, chatId)
                 .collectList()
@@ -146,6 +170,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 });
     }
 
+    /**
+     * 获取字符串结果。
+     */
     private String joinChunks(List<String> chunks) {
         StringBuilder sb = new StringBuilder();
         for (String chunk : chunks) {
@@ -156,6 +183,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
         return sb.toString().trim();
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Flux<String> fallbackToGeneral(AgentType agentType, String userMessage, String chatId, Throwable primaryEx) {
         if (agentType == AgentType.GENERAL) {
             log.error("General agent failed: chatId={}", chatId, primaryEx);
@@ -170,6 +200,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 });
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Flux<String> streamWithRetryInternal(ChatClient chatClient, String userMessage, String chatId) {
         return streamCallWithEmptyDetection(chatClient, userMessage, chatId)
                 .onErrorResume(firstEx -> {
@@ -179,6 +212,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 });
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Flux<String> streamCallWithEmptyDetection(ChatClient chatClient, String userMessage, String chatId) {
         AtomicBoolean hasContent = new AtomicBoolean(false);
 
@@ -193,6 +229,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                         : Mono.error(new IllegalStateException("Stream call completed with empty content"))));
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Flux<String> streamCall(ChatClient chatClient, String userMessage, String chatId) {
         return Flux.defer(() -> chatClient.prompt()
                 .user(userMessage)
@@ -201,6 +240,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 .content());
     }
 
+    /**
+     * 返回字符串数据流。
+     */
     private Flux<String> nonStreamCall(ChatClient chatClient, String userMessage, String chatId, Throwable streamEx) {
         log.error("Stream call failed, falling back to non-stream call: chatId={}", chatId, streamEx);
 
@@ -217,6 +259,9 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 });
     }
 
+    /**
+     * 查询聊天客户端。
+     */
     private ChatClient selectChatClient(AgentType agentType) {
         return switch (agentType) {
             case SHOP -> shopAgentChatClient;
@@ -226,10 +271,16 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
         };
     }
 
+    /**
+     * 智能体回答类。
+     */
     private static class AgentAnswer {
         private final AgentType agentType;
         private final String content;
 
+        /**
+         * 构造智能体回答。
+         */
         private AgentAnswer(AgentType agentType, String content) {
             this.agentType = agentType;
             this.content = content;

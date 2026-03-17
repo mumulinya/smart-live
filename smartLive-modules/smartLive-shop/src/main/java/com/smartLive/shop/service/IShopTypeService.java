@@ -5,18 +5,12 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.shop.domain.ShopType;
 
 /**
- * <p>
- *  服务类
- * </p>
- *
- * @author 木木林
- * @since 2021-12-22
+ * 店铺类型服务接口。
  */
 public interface IShopTypeService extends IService<ShopType> {
 
     /**
-     * 查询所有商铺类型
-     * @return 商铺类型列表
+     * 查询店铺类型列表。
      */
     Result queryList();
 }

@@ -7,6 +7,9 @@ import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
 
+/**
+ * 商家聊天请求数据传输对象。
+ */
 @Data
 public class MerchantChatRequestDTO implements Serializable {
 
@@ -30,6 +33,9 @@ public class MerchantChatRequestDTO implements Serializable {
 
     private ShopSuggestDTO shopSuggestData;
 
+    /**
+     * 转换为商家聊天。
+     */
     public MerchantChatDTO toMerchantChatDTO() {
         MerchantChatDTO dto = new MerchantChatDTO();
         dto.setSessionId(parseRequiredLong(sessionId, "sessionId"));
@@ -45,6 +51,9 @@ public class MerchantChatRequestDTO implements Serializable {
         return dto;
     }
 
+    /**
+     * 解析必填 Long 参数。
+     */
     private Long parseRequiredLong(String value, String fieldName) {
         if (!StringUtils.hasText(value)) {
             throw new ServiceException(fieldName + " cannot be blank");
@@ -52,6 +61,9 @@ public class MerchantChatRequestDTO implements Serializable {
         return parseLong(value, fieldName);
     }
 
+    /**
+     * 解析可选 Long 参数。
+     */
     private Long parseOptionalLong(String value, String fieldName) {
         if (!StringUtils.hasText(value)) {
             return null;
@@ -59,6 +71,9 @@ public class MerchantChatRequestDTO implements Serializable {
         return parseLong(value, fieldName);
     }
 
+    /**
+     * 解析 Long 参数。
+     */
     private Long parseLong(String value, String fieldName) {
         try {
             return Long.valueOf(value.trim());

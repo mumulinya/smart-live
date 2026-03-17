@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 商品智能体配置类。
+ */
 @Configuration
 public class ProductAgentConfiguration {
 
@@ -24,6 +27,9 @@ public class ProductAgentConfiguration {
             4. If you return product cards or order results, output valid JSON only.
             """;
 
+    /**
+     * 获取 ReAct 智能体。
+     */
     @Bean("productAgent")
     public ReactAgent productAgent(
             @Qualifier("frameworkChatModel") ChatModel chatModel,

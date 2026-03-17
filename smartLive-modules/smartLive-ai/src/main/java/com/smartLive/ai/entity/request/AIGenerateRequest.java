@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * 生成请求对象。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

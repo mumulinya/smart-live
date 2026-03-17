@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 创建会话数据传输对象。
+ */
 @Data
 public class CreateSessionDTO implements Serializable {
 

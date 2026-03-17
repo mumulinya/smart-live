@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * 店铺Milvus策略类。
+ */
 @Component
 public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
 
@@ -24,11 +27,17 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
     @Qualifier("shopVectorStore")
     private VectorStore shopVectorStore;
 
+    /**
+     * 获取类型。
+     */
     @Override
     public Integer getType() {
         return GlobalBizTypeEnum.SHOP.getCode();
     }
 
+    /**
+     * 获取结果。
+     */
     @Override
     public boolean insertOrUpdate(String id, Object rawData) throws IOException {
         ShopDoc doc = EsTool.convertToObject((Map) rawData, ShopDoc.class);
@@ -43,6 +52,9 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
         return true;
     }
 
+    /**
+     * 获取结果。
+     */
     @Override
     public boolean batchInsert(List<Object> rawDataList) throws IOException {
         List<ShopDoc> shops = deduplicateById(EsTool.convertList(rawDataList, ShopDoc.class));
@@ -62,12 +74,18 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
         return true;
     }
 
+    /**
+     * 删除结果。
+     */
     @Override
     public boolean delete(String id) throws IOException {
         deleteById(id);
         return true;
     }
 
+    /**
+     * 创建文档。
+     */
     @Override
     public Document createDocument(ShopDoc shop) {
         if (shop == null || shop.getId() == null) {
@@ -96,6 +114,9 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
                 .build();
     }
 
+    /**
+     * 获取店铺文档列表。
+     */
     private List<ShopDoc> deduplicateById(List<ShopDoc> rawList) {
         if (rawList == null || rawList.isEmpty()) {
             return List.of();
@@ -109,6 +130,9 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
         return new ArrayList<>(unique.values());
     }
 
+    /**
+     * 批量删除数据。
+     */
     private void deleteBatch(List<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return;
@@ -117,11 +141,17 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
         shopVectorStore.delete(String.format("id in [%s]", String.join(", ", ids)));
     }
 
+    /**
+     * 按ID删除数据。
+     */
     private void deleteById(String id) {
         shopVectorStore.delete(List.of(id));
         shopVectorStore.delete(String.format("id == %s", id));
     }
 
+    /**
+     * 构建内容。
+     */
     private String buildContent(String... values) {
         List<String> segments = new ArrayList<>();
         for (String value : values) {
@@ -132,6 +162,9 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
         return segments.isEmpty() ? "shop" : String.join(" ", segments);
     }
 
+    /**
+     * 处理 putIfNotNull 逻辑。
+     */
     private void putIfNotNull(Map<String, Object> map, String key, Object value) {
         if (value != null) {
             map.put(key, value);

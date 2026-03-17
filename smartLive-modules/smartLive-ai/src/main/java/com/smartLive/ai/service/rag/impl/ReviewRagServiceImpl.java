@@ -20,6 +20,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 评价 RAG 服务实现类。
+ */
 @Service
 @Slf4j
 public class ReviewRagServiceImpl implements IReviewRagService {
@@ -27,6 +30,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
     private final VectorStore reviewVectorStore;
     private final RemoteReviewService remoteReviewService;
 
+    /**
+     * 构造评价 RAG 服务实现类。
+     */
     @Autowired
     public ReviewRagServiceImpl(@Qualifier("reviewVectorStore") VectorStore vectorStore,
                                 RemoteReviewService remoteReviewService) {
@@ -34,6 +40,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         this.remoteReviewService = remoteReviewService;
     }
 
+    /**
+     * 获取评价摘要。
+     */
     @Override
     public String getReviewSummary(Integer sourceType, Long sourceId,
                                    Integer minScore, Integer maxScore, String userMessage) {
@@ -49,6 +58,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return context.toString();
     }
 
+    /**
+     * 搜索评价。
+     */
     @Override
     public List<ReviewVO> searchReviews(String query, Long shopId) {
         if (shopId == null) {
@@ -59,6 +71,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return convertDocumentsToReviewVo(docs);
     }
 
+    /**
+     * 按评分获取评价列表。
+     */
     @Override
     public List<ReviewVO> getReviewsByScore(Long shopId, Integer minScore, Integer maxScore) {
         if (shopId == null) {
@@ -68,6 +83,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return convertDocumentsToReviewVo(docs);
     }
 
+    /**
+     * 按 ID 获取评价。
+     */
     @Override
     public ReviewVO getReviewById(Long reviewId, Long shopId) {
         if (reviewId == null) {
@@ -83,6 +101,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return convertReviewDtoToReviewVo(reviewDTO);
     }
 
+    /**
+     * 搜索评价文档。
+     */
     private List<Document> searchReviewDocs(String query, String baseFilter, String scoreFilter, int topK) {
         try {
             SearchRequest.Builder builder = SearchRequest.builder()
@@ -100,6 +121,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         }
     }
 
+    /**
+     * 合并过滤条件。
+     */
     private String mergeFilter(String baseFilter, String extraFilter) {
         if (!StringUtils.hasText(baseFilter)) {
             return extraFilter;
@@ -110,6 +134,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return baseFilter + " && " + extraFilter;
     }
 
+    /**
+     * 构建来源过滤条件。
+     */
     private String buildSourceFilter(Integer sourceType, Long sourceId) {
         List<String> filters = new ArrayList<>();
         if (sourceType != null) {
@@ -121,10 +148,16 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return String.join(" && ", filters);
     }
 
+    /**
+     * 构建店铺过滤条件。
+     */
     private String buildShopFilter(Long shopId) {
         return shopId == null ? "" : "shopId == " + shopId;
     }
 
+    /**
+     * 构建评分过滤条件。
+     */
     private String buildScoreFilter(Integer minScore, Integer maxScore) {
         if (minScore != null && maxScore != null) {
             return "score >= " + minScore + " && score <= " + maxScore;
@@ -138,6 +171,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return "";
     }
 
+    /**
+     * 转换评价数据传输对象评价视图对象。
+     */
     private ReviewVO convertReviewDtoToReviewVo(ReviewDTO reviewDTO) {
         ReviewVO reviewVO = new ReviewVO();
         reviewVO.setId(reviewDTO.getId());
@@ -167,6 +203,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return reviewVO;
     }
 
+    /**
+     * 获取字符串列表。
+     */
     private List<String> splitImages(String images) {
         if (!StringUtils.hasText(images)) {
             return null;
@@ -177,6 +216,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
                 .toList();
     }
 
+    /**
+     * 将文档列表转换为评价视图对象。
+     */
     private List<ReviewVO> convertDocumentsToReviewVo(List<Document> documents) {
         if (documents == null || documents.isEmpty()) {
             return List.of();
@@ -191,6 +233,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         return list;
     }
 
+    /**
+     * 将文档转换为评价视图对象。
+     */
     private ReviewVO convertDocumentToReviewVo(Document document) {
         if (document == null) {
             return null;
@@ -227,6 +272,9 @@ public class ReviewRagServiceImpl implements IReviewRagService {
         }
     }
 
+    /**
+     * 转换为 Short。
+     */
     private Short toShort(Object value) {
         Integer number = RagMetadataValueUtils.toInteger(value);
         return number == null ? null : number.shortValue();

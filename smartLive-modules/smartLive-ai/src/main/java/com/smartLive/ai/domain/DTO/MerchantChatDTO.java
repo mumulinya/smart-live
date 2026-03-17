@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 商家聊天数据传输对象。
+ */
 @Data
 public class MerchantChatDTO implements Serializable {
 

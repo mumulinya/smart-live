@@ -5,7 +5,7 @@ import com.smartLive.ai.entity.vo.ShopVO;
 import java.util.List;
 
 /**
- * 店铺rag服务
+ * 店铺 RAG 服务
  */
 public interface IShopRagService {
     /**

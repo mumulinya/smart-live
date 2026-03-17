@@ -1,7 +1,7 @@
 package com.smartLive.ai.controller;
 
 import com.smartLive.ai.domain.UserAiSession;
-import com.smartLive.ai.service.IUserAiSessionService;
+import com.smartLive.ai.service.user.IUserAiSessionService;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.Result;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 用户 AI 会话控制器。
+ */
 @Slf4j
 @RestController
 @RequestMapping("/session")
@@ -27,6 +30,9 @@ public class UserAiSessionController extends BaseController {
     @Autowired
     private IUserAiSessionService sessionService;
 
+    /**
+     * 创建会话。
+     */
     @PostMapping("/create")
     public Result createSession(@RequestBody Map<String, String> params) {
         String title = params.get("title");
@@ -34,12 +40,18 @@ public class UserAiSessionController extends BaseController {
         return Result.ok(sessionId);
     }
 
+    /**
+     * 获取会话列表。
+     */
     @GetMapping("/list")
     public Result getSessionList(@RequestParam("current") Integer current) {
         List<UserAiSession> list = sessionService.selectSessionList(current);
         return Result.ok(list);
     }
 
+    /**
+     * 搜索会话。
+     */
     @GetMapping("/search")
     public Result searchSession(@RequestParam("keyword") String keyword,
                                 @RequestParam("current") Integer current) {
@@ -47,6 +59,9 @@ public class UserAiSessionController extends BaseController {
         return Result.ok(list);
     }
 
+    /**
+     * 删除会话。
+     */
     @DeleteMapping("/{sessionId}")
     public Result deleteSession(@PathVariable("sessionId") Long sessionId) {
         boolean success = sessionService.deleteSession(sessionId);
@@ -56,6 +71,9 @@ public class UserAiSessionController extends BaseController {
         return Result.fail("\u5220\u9664\u4f1a\u8bdd\u5931\u8d25");
     }
 
+    /**
+     * 更新会话标题。
+     */
     @PutMapping("/{sessionId}/title")
     public Result updateSessionTitle(@PathVariable("sessionId") Long sessionId,
                                      @RequestBody Map<String, String> params) {

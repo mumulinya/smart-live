@@ -1146,7 +1146,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .collect(Collectors.toList());
 
         executorService.submit(() -> {
-            log.info("缂傚倷鐒﹀畷妯衡枖閺囥垹鐓濈紒鍗炴櫒闂備焦瀵х粙鎴︽嚐椤栨粍顫曢柟瀵稿仦閸欏繘鎮楅敐搴濈盎缂佸弶妞介幃浠嬵敍濮橆剚娈查柣搴＄仛濮樸劑鍩€椤掑喚娼愬ǎ鍥ㄦそ閹焦鎯旈姀銏╂祫闂佸憡鍨崐妤冪玻濮婄＂", Thread.currentThread().getName(), idList);
             List<Review> reviews = query()
                     .in("id", idList)
                     .eq("status", ContentStatusEnum.PUBLISHED.getCode())

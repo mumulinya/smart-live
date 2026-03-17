@@ -9,6 +9,9 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 商家 AI 消息实体类。
+ */
 @Data
 @TableName("merchant_ai_message")
 public class MerchantAiMessage implements Serializable {

@@ -13,11 +13,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 店铺实体类
- * 记录店铺的基础信息、地理坐标以及收藏、评价、销量等统计指标。
- * 
- * @author smartLive
- * @date 2026-03-11
+ * 店铺实体。
  */
 @TableName("shop")
 @AllArgsConstructor

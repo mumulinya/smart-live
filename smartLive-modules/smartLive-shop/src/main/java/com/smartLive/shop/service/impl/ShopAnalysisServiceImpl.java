@@ -32,6 +32,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/**
+ * 店铺经营分析服务实现类。
+ */
 @Service
 @Slf4j
 public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMapper, ShopAnalysisRecord>
@@ -48,6 +51,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
     @Autowired
     private ExecutorService executorService;
 
+    /**
+     * 获取店铺经营分析数据。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ShopAnalysisVO getShopAnalysis(Long shopId, String timeRange) {
@@ -89,6 +95,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         return toShopAnalysisVO(record);
     }
 
+    /**
+     * 获取店铺经营分析记录。
+     */
     @Override
     public ShopAnalysisVO getShopAnalysisRecord(Long analysisRecordId, Long shopId) {
         ShopAnalysisRecord record = getAndCheckRecord(analysisRecordId);
@@ -98,6 +107,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         return toShopAnalysisVO(record);
     }
 
+    /**
+     * 查询并校验经营分析记录。
+     */
     private ShopAnalysisRecord getAndCheckRecord(Long analysisRecordId) {
         if (analysisRecordId == null) {
             throw new BusinessException("analysisRecordId cannot be blank");
@@ -109,6 +121,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         return record;
     }
 
+    /**
+     * 查询当天已生成的经营分析记录。
+     */
     private ShopAnalysisRecord findTodayRecord(Long shopId, String timeRange) {
         LocalDateTime todayStart = LocalDateTime.now().toLocalDate().atStartOfDay();
         LocalDateTime tomorrowStart = todayStart.plusDays(1);
@@ -123,6 +138,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
                 .one();
     }
 
+    /**
+     * 构建店铺经营分析时间范围。
+     */
     private LocalDateTime[] buildShopAnalysisRange(String timeRange) {
         String normalized = normalizeShopAnalysisTimeRange(timeRange);
         LocalDateTime now = LocalDateTime.now();
@@ -138,6 +156,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         }
     }
 
+    /**
+     * 规范化经营分析时间范围。
+     */
     private String normalizeShopAnalysisTimeRange(String timeRange) {
         String normalized = StrUtil.isBlank(timeRange) ? "week" : timeRange.trim().toLowerCase(Locale.ROOT);
         if ("week".equals(normalized) || "month".equals(normalized) || "quarter".equals(normalized)) {
@@ -146,10 +167,16 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         throw new BusinessException("unsupported timeRange");
     }
 
+    /**
+     * 格式化经营分析时间。
+     */
     private String formatShopAnalysisTime(LocalDateTime time) {
         return time.format(SHOP_ANALYSIS_TIME_FORMATTER);
     }
 
+    /**
+     * 异步执行任务并提供默认值。
+     */
     private <T> CompletableFuture<T> supplyAsync(Supplier<T> supplier, T defaultValue, String taskName) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -202,6 +229,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         return record;
     }
 
+    /**
+     * 将分析记录转换为经营分析视图对象。
+     */
     private ShopAnalysisVO toShopAnalysisVO(ShopAnalysisRecord record) {
         if (record == null) {
             return buildEmptyShopAnalysis();
@@ -218,6 +248,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         return result;
     }
 
+    /**
+     * 将数值保留一位小数。
+     */
     private java.math.BigDecimal normalizeOneDecimal(java.math.BigDecimal value) {
         if (value == null) {
             return java.math.BigDecimal.ZERO;
@@ -225,14 +258,23 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         return value.setScale(1, java.math.RoundingMode.HALF_UP);
     }
 
+    /**
+     * 判断数值是否为零。
+     */
     private boolean isZero(Number value) {
         return value == null || value.doubleValue() == 0D;
     }
 
+    /**
+     * 判断数值是否为零。
+     */
     private boolean isZero(java.math.BigDecimal value) {
         return value == null || value.compareTo(java.math.BigDecimal.ZERO) == 0;
     }
 
+    /**
+     * 将商品销量数据转换为视图对象列表。
+     */
     private List<ProductSalesVO> toProductSalesVOList(List<ProductSalesDTO> source) {
         if (source == null) {
             return new ArrayList<>();
@@ -246,6 +288,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 判断商品销量列表是否为空。
+     */
     private boolean isEmptyProductSales(List<ProductSalesDTO> source) {
         if (source == null || source.isEmpty()) {
             return true;
@@ -253,6 +298,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         return source.stream().filter(Objects::nonNull).findAny().isEmpty();
     }
 
+    /**
+     * 解析商品销量数据。
+     */
     private List<ProductSalesVO> parseProductSales(String json) {
         if (StrUtil.isBlank(json)) {
             return new ArrayList<>();
@@ -265,14 +313,23 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         }
     }
 
+    /**
+     * 将时间转换为日期对象。
+     */
     private Date toDate(LocalDateTime time) {
         return time == null ? null : java.sql.Timestamp.valueOf(time);
     }
 
+    /**
+     * 构建空的经营分析结果。
+     */
     private ShopAnalysisVO buildEmptyShopAnalysis() {
         return new ShopAnalysisVO(null, 0, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO, 0, new ArrayList<>(), new ArrayList<>());
     }
 
+    /**
+     * 规范化经营分析结果。
+     */
     private void normalizeShopAnalysis(ShopAnalysisVO result) {
         if (result.getTotalOrders() == null) {
             result.setTotalOrders(0);

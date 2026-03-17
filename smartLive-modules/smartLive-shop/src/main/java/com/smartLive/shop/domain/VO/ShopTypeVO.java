@@ -8,11 +8,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 店铺类型返回对象 (View Object)
- * 用于前端展示店铺类型详情
- * 
- * @author 虎哥
- * @since 2021-12-22
+ * 店铺类型视图对象。
  */
 @Data
 public class ShopTypeVO implements Serializable {

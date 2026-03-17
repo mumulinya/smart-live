@@ -20,6 +20,9 @@ public class AgentChatContext {
     private final AutonomousAgentStrategy autonomousAgentStrategy;
     private final Environment environment;
 
+    /**
+     * 构造智能体聊天上下文。
+     */
     public AgentChatContext(
             FrameworkRoutingStrategy frameworkRoutingStrategy,
             DirectRoutingStrategy directRoutingStrategy,

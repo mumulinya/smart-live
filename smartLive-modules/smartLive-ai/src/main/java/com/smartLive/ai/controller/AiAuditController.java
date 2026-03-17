@@ -10,16 +10,25 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * AI 审核控制器。
+ */
 @RestController
 @RequestMapping("/ai/audit")
 public class AiAuditController {
 
     private final ChatClient chatClient;
 
+    /**
+     * 构造 AI 审核控制器。
+     */
     public AiAuditController(@Qualifier("auditChatClient") ChatClient chatClient) {
         this.chatClient = chatClient;
     }
 
+    /**
+     * 校验审核结果。
+     */
     @PostMapping("/check")
     public AuditResultDTO check(@RequestBody AuditCheckDTO dto) {
         if (dto == null || dto.getContent() == null || dto.getContent().isBlank()) {
@@ -44,6 +53,9 @@ public class AiAuditController {
         return parseAuditResult(result);
     }
 
+    /**
+     * 解析审核结果。
+     */
     private AuditResultDTO parseAuditResult(String result) {
         if (result == null || result.isBlank()) {
             return new AuditResultDTO(null, "AI审核结果为空");
@@ -71,6 +83,9 @@ public class AiAuditController {
         }
     }
 
+    /**
+     * 规范化类型。
+     */
     private String normalizeType(String type) {
         if (type == null || type.isBlank()) {
             return "content";
@@ -78,6 +93,9 @@ public class AiAuditController {
         return type.trim().toLowerCase();
     }
 
+    /**
+     * 解析类型描述。
+     */
     private String resolveTypeDesc(String type) {
         return switch (type) {
             case "blog" -> "博客";

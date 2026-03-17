@@ -3,10 +3,19 @@ package com.smartLive.ai.service.chat;
 import com.smartLive.ai.entity.request.AIChatRequest;
 import reactor.core.publisher.Flux;
 
+/**
+ * 智能体聊天策略类。
+ */
 public interface AgentChatStrategy {
 
+    /**
+     * 返回字符串数据流。
+     */
     Flux<String> streamChat(AIChatRequest chatRequest);
 
+    /**
+     * 解析聊天 ID。
+     */
     default String resolveChatId(AIChatRequest request) {
         if (request == null) {
             return "anonymous";
@@ -20,6 +29,9 @@ public interface AgentChatStrategy {
         return "anonymous";
     }
 
+    /**
+     * 构建enriched消息。
+     */
     default String buildEnrichedMessage(AIChatRequest request) {
         StringBuilder sb = new StringBuilder();
         sb.append("User message: ").append(request.getMessage());

@@ -6,9 +6,15 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * RAG 元数据值工具类。
+ */
 @Slf4j
 public final class RagMetadataValueUtils {
 
+    /**
+     * 构造 RAG 元数据值工具类。
+     */
     private RagMetadataValueUtils() {
     }
 
