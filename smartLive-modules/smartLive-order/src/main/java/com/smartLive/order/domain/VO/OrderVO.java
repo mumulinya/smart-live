@@ -13,9 +13,9 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 订单返回对象 (View Object)
- * 用于前端展示订单详情
- * * @author mumulin
+ * 订单返回对象，用于前端展示订单详情。
+ *
+ * @author mumulin
  * @date 2025-09-21
  */
 @Data
@@ -45,9 +45,7 @@ public class OrderVO extends BaseEntity implements Serializable
     /** 副标题 */
     private String subTitle;
 
-    /** * 代金券单价/原价
-     * (注意：这是券的面额或单价，不是订单总实付)
-     */
+    /** 代金券单价/原价（券面额，不是订单总实付） */
     private BigDecimal payValue;
 
     /** 抵扣金额，单位是分 */
@@ -55,31 +53,23 @@ public class OrderVO extends BaseEntity implements Serializable
 
     // ========== 新增核心展示字段 ==========
 
-    /** * 订单实付总金额 (单位: 分)
-     * (新增：展示用户实际支付了多少钱)
-     */
+    /** 订单实付总金额（单位：分） */
     private BigDecimal payAmount;
-    /** * 订单封面图片 */
+    /** 订单封面图片 */
     private String coverImg;
-    /** * 评价状态
-     * 0：未评价；1：已评价
-     * (新增：用于前端判断显示"去评价"还是"查看评价"按钮)
-     */
+    /** 评价状态：0 未评价，1 已评价 */
     private Integer reviewStatus;
 
-    /** * 评价ID */
+    /** 评价ID */
     @JsonSerialize(using = ToStringSerializer.class)
     private Long reviewId;
 
-    /** * 评价时间
-     * (新增：展示评价日期)
-     */
+    /** 评价时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date reviewTime;
 
     /**
-     * 退款金额 (单位: 分)
-     * (新增：如果有退款，展示退了多少)
+     * 退款金额（单位：分）
      */
     private BigDecimal refundAmount;
 
@@ -124,7 +114,10 @@ public class OrderVO extends BaseEntity implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date expireTime;
 
+    /** 商品名称 */
     private String productName;
+    /** 店铺名称 */
     private String shopName;
+    /** 用户昵称 */
     private String userName;
 }

@@ -53,6 +53,9 @@ import com.smartLive.common.core.constant.mq.ProductMqConstants;
 
 import jakarta.annotation.Resource;
 
+/**
+ * 订单服务实现类，负责订单创建、支付、核销及统计等业务处理。
+ */
 @Service
 @Slf4j
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrderService
@@ -92,6 +95,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
     private IOrderService proxy;
 
+    /**
+     * 根据订单ID查询订单。
+     *
+     * @param id 订单ID
+     * @return 订单实体
+     */
     @Override
     public Order selectOrderById(Long id)
     {
@@ -99,6 +108,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return orderMapper.selectOrderById(id);
     }
 
+    /**
+     * 查询订单列表并补充商品、店铺与用户信息。
+     *
+     * @param order 查询条件
+     * @return 订单列表
+     */
     @Override
     public List<OrderVO> selectOrderList(Order order)
     {
@@ -135,6 +150,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return orderVOList;
     }
 
+    /**
+     * 新增订单并写入创建时间。
+     *
+     * @param order 订单信息
+     * @return 影响行数
+     */
     @Override
     public int insertOrder(Order order)
     {
@@ -142,6 +163,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return orderMapper.insertOrder(order);
     }
 
+    /**
+     * 更新订单并写入更新时间。
+     *
+     * @param order 订单信息
+     * @return 影响行数
+     */
     @Override
     public int updateOrder(Order order)
     {
@@ -149,25 +176,42 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return orderMapper.updateOrder(order);
     }
 
+    /**
+     * 批量删除订单。
+     *
+     * @param ids 订单ID数组
+     * @return 影响行数
+     */
     @Override
     public int deleteOrderByIds(Long[] ids)
     {
         return orderMapper.deleteOrderByIds(ids);
     }
 
+    /**
+     * 删除单个订单。
+     *
+     * @param id 订单ID
+     * @return 影响行数
+     */
     @Override
     public int deleteOrderById(Long id)
     {
         return orderMapper.deleteOrderById(id);
     }
 
+    /**
+     * 创建订单并触发库存扣减与延迟检查消息。
+     *
+     * @param order 订单信息
+     */
     public  void createOrder(Order order) {
         Long userId = order.getUserId();
         Integer count = query()
                 .eq("user_id", userId)
                 .eq("source_id", order.getSourceId())
                 .notIn("status",
-                        OrderStatusConstants.EXPIRED,   // 闂傚倸鍊搁崐椋庣矆娓氣偓楠炴牠顢曚綅閸ヮ剦鏁冮柨鏇楀亾闁汇倗鍋撶换娑㈠箣閻愨晜锛堝┑鐐叉▕娴滄繈寮插┑瀣厓鐟滄粓宕滈悢鐓庢瀬?
+                        OrderStatusConstants.EXPIRED,   // 排除已过期订单，避免重复创建
                         OrderStatusConstants.CANCELLED,
                         OrderStatusConstants.REFUNDED
                 ).count().intValue();
@@ -202,10 +246,20 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 统一处理订单创建入口。
+     *
+     * @param order 订单信息
+     */
     public void handleOrder(Order order) {
         createOrder(order);
     }
 
+    /**
+     * 增加商品销量统计数据。
+     *
+     * @param order 订单信息
+     */
     private void incrementSales(Order order) {
         if (order == null || order.getSourceId() == null) {
             return;
@@ -220,8 +274,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         redisService.setCacheSet(SalesTypeEnum.PRODUCT_SALES.getDirtyKey(), order.getSourceId().toString());
     }
 
+    /**
+     * 增加店铺销量统计数据。
+     *
+     * @param order 订单信息
+     */
     private void incrementShopSales(Order order) {
-        log.info("闂傚倸鍊搁崐椋庢閿熺姴纾婚柛娑卞灡閺嗘粓鏌熼悜姗嗘▌闁绘垼妫勭粈鍐煃閸濆嫬鈧悂宕濋崨顓涙斀閹烘娊宕愰弴銏犵疇闊洦绋戠粻鐘崇箾閸℃ɑ灏伴柍閿嬪灴楠炴牜鈧稒蓱鐏忣厼霉濠婂牏鐣烘慨濠勭帛閹峰懘鎮烽幍顔俱偡缂傚倷鑳剁划顖滄暜閻愬弬锝夊箛閻楀牊娅嗛梻浣诡儥閸ㄧ増绂嶉悙顒傜闁瑰鍎愭禒鐐亜韫囨挾鍚囬柛銉墮閻撴盯鏌涘☉鍗炴灈濞? order={}", order);
+        log.info("开始更新店铺销量统计，order={}", order);
         if (order == null || order.getVerifyShopId() == null) {
             return;
         }
@@ -235,6 +294,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         redisService.setCacheSet(SalesTypeEnum.SHOP_SALES.getDirtyKey(), shopId.toString());
     }
 
+    /**
+     * 回滚销量统计数据。
+     *
+     * @param order 订单信息
+     * @param decrementShop 是否同步回滚店铺销量
+     */
     private void decrementSales(Order order, boolean decrementShop) {
         if (order == null || order.getSourceId() == null) {
             return;
@@ -257,6 +322,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 初始化销量统计缓存。
+     *
+     * @param type 统计类型（商品或店铺）
+     * @param id 业务ID
+     */
     private void initSalesCount(SalesTypeEnum type, Long id) {
         Integer baseline = 0;
         Integer totalOrders = 0;
@@ -274,6 +345,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         redisService.setCacheObject(countKey, initialCount);
     }
 
+    /**
+     * 分页查询当前用户的订单列表。
+     *
+     * @param order 查询条件
+     * @param current 当前页码
+     * @return 订单列表
+     */
     @Override
     public List<OrderVO> queryMyOrderList(Order order, Integer current) {
         Page<Order> result = query()
@@ -301,6 +379,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return orderVOList;
     }
 
+    /**
+     * 余额支付订单。
+     *
+     * @param id 订单ID
+     * @return 影响行数
+     */
     @Override
     public Integer pay(Long id) {
         Order order = getById(id);
@@ -316,6 +400,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return updateOrder(order);
     }
 
+    /**
+     * 支付成功回调处理。
+     *
+     * @param orderId 订单ID
+     * @param payType 支付方式
+     * @return 影响行数
+     */
     @Override
     public Integer paySuccess(Long orderId, Integer payType) {
         Order order = getById(orderId);
@@ -333,6 +424,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return updateOrder(order);
     }
 
+    /**
+     * 支付后根据商品有效期信息更新订单有效期。
+     *
+     * @param order 订单信息
+     */
     private void updateExpireTimeAfterPayment(Order order) {
         if (order == null || order.getSourceId() == null) {
             return;
@@ -355,6 +451,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 取消订单并处理库存与退款逻辑。
+     *
+     * @param id 订单ID
+     * @return 影响行数
+     */
     @Override
     public Integer cancel(Long id) {
         Order order = getById(id);
@@ -378,6 +480,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return i;
     }
 
+    /**
+     * 订单退款处理。
+     *
+     * @param id 订单ID
+     * @return 影响行数
+     */
     @Override
     public Integer refund(Long id) {
         Order order = getById(id);
@@ -403,6 +511,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return i;
     }
 
+    /**
+     * 发送退款消息到MQ。
+     *
+     * @param order 订单信息
+     */
     private void sendRefundMessage(Order order) {
         OrderRefundMessage msg = new OrderRefundMessage();
         msg.setOrderId(order.getId());
@@ -417,6 +530,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         log.info("refund message sent, orderId={}, userId={}, amount={}", order.getId(), order.getUserId(), order.getPayAmount());
     }
 
+    /**
+     * 核销/使用订单并触发积分消息。
+     *
+     * @param id 订单ID
+     * @param verifyShopId 核销门店ID
+     * @return 影响行数
+     */
     @Override
     public Integer use(Long id, Long verifyShopId) {
         Order order = getById(id);
@@ -455,21 +575,38 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         PointsMqConstants.POINTS_ORDER_ROUTING_KEY,
                         pointsMsg
                 );
-                log.info("闂傚倸鍊风粈渚€骞夐敓鐘冲仭闁挎洖鍊搁崹鍌炴煕瑜庨〃鍛存倿閸偁浜滈柟瀵稿仜椤曟粎绱掓担鍝勵暭闁靛洤瀚伴獮妯虹暦閸モ敩銊╂倵鐟欏嫭绌跨紒缁樼箓椤曪綁骞橀钘変簻闂佸憡绻傜€氬嘲螞鎼淬劍鈷掗柛灞剧懅椤︼妇绱掗妸鈺€鎲剧€规洘鍨块獮妯肩磼濡厧骞樺┑掳鍊х徊浠嬪窗濮橆儵娑㈠箣閻樺啿浠忛悷婊勬瀵鈽夐姀鐘殿唺闂佺懓顕崑鐐哄磿濡ゅ搫鈹戦悩鍨毄闁稿鍋ゅ畷褰掓偨閸涘﹤浜辨繝鐢靛Т閸燁偊顢? orderId={}, userId={}, payAmount={}", order.getId(), order.getUserId(), order.getPayAmount());
+                log.info("发送积分消息成功，orderId={}, userId={}, payAmount={}", order.getId(), order.getUserId(), order.getPayAmount());
             }
         }
         return i;
     }
 
+    /**
+     * 获取用户订单总数。
+     *
+     * @param userId 用户ID
+     * @return 订单数量
+     */
     @Override
     public Integer getOrderCount(Long userId) {
         return query().eq("user_id", userId).count().intValue();
     }
 
+    /**
+     * 获取全部订单总数。
+     *
+     * @return 订单总数
+     */
     @Override
     public Integer getOrderTotal() {
         return query().count().intValue();
     }
+    /**
+     * 根据订单ID获取订单详情VO。
+     *
+     * @param id 订单ID
+     * @return 订单视图对象
+     */
     @Override
     public OrderVO getOrderById(Long id) {
         Order order = selectOrderById(id);
@@ -490,6 +627,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return null;
     }
 
+    /**
+     * 更新订单评价状态。
+     *
+     * @param orderId 订单ID
+     * @param reviewId 评价ID
+     * @param reviewTime 评价时间
+     * @return 影响行数
+     */
     @Override
     public Integer updateOrderReviewStatus(Long orderId, Long reviewId, java.util.Date reviewTime) {
         boolean update = update().eq("id", orderId)
@@ -503,6 +648,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
 
+    /**
+     * 获取订单创建状态，供前端轮询。
+     *
+     * @param id 订单ID
+     * @return 状态字符串
+     */
     @Override
     public String getOrderStatus(Long id) {
         String key = "order:status:" + id;
@@ -518,11 +669,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return "FAILED";
     }
 
+    /**
+     * 统计商品销量。
+     *
+     * @return 商品销量列表
+     */
     @Override
     public List<ProductSoldVO> countProductSold() {
         return orderMapper.countProductSold();
     }
 
+    /**
+     * 统计店铺近一周核销订单数。
+     *
+     * @param shopId 店铺ID
+     * @return 订单数量
+     */
     @Override
     public Integer countWeekOrders(Long shopId) {
         if (shopId == null) {
@@ -531,6 +693,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Integer count = orderMapper.countWeekOrders(shopId);
         return count == null ? 0 : count;
     }
+    /**
+     * 获取店铺订单分析数据。
+     *
+     * @param shopId 店铺ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 店铺订单分析
+     */
     @Override
     public ShopOrderAnalysisVO getShopOrderAnalysis(Long shopId, String startTime, String endTime) {
         if (shopId == null) {
@@ -546,6 +716,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return analysis;
     }
 
+    /**
+     * 获取店铺经营建议数据。
+     *
+     * @param shopId 店铺ID
+     * @param timeRange 时间范围标识
+     * @return 店铺经营建议
+     */
     @Override
     public ShopOrderSuggestVO getShopOrderSuggest(Long shopId, String timeRange) {
         if (shopId == null) {
@@ -561,6 +738,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return suggest;
     }
 
+    /**
+     * 获取店铺复购率。
+     *
+     * @param shopId 店铺ID
+     * @param timeRange 时间范围标识
+     * @return 复购率
+     */
     @Override
     public java.math.BigDecimal getShopRepurchaseRate(Long shopId, String timeRange) {
         if (shopId == null) {
@@ -575,6 +759,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return repurchaseRate == null ? java.math.BigDecimal.ZERO : repurchaseRate;
     }
 
+    /**
+     * 解析并校验业务时间范围。
+     *
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 时间范围数组
+     */
     private java.time.LocalDateTime[] parseBusinessTimeRange(String startTime, String endTime) {
         if (startTime == null || endTime == null || startTime.isBlank() || endTime.isBlank()) {
             throw new BusinessException("startTime and endTime are required");
@@ -591,6 +782,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 构建经营建议统计时间范围。
+     *
+     * @param timeRange 时间范围标识
+     * @return 时间范围数组
+     */
     private java.time.LocalDateTime[] buildOrderSuggestRange(String timeRange) {
         String normalized = timeRange == null || timeRange.isBlank() ? "week" : timeRange.trim().toLowerCase(java.util.Locale.ROOT);
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -602,6 +799,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         };
     }
 
+    /**
+     * 构建可选时间范围，不传参则返回空。
+     *
+     * @param timeRange 时间范围标识
+     * @return 时间范围数组或空
+     */
     private java.time.LocalDateTime[] buildOptionalOrderRange(String timeRange) {
         if (timeRange == null || timeRange.isBlank()) {
             return null;
@@ -717,6 +920,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orders.forEach(order -> order.setUserName(userNameMap.getOrDefault(order.getUserId(), "")));
     }
 
+    /**
+     * 解析订单可用店铺ID集合。
+     *
+     * @param order 订单信息
+     * @return 店铺ID列表
+     */
     private List<Long> collectOrderShopIds(OrderVO order) {
         List<Long> shopIds = new ArrayList<>();
         if (order == null) {
@@ -739,14 +948,29 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return shopIds;
     }
 
+    /**
+     * 构建空的订单分析对象。
+     *
+     * @return 订单分析对象
+     */
     private ShopOrderAnalysisVO buildEmptyOrderAnalysis() {
         return new ShopOrderAnalysisVO(0, java.math.BigDecimal.ZERO, 0, new ArrayList<>());
     }
 
+    /**
+     * 构建空的订单建议对象。
+     *
+     * @return 订单建议对象
+     */
     private ShopOrderSuggestVO buildEmptyOrderSuggest() {
         return new ShopOrderSuggestVO(0, new ArrayList<>(), new ArrayList<>());
     }
 
+    /**
+     * 规整订单分析数据的默认值。
+     *
+     * @param analysis 订单分析对象
+     */
     private void normalizeOrderAnalysis(ShopOrderAnalysisVO analysis) {
         if (analysis.getTotalOrders() == null) {
             analysis.setTotalOrders(0);
@@ -762,6 +986,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 规整订单建议数据的默认值。
+     *
+     * @param suggest 订单建议对象
+     */
     private void normalizeOrderSuggest(ShopOrderSuggestVO suggest) {
         if (suggest.getWeekOrders() == null) {
             suggest.setWeekOrders(0);
@@ -774,6 +1003,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 订单过期处理。
+     *
+     * @param id 订单ID
+     * @return 影响行数
+     */
     @Override
     public Integer expired(Long id) {
         Order order = getById(id);

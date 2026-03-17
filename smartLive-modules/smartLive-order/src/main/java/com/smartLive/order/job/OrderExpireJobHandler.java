@@ -55,7 +55,7 @@ public class OrderExpireJobHandler {
         // 计算临期窗口的截止时间（当前时间 + 3天）
         Date soonExpireDeadline = new Date(nowTime + EXPIRE_NOTIFY_DAYS * 24L * 60 * 60 * 1000);
 
-        // 查询已支付且即将过期（expireTime 在 [今天, 今天+3天] 之间）的订单
+        // 查询已支付且即将过期（过期时间在 [今天, 今天+3天] 之间）的订单
         List<Order> orders = orderService.lambdaQuery()
                 .eq(Order::getStatus, OrderStatusConstants.PAID)
                 .isNotNull(Order::getExpireTime)
@@ -73,7 +73,7 @@ public class OrderExpireJobHandler {
 
         for (Order order : orders) {
             try {
-                // 调用 MQ 发送系统通知给 IM 模块
+                // 调用消息队列发送系统通知给即时通讯模块
                 log.info("【临期提醒】给用户 {} 发送订单 {} 的即将过期提醒", order.getUserId(), order.getId());
                 
                 String content = String.format("温馨提示：您购买的商品（订单号：%s）还有不足 %d 天即将过期，请尽快前往使用，以免影响您的权益哦~", 
@@ -88,7 +88,7 @@ public class OrderExpireJobHandler {
                 createDTO.setTitle("订单过期提醒");
                 createDTO.setAction("order_expire");
                 createDTO.setExtraData(map);
-                // 复用系统的内部通知结构发送MQ
+                // 复用系统的内部通知结构发送消息队列
                 mqMessageSendUtils.sendMqMessage(
                         ChatMqConstants.SYSTEM_NOTICE_EXCHANGE,
                         ChatMqConstants.SYSTEM_NOTICE_ROUTING,
@@ -118,7 +118,7 @@ public class OrderExpireJobHandler {
 
         Date now = new Date();
 
-        // 1. 查询已过期（expireTime < 当前时间）且状态仍为已支付(2)的未使用订单
+        // 1. 查询已过期（过期时间 < 当前时间）且状态仍为已支付(2)的未使用订单
         List<Order> orders = orderService.lambdaQuery()
                 .eq(Order::getStatus, OrderStatusConstants.PAID)
                 .isNotNull(Order::getExpireTime)

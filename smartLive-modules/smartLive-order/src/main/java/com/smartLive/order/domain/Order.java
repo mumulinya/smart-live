@@ -20,8 +20,9 @@ import com.smartLive.common.core.annotation.Excel;
 import com.smartLive.common.core.web.domain.BaseEntity;
 
 /**
- * 订单表对象 tb_order
- * * @author mumulin
+ * 订单表实体对象，对应表 tb_order。
+ *
+ * @author mumulin
  * @date 2025-09-21
  */
 @TableName("`order`")
@@ -57,7 +58,7 @@ public class Order extends BaseEntity implements Serializable
     @Excel(name = "订单状态", readConverterExp = "1=未支付,2=已支付,3=已核销,4=已取消,5=退款中,6=已退款")
     private Integer status;
 
-    // ========== 新增核心交易字段 Start ==========
+    // ========== 新增核心交易字段 开始 ==========
 
     /** 实付金额 (单位: 分) */
     @Excel(name = "实付金额(分)")
@@ -71,7 +72,7 @@ public class Order extends BaseEntity implements Serializable
     @Excel(name = "第三方支付流水号")
     private String outTradeNo;
 
-    // ========== 评价相关字段 (Comment 改为 Review) Start ==========
+    // ========== 评价相关字段（评论字段调整为评价字段）开始 ==========
 
     /** 评价状态 0：未评价；1：已评价 */
     @Excel(name = "评价状态", readConverterExp = "0=未评价,1=已评价")
@@ -87,7 +88,7 @@ public class Order extends BaseEntity implements Serializable
     @Excel(name = "评价时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date reviewTime;
 
-    // ========== 时间与退款字段 Start ==========
+    // ========== 时间与退款字段 开始 ==========
 
     /** 支付时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

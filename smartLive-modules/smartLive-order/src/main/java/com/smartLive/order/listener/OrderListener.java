@@ -16,6 +16,9 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
 
+/**
+ * 订单消息监听器，处理下单、支付延迟、取消回滚等消息。
+ */
 @Component
 @Slf4j
 public class OrderListener {
@@ -70,7 +73,7 @@ public class OrderListener {
             }
             log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
 
-            //DB 兜底：判断当前订单是否重复创建
+            // 数据库兜底：判断当前订单是否重复创建
             if (orderService.getById(order.getId()) != null) {
                 log.info("[MQ幂等] 订单已存在（DB兜底），orderId={}", order.getId());
                 channel.basicAck(deliveryTag, false);
@@ -126,7 +129,7 @@ public class OrderListener {
             log.info("[MQ幂等] 首次消费，key={}", idempotentKey);
 
             log.info("开始处理订单信息: {}", order);
-            //DB 兜底：判断当前订单是否重复创建
+            // 数据库兜底：判断当前订单是否重复创建
             if (orderService.getById(order.getId()) != null) {
                 log.info("[MQ幂等] 订单已存在（DB兜底），orderId={}", order.getId());
                 channel.basicAck(deliveryTag, false);
@@ -140,7 +143,7 @@ public class OrderListener {
                 throw new RuntimeException("普通订单保存失败，触发本地重试");
             }
 
-            // 创建成功，删除 Redis 占位符
+            // 创建成功，删除缓存占位符
             redisService.deleteObject("order:status:" + order.getId());
 
             //发送延迟消息，检测订单支付状态
@@ -275,7 +278,7 @@ public class OrderListener {
     ))
     public void handleDeadLetter(Order order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
         log.error("死信队列收到订单信息为: {}", order);
-        // TODO: 保存到数据库异常表
+        // 待办：保存到数据库异常表
         channel.basicAck(deliveryTag, false);
     }
 }

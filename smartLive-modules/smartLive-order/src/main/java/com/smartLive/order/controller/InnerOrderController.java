@@ -15,22 +15,44 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 订单内部接口控制器，供内部服务调用。
+ */
 @RestController
 @RequestMapping("/inner/order")
 public class InnerOrderController extends BaseController {
     @Autowired
     private IOrderService orderService;
 
+    /**
+     * 获取用户订单数量。
+     *
+     * @param userId 用户ID
+     * @return 订单数量
+     */
     @GetMapping("/getOrderCount/{userId}")
     Integer getCommentCount(@PathVariable("userId") Long userId) {
         return orderService.getOrderCount(userId);
     }
 
+    /**
+     * 获取订单总数量。
+     *
+     * @return 订单数量
+     */
     @GetMapping("/getOrderTotal")
     Integer getOrderTotal() {
         return orderService.getOrderTotal();
     }
 
+    /**
+     * 更新订单评价状态。
+     *
+     * @param orderId 订单ID
+     * @param reviewId 评价ID
+     * @param reviewTime 评价时间
+     * @return 影响行数
+     */
     @PutMapping("/updateOrderReviewStatus/{orderId}")
     Integer updateOrderReviewStatus(@PathVariable("orderId") Long orderId,
                                     @RequestParam(value = "reviewId", required = false) Long reviewId,
@@ -38,21 +60,47 @@ public class InnerOrderController extends BaseController {
         return orderService.updateOrderReviewStatus(orderId, reviewId, reviewTime);
     }
 
+    /**
+     * 支付成功回调处理。
+     *
+     * @param orderId 订单ID
+     * @param payType 支付方式
+     * @return 影响行数
+     */
     @PutMapping("/paySuccess/{orderId}/{payType}")
     Integer paySuccess(@PathVariable("orderId") Long orderId, @PathVariable("payType") Integer payType) {
         return orderService.paySuccess(orderId, payType);
     }
 
+    /**
+     * 统计商品销量。
+     *
+     * @return 商品销量列表
+     */
     @GetMapping("/count/product/sold")
     public List<ProductSoldVO> countProductSold() {
         return orderService.countProductSold();
     }
 
+    /**
+     * 统计店铺近一周核销订单数。
+     *
+     * @param shopId 店铺ID
+     * @return 订单数量
+     */
     @GetMapping("/count/week/orders")
     public Integer countWeekOrders(@RequestParam("shopId") Long shopId) {
         return orderService.countWeekOrders(shopId);
     }
 
+    /**
+     * 获取店铺订单分析数据。
+     *
+     * @param shopId 店铺ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 店铺订单分析
+     */
     @GetMapping("/analysis/{shopId}")
     public ShopOrderAnalysisVO getShopOrderAnalysis(@PathVariable("shopId") Long shopId,
                                                     @RequestParam("startTime") String startTime,
@@ -60,12 +108,26 @@ public class InnerOrderController extends BaseController {
         return orderService.getShopOrderAnalysis(shopId, startTime, endTime);
     }
 
+    /**
+     * 获取店铺经营建议数据。
+     *
+     * @param shopId 店铺ID
+     * @param timeRange 时间范围标识
+     * @return 店铺经营建议
+     */
     @GetMapping("/suggest/{shopId}")
     public ShopOrderSuggestVO getShopOrderSuggest(@PathVariable("shopId") Long shopId,
                                                   @RequestParam(value = "timeRange", defaultValue = "week") String timeRange) {
         return orderService.getShopOrderSuggest(shopId, timeRange);
     }
 
+    /**
+     * 获取店铺复购率。
+     *
+     * @param shopId 店铺ID
+     * @param timeRange 时间范围标识
+     * @return 复购率
+     */
     @GetMapping("/repurchase-rate/{shopId}")
     public java.math.BigDecimal getShopRepurchaseRate(@PathVariable("shopId") Long shopId,
                                                        @RequestParam(value = "timeRange", required = false) String timeRange) {

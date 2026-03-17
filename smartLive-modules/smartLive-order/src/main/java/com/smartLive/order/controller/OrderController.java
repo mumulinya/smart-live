@@ -20,7 +20,7 @@ import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.page.TableDataInfo;
 
 /**
- * 订单表Controller
+ * 订单表控制器。
  *
  * @author mumulin
  * @date 2025-09-21
@@ -102,11 +102,15 @@ public class OrderController extends BaseController
 
 
     /**
-     * 获取当前用户订单列表
+     * 获取当前用户订单列表。
+     *
+     * @param order 查询条件
+     * @param current 当前页码
+     * @return 订单列表
      */
     @GetMapping("/of/me")
     public Result queryMyOrderList(Order order,@RequestParam(value = "current", defaultValue = "1") Integer current) {
-        //获取当前用户id
+        // 获取当前用户编号
         Long userId = UserContextHolder.getUser().getId();
         order.setUserId(userId);
         List<OrderVO> orderList = orderService.queryMyOrderList(order, current);
@@ -114,9 +118,10 @@ public class OrderController extends BaseController
     }
 
     /**
-     * 根据订单id查询订单
-     * @param id
-     * @return
+     * 根据订单ID查询订单。
+     *
+     * @param id 订单ID
+     * @return 订单详情
      */
     @GetMapping("/getOrderById/{id}")
     public Result getOrderById(@PathVariable("id") Long id){
@@ -175,7 +180,8 @@ public class OrderController extends BaseController
 
 
     /**
-     * 查询订单创建状态 (用于前端轮询)
+     * 查询订单创建状态（用于前端轮询）。
+     *
      * @param id 订单ID
      * @return PENDING / SUCCESS / FAILED
      */

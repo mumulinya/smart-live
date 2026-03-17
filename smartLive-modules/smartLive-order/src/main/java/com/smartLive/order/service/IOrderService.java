@@ -11,6 +11,9 @@ import com.smartLive.order.domain.VO.ShopOrderSuggestVO;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * 订单业务服务接口。
+ */
 public interface IOrderService extends IService<Order> {
     /**
      * 查询订单详情
@@ -122,6 +125,9 @@ public interface IOrderService extends IService<Order> {
 
     ShopOrderSuggestVO getShopOrderSuggest(Long shopId, String timeRange);
 
+    /**
+     * 获取店铺复购率
+     */
     BigDecimal getShopRepurchaseRate(Long shopId, String timeRange);
     /**
      * 订单过期作废处理
