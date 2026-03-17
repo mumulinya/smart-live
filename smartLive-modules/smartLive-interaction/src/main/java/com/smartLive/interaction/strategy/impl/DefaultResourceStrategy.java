@@ -1,6 +1,7 @@
 package com.smartLive.interaction.strategy.impl;
 
 import com.smartLive.interaction.strategy.resource.ResourceStrategy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -11,6 +12,7 @@ import java.util.List;
  * Default ResourceStrategy.
  */
 @Component
+@Slf4j
 public class DefaultResourceStrategy implements ResourceStrategy<Object> {
 
     @Override
@@ -20,6 +22,7 @@ public class DefaultResourceStrategy implements ResourceStrategy<Object> {
 
     @Override
     public List<Object> getResourceList(List<Long> sourceIdList) {
+        log.info("DefaultResourceStrategy.getResourceList: {}", sourceIdList);
         return Collections.emptyList();
     }
 

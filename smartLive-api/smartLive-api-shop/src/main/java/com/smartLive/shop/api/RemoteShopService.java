@@ -71,7 +71,10 @@ public interface RemoteShopService {
     ShopAnalysisDTO getShopAnalysis(@RequestParam("shopId") Long shopId,
                                     @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
 
+    @GetMapping("/inner/shop/analysis/record/{analysisRecordId}")
+    ShopAnalysisDTO getShopAnalysisRecord(@PathVariable("analysisRecordId") Long analysisRecordId,
+                                          @RequestParam("shopId") Long shopId);
+
     @GetMapping("/inner/shop/suggest")
-    ShopSuggestDTO getShopSuggest(@RequestParam("shopId") Long shopId,
-                                  @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
+    ShopSuggestDTO getShopSuggest(@RequestParam("shopId") Long shopId);
 }

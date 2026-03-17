@@ -1,0 +1,2 @@
+com.smartLive.ai.api.factory.RemoteAiMerchantFallbackFactory
+com.smartLive.ai.api.factory.RemoteAiAuditFallbackFactory

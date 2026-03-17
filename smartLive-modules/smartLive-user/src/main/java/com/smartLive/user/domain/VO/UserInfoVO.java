@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * 用户信息返回对象 (View Object)
  * 用于前端展示用户详细信息
- * 
+ *
  * @author mumulin
  * @date 2025-09-21
  */
@@ -50,12 +50,14 @@ public class UserInfoVO implements Serializable
 
     /** 会员级别，0~9级,0代表未开通会员 */
     private String level;
-    
+
     /** 背景图片 */
     private String backgroundImage;
 
     private Integer auditStatus;
-    
+
     /** 是否有密码 */
     private Boolean hasPassword;
+    private String nickName;
+    private String icon;
 }

@@ -102,4 +102,9 @@ public interface OrderMapper extends BaseMapper<Order> {
                                                 @Param("startTime") LocalDateTime startTime,
                                                 @Param("endTime") LocalDateTime endTime,
                                                 @Param("limit") Integer limit);
+
+    java.math.BigDecimal selectShopRepurchaseRate(@Param("shopId") Long shopId,
+                                                  @Param("statusList") List<Integer> statusList,
+                                                  @Param("startTime") LocalDateTime startTime,
+                                                  @Param("endTime") LocalDateTime endTime);
 }

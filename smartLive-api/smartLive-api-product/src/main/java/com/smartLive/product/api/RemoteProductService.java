@@ -69,4 +69,8 @@ public interface RemoteProductService {
 
     @GetMapping("/inner/product/getAllProductIds")
     List<Long> getAllProductIds();
+
+    @GetMapping("/inner/product/slow/{shopId}")
+    List<ProductDTO> getShopSlowProducts(@PathVariable("shopId") Long shopId,
+                                         @RequestParam(value = "limit", defaultValue = "3") Integer limit);
 }

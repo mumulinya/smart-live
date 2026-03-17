@@ -253,6 +253,11 @@
             </dependency>
             <dependency>
                 <groupId>com.smartLive</groupId>
+                <artifactId>smartLive-api-ai</artifactId>
+                <version>${smartLive.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.smartLive</groupId>
                 <artifactId>smartLive-api-search</artifactId>
                 <version>${smartLive.version}</version>
             </dependency>

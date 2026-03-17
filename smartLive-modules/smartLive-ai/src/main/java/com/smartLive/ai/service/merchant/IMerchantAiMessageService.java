@@ -8,7 +8,7 @@ import java.util.List;
 public interface IMerchantAiMessageService extends IService<MerchantAiMessage> {
 
     MerchantAiMessage saveMessage(Long sessionId, String role, String content,
-                                  Long reviewId, Long productId, String timeRange);
+                                  Long reviewId, Long productId, String timeRange, Long analysisRecordId);
 
     List<MerchantAiMessage> listBySessionId(Long sessionId);
 }

@@ -22,6 +22,7 @@ CREATE TABLE `merchant_ai_message` (
   `content` text NOT NULL COMMENT 'message content',
   `review_id` bigint DEFAULT NULL COMMENT 'related review id',
   `product_id` bigint DEFAULT NULL COMMENT 'related product id',
+  `analysis_record_id` bigint DEFAULT NULL COMMENT 'related analysis snapshot id',
   `time_range` varchar(10) DEFAULT NULL COMMENT 'analysis time range: week/month/quarter',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
   PRIMARY KEY (`id`) USING BTREE,

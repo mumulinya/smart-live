@@ -110,4 +110,10 @@ public class ProductInnerController extends BaseController {
                 .map(Product::getId)
                 .collect(Collectors.toList());
     }
+
+    @GetMapping("/slow/{shopId}")
+    public List<Product> getShopSlowProducts(@PathVariable("shopId") Long shopId,
+                                             @RequestParam(value = "limit", defaultValue = "3") Integer limit) {
+        return productService.getShopSlowProducts(shopId, limit);
+    }
 }

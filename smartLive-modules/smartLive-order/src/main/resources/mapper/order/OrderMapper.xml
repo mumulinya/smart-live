@@ -216,6 +216,45 @@
         limit #{limit}
     </select>
 
+    <select id="selectShopRepurchaseRate" resultType="java.math.BigDecimal">
+        select coalesce(round(
+            coalesce((
+                select count(*)
+                from (
+                    select user_id
+                    from `order`
+                    where FIND_IN_SET(#{shopId}, shop_id)
+                      and status in
+                      <foreach collection="statusList" item="statusItem" open="(" separator="," close=")">
+                          #{statusItem}
+                      </foreach>
+                      <if test="startTime != null">
+                          and coalesce(pay_time, create_time) <![CDATA[>=]]> #{startTime}
+                      </if>
+                      <if test="endTime != null">
+                          and coalesce(pay_time, create_time) <![CDATA[<=]]> #{endTime}
+                      </if>
+                    group by user_id
+                    having count(*) <![CDATA[>=]]> 2
+                ) repurchase_users
+            ), 0) * 100.0 /
+            nullif((
+                select count(distinct user_id)
+                from `order`
+                where FIND_IN_SET(#{shopId}, shop_id)
+                  and status in
+                  <foreach collection="statusList" item="statusItem" open="(" separator="," close=")">
+                      #{statusItem}
+                  </foreach>
+                  <if test="startTime != null">
+                      and coalesce(pay_time, create_time) <![CDATA[>=]]> #{startTime}
+                  </if>
+                  <if test="endTime != null">
+                      and coalesce(pay_time, create_time) <![CDATA[<=]]> #{endTime}
+                  </if>
+            ), 0), 2), 0)
+    </select>
+
     <delete id="deleteOrderById" parameterType="Long">
         delete from `order` where id = #{id}
     </delete>

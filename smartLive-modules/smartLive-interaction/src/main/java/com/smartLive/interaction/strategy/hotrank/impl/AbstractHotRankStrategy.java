@@ -43,6 +43,7 @@ public abstract class AbstractHotRankStrategy implements HotRankStrategy {
     protected <T> List<T> getResourceList(Integer bizType, List<Long> sourceIds) {
         if (CollUtil.isEmpty(sourceIds)) return Collections.emptyList();
         ResourceStrategy strategy = resourceStrategyFactory.getStrategy(bizType);
+        log.debug("getResourceList: bizType={}, sourceIds={},strategy={}", bizType, sourceIds,strategy);
         if (strategy == null) return Collections.emptyList();
         return strategy.getResourceList(sourceIds);
     }

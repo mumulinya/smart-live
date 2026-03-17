@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -45,4 +46,8 @@ public interface RemoteOrderService {
     @GetMapping("/inner/order/suggest/{shopId}")
     ShopOrderSuggestDTO getShopOrderSuggest(@PathVariable("shopId") Long shopId,
                                             @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
+
+    @GetMapping("/inner/order/repurchase-rate/{shopId}")
+    BigDecimal getShopRepurchaseRate(@PathVariable("shopId") Long shopId,
+                                     @RequestParam(value = "timeRange", required = false) String timeRange);
 }

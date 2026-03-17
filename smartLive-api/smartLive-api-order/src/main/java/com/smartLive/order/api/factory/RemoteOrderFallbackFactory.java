@@ -65,6 +65,12 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
                 log.error("get shop order suggest failed: {}", cause.getMessage());
                 return new ShopOrderSuggestDTO(0, new ArrayList<>(), new ArrayList<>());
             }
+
+            @Override
+            public BigDecimal getShopRepurchaseRate(Long shopId, String timeRange) {
+                log.error("get shop repurchase rate failed: {}", cause.getMessage());
+                return BigDecimal.ZERO;
+            }
         };
     }
 }

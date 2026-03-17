@@ -38,6 +38,9 @@ public interface RemoteReviewService {
     ShopReviewSuggestDTO getShopReviewSuggest(@PathVariable("shopId") Long shopId,
                                               @RequestParam(value = "timeRange", defaultValue = "week") String timeRange);
 
+    @GetMapping("/inner/review/suggest/realtime/{shopId}")
+    ShopReviewSuggestDTO getShopReviewSuggestRealtime(@PathVariable("shopId") Long shopId);
+
     @GetMapping("/inner/review/getReviewById/{id}")
     ReviewDTO getReviewById(@PathVariable("id") Long id);
 }

@@ -514,6 +514,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * @return 闂傚倷绀侀幗婊堝窗鎼粹垾娑樜旈崨顓狀啇濡炪値浜濇导?
      */
     @Override
+    public List<Product> getShopSlowProducts(Long shopId, Integer limit) {
+        if (shopId == null) {
+            return Collections.emptyList();
+        }
+        int safeLimit = limit == null || limit <= 0 ? 3 : Math.min(limit, 10);
+        return query()
+                .select("id", "name", "sold")
+                .apply("FIND_IN_SET({0}, shop_id)", shopId)
+                .eq("status", ProductStatusEnum.ON_SHELF.getCode())
+                .eq("audit_status", AuditStatusEnum.PASS.getCode())
+                .orderByAsc("sold")
+                .orderByAsc("id")
+                .last("limit " + safeLimit)
+                .list();
+    }
+
+    @Override
     public ProductVO getProductById(Long id) {
         Product product = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_PRODUCT_KEY,

@@ -215,4 +215,6 @@ public interface IReviewService extends IService<Review> {
     ShopReviewAnalysisVO getShopReviewAnalysis(Long shopId, String startTime, String endTime);
 
     ShopReviewSuggestVO getShopReviewSuggest(Long shopId, String timeRange);
+
+    ShopReviewSuggestVO getShopReviewSuggestRealtime(Long shopId);
 }

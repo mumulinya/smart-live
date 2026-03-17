@@ -77,7 +77,8 @@ public abstract class AbstractMerchantAiStrategy {
                 resolveRawUserMessage(dto),
                 dto.getReviewId(),
                 dto.getProductId(),
-                resolveMessageTimeRange(dto)
+                resolveMessageTimeRange(dto),
+                resolveMessageAnalysisRecordId(dto)
         );
         memoryManager.appendMessageToCache(userRecord);
         touchSession(dto.getSessionId());
@@ -180,6 +181,17 @@ public abstract class AbstractMerchantAiStrategy {
         return dto.getTimeRange();
     }
 
+    protected final Long resolveMessageAnalysisRecordId(MerchantChatDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getType())) {
+            return null;
+        }
+        String normalizedType = dto.getType().trim().toLowerCase(Locale.ROOT);
+        if (!"analysis".equals(normalizedType)) {
+            return null;
+        }
+        return dto.getAnalysisRecordId();
+    }
+
     protected final String firstNonBlank(String... values) {
         if (values == null) {
             return null;
@@ -202,7 +214,8 @@ public abstract class AbstractMerchantAiStrategy {
                 content,
                 dto.getReviewId(),
                 dto.getProductId(),
-                resolveMessageTimeRange(dto)
+                resolveMessageTimeRange(dto),
+                resolveMessageAnalysisRecordId(dto)
         );
         memoryManager.appendMessageToCache(assistantRecord);
         touchSession(dto.getSessionId());

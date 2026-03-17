@@ -8,9 +8,7 @@ import com.smartLive.ai.service.merchant.IMerchantAiMessageService;
 import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
 import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.AbstractMerchantAiStrategy;
-import com.smartLive.interaction.api.DTO.BadReviewDTO;
-import com.smartLive.interaction.api.DTO.ShopReviewSuggestDTO;
-import com.smartLive.interaction.api.RemoteReviewService;
+import com.smartLive.common.core.exception.ServiceException;
 import com.smartLive.shop.api.DTO.ProductSalesDTO;
 import com.smartLive.shop.api.DTO.ShopSuggestDTO;
 import com.smartLive.shop.api.RemoteShopService;
@@ -18,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,48 +24,44 @@ import java.util.List;
 @Slf4j
 public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
 
-    private final RemoteReviewService remoteReviewService;
-
     public SuggestAiStrategy(@Qualifier("merchantStrategyChatClient") ChatClient merchantStrategyChatClient,
                              IMerchantAiSessionService merchantSessionService,
                              IMerchantAiMessageService merchantMessageService,
                              MerchantMessageChatMemoryManager memoryManager,
                              RemoteShopService remoteShopService,
                              IShopRagService shopRagService,
-                             ObjectMapper objectMapper,
-                             RemoteReviewService remoteReviewService) {
+                             ObjectMapper objectMapper) {
         super(merchantStrategyChatClient, merchantSessionService, merchantMessageService, memoryManager,
                 remoteShopService, shopRagService, objectMapper);
-        this.remoteReviewService = remoteReviewService;
+    }
+
+    @Override
+    protected void validateSceneInput(MerchantChatDTO dto, MerchantAiSession session) {
+        if (dto == null || dto.getShopSuggestData() == null) {
+            throw new ServiceException("shopSuggestData cannot be blank");
+        }
     }
 
     @Override
     protected String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session) {
-        ShopSuggestDTO suggest = remoteShopService.getShopSuggest(session.getShopId(), dto.getTimeRange());
-        ShopReviewSuggestDTO reviewSuggest = remoteReviewService.getShopReviewSuggest(session.getShopId(), dto.getTimeRange());
-        if (reviewSuggest == null) {
-            reviewSuggest = new ShopReviewSuggestDTO();
-        }
+        ShopSuggestDTO suggest = dto.getShopSuggestData();
         ShopPromptContext shopContext = getShopPromptContext(session.getShopId());
 
         return """
                 SCENE: OPERATION_SUGGESTION
 
-                You are generating operation suggestions for the merchant.
+                You are generating operation improvement suggestions for the merchant.
 
                 Shop:
                 - name: %s
                 - type: %s
 
                 Current business snapshot:
-                - weekOrders: %s
                 - pendingReviewCount: %s
-                - avgScore: %s
                 - badReviewCount: %s
-                - hotProducts: %s
+                - repurchaseRate: %s%%
                 - slowProducts: %s
-                - badReviewIssues:
-                %s
+                - badReviewKeywords: %s
 
                 Extra instruction:
                 %s
@@ -77,20 +70,18 @@ public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
                 1. Output language: Simplified Chinese.
                 2. Give practical operation suggestions, not generic slogans.
                 3. Structure the answer into diagnosis, short-term actions and medium-term improvements.
-                4. Prioritize actions that can be executed by the merchant.
-                5. Combine pending reviews and bad review issues into the action plan.
+                4. Prioritize pending reviews, bad reviews, repurchase rate and slow-moving products.
+                5. Explain the actions clearly enough for the merchant to execute.
                 6. Do not invent facts that are not provided.
                 7. Do not output JSON.
                 """.formatted(
                 shopContext.getShopName(),
                 shopContext.getShopType(),
-                defaultNumber(suggest.getWeekOrders()),
                 defaultNumber(suggest.getPendingReviewCount()),
-                defaultDecimal(suggest.getAvgScore()),
                 defaultNumber(suggest.getBadReviewCount()),
-                formatProductSales(suggest.getHotProducts()),
+                defaultDecimal(suggest.getRepurchaseRate()),
                 formatProductSales(suggest.getSlowProducts()),
-                formatBadReviewIssues(reviewSuggest.getBadReviewList()),
+                formatKeywords(suggest.getBadReviewKeywords()),
                 resolveInstruction(dto)
         );
     }
@@ -109,20 +100,17 @@ public class SuggestAiStrategy extends AbstractMerchantAiStrategy {
         return items.isEmpty() ? "No data" : String.join("; ", items);
     }
 
-    private String formatBadReviewIssues(List<BadReviewDTO> badReviewList) {
-        if (badReviewList == null || badReviewList.isEmpty()) {
+    private String formatKeywords(List<String> keywords) {
+        if (keywords == null || keywords.isEmpty()) {
             return "No data";
         }
         List<String> items = new ArrayList<>();
-        for (BadReviewDTO review : badReviewList) {
-            if (review == null || !StringUtils.hasText(review.getContent())) {
+        for (String keyword : keywords) {
+            if (keyword == null || keyword.isBlank()) {
                 continue;
             }
-            items.add("- [score=" + defaultNumber(review.getScore()) + "][" + formatDate(review.getCreateTime()) + "] " + review.getContent().trim());
-            if (items.size() >= 5) {
-                break;
-            }
+            items.add(keyword.trim());
         }
-        return items.isEmpty() ? "No data" : String.join("\n", items);
+        return items.isEmpty() ? "No data" : String.join(", ", items);
     }
 }

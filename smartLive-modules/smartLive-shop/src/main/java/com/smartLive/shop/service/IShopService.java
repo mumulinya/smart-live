@@ -5,8 +5,6 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.smartLive.shop.domain.Shop;
-import com.smartLive.shop.domain.VO.ShopAnalysisVO;
-import com.smartLive.shop.domain.VO.ShopSuggestVO;
 import com.smartLive.shop.domain.VO.ShopVO;
 
 /**
@@ -204,8 +202,6 @@ public interface IShopService extends IService<Shop> {
      * @param timeRange 时间范围
      * @return 经营分析数据
      */
-    ShopAnalysisVO getShopAnalysis(Long shopId, String timeRange);
-
     /**
      * 获取店铺经营建议数据。
      *
@@ -213,7 +209,6 @@ public interface IShopService extends IService<Shop> {
      * @param timeRange 时间范围
      * @return 经营建议数据
      */
-    ShopSuggestVO getShopSuggest(Long shopId, String timeRange);
 
     /**
      * 按店铺名称模糊搜索店铺列表。

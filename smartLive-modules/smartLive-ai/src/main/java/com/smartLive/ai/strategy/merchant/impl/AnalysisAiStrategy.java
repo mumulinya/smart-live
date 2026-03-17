@@ -10,6 +10,8 @@ import com.smartLive.ai.service.merchant.IMerchantAiSessionService;
 import com.smartLive.ai.service.rag.IReviewRagService;
 import com.smartLive.ai.service.rag.IShopRagService;
 import com.smartLive.ai.strategy.merchant.AbstractMerchantAiStrategy;
+import com.smartLive.common.core.exception.ServiceException;
+import com.smartLive.shop.api.DTO.ProductSalesDTO;
 import com.smartLive.shop.api.DTO.ShopAnalysisDTO;
 import com.smartLive.shop.api.RemoteShopService;
 import lombok.extern.slf4j.Slf4j;
@@ -41,9 +43,18 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
     }
 
     @Override
+    protected void validateSceneInput(MerchantChatDTO dto, MerchantAiSession session) {
+        if (dto.getAnalysisRecordId() == null) {
+            throw new ServiceException("analysisRecordId cannot be blank");
+        }
+    }
+
+    @Override
     protected String buildScenePrompt(MerchantChatDTO dto, MerchantAiSession session) {
-        ShopAnalysisDTO analysis = remoteShopService.getShopAnalysis(session.getShopId(), dto.getTimeRange());
-        log.info("查询的周期为:{},店铺的 analysis: {}",dto.getTimeRange(), analysis);
+        ShopAnalysisDTO analysis = remoteShopService.getShopAnalysisRecord(dto.getAnalysisRecordId(), session.getShopId());
+        if (analysis == null || analysis.getId() == null) {
+            throw new ServiceException("analysis record not found");
+        }
         List<ReviewVO> badReviews = reviewRagService.getReviewsByScore(session.getShopId(), 1, 3);
         ShopPromptContext shopContext = getShopPromptContext(session.getShopId());
 
@@ -55,13 +66,15 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
                 Shop:
                 - name: %s
                 - type: %s
-                - range: %s
 
-                Shop metrics:
+                Shop analysis snapshot:
+                - recordId: %s
                 - totalOrders: %s
                 - totalRevenue: %s
                 - avgScore: %s
                 - badReviewCount: %s
+                - hotProducts: %s
+                - slowProducts: %s
 
                 Low-score review samples from RAG:
                 %s
@@ -72,21 +85,37 @@ public class AnalysisAiStrategy extends AbstractMerchantAiStrategy {
                 Requirements:
                 1. Output language: Simplified Chinese.
                 2. Structure the answer into three parts: current status, key problems, action plan.
-                3. Combine the metrics and the bad review samples to explain the situation.
+                3. Combine the metrics, product performance and bad review samples to explain the situation.
                 4. When discussing problems, cite the review sample trends instead of giving generic statements.
                 5. Do not invent data that is not provided.
                 6. Do not output JSON.
                 """.formatted(
                 shopContext.getShopName(),
                 shopContext.getShopType(),
-                dto.getTimeRange(),
+                analysis.getId(),
                 defaultNumber(analysis.getTotalOrders()),
                 defaultDecimal(analysis.getTotalRevenue()),
                 defaultDecimal(analysis.getAvgScore()),
                 defaultNumber(analysis.getBadReviewCount()),
+                formatProductSales(analysis.getHotProducts()),
+                formatProductSales(analysis.getSlowProducts()),
                 formatBadReviewSamples(badReviews),
                 resolveInstruction(dto)
         );
+    }
+
+    private String formatProductSales(List<ProductSalesDTO> products) {
+        if (products == null || products.isEmpty()) {
+            return "No data";
+        }
+        List<String> items = new ArrayList<>();
+        for (ProductSalesDTO product : products) {
+            if (product == null) {
+                continue;
+            }
+            items.add(defaultText(product.getProductName()) + "(sales=" + defaultLongNumber(product.getSalesCount()) + ")");
+        }
+        return items.isEmpty() ? "No data" : String.join("; ", items);
     }
 
     private String formatBadReviewSamples(List<ReviewVO> reviews) {

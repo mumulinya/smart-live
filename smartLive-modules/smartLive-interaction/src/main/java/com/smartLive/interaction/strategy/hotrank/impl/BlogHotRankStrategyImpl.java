@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 
 /**
  * 博客热度计算策略实现
- * 
+ *
  * 核心逻辑：
  * 1. 监听 Redis 计算队列中的活跃博客 ID。
  * 2. 结合点赞、评论、收藏等互动数据，按照《SmartLive 热度评分体系》进行加权打分。
  * 3. 维护 ZSet 排行榜，并支持基于 30 天线性衰减的时间加成，确保新内容能够获得曝光。
- * 
+ *
  * @author smartLive
  * @date 2026-03-11
  */
@@ -32,12 +32,12 @@ public class BlogHotRankStrategyImpl extends AbstractHotRankStrategy {
 
     @Autowired
     private RemoteBlogService remoteBlogService;
-    
+
     @Override
-    public Integer getType() { 
-        return GlobalBizTypeEnum.BLOG.getCode(); 
+    public Integer getType() {
+        return GlobalBizTypeEnum.BLOG.getCode();
     }
-    
+
     /**
      * 增量计算并刷新热度榜单
      * 1. 从活跃队列中提取近期有互动（点赞/收藏等）的博客。
@@ -50,7 +50,7 @@ public class BlogHotRankStrategyImpl extends AbstractHotRankStrategy {
         String tempKey = calcKey + ":TEMP";
         try {
             if (Boolean.FALSE.equals(redisService.hasKey(calcKey))) return;
-            
+
             redisService.rename(calcKey, tempKey);
             Set<Object> activeSet = redisService.getCacheSet(tempKey);
             if (CollUtil.isEmpty(activeSet)) {
@@ -61,7 +61,7 @@ public class BlogHotRankStrategyImpl extends AbstractHotRankStrategy {
             Set<Long> candidateIds = toLongSet(activeSet);
             String hotRankKey = RedisConstants.BLOG_HOT_RANK_KEY;
             candidateIds.addAll(getTopIds(hotRankKey, HOT_RANK_MERGE_TOP_N));
-            
+
             List<BlogVO> blogList = getResourceList(getType(), new ArrayList<>(candidateIds));
             if (CollUtil.isEmpty(blogList)) {
                 redisService.deleteObject(tempKey);
@@ -70,18 +70,18 @@ public class BlogHotRankStrategyImpl extends AbstractHotRankStrategy {
 
             Map<Long, BlogVO> blogMap = blogList.stream().collect(Collectors.toMap(BlogVO::getId, b -> b, (k1, k2) -> k1));
             Set<ZSetOperations.TypedTuple<String>> tuples = new HashSet<>();
-            
+
             for (Long id : candidateIds) {
                 BlogVO blog = blogMap.get(id);
                 if (blog == null) {
                     redisService.removeCacheZSetObject(hotRankKey, String.valueOf(id));
                     continue;
                 }
-                
+
                 double score = calcBlogScore(blog);
                 tuples.add(new DefaultTypedTuple<>(String.valueOf(id), score));
             }
-            
+
             if (!tuples.isEmpty()) {
                 redisService.setCacheZSet(hotRankKey, tuples);
             }
@@ -126,6 +126,8 @@ public class BlogHotRankStrategyImpl extends AbstractHotRankStrategy {
                 redisService.deleteObject(hotRankKey);
                 redisService.setCacheZSet(hotRankKey, allTuples);
                 log.info("全量重建博客热榜完成：共写入 {} 条数据", allTuples.size());
+            }else {
+                log.warn("全量重建博客热榜：未获取到任何博客数据");
             }
         } catch (Exception e) {
             log.error("全量重建博客热榜异常", e);

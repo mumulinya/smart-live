@@ -62,4 +62,25 @@ CREATE TABLE `shop_type`  (
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = COMPACT;
 
+-- ----------------------------
+-- Table structure for shop_analysis_record
+-- ----------------------------
+DROP TABLE IF EXISTS `shop_analysis_record`;
+CREATE TABLE `shop_analysis_record`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `shop_id` bigint NOT NULL COMMENT 'shop id',
+  `time_range` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'week/month/quarter',
+  `start_time` datetime NULL DEFAULT NULL COMMENT 'analysis range start',
+  `end_time` datetime NULL DEFAULT NULL COMMENT 'analysis range end',
+  `total_orders` int NULL DEFAULT 0 COMMENT 'total orders',
+  `total_revenue` decimal(10, 2) NULL DEFAULT 0.00 COMMENT 'total revenue',
+  `avg_score` decimal(3, 1) NULL DEFAULT 0.0 COMMENT 'average score',
+  `bad_review_count` int NULL DEFAULT 0 COMMENT 'bad review count',
+  `hot_products` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'json array of hot products',
+  `slow_products` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'json array of slow products',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_shop_time_range`(`shop_id` ASC, `time_range` ASC, `create_time` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = COMPACT;
+
 SET FOREIGN_KEY_CHECKS = 1;

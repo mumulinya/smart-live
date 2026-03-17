@@ -65,4 +65,10 @@ public class InnerOrderController extends BaseController {
                                                   @RequestParam(value = "timeRange", defaultValue = "week") String timeRange) {
         return orderService.getShopOrderSuggest(shopId, timeRange);
     }
+
+    @GetMapping("/repurchase-rate/{shopId}")
+    public java.math.BigDecimal getShopRepurchaseRate(@PathVariable("shopId") Long shopId,
+                                                       @RequestParam(value = "timeRange", required = false) String timeRange) {
+        return orderService.getShopRepurchaseRate(shopId, timeRange);
+    }
 }

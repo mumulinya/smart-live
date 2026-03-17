@@ -50,6 +50,12 @@ public class RemoteReviewFallbackFactory implements FallbackFactory<RemoteReview
             }
 
             @Override
+            public ShopReviewSuggestDTO getShopReviewSuggestRealtime(Long shopId) {
+                log.error("Get realtime shop review suggest failed: {}", throwable.getMessage());
+                return new ShopReviewSuggestDTO(BigDecimal.ZERO, 0, 0, new ArrayList<>());
+            }
+
+            @Override
             public ReviewDTO getReviewById(Long id) {
                 log.error("Get review by id failed: {}", throwable.getMessage());
                 return null;

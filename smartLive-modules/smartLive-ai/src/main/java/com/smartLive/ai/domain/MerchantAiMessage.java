@@ -30,6 +30,8 @@ public class MerchantAiMessage implements Serializable {
 
     private String timeRange;
 
+    private Long analysisRecordId;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 }

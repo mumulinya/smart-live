@@ -5,6 +5,7 @@ import com.smartLive.blog.api.DTO.BlogDTO;
 import com.smartLive.common.core.enums.common.ResourceTypeEnum;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.interaction.domain.VO.BlogVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public  class BlogResourceStrategy implements ResourceStrategy<BlogVO> {
     @Autowired
     private RemoteBlogService remoteBlogService;
@@ -33,6 +35,7 @@ public  class BlogResourceStrategy implements ResourceStrategy<BlogVO> {
     @Override
     public List<BlogVO> getResourceList(List<Long> sourceIdList) {
         List<BlogDTO> blogDTOList= remoteBlogService.getBlogListByIds(sourceIdList);
+        log.info("blogDTOList:{}", blogDTOList);
         if (blogDTOList == null || blogDTOList.isEmpty()) {
             return new ArrayList<>();
         }

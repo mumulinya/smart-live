@@ -114,6 +114,10 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-chat</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-ai</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

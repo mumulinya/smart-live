@@ -15,7 +15,7 @@ public class MerchantAiMessageServiceImpl extends ServiceImpl<MerchantAiMessageM
 
     @Override
     public MerchantAiMessage saveMessage(Long sessionId, String role, String content,
-                                         Long reviewId, Long productId, String timeRange) {
+                                         Long reviewId, Long productId, String timeRange, Long analysisRecordId) {
         MerchantAiMessage message = new MerchantAiMessage();
         message.setSessionId(sessionId);
         message.setRole(role);
@@ -23,6 +23,7 @@ public class MerchantAiMessageServiceImpl extends ServiceImpl<MerchantAiMessageM
         message.setReviewId(reviewId);
         message.setProductId(productId);
         message.setTimeRange(timeRange);
+        message.setAnalysisRecordId(analysisRecordId);
         message.setCreateTime(new Date());
         this.save(message);
         return message;

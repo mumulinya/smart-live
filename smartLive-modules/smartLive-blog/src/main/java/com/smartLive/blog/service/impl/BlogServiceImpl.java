@@ -50,7 +50,7 @@ import com.smartLive.common.redis.util.RedisMultiCacheManager;
 /**
  * 闂傚倷绀侀幉锟犮€冮崱娑欏殞濡わ絽鍠氶弫鍥╂喐閻楀牆绗掗柛鎰ㄥ亾缂傚倷绀侀鍫濃枖閺囩喍绻嗛柛銉戔偓濡插牓鏌熼崜褜妫庡瑙劽埞鎴︻敊閹勭€鹃悗鍨緲鐎氭澘鐣烽悢纰辨晣闁绘柨鐨濋崑鎾绘倷閻戞ê鈧敻鏌涢敂璇插箹濞寸姍鍕垫闁绘劕寮跺婵嬫煟?
  * 濠电姷鏁搁崑鐐哄垂瑜版帒鏋佺紒瀣紩閻戞绡€闁告劦浜跺ú鎼佹⒑缁洖澧叉い銊ユ噽閹叉挳鏁冮崒娑氬幐闂佺鏈喊宥夊箹閹邦喗鍠愰柡澶婄仢閳ь剙顭峰顐︻敋閳ь剙鐣峰鈧弫鍌炴偡妫颁礁顥氬┑鐐舵彧缁茶偐鎷冮敃鈧…鍥晸閻樺磭鍘告繝銏ｆ硾濡绂嶆ィ鍐┾拺缂佸娉曠粻浼存煟閵堝懏澶勭紒鍌涘浮瀹曞ジ濡烽妷搴涘劚閳藉骞橀弶鎴闂傚倷绀侀幉锟犳嚌妤ｅ啫瀚夋い鎺戝閺佸棝鏌ｉ幇顒佹儓闁活厽顨呴埞鎴︽偐閹绘帊绨藉┑鈽嗗灠椤戝洨妲愰幒妤佸亼婵炲棗绻戦崳钘夘熆鐠哄搫顏柟顔筋殔閳藉鈻庡Ο鐓庡Ш婵＄偑鍊栭幐濠氬箖閸岀偛绠栭柛顐ｆ礀楠炪垺绻涢崱妯虹仸闁诡垽绲剧换娑㈠箣閻愭潙闉嶉梺鐓庢贡閸嬫捇骞堥妸鈺傚亜闁稿繗鍋愰崝鐢告⒑閸濆嫬顏╃紒缁樺笧閺侇噣宕卞☉娆戝帾?
- * 
+ *
  * @author smartLive
  * @date 2026-03-11
  */
@@ -62,7 +62,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Autowired
     private BlogMapper blogMapper;
-    
+
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
     @Autowired
@@ -116,7 +116,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     /**
      * 闂傚倷绀侀幖顐ゆ偖椤愶箑纾块柟缁㈠櫘閺佸淇婇妶鍛櫣缁绢厸鍋撴繝娈垮枟閿曗晠宕滈敃鍌氳Е?
-     * 
+     *
      * @param id 闂傚倷绀侀幉锟犮€冮崱娑欏殞濡わ絽鍠氶弫鍥偡濞嗗繐顏柍缁樻煥閳规垿鎮╁畷鍥舵殹闂?
      * @return 闂傚倷绀侀幉锟犮€冮崱娑欏殞濡わ絽鍠氶弫?
      */
@@ -128,7 +128,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     /**
      * 闂傚倷绀侀幖顐ゆ偖椤愶箑纾块柟缁㈠櫘閺佸淇婇妶鍛櫣缁绢厸鍋撴繝娈垮枟閿曗晠宕滈敃鍌氳Е闁稿瞼鍋為悡鏇㈡煙閻戞ɑ鎯勬繛鍫熺懇閺?
-     * 
+     *
      * @param blog 闂傚倷绀侀幉锟犮€冮崱娑欏殞濡わ絽鍠氶弫?
      * @return 闂傚倷绀侀幉锟犮€冮崱娑欏殞濡わ絽鍠氶弫?
      */
@@ -161,7 +161,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     /**
      * 闂傚倷绀侀幖顐﹀磹閻熼偊鐔嗘慨妞诲亾鐠侯垶鏌涢幇闈涙灈缁绢厸鍋撴繝娈垮枟閿曗晠宕滈敃鍌氳Е?
-     * 
+     *
      * @param blog 闂傚倷绀侀幉锟犮€冮崱娑欏殞濡わ絽鍠氶弫?
      * @return 缂傚倸鍊搁崐鐑芥倿閿曞倸绠板┑鐘崇閸?
      */
@@ -181,7 +181,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     /**
      * 婵犵數鍎戠徊钘壝归崒鐐茬獥婵°倕鎳庨弸浣糕攽閸屾粠鐒剧痪顓涘亾婵犳鍠楅敃鈺呭礈閿曞倸瑙?
-     * 
+     *
      * @param blog 闂傚倷绀侀幉锟犮€冮崱娑欏殞濡わ絽鍠氶弫?
      * @return 缂傚倸鍊搁崐鐑芥倿閿曞倸绠板┑鐘崇閸?
      */
@@ -204,7 +204,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     /**
      * 闂傚倷绀佺紞濠傤焽瑜忕槐鐐寸節閸パ囨７濠电偛妯婃禍婊呯矆閸℃稒鐓熸俊顖濆亹鐢盯鏌ｅ┑鍫濇灈闁哄本绋戣灃濞达綀妫勯ˉ婵嗩渻?
-     * 
+     *
      * @param ids 闂傚倸鍊搁崐绋棵洪悩璇茬；闁瑰墽绮崑锟犳煛閸ャ劍鐨戞い锔肩畵閺屾盯濡搁妷褏楔濠殿喖锕ｇ划娆愪繆閸洖鐐婇柕濞у嫭顔忛梻鍌欑閹诧繝銆冮崱娑欏殞濡わ絽鍠氶弫鍥偡濞嗗繐顏柍缁樻煥閳规垿鎮╁畷鍥舵殹闂?
      * @return 缂傚倸鍊搁崐鐑芥倿閿曞倸绠板┑鐘崇閸?
      */
@@ -239,7 +239,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     /**
      * 闂傚倷绀侀幉锛勬暜閻愬绠鹃柍褜鍓氱换娑㈠川椤撱垹寮伴悗瑙勬磵閳ь剚鍓氬鈺傘亜閹烘埈妲搁柟顔兼噺缁绘盯鏁愰崨顔绢槺闂佸憡鎸荤换鍐偓?
-     * 
+     *
      * @param id 闂傚倷绀侀幉锟犮€冮崱娑欏殞濡わ絽鍠氶弫鍥偡濞嗗繐顏柍缁樻煥閳规垿鎮╁畷鍥舵殹闂?
      * @return 缂傚倸鍊搁崐鐑芥倿閿曞倸绠板┑鐘崇閸?
      */
@@ -487,6 +487,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public List<BlogVO> getBlogListByIds(List<Long> sourceIdList) {
+        log.info("getBlogListByIds: {}", sourceIdList);
         if (CollUtil.isEmpty(sourceIdList)) {
             return Collections.emptyList();
         }
@@ -504,6 +505,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 RedisConstants.CACHE_BLOG_TTL,
                 TimeUnit.MINUTES
         );
+        log.info("getBlogListByIds: {}", blogList);
         if (CollUtil.isEmpty(blogList)) {
             return Collections.emptyList();
         }
@@ -513,9 +515,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         List<Blog> orderedBlogList = new ArrayList<>(sourceIdList.size());
         for (Long blogId : sourceIdList) {
             Blog blog = blogMap.get(blogId);
-            if (blog != null
-                    && Objects.equals(blog.getStatus(), ContentStatusEnum.PUBLISHED.getCode().shortValue())
-                    && Objects.equals(blog.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
+            if (blog != null) {
                 orderedBlogList.add(blog);
             }
         }

@@ -61,6 +61,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -239,10 +240,11 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Override
     public int updateReview(Review review) {
         review.setUpdateTime(DateUtils.getNowDate());
+        review.setAuditStatus(AuditStatusEnum.WAITING.getCode());
+        review.setRejectReason(null);
         int i = reviewMapper.updateReview(review);
-        // 如果更新后状态变为待审核(0)，重新触发审核流
-        if (i > 0 && Objects.equals(review.getAuditStatus(), AuditStatusEnum.WAITING.getCode())
-                && !Objects.equals(review.getStatus(), ContentStatusEnum.DRAFT.getCode())) {
+        // 评价被修改后统一回到待审核态，并重新触发审核流
+        if (i > 0 && !Objects.equals(review.getStatus(), ContentStatusEnum.DRAFT.getCode())) {
             sendAuditMessage(review);
         }
         // 数据变更，必须清除详情缓存保证数据一致性
@@ -1328,6 +1330,11 @@ private void sendReviewMilvusBatchMessage(List<?> reviews) {
         suggest.setBadReviewList(normalizeBadReviewList(reviewMapper.selectBadReviewList(shopId, AuditStatusEnum.PASS.getCode(), suggestRange[0], suggestRange[1], 1, 3, 10)));
         normalizeShopReviewSuggest(suggest);
         return suggest;
+    }
+
+    @Override
+    public ShopReviewSuggestVO getShopReviewSuggestRealtime(Long shopId) {
+        return getShopReviewSuggest(shopId, "month");
     }
 
     private java.time.LocalDateTime[] parseReviewAnalysisTimeRange(String startTime, String endTime) {

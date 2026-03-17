@@ -94,6 +94,11 @@ public class RemoteProductFallbackFactory implements FallbackFactory<RemoteProdu
             public List<Long> getAllProductIds() {
                 return Collections.emptyList();
             }
+
+            @Override
+            public List<ProductDTO> getShopSlowProducts(Long shopId, Integer limit) {
+                return Collections.emptyList();
+            }
         };
     }
 }

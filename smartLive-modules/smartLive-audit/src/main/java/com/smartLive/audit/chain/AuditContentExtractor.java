@@ -40,6 +40,7 @@ public class AuditContentExtractor {
 
         // 5. 名称字段（店铺/商品）
         appendIfExists(sb, map, "name", false);
+        appendIfExists(sb, map, "targetTitle", true);
 
         return sb.toString();
     }
@@ -58,4 +59,3 @@ public class AuditContentExtractor {
         }
     }
 }
-

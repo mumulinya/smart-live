@@ -1,6 +1,7 @@
 package com.smartLive.ai.domain.DTO;
 
 import com.smartLive.common.core.exception.ServiceException;
+import com.smartLive.shop.api.DTO.ShopSuggestDTO;
 import lombok.Data;
 import org.springframework.util.StringUtils;
 
@@ -25,6 +26,10 @@ public class MerchantChatRequestDTO implements Serializable {
 
     private String timeRange;
 
+    private String analysisRecordId;
+
+    private ShopSuggestDTO shopSuggestData;
+
     public MerchantChatDTO toMerchantChatDTO() {
         MerchantChatDTO dto = new MerchantChatDTO();
         dto.setSessionId(parseRequiredLong(sessionId, "sessionId"));
@@ -35,6 +40,8 @@ public class MerchantChatRequestDTO implements Serializable {
         dto.setProductId(parseOptionalLong(productId, "productId"));
         dto.setReviewId(parseOptionalLong(reviewId, "reviewId"));
         dto.setTimeRange(StringUtils.hasText(timeRange) ? timeRange.trim() : null);
+        dto.setAnalysisRecordId(parseOptionalLong(analysisRecordId, "analysisRecordId"));
+        dto.setShopSuggestData(shopSuggestData);
         return dto;
     }
 

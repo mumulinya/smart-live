@@ -561,6 +561,20 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return suggest;
     }
 
+    @Override
+    public java.math.BigDecimal getShopRepurchaseRate(Long shopId, String timeRange) {
+        if (shopId == null) {
+            return java.math.BigDecimal.ZERO;
+        }
+        java.time.LocalDateTime[] range = buildOptionalOrderRange(timeRange);
+        java.math.BigDecimal repurchaseRate = orderMapper.selectShopRepurchaseRate(
+                shopId,
+                BUSINESS_ORDER_STATUSES,
+                range == null ? null : range[0],
+                range == null ? null : range[1]);
+        return repurchaseRate == null ? java.math.BigDecimal.ZERO : repurchaseRate;
+    }
+
     private java.time.LocalDateTime[] parseBusinessTimeRange(String startTime, String endTime) {
         if (startTime == null || endTime == null || startTime.isBlank() || endTime.isBlank()) {
             throw new BusinessException("startTime and endTime are required");
@@ -586,6 +600,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             case "week" -> new java.time.LocalDateTime[]{now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).atStartOfDay(), now};
             default -> throw new BusinessException("unsupported timeRange");
         };
+    }
+
+    private java.time.LocalDateTime[] buildOptionalOrderRange(String timeRange) {
+        if (timeRange == null || timeRange.isBlank()) {
+            return null;
+        }
+        return buildOrderSuggestRange(timeRange);
     }
 
     /**

@@ -54,6 +54,11 @@ public class ReviewInnerController extends BaseController {
         return reviewService.getShopReviewSuggest(shopId, timeRange);
     }
 
+    @GetMapping("/suggest/realtime/{shopId}")
+    public ShopReviewSuggestVO getShopReviewSuggestRealtime(@PathVariable("shopId") Long shopId) {
+        return reviewService.getShopReviewSuggestRealtime(shopId);
+    }
+
     @GetMapping("/getReviewById/{id}")
     public ReviewVO getReviewById(@PathVariable("id") Long id) {
         return reviewService.getReviewById(id);

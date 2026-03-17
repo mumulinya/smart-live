@@ -42,6 +42,8 @@ public interface IProductService extends IService<Product> {
 
     List<Product> getProductListByIds(List<Long> sourceIdList);
 
+    List<Product> getShopSlowProducts(Long shopId, Integer limit);
+
     ProductVO getProductById(Long id);
 
     List<ProductVO> getHotProductRank(Integer current, Integer size, Integer category);

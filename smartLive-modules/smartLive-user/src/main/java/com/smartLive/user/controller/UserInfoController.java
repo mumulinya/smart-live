@@ -40,6 +40,8 @@ public class UserInfoController {
             }else {
                 userInfo.setHasPassword(true);
             }
+            userInfo.setIcon(byId.getIcon());
+            userInfo.setNickName(byId.getNickName());
             return Result.ok(userInfo);
         } catch (Exception e) {
             return Result.fail("获取用户信息失败：" + e.getMessage());
@@ -56,10 +58,10 @@ public class UserInfoController {
             UserInfo userInfo = new UserInfo();
             BeanUtils.copyProperties(userInfoDTO, userInfo);
             userInfo.setUpdateTime(new Date());
-            
+
             boolean success = userInfoService.updateUserInfo(userInfo);
             return success ? Result.ok(true) : Result.fail("更新用户信息失败");
-            
+
         } catch (Exception e) {
             return Result.fail("更新用户信息失败：" + e.getMessage());
         }

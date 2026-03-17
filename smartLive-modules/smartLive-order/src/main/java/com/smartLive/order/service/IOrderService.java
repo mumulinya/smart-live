@@ -8,6 +8,7 @@ import com.smartLive.order.domain.VO.ProductSoldVO;
 import com.smartLive.order.domain.VO.ShopOrderAnalysisVO;
 import com.smartLive.order.domain.VO.ShopOrderSuggestVO;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface IOrderService extends IService<Order> {
@@ -120,6 +121,8 @@ public interface IOrderService extends IService<Order> {
      */
 
     ShopOrderSuggestVO getShopOrderSuggest(Long shopId, String timeRange);
+
+    BigDecimal getShopRepurchaseRate(Long shopId, String timeRange);
     /**
      * 订单过期作废处理
      */

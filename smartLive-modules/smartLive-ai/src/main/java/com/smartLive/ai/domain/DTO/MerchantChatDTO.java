@@ -1,5 +1,6 @@
 package com.smartLive.ai.domain.DTO;
 
+import com.smartLive.shop.api.DTO.ShopSuggestDTO;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -26,4 +27,8 @@ public class MerchantChatDTO implements Serializable {
     private Long reviewId;
 
     private String timeRange;
+
+    private Long analysisRecordId;
+
+    private ShopSuggestDTO shopSuggestData;
 }

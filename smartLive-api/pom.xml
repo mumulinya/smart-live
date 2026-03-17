@@ -18,6 +18,7 @@
         <module>smartLive-api-interaction</module>
         <module>smartLive-api-chat</module>
         <module>smartLive-api-points</module>
+        <module>smartLive-api-ai</module>
 
     </modules>
 

@@ -63,4 +63,9 @@ public class ServiceNameConstants
      * wallet module service id
      */
     public static final String WALLET_SERVICE = "smartLive-wallet";
+
+    /**
+     * AI module service id
+     */
+    public static final String AI_SERVICE = "smartLive-ai";
 }
