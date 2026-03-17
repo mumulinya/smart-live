@@ -9,17 +9,19 @@ import java.util.List;
  */
 public interface IShopRagService {
     /**
-     * 获取店铺列表
-     * @param shopVo
-     * @param userMessage
-     * @return
+     * 获取店铺列表。
+     *
+     * @param shopVo 店铺查询条件
+     * @param userMessage 用户问题文本
+     * @return 店铺列表
      */
     List<ShopVO> getShopList(ShopVO shopVo, String userMessage);
     /**
-     * 获取店铺详情
-     * @param shopVo
-     * @param userMessage
-     * @return
+     * 获取店铺详情。
+     *
+     * @param shopVo 店铺查询条件
+     * @param userMessage 用户问题文本
+     * @return 店铺详情
      */
     ShopVO getShopDetails(ShopVO shopVo, String userMessage);
 }

@@ -65,8 +65,8 @@ public interface BlogMapper  extends BaseMapper<Blog>
      */
     public int deleteBlogByIds(Long[] ids);
     /**
-     * 纯注解方式实现高效批量更新
-     * 原理：拼接 UPDATE ... CASE WHEN ... SQL
+     * 纯注解方式实现高效批量更新。
+     * 原理：拼接批量更新 SQL（CASE WHEN）。
      */
     @Update("<script>" +
             "UPDATE blog " +

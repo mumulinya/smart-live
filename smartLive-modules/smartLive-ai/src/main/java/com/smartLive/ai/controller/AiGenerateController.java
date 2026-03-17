@@ -40,14 +40,14 @@ public class AiGenerateController extends BaseController {
     @PostMapping("/blog")
     public Result generateBlog(@RequestBody BlogGenerateDTO dto) {
         if (dto.getShopId() == null) {
-            return Result.fail("璇锋彁渚涘簵閾篒D");
+            return Result.fail("请提供店铺ID");
         }
         try {
             BlogGenerateVO vo = blogGenerateService.generate(dto);
             return Result.ok(vo);
         } catch (Exception e) {
-            log.error("AI 鍗氬鐢熸垚澶辫触", e);
-            return Result.fail("AI 鍗氬鐢熸垚澶辫触: " + e.getMessage());
+            log.error("AI 博客生成失败", e);
+            return Result.fail("AI 博客生成失败: " + e.getMessage());
         }
     }
 
@@ -61,14 +61,14 @@ public class AiGenerateController extends BaseController {
     @PostMapping("/review")
     public Result generateReview(@RequestBody ReviewGenerateDTO dto) {
         if (dto.getShopId() == null) {
-            return Result.fail("璇锋彁渚涘簵閾篒D");
+            return Result.fail("请提供店铺ID");
         }
         try {
             String content = reviewGenerateService.generate(dto);
             return Result.ok(content);
         } catch (Exception e) {
-            log.error("AI 璇勪环鐢熸垚澶辫触", e);
-            return Result.fail("AI 璇勪环鐢熸垚澶辫触: " + e.getMessage());
+            log.error("AI 评价生成失败", e);
+            return Result.fail("AI 评价生成失败: " + e.getMessage());
         }
     }
 }

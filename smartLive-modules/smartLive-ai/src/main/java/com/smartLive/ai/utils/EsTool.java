@@ -135,7 +135,7 @@ public class EsTool {
                 .map(item -> {
                     try {
                         if (item instanceof LinkedHashMap) {
-                            // 处理 Feign 传输的 LinkedHashMap
+                            // 处理远程调用传输的映射对象
                             return convertToObject((LinkedHashMap<String, Object>) item, targetClass);
                         } else if (targetClass.isInstance(item)) {
                             // 如果已经是目标类型，直接返回
@@ -168,4 +168,3 @@ public class EsTool {
 
 
 }
-

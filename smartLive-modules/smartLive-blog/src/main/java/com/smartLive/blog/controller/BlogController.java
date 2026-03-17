@@ -16,6 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/**
+ * 博客管理控制器。
+ */
 @RestController
 @RequestMapping("/blog")
 public class BlogController extends BaseController
@@ -105,23 +108,47 @@ public class BlogController extends BaseController
         return Result.ok(blogService.saveBlog(blog));
     }
 
+    /**
+     * 查询当前用户的博客列表。
+     *
+     * @param blog 查询条件
+     * @param current 当前页码
+     * @return 博客列表
+     */
     @GetMapping("/of/me")
     public Result queryMyBlog(Blog blog,@RequestParam(value = "current", defaultValue = "1") Integer current) {
         List<BlogVO> blogList=blogService.queryMyBlog(blog,current);
         return Result.ok(blogList);
     }
 
+    /**
+     * 分页查询热门博客。
+     *
+     * @param current 当前页码
+     * @return 热门博客列表
+     */
     @GetMapping("/hot")
     public Result queryHotBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
 
         return Result.ok(blogService.queryHotBlog(current));
     }
+    /**
+     * 按分类分页查询博客列表。
+     *
+     * @param typeId 分类ID
+     * @param current 当前页码
+     * @return 博客列表
+     */
     @GetMapping("/category/{typeId}")
     public Result queryBlogByCategory(@PathVariable("typeId") Long typeId,@RequestParam(value = "current", defaultValue = "1") Integer current) {
         return Result.ok(blogService.queryBlogByCategory(typeId,current));
     }
     /**
-     * 查询指定用户的博客流
+     * 查询指定用户的博客列表。
+     *
+     * @param current 当前页码
+     * @param userId 用户ID
+     * @return 博客列表
      */
     @GetMapping("/of/user")
     public Result queryBlogByUserId(
@@ -130,7 +157,10 @@ public class BlogController extends BaseController
         return Result.ok(blogService.queryBlogByUserId(current, userId));
     }
     /**
-     * 根据ID获取博客详细信息 (移动端)
+     * 获取博客详情（移动端）。
+     *
+     * @param id 博客ID
+     * @return 博客详情
      */
     @GetMapping("/getBlogById/{id}")
     public Result getBlogById(@PathVariable("id") Long id) {
@@ -138,7 +168,10 @@ public class BlogController extends BaseController
         return Result.ok(blogService.queryBlogById(id));
     }
     /**
-     * 设置博客是否置顶
+     * 设置博客置顶状态。
+     *
+     * @param blog 博客信息
+     * @return 更新结果
      */
     @PutMapping("/isPin")
     public Result isPin(@RequestBody Blog blog){
@@ -148,22 +181,27 @@ public class BlogController extends BaseController
         }else
             return Result.fail("pin update failed");
     }
-    /**
-     * 全量同步所有博客到搜索引擎 (全量导入)
-     */
     @PostMapping("/allPublish")
     public AjaxResult allPublish() {
         return success(blogService.allPublish());
     }
     /**
-     * 全量同步所有博客到搜索引擎 (全量导入)
+     * 发布指定博客到搜索索引。
+     *
+     * @param ids 博客ID数组
+     * @return 执行结果
      */
-
     @PostMapping("/publish/{ids}")
     public AjaxResult allPublish(@PathVariable String[] ids) {
         return success(blogService.publish(ids));
     }
 
+    /**
+     * 按标题关键字搜索博客。
+     *
+     * @param keyword 关键词
+     * @return 博客列表
+     */
     @GetMapping("/search")
     public Result searchBlogs(@RequestParam(name = "keyword", required = false) String keyword) {
         return Result.ok(blogService.searchBlogs(keyword));

@@ -27,10 +27,10 @@ import java.util.concurrent.TimeUnit;
 @Component
 @RequiredArgsConstructor
 /**
- * ChatMemory 会话装载器：
- * 1. 请求开始时先清空运行时 ChatMemory，再按会话重建；
- * 2. 历史优先从 Redis List 读取，未命中时回源 message 表；
- * 3. 每轮 user/assistant 落库后把同一份摘要消息追加到 Redis List。
+ * 会话记忆装载器：
+ * 1. 请求开始时先清空运行时会话记忆，再按会话重建；
+ * 2. 历史优先从缓存列表读取，未命中时回源消息表；
+ * 3. 每轮用户/助手消息落库后把同一份摘要消息追加到缓存列表。
  */
 public class MessageTableChatMemoryManager {
 
@@ -66,7 +66,7 @@ public class MessageTableChatMemoryManager {
     }
 
     /**
-     * 当前轮落库后，把消息摘要追加到 Redis List，Redis 自动维护窗口。
+     * 当前轮落库后，把消息摘要追加到缓存列表，缓存自动维护窗口。
      */
     public void appendMessageToCache(UserAiMessage message) {
         if (message == null || message.getSessionId() == null) {
@@ -85,7 +85,7 @@ public class MessageTableChatMemoryManager {
             redisService.expire(cacheKey, REDIS_TTL_DAYS, TimeUnit.DAYS);
         }
         catch (Exception e) {
-            // key 类型异常时先清理，避免污染后续会话。
+            // 键类型异常时先清理，避免污染后续会话。
             if (isWrongTypeException(e)) {
                 redisService.deleteObject(cacheKey);
             }
@@ -97,7 +97,7 @@ public class MessageTableChatMemoryManager {
      * 加载历史消息。
      */
     private List<org.springframework.ai.chat.messages.Message> loadHistoryMessages(Long sessionId) {
-        // 优先走 Redis List，命中则不查库；miss 时回源 DB 并回填 Redis。
+        // 优先从缓存列表读取，命中则不查库；未命中时回源数据库并回填缓存。
         List<CachedMessage> cachedMessages = loadMessagesFromRedis(sessionId);
         if (cachedMessages != null) {
             return toMemoryMessages(cachedMessages);
@@ -109,7 +109,7 @@ public class MessageTableChatMemoryManager {
     }
 
     /**
-     * 返回 null 表示缓存未命中，需要回源 DB。
+     * 返回 null 表示缓存未命中，需要回源数据库。
      * 返回空列表表示缓存命中但无历史。
      */
     private List<CachedMessage> loadMessagesFromRedis(Long sessionId) {
@@ -126,13 +126,13 @@ public class MessageTableChatMemoryManager {
             }
 
             List<CachedMessage> trimmedMessages = trimToWindow(cachedMessages);
-            // 读取时也做一次窗口纠偏，确保 Redis 和 ChatMemory 窗口一致。
+            // 读取时也做一次窗口纠偏，确保缓存与会话记忆窗口一致。
             redisService.trimCacheList(cacheKey, -ChatMemoryConfiguration.MAX_MESSAGES, -1);
             redisService.expire(cacheKey, REDIS_TTL_DAYS, TimeUnit.DAYS);
             return trimmedMessages;
         }
         catch (Exception e) {
-            // key 类型异常说明缓存脏了，删掉后走 DB 回源重建。
+            // 键类型异常说明缓存脏了，删掉后从数据库回源重建。
             if (isWrongTypeException(e)) {
                 redisService.deleteObject(cacheKey);
             }
@@ -174,7 +174,7 @@ public class MessageTableChatMemoryManager {
     private void refillConversationCache(Long sessionId, List<CachedMessage> messages) {
         String cacheKey = buildRedisKey(sessionId);
         try {
-            // miss 回填时直接重建该 key，避免残留脏数据。
+            // 未命中回填时直接重建该键，避免残留脏数据。
             redisService.deleteObject(cacheKey);
             if (messages != null && !messages.isEmpty()) {
                 redisService.rightPushAllCacheList(cacheKey, messages);
@@ -248,13 +248,13 @@ public class MessageTableChatMemoryManager {
         }
 
         if ("assistant".equals(role)) {
-            // 助手若返回推荐卡片，缓存中只保留“replyText + 核心实体摘要”。
+            // 助手若返回推荐卡片，缓存中只保留“回复文本 + 核心实体摘要”。
             String summary = recommendationCardHelper.buildMemorySummary(content);
             if (hasText(summary)) {
                 return summary;
             }
             if (recommendationCardHelper.extractRecommendationJson(content) != null) {
-                // 卡片摘要构建失败时，至少保留 replyText，避免把整段 JSON 放进记忆。
+                // 卡片摘要构建失败时，至少保留回复文本，避免整段结构化内容进入记忆。
                 return recommendationCardHelper.extractReplyText(content);
             }
         }
@@ -280,7 +280,7 @@ public class MessageTableChatMemoryManager {
     }
 
     /**
-     * 判断是否为 WRONGTYPE 异常。
+     * 判断是否为类型异常。
      */
     private boolean isWrongTypeException(Exception exception) {
         if (exception == null || exception.getMessage() == null) {
@@ -290,7 +290,7 @@ public class MessageTableChatMemoryManager {
     }
 
     /**
-     * 构建 Redis 键。
+     * 构建缓存键。
      */
     private String buildRedisKey(Long sessionId) {
         return REDIS_KEY_PREFIX + sessionId;
@@ -311,7 +311,7 @@ public class MessageTableChatMemoryManager {
     @AllArgsConstructor
     private static class CachedMessage {
         /**
-         * 数据库 message.id，便于排查问题时对照。
+         * 数据库消息ID，便于排查问题时对照。
          */
         private Long messageId;
         private String role;

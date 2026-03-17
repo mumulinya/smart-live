@@ -13,19 +13,27 @@ import java.util.List;
 public class ReviewVO {
 
     // ===== 基础字段 =====
+    /** 评价编号 */
     private Long id;
+    /** 用户编号 */
     private Long userId;
+    /** 店铺编号 */
     private Long shopId;
+    /** 订单编号 */
     private Long orderId;
 
     // ===== 来源相关字段 =====
     /** 来源类型：1=店铺 2=文章 3=团购 */
     private Integer sourceType;
+    /** 来源名称 */
     private String sourceName;
+    /** 来源编号 */
     private Long sourceId;
 
     // ===== 评价内容 =====
+    /** 评价内容 */
     private String content;
+    /** 评价图片列表 */
     private List<String> images;
 
     // ===== 评分信息 =====
@@ -39,8 +47,11 @@ public class ReviewVO {
     private Short envScore;
 
     // ===== 互动数据 =====
+    /** 点赞数量 */
     private Integer liked;
+    /** 回复数量 */
     private Integer replyCount;
+    /** 收藏数量 */
     private Integer stared;
 
     // ===== 状态字段 =====
@@ -48,11 +59,13 @@ public class ReviewVO {
     private Integer status;
     /** 是否匿名 */
     private Boolean isAnonymous;
-    /** 是否AI生成 */
+    /** 是否人工智能生成 */
     private Boolean isAIGenerated;
 
     // ===== 用户信息 =====
+    /** 用户昵称 */
     private String nickName;
+    /** 用户头像 */
     private String userIcon;
 
     // ===== 时间戳 =====
@@ -60,10 +73,12 @@ public class ReviewVO {
     private Date createTime;
 
     // ===== 用户交互状态（当前用户）=====
+    /** 当前用户是否点赞 */
     private Boolean isLike;
+    /** 当前用户是否收藏 */
     private Boolean isStared;
 
-    // ===== 查询条件字段（用于 Service 层）=====
+    // ===== 查询条件字段（用于服务层）=====
     /** 最低评分过滤 */
     private Integer minScore;
     /** 分页/限制返回数量 */
@@ -72,8 +87,8 @@ public class ReviewVO {
     private Integer sortType;
 
     // ===== 辅助字段 =====
-    /** RAG相关性得分 */
+    /** 检索增强生成相关性得分 */
     private Float relevanceScore;
-    /** 是否是AI推荐 */
+    /** 是否为人工智能推荐 */
     private Boolean isAIRecommended;
 }

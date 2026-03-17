@@ -31,7 +31,7 @@ public class Shop extends BaseEntity implements Serializable
     @Excel(name = "商铺名称")
     private String name;
 
-    /** 商铺类型的id */
+    /** 商铺类型ID */
     @Excel(name = "商铺类型的id")
     private Long typeId;
 
@@ -55,7 +55,7 @@ public class Shop extends BaseEntity implements Serializable
     @Excel(name = "经度")
     private Double x;
 
-    /** 维度 */
+    /** 纬度 */
     @Excel(name = "维度")
     private Double y;
 
@@ -86,9 +86,10 @@ public class Shop extends BaseEntity implements Serializable
     @Excel(name = "营业时间，例如 10:00-22:00")
     private String openHours;
 
-    /** 审核状态 */
+    /** 店铺状态 */
     private Integer status;
 
+    /** 审核状态 */
     private Integer auditStatus;
 
     /** 审核拒绝原因 */

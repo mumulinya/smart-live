@@ -163,7 +163,7 @@ public class OrderListener {
     @RabbitListener(bindings=@QueueBinding(
             value = @Queue(name = OrderMqConstants.ORDER_DELAY_QUEUE),
             exchange = @Exchange(name = OrderMqConstants.ORDER_DELAY_EXCHANGE,
-                    type = "x-delayed-message", // 使用 x-delayed-message 类型交换机
+                    type = "x-delayed-message", // 使用延迟消息交换机类型
                     durable = "true",
                     arguments = @Argument(name = "x-delayed-type", value = "direct") // 指定路由类型
                     ),

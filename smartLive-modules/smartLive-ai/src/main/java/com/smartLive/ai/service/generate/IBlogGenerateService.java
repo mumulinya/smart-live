@@ -4,7 +4,7 @@ import com.smartLive.ai.domain.DTO.BlogGenerateDTO;
 import com.smartLive.ai.entity.vo.BlogGenerateVO;
 
 /**
- * AI Blog Generate Service Interface
+ * 博客内容生成服务接口。
  *
  * 作者：smartLive
  */

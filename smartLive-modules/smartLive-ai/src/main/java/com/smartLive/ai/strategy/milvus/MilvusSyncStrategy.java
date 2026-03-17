@@ -12,38 +12,41 @@ import java.util.List;
 public interface MilvusSyncStrategy<T> {
 
     /**
-     * 获取策略的类型
+     * 获取策略类型。
      */
     Integer getType();
 
 
     /**
-     * 单条插入或更新
-     * @param id 文档ID
+     * 单条插入或更新。
+     *
+     * @param id 文档编号
      * @param data 实体数据
      * @return 是否成功
      */
     boolean insertOrUpdate(String id, Object data) throws IOException;
 
     /**
-     * 批量插入
-     * @param dataList 实体列表
+     * 批量插入数据。
      *
+     * @param dataList 实体列表
      * @return 是否成功
      */
     boolean batchInsert(List<Object> dataList) throws IOException;
 
     /**
-     * 按ID删除
-     * @param id 文档ID
+     * 按编号删除。
+     *
+     * @param id 文档编号
      * @return 是否成功
      */
     boolean delete(String id) throws IOException;
 
     /**
-     *创建文档
-     * @param data
-     * @return
+     * 创建文档对象。
+     *
+     * @param data 实体数据
+     * @return 文档对象
      */
-    public Document createDocument(T data);
+    Document createDocument(T data);
 }

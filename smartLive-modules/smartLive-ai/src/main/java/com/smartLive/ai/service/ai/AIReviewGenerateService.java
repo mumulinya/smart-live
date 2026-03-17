@@ -77,7 +77,6 @@ public class AIReviewGenerateService {
      * @return 生成好的 ReviewDTO 对象，若无历史评价则返回 null
      */
     private ReviewDTO createReview(ReviewDTO queryDTO) {
-//        List<ReviewDTO> reviews = reviewRagService.getReviews(null, null);
         List<ReviewDTO> reviews=new ArrayList<>();
         if (reviews == null || reviews.isEmpty()) {
             return null;
@@ -96,7 +95,7 @@ public class AIReviewGenerateService {
         reviewDTO.setScore(5);
         reviewDTO.setCreateTime(new Date());
         reviewDTO.setStatus(0);
-        reviewDTO.setUserId(99999L); // 默认 AI 专用用户 ID
+        reviewDTO.setUserId(99999L); // 默认智能助手专用用户编号
         reviewDTO.setIsAIGenerated(true);
         return reviewDTO;
     }

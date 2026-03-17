@@ -6,8 +6,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * 系统模块
- * 
+ * 博客模块启动类。
+ *
  * @author smartLive
  */
 @EnableCustomConfig
@@ -15,6 +15,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SmartLiveBlogApplication
 {
+    /**
+     * 启动入口。
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args)
     {
         SpringApplication.run(SmartLiveBlogApplication.class, args);

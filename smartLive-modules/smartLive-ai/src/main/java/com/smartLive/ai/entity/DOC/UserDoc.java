@@ -27,12 +27,13 @@ public class UserDoc
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /** 昵称，默认是用户id */
+    /** 昵称，默认是用户编号 */
     private String nickName;
 
     /** 人物头像 */
     private String icon;
 
+    /** 是否已关注 */
     private Boolean isFollow;
 
 
@@ -40,6 +41,7 @@ public class UserDoc
     private String introduce;
     /** 城市 */
     private String city;
+    /** 创建时间 */
     private Date createTime;
 
 }

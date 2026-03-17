@@ -27,13 +27,13 @@ public class Blog extends BaseEntity implements Serializable
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /** 商户id */
+    /** 商户ID */
     @Excel(name = "商户id")
     private Long shopId;
-    /** 博客类型id */
+    /** 博客类型ID */
     private Long typeId;
 
-    /** 用户id */
+    /** 用户ID */
     @Excel(name = "用户id")
     private Long userId;
 
@@ -67,6 +67,7 @@ public class Blog extends BaseEntity implements Serializable
     @Excel(name = "状态，0：正常，1：被举报，2：禁止查看")
     private Short status;
 
+    /** 审核状态 */
     private Short auditStatus;
 
     /** 审核拒绝原因 */

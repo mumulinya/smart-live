@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Default MilvusSyncStrategy.
+ * 默认 Milvus 同步策略实现。
  */
 @Component
 public class DefaultMilvusSyncStrategy implements MilvusSyncStrategy<Object> {

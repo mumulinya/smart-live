@@ -188,6 +188,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         }, executorService);
     }
 
+    /**
+     * 判断经营分析结果是否为空。
+     */
     private boolean isEmptyAnalysisResult(ShopOrderAnalysisDTO orderAnalysis,
                                           ShopReviewAnalysisDTO reviewAnalysis,
                                           ShopOrderSuggestDTO orderSuggest) {
@@ -206,6 +209,9 @@ public class ShopAnalysisServiceImpl extends ServiceImpl<ShopAnalysisRecordMappe
         return emptyOrderAnalysis && emptyReviewAnalysis && emptyOrderSuggest;
     }
 
+    /**
+     * 构建店铺经营分析记录。
+     */
     private ShopAnalysisRecord buildShopAnalysisRecord(Long shopId,
                                                        String timeRange,
                                                        LocalDateTime[] range,

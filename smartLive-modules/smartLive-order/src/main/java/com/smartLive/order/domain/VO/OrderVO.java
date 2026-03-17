@@ -25,11 +25,11 @@ public class OrderVO extends BaseEntity implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    /** 订单ID (防止前端精度丢失，序列化为String) */
+    /** 订单ID（防止前端精度丢失，序列化为字符串） */
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    /** 下单的用户id */
+    /** 下单的用户ID */
     private Long userId;
 
     /** 来源ID（可以是代金券ID、商品ID等） */

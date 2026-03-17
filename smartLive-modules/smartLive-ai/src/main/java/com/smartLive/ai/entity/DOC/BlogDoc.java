@@ -16,15 +16,16 @@ public class BlogDoc   implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
+    /** 博客编号 */
     private Long id;
 
-    /** 商户id */
+    /** 商户编号 */
     private Long shopId;
 
-    /** 博客类型id */
+    /** 博客类型编号 */
     private Long typeId;
 
-    /** 用户id */
+    /** 用户编号 */
     private Long userId;
 
     /** 标题 */

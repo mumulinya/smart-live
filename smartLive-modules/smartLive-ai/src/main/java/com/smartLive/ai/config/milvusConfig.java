@@ -63,7 +63,7 @@ public class milvusConfig {
      */
     @Bean
     public VectorStore productVectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
-        // 将集合名称调整为 product
+        // 将集合名称统一为商品集合
         return buildVectorStore("product", embeddingModel);
     }
 

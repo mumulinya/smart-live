@@ -38,7 +38,7 @@ public class Order extends BaseEntity implements Serializable
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    /** 下单的用户id */
+    /** 下单的用户ID */
     @Excel(name = "下单的用户id")
     private Long userId;
 

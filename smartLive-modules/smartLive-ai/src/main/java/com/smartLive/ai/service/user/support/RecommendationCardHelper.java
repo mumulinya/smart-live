@@ -15,9 +15,9 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 /**
- * 处理推荐卡片 JSON：
- * 1. 给前端渲染时做标准化
- * 2. 给 ChatMemory 恢复时提取成紧凑摘要，避免把整段 JSON 塞进模型上下文
+ * 推荐卡片 JSON 处理器：
+ * 1. 面向前端渲染做字段标准化。
+ * 2. 面向会话记忆恢复提取紧凑摘要，避免整段 JSON 进入模型上下文。
  */
 public class RecommendationCardHelper {
 
@@ -94,7 +94,7 @@ public class RecommendationCardHelper {
                 return null;
             }
 
-            // ChatMemory 中优先保留自然语言答复，再附上可被后续追问引用的实体锚点
+            // 会话记忆中优先保留自然语言答复，再附上可被后续追问引用的实体锚点
             String replyText = normalizeText(root.path("replyText").asText(null));
             String recommendationSummary = buildRecommendationSummary(root);
             if (!hasText(replyText)) {

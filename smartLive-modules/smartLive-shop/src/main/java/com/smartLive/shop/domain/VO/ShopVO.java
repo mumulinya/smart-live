@@ -24,7 +24,7 @@ public class ShopVO implements Serializable
     /** 商铺名称 */
     private String name;
 
-    /** 商铺类型的id */
+    /** 商铺类型ID */
     private Long typeId;
 
     /** 商铺图片，多个图片以','隔开 */
@@ -42,7 +42,7 @@ public class ShopVO implements Serializable
     /** 经度 */
     private Double x;
 
-    /** 维度 */
+    /** 纬度 */
     private Double y;
 
     /** 均价，取整数 */
@@ -66,9 +66,10 @@ public class ShopVO implements Serializable
     /** 营业时间，例如 10:00-22:00 */
     private String openHours;
 
-    /** 审核状态 */
+    /** 店铺状态 */
     private Integer status;
 
+    /** 审核状态 */
     private Integer auditStatus;
 
     /** 审核拒绝原因 */
@@ -78,7 +79,9 @@ public class ShopVO implements Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
+    /** 距离，单位米 */
     private Double distance;
+    /** 经纬度位置字符串（lat,lon） */
     private String location;
     
     /** 是否收藏 */

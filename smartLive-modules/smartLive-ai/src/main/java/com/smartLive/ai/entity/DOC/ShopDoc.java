@@ -32,7 +32,7 @@ public class ShopDoc implements Serializable
     /** 商铺名称 */
     private String name;
 
-    /** 商铺类型的id */
+    /** 商铺类型编号 */
     private Long typeId;
 
     /** 商铺图片，多个图片以','隔开 */
@@ -50,7 +50,7 @@ public class ShopDoc implements Serializable
     /** 经度 */
     private Double x;
 
-    /** 维度 */
+    /** 纬度 */
     private Double y;
 
     /** 均价，取整数 */
@@ -70,7 +70,7 @@ public class ShopDoc implements Serializable
     /** 距离，单位米 */
     private Double distance;
 
-    // 添加位置坐标字段
+    // 位置坐标字段
     private String location;
 
     /** 创建时间 */
@@ -82,7 +82,7 @@ public class ShopDoc implements Serializable
      */
     private void updateLocation() {
         if (this.x != null && this.y != null) {
-            this.location = this.y + "," + this.x; // geo_point格式：lat,lon
+            this.location = this.y + "," + this.x; // 地理点位格式：纬度,经度
         }
     }
     /**

@@ -29,7 +29,7 @@ public class ProductVO implements Serializable
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /** 商铺id */
+    /** 商铺编号 */
     private String shopId;
 
     /** 商品名称 */
@@ -59,7 +59,8 @@ public class ProductVO implements Serializable
     /** 1,上架; 2,下架; 3,过期 */
     private Integer status;
 
-    private Long userId; // For order context
+    /** 订单上下文中的用户编号 */
+    private Long userId;
 
     /**
      * 库存
@@ -81,9 +82,10 @@ public class ProductVO implements Serializable
 
     /** 有效期类型：1-固定日期，2-动态有效期 */
     private Integer validityType;
-    /** 固定日期的开始/结束时间 */
+    /** 固定日期的开始时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date useStartTime;
+    /** 固定日期的结束时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date useEndTime;
 

@@ -18,7 +18,7 @@ public class SpringAiCompatibilityConfig {
      */
     @PostConstruct
     public void applySpringAiJsonCompatibility() {
-        // 上游模型提供方可能会返回额外的枚举值（例如 finish_reason=abort）。
+        // 上游模型提供方可能会返回额外的枚举值（例如中止状态）。
         // 忽略未知枚举值，避免流式解析因兼容性问题中断。
         ModelOptionsUtils.OBJECT_MAPPER.configure(
                 DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL,

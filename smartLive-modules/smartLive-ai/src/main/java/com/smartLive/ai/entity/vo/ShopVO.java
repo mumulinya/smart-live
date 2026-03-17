@@ -5,17 +5,19 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// 店铺视图对象。
+/**
+ * 店铺视图对象。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShopVO {
-    /** 商铺id */
+    /** 商铺编号 */
     private Long id;
     /** 商铺名称 */
     private String name;
 
-    /** 商铺类型的id */
+    /** 商铺类型编号 */
     private Long typeId;
 
     /** 商铺图片，多个图片以','隔开 */
@@ -33,7 +35,7 @@ public class ShopVO {
     /** 经度 */
     private Double x;
 
-    /** 维度 */
+    /** 纬度 */
     private Double y;
 
     /** 均价，取整数 */
@@ -51,8 +53,8 @@ public class ShopVO {
     /** 营业时间，例如 10:00-22:00 */
     private String openHours;
 
+    /** 距离 */
     @TableField(exist = false)
-    /** 距离*/
     private Double distance;
     /** 所属区域，例如：浦东新区 */
     private String district;

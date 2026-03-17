@@ -34,7 +34,7 @@ public class UserAiSessionServiceImpl extends ServiceImpl<UserAiSessionMapper, U
      * 创建全新会话
      *
      * @param 标题 会话标题，若为空则默认设为“新会话”
-     * @return 产生的会话 ID
+     * @return 产生的会话编号
      */
     @Override
     public Long createSession(String title) {
@@ -72,7 +72,7 @@ public class UserAiSessionServiceImpl extends ServiceImpl<UserAiSessionMapper, U
      */
     @Override
     public List<UserAiSession> searchByKeyword(String keyword, Integer current) {
-        // 获取当前登录用户ID
+        // 获取当前登录用户编号
         Long userId = UserContextHolder.getUser().getId();
         Page<UserAiSession> page = new Page<>(current,10);
         LambdaQueryWrapper<UserAiSession> wrapper = new LambdaQueryWrapper<>();
@@ -85,7 +85,7 @@ public class UserAiSessionServiceImpl extends ServiceImpl<UserAiSessionMapper, U
     /**
      * 删除会话及其关联的所有消息记录
      *
-     * @param sessionId 会话 ID
+     * @param sessionId 会话编号
      * @return 是否删除成功
      */
     @Override

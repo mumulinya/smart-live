@@ -5,17 +5,17 @@ import com.smartLive.ai.entity.vo.ProductVO;
 import java.util.List;
 
 /**
- * Product RAG service.
+ * 商品 RAG 服务接口。
  */
 public interface IProductRagService {
 
     /**
-     * Query products.
+     * 查询商品列表。
      */
     List<ProductVO> getProductList(ProductVO productVO, String userMessage);
 
     /**
-     * Place product order.
+     * 下单商品。
      */
     String orderProduct(ProductVO productVO);
 }

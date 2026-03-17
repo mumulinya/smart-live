@@ -379,7 +379,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             return null;
         }
         redisService.setCacheObject(key, JSONUtil.toJsonStr(shop), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
-        return convertToShopVO(shop); // Convert Shop to ShopVO before returning
+        return convertToShopVO(shop); // 转换为店铺视图对象后返回
 
     }
 

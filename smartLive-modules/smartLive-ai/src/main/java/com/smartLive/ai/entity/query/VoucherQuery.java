@@ -11,15 +11,16 @@ import java.time.LocalDateTime;
 @Data
 public class VoucherQuery {
 
-    /** 商铺id */
-    @ToolParam(required = false, description = "商铺id")
+    /** 商铺编号 */
+    @ToolParam(required = false, description = "商铺编号")
     private Long shopId;
 
     /** 0,普通券；1,秒杀券 */
     private String type;
 
+    /** 商铺名称 */
     @ToolParam(required = false, description = "商铺名称")
-   private String shopName;
+    private String shopName;
     /**
      * 库存
      */

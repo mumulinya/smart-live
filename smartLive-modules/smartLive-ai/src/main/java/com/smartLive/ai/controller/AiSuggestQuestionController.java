@@ -35,7 +35,7 @@ public class AiSuggestQuestionController extends BaseController {
     @GetMapping
     public Result getSuggestions() {
         List<AiSuggestQuestion> list = suggestQuestionService.getRandomSuggestions(3);
-        // 仅返回内容字符串列表，符合前端 UI 渲染逻辑
+        // 仅返回内容字符串列表，符合前端界面渲染逻辑
         List<String> contents = list.stream().map(AiSuggestQuestion::getContent).collect(Collectors.toList());
         return Result.ok(contents);
     }

@@ -23,7 +23,6 @@ import java.util.Map;
 
 /**
  * 基于 Spring AI 的自主反思（ReAct/Plan-and-Solve 风格）Agent 聊天服务。
- * <p>
  * 这是项目中的【第三套 Agent 方案】：
  * 1. 架构：纯基于单模型推理 + 本地大循环（While loop）实现复杂规划、工具调用、自我反思。
  * 2. 职责：处理极高复杂度、需要逐步推导的复合任务。

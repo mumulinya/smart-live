@@ -10,28 +10,28 @@ import lombok.Data;
 @Data
 public class ReviewGenerateDTO {
 
-    /** 店铺 ID。 */
+    /** 店铺编号。 */
     private Long shopId;
 
-    /** 订单 ID。 */
+    /** 订单编号。 */
     private Long orderId;
 
     /** 来源类型：2=店铺，3=博客，4=商品。 */
     private Integer sourceType;
 
-    /** Source id. */
+    /** 来源编号。 */
     private Long sourceId;
 
     /** 总评分，范围 1-5。 */
     private Integer score;
 
-    /** Service score. */
+    /** 服务评分。 */
     private Short serviceScore;
 
-    /** Taste score. */
+    /** 口味评分。 */
     private Short tasteScore;
 
-    /** Environment score. */
+    /** 环境评分。 */
     private Short envScore;
 
     /** 用户补充描述。 */

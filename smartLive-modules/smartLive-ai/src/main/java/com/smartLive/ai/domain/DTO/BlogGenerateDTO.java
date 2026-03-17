@@ -10,12 +10,12 @@ import lombok.Data;
 @Data
 public class BlogGenerateDTO {
 
-    /** 店铺 ID。 */
+    /** 店铺编号。 */
     private Long shopId;
 
     /** 用户补充要求。 */
     private String description;
 
-    /** Style: 0=natural, 1=refined, 2=humorous. */
+    /** 风格：0=自然，1=精致，2=幽默。 */
     private Integer style;
 }

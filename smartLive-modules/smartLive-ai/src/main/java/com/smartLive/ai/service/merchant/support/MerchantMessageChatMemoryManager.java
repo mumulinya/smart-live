@@ -102,7 +102,7 @@ public class MerchantMessageChatMemoryManager {
     }
 
     /**
-     * 从 Redis 加载消息。
+     * 从缓存加载消息。
      */
     private List<CachedMessage> loadMessagesFromRedis(Long sessionId) {
         String cacheKey = buildRedisKey(sessionId);
@@ -246,14 +246,14 @@ public class MerchantMessageChatMemoryManager {
     }
 
     /**
-     * 构建 Redis 键。
+     * 构建缓存键。
      */
     private String buildRedisKey(Long sessionId) {
         return REDIS_KEY_PREFIX + sessionId;
     }
 
     /**
-     * 判断是否为 WRONGTYPE 异常。
+     * 判断是否为类型异常。
      */
     private boolean isWrongTypeException(Exception exception) {
         if (exception == null || exception.getMessage() == null) {

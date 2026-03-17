@@ -8,9 +8,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 博客视图对象 (View Object)
- * 用于前端展现用户的探店笔记详情，包含互动统计数据、作者信息及当前用户的交互状态。
- * 
+ * 博客视图对象，用于前端展现探店笔记详情。
+ * 包含互动统计、作者信息及当前用户的交互状态。
+ *
  * @author smartLive
  * @date 2026-03-11
  */
@@ -23,13 +23,13 @@ public class BlogVO implements Serializable
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    /** 商户id */
+    /** 商户ID */
     private Long shopId;
     
-    /** 博客类型id */
+    /** 博客类型ID */
     private Long typeId;
 
-    /** 用户id */
+    /** 用户ID */
     private Long userId;
 
     /** 标题 */
@@ -56,6 +56,7 @@ public class BlogVO implements Serializable
     /** 状态，0：正常，1：草稿，2：禁止查看 */
     private Short status;
 
+    /** 审核状态 */
     private Short auditStatus;
     
     /** 创建时间 */
@@ -72,8 +73,10 @@ public class BlogVO implements Serializable
      */
     private String name;
 
+    /** 用户昵称 */
     private String userName;
 
+    /** 店铺名称 */
     private String shopName;
     
     /**
