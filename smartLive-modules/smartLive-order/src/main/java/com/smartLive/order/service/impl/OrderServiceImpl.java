@@ -167,9 +167,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 .eq("user_id", userId)
                 .eq("source_id", order.getSourceId())
                 .notIn("status",
-                        OrderStatusConstants.EXPIRED,   // 闂傚倸鍊风粈渚€骞栭位鍥敃閿曗偓閻ょ偓绻涢幋鐐╂（婵炲樊浜濋弲婵嬫煃瑜滈崜鐔煎极?
-                        OrderStatusConstants.CANCELLED, 
-                        OrderStatusConstants.REFUNDED   
+                        OrderStatusConstants.EXPIRED,   // 闂傚倸鍊搁崐椋庣矆娓氣偓楠炴牠顢曚綅閸ヮ剦鏁冮柨鏇楀亾闁汇倗鍋撶换娑㈠箣閻愨晜锛堝┑鐐叉▕娴滄繈寮插┑瀣厓鐟滄粓宕滈悢鐓庢瀬?
+                        OrderStatusConstants.CANCELLED,
+                        OrderStatusConstants.REFUNDED
                 ).count().intValue();
         if(count>0){
             log.error("duplicate order detected, recover redis stock and eligibility");
@@ -188,7 +188,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             StockDeductMessage msg = new StockDeductMessage();
             msg.setProductId(order.getSourceId());
             msg.setOrderId(order.getId());
-            msg.setCount(order.getAmount() != null ? order.getAmount() : 1); 
+            msg.setCount(order.getAmount() != null ? order.getAmount() : 1);
 
             mqMessageSendUtils.sendMqMessage(
                 ProductMqConstants.PRODUCT_STOCK_EXCHANGE,
@@ -201,7 +201,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             mqMessageSendUtils.sendMqMessage( OrderMqConstants.ORDER_DELAY_EXCHANGE,OrderMqConstants.ORDER_DELAY_ROUTING_KEY,order.getId(),(OrderMqConstants.DELAY_TIME));
         }
     }
-    
+
     public void handleOrder(Order order) {
         createOrder(order);
     }
@@ -221,7 +221,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     private void incrementShopSales(Order order) {
-        log.info("闂傚倸鍊风欢锟犲磻閸涱垱鏆滈柟鐑橆樄閻戣棄绀冮柍鍝勫€搁崝鍛攽鎺抽崐鏇㈠箠韫囨稑绠犳繛鍡樻尰閳锋垿骞栫€涙ɑ灏ù婊堢畺濮婄粯鎷呴悷鎵シ缂備胶绮敮鐐参ｉ幇鐗堟櫆闂佹鍨版禍鐐箾閹寸儐浠炬い蹇撶吇閸ヮ剙鐓涢柛娑卞枛娴? order={}", order);
+        log.info("闂傚倸鍊搁崐椋庢閿熺姴纾婚柛娑卞灡閺嗘粓鏌熼悜姗嗘▌闁绘垼妫勭粈鍐煃閸濆嫬鈧悂宕濋崨顓涙斀閹烘娊宕愰弴銏犵疇闊洦绋戠粻鐘崇箾閸℃ɑ灏伴柍閿嬪灴楠炴牜鈧稒蓱鐏忣厼霉濠婂牏鐣烘慨濠勭帛閹峰懘鎮烽幍顔俱偡缂傚倷鑳剁划顖滄暜閻愬弬锝夊箛閻楀牊娅嗛梻浣诡儥閸ㄧ増绂嶉悙顒傜闁瑰鍎愭禒鐐亜韫囨挾鍚囬柛銉墮閻撴盯鏌涘☉鍗炴灈濞? order={}", order);
         if (order == null || order.getVerifyShopId() == null) {
             return;
         }
@@ -289,10 +289,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             BeanUtils.copyProperties(v, orderVO);;
             ProductDTO product  = remoteProductService.getProductById(v.getSourceId());
             if(product!=null) {
-                orderVO.setRules(product.getRulesJson()); // Mapped rulesJson to rules
-                orderVO.setPayValue(product.getPrice());      // Mapped price to payValue
-                orderVO.setActualValue(product.getOriginalPrice()); // Mapped originalPrice to actualValue
-                orderVO.setTitle(product.getName());          // Mapped name to title
+                orderVO.setRules(product.getRulesJson()); // 将商品规则映射到订单规则字段
+                orderVO.setPayValue(product.getPrice());      // 将商品售价映射到支付金额字段
+                orderVO.setActualValue(product.getOriginalPrice()); // 将商品原价映射到实际价值字段
+                orderVO.setTitle(product.getName());          // 将商品名称映射到订单标题字段
                 orderVO.setSubTitle(product.getSubTitle());
                 orderVO.setCoverImg(product.getCoverImg());
             }
@@ -368,7 +368,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
             if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
                 log.info("cancel order recovers stock for product activity");
-                // 闂傚倸鍊搁崐宄懊归崶顒夋晪闁哄稁鍘奸崒銊ф喐閻楀牆绗掗柛銊ュ€婚幉鎼佹偋閸繂鎯為梺鎼炲労閸撴瑩鎯屽Δ鈧…璺ㄦ崉娓氼垰鍓伴梺鍛婃煥閹虫ê顫忛搹瑙勫枂闁告洦鍋勬慨銏㈢磼閸撗嗘闁告瑥鍟撮悰?
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
             if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
@@ -456,7 +455,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         PointsMqConstants.POINTS_ORDER_ROUTING_KEY,
                         pointsMsg
                 );
-                log.info("闂傚倷绀侀幉锟犳偡閿曞倸鍨傞柛褎顨呴悞鍨亜閹寸偛顕滅紒浣哄閵囧嫰骞樺畷鍥┬ㄩ悗瑙勬穿缁绘繂顕ｉ幘顔藉亜闁告繂瀚峰Λ搴ㄦ⒒閸屾瑧顦︾紒銊╀憾瀹曟垿骞樼紒妯煎幘婵°倧绲介崰姘涢幋鐘冲仏鐟滄棃寮诲☉銏犵闁瑰鍋為崕妤哄┑鐘垫暩閸嬬偤宕归悽鍛婂亱濠电姴鍟? orderId={}, userId={}, payAmount={}", order.getId(), order.getUserId(), order.getPayAmount());
+                log.info("闂傚倸鍊风粈渚€骞夐敓鐘冲仭闁挎洖鍊搁崹鍌炴煕瑜庨〃鍛存倿閸偁浜滈柟瀵稿仜椤曟粎绱掓担鍝勵暭闁靛洤瀚伴獮妯虹暦閸モ敩銊╂倵鐟欏嫭绌跨紒缁樼箓椤曪綁骞橀钘変簻闂佸憡绻傜€氬嘲螞鎼淬劍鈷掗柛灞剧懅椤︼妇绱掗妸鈺€鎲剧€规洘鍨块獮妯肩磼濡厧骞樺┑掳鍊х徊浠嬪窗濮橆儵娑㈠箣閻樺啿浠忛悷婊勬瀵鈽夐姀鐘殿唺闂佺懓顕崑鐐哄磿濡ゅ搫鈹戦悩鍨毄闁稿鍋ゅ畷褰掓偨閸涘﹤浜辨繝鐢靛Т閸燁偊顢? orderId={}, userId={}, payAmount={}", order.getId(), order.getUserId(), order.getPayAmount());
             }
         }
         return i;
@@ -464,9 +463,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public Integer getOrderCount(Long userId) {
-        int orderCount = query().eq("user_id", userId).count().intValue();
-        System.out.println("闂傚倷绀侀崥瀣磿閹惰棄搴婇柤鑹扮堪娴滃綊鏌涢妷顔煎闁稿鍔戦弻鏇熺節韫囨洜鏆犻梺缁樻尰濞茬喖骞冪憴鍕闂傚牊绋撴禒濂告倵鐟欏嫭绀堥柛鐘崇墵閻涱噣鍩€椤掑倻纾藉ù锝堝亗閹存績鏋?"+orderCount);
-        return orderCount;
+        return query().eq("user_id", userId).count().intValue();
     }
 
     @Override
@@ -591,6 +588,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         };
     }
 
+    /**
+     * 批量回填商品销量列表中的商品名称。
+     */
     private List<ProductSalesVO> fillProductNames(List<ProductSalesVO> products) {
         if (products == null || products.isEmpty()) {
             return new ArrayList<>();
@@ -616,6 +616,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return products;
     }
 
+    /**
+     * 批量回填订单中的商品名称。
+     */
     private void fillOrderProductNames(List<OrderVO> orders) {
         if (orders == null || orders.isEmpty()) {
             return;
@@ -635,6 +638,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orders.forEach(order -> order.setProductName(productNameMap.getOrDefault(order.getSourceId(), "")));
     }
 
+    /**
+     * 批量回填订单中的店铺名称。
+     */
     private void fillOrderShopNames(List<OrderVO> orders) {
         if (orders == null || orders.isEmpty()) {
             return;
@@ -668,6 +674,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         });
     }
 
+    /**
+     * 批量回填订单中的用户昵称。
+     */
     private void fillOrderUserNames(List<OrderVO> orders) {
         if (orders == null || orders.isEmpty()) {
             return;
@@ -757,7 +766,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
             if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
                 log.info("expired order recovers stock for product activity");
-                // 闂傚倸鍊搁崐宄懊归崶顒夋晪闁哄稁鍘奸崒銊ф喐閻楀牆绗掗柛銊ュ€婚幉鎼佹偋閸繂鎯為梺鎼炲労閸撴瑩鎯屽Δ鈧…璺ㄦ崉娓氼垰鍓伴梺鍛婃煥閹虫ê顫忛搹瑙勫枂闁告洦鍋勬慨銏㈢磼閸撗嗘闁告瑥鍟撮悰?
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
             if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {

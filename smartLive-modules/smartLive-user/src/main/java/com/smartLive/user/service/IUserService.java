@@ -8,141 +8,161 @@ import com.smartLive.user.domain.User;
 import com.smartLive.user.domain.VO.UserVO;
 
 /**
- * 閻劍鍩汼ervice閹恒儱褰?
- * 
+ * 用户服务接口。
+ *
  * @author mumulin
  * @date 2025-09-21
  */
 public interface IUserService extends IService<User>
 {
     /**
-     * 閺屻儴顕楅悽銊﹀煕
-     * 
-     * @param id 閻劍鍩涙稉濠氭暛
-     * @return 閻劍鍩?
+     * 根据用户ID查询用户信息。
+     *
+     * @param id 用户ID
+     * @return 用户信息
      */
-     User selectUserById(Long id);
+    User selectUserById(Long id);
 
     /**
-     * 閺屻儴顕楅悽銊﹀煕閸掓銆?
-     * 
-     * @param user 閻劍鍩?
-     * @return 閻劍鍩涢梿鍡楁値
+     * 查询用户列表。
+     *
+     * @param user 查询条件
+     * @return 用户列表
      */
-     List<User> selectUserList(User user);
+    List<User> selectUserList(User user);
 
     /**
-     * 閺傛澘顤冮悽銊﹀煕
-     * 
-     * @param user 閻劍鍩?
-     * @return 缂佹挻鐏?
+     * 新增用户。
+     *
+     * @param user 用户信息
+     * @return 影响行数
      */
-     int insertUser(User user);
+    int insertUser(User user);
 
     /**
-     * 娣囶喗鏁奸悽銊﹀煕
-     * 
-     * @param user 閻劍鍩?
-     * @return 缂佹挻鐏?
+     * 修改用户信息。
+     *
+     * @param user 用户信息
+     * @return 影响行数
      */
-     int updateUser(User user);
+    int updateUser(User user);
 
     /**
-     * 閹靛綊鍣洪崚鐘绘珟閻劍鍩?
-     * 
-     * @param ids 闂団偓鐟曚礁鍨归梽銈囨畱閻劍鍩涙稉濠氭暛闂嗗棗鎮?
-     * @return 缂佹挻鐏?
+     * 批量删除用户。
+     *
+     * @param ids 用户ID数组
+     * @return 影响行数
      */
-     int deleteUserByIds(Long[] ids);
+    int deleteUserByIds(Long[] ids);
 
     /**
-     * 閸掔娀娅庨悽銊﹀煕娣団剝浼?
-     * 
-     * @param id 閻劍鍩涙稉濠氭暛
-     * @return 缂佹挻鐏?
+     * 根据用户ID删除用户。
+     *
+     * @param id 用户ID
+     * @return 影响行数
      */
-     int deleteUserById(Long id);
+    int deleteUserById(Long id);
 
     /**
-     * 閺嶈宓侀悽銊﹀煕閻絻鐦介崣椋庣垳閺屻儴顕楅悽銊﹀煕
-     * @param phone 閹靛婧€閸?
-     * @return 閻劍鍩?
+     * 根据手机号查询用户。
+     *
+     * @param phone 手机号
+     * @return 用户信息
      */
     User getUserInfoByPhone(String phone);
 
     /**
-     * 閻絻鐦介崣椋庣垳閸掓稑缂撻悽銊﹀煕
-     * @param phone 閹靛婧€閸?
-     * @return 閻劍鍩?
+     * 根据手机号创建用户。
+     *
+     * @param phone 手机号
+     * @return 新建用户
      */
     User createUserByPhone(String phone);
 
     /**
-     * 閺嶈宓侀悽銊﹀煕id閸掓銆冮弻銉嚄閻劍鍩涢崚妤勩€?
-     * @param userIdList 閻劍鍩沬d閸掓銆?
-     * @return 閻劍鍩涢崚妤勩€?
+     * 批量查询用户信息。
+     *
+     * @param userIdList 用户ID列表
+     * @return 用户视图列表
      */
-  List<UserVO> getUserList(List<Long> userIdList);
+    List<UserVO> getUserList(List<Long> userIdList);
+
     /**
-     * 閺嶈宓侀悽銊﹀煕id閺屻儴顕楅悽銊﹀煕
-     * @param id 閻劍鍩沬d
-     * @return 閻劍鍩?
+     * 根据用户ID查询用户视图。
+     *
+     * @param id 用户ID
+     * @return 用户视图
      */
     UserVO queryUserById(Long id);
 
     /**
-     * 閼惧嘲褰囬悽銊﹀煕缂佺喕顓告穱鈩冧紖
-     * @param userId 閻劍鍩沬d
-     * @return 閻劍鍩涚紒鐔活吀娣団剝浼?
+     * 获取用户统计数据。
+     *
+     * @param userId 用户ID
+     * @return 用户统计数据
      */
     Stats getStats(Long userId);
 
     /**
-     * 閸忋劑鍎撮崣鎴濈
+     * 全量发布用户数据到搜索索引。
      *
-     * @return 閸忋劑鍎撮崣鎴濈缂佹挻鐏?
+     * @return 执行结果
      */
     String allPublish();
 
     /**
-     * 閸欐垵绔?
+     * 发布指定用户数据到搜索索引。
      *
-     * @param
-     * @return 閸欐垵绔风紒鎾寸亯
+     * @param ids 用户ID数组
+     * @return 执行结果
      */
-    String publish( String[] ids);
+    String publish(String[] ids);
 
     /**
-     * 娣囶喗鏁奸悽銊﹀煕鐎靛棛鐖?
-     * @param userId 閻劍鍩沬d
-     * @param passwordDTO 鐎靛棛鐖淒TO
-     * @return
+     * 修改用户密码。
+     *
+     * @param userId 用户ID
+     * @param passwordDTO 密码信息
+     * @return 是否修改成功
      */
     Boolean updateUserPassWord(Long userId, com.smartLive.user.DTO.PasswordDTO passwordDTO);
+
     /**
-     * 閺嶈宓侀悽銊﹀煕id閼惧嘲褰囬悽銊﹀煕閸氬秶袨
-     * @param userId
-     * @return
+     * 根据用户ID获取用户昵称。
+     *
+     * @param userId 用户ID
+     * @return 用户昵称
      */
     String getUserNameById(Long userId);
+
     /**
-     * 閺嶈宓侀悽銊﹀煕id閺屻儴顕楅悽銊﹀煕娣団剝浼?
-     * @param id
-     * @return
+     * 根据用户ID查询用户详情。
+     *
+     * @param id 用户ID
+     * @return 用户详情
      */
     UserVO queryUserInfoById(Long id);
 
     /**
-     * 濞撳懐鎮婇悽銊﹀煕鐠囷附鍎忕紓鎾崇摠
-     * @param userId 閻劍鍩沬d
+     * 清理用户缓存。
+     *
+     * @param userId 用户ID
      */
     void clearUserCache(Long userId);
+
     /**
-     * 閺嶈宓侀悽銊﹀煕id閺屻儴顕楅悽銊﹀煕鐠囷附鍎?
-     * @param userId 閻劍鍩沬d
-     * @return 閻劍鍩涚拠锔藉剰
+     * 根据用户ID获取用户信息。
+     *
+     * @param userId 用户ID
+     * @return 用户视图
      */
     UserVO getUserById(Long userId);
 
+    /**
+     * 按昵称模糊搜索用户列表。
+     *
+     * @param keyword 搜索关键词
+     * @return 用户列表
+     */
     List<UserVO> searchUsers(String keyword);
 }

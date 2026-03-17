@@ -8,225 +8,252 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 閸楁艾顓筍ervice閹恒儱褰?
- * 
+ * 博客服务接口。
+ *
  * @author mumulin
  * @date 2025-09-21
  */
 public interface IBlogService extends IService<Blog>
 {
     /**
-     * 閺屻儴顕楅崡姘吂
-     * 
-     * @param id 閸楁艾顓规稉濠氭暛
-     * @return 閸楁艾顓?
-     */
-     Blog selectBlogById(Long id);
-
-    /**
-     * 閺屻儴顕楅崡姘吂閸掓銆?
-     * 
-     * @param blog 閸楁艾顓?
-     * @return 閸楁艾顓归梿鍡楁値
-     */
-     List<Blog> selectBlogList(Blog blog);
-
-     BlogVO selectBlogVoById(Long id);
-
-     List<BlogVO> selectBlogVoList(Blog blog);
-
-    /**
-     * 閺傛澘顤冮崡姘吂
-     * 
-     * @param blog 閸楁艾顓?
-     * @return 缂佹挻鐏?
-     */
-     int insertBlog(Blog blog);
-
-    /**
-     * 娣囶喗鏁奸崡姘吂
-     * 
-     * @param blog 閸楁艾顓?
-     * @return 缂佹挻鐏?
-     */
-     int updateBlog(Blog blog);
-
-    /**
-     * 閹靛綊鍣洪崚鐘绘珟閸楁艾顓?
-     * 
-     * @param ids 闂団偓鐟曚礁鍨归梽銈囨畱閸楁艾顓规稉濠氭暛闂嗗棗鎮?
-     * @return 缂佹挻鐏?
-     */
-     int deleteBlogByIds(Long[] ids);
-
-    /**
-     * 閸掔娀娅庨崡姘吂娣団剝浼?
-     * 
-     * @param id 閸楁艾顓规稉濠氭暛
-     * @return 缂佹挻鐏?
-     */
-     int deleteBlogById(Long id);
-
-    /**
-     * 閺嶈宓侀崡姘吂ID閺屻儴顕楅崡姘瀮鐠囷附鍎?
+     * 根据博客ID查询博客实体。
      *
-     * @param id 閸楁艾顓规稉濠氭暛
-     * @return 閸楁艾顓圭拠锔藉剰VO
+     * @param id 博客ID
+     * @return 博客实体
+     */
+    Blog selectBlogById(Long id);
+
+    /**
+     * 查询博客实体列表。
+     *
+     * @param blog 查询条件
+     * @return 博客实体列表
+     */
+    List<Blog> selectBlogList(Blog blog);
+
+    /**
+     * 根据博客ID查询博客视图。
+     *
+     * @param id 博客ID
+     * @return 博客视图
+     */
+    BlogVO selectBlogVoById(Long id);
+
+    /**
+     * 查询博客视图列表。
+     *
+     * @param blog 查询条件
+     * @return 博客视图列表
+     */
+    List<BlogVO> selectBlogVoList(Blog blog);
+
+    /**
+     * 新增博客。
+     *
+     * @param blog 博客信息
+     * @return 影响行数
+     */
+    int insertBlog(Blog blog);
+
+    /**
+     * 修改博客。
+     *
+     * @param blog 博客信息
+     * @return 影响行数
+     */
+    int updateBlog(Blog blog);
+
+    /**
+     * 批量删除博客。
+     *
+     * @param ids 博客ID数组
+     * @return 影响行数
+     */
+    int deleteBlogByIds(Long[] ids);
+
+    /**
+     * 根据博客ID删除博客。
+     *
+     * @param id 博客ID
+     * @return 影响行数
+     */
+    int deleteBlogById(Long id);
+
+    /**
+     * 查询博客详情。
+     *
+     * @param id 博客ID
+     * @return 博客详情
      */
     BlogVO queryBlogById(Long id);
+
     /**
-     * 娣囨繂鐡ㄩ崡姘吂閿涘牆褰傜敮?閼藉顭堥敍?
+     * 保存博客内容。
      *
-     * @param blog 閸楁艾顓圭€圭偘缍?
-     * @return 閸楁艾顓笽D
+     * @param blog 博客信息
+     * @return 博客ID
      */
     Long saveBlog(Blog blog);
 
     /**
-     * 閺屻儴顕楅張鈧悜顓炲触鐎广垹鍨悰?
+     * 分页查询热门博客。
      *
-     * @param current 瑜版挸澧犳い鐢电垳
-     * @return 閻戭參妫崡姘吂閸掓銆?
+     * @param current 当前页
+     * @return 热门博客列表
      */
     List<BlogVO> queryHotBlog(Integer current);
 
     /**
-     * 閺屻儴顕楅幐鍥х暰閻劍鍩涢崣鎴濈閻ㄥ嫬宕ョ€广垹鍨悰?
+     * 查询指定用户发布的博客。
      *
-     * @param current 瑜版挸澧犳い鐢电垳
-     * @param userId  閻劍鍩汭D
-     * @return 閸楁艾顓归崚妤勩€?
+     * @param current 当前页
+     * @param userId 用户ID
+     * @return 博客列表
      */
     List<BlogVO> queryBlogByUserId(Integer current, Long userId);
 
-
     /**
-     * 閺屻儴顕楅幋鎴犳畱閸楁艾顓归崚妤勩€?
+     * 查询当前用户的博客列表。
      *
-     * @param blog    閸楁艾顓归弻銉嚄閺夆€叉閿涘牆瀵橀崥顐ゅЦ閹胶鐡戠粵娑⑩偓澶婂棘閺佸府绱?
-     * @param current 瑜版挸澧犳い鐢电垳
-     * @return 閹存垹娈戦崡姘吂閸掓銆?
+     * @param blog 查询条件
+     * @param current 当前页
+     * @return 博客列表
      */
     List<BlogVO> queryMyBlog(Blog blog, Integer current);
 
     /**
-     * 閺屻儴顕楅崡姘吂鐠囷附鍎忛敍鍫濆瘶閸氼偆鏁ら幋铚備繆閹垽绱?
+     * 获取博客详情页数据。
      *
-     * @param id 閸楁艾顓规稉濠氭暛
-     * @return 閸楁艾顓圭拠锔藉剰VO
+     * @param id 博客ID
+     * @return 博客详情
      */
     BlogVO getBlogById(Long id);
 
-
-
     /**
-     * 閺屻儴顕楅幐鍥х暰閸掑棛琚稉瀣畱閸楁艾顓归崚妤勩€?
+     * 根据博客分类查询博客列表。
      *
-     * @param typeId  閸掑棛琚獻D
-     * @param current 瑜版挸澧犳い鐢电垳
-     * @return 閸楁艾顓归崚妤勩€?
+     * @param typeId 分类ID
+     * @param current 当前页
+     * @return 博客列表
      */
     List<BlogVO> queryBlogByCategory(Long typeId, Integer current);
 
     /**
-     * 閺嶈宓両D閸掓銆冮幍褰掑櫤閼惧嘲褰囬崡姘吂閿涘牆鎯堥悽銊﹀煕娣団剝浼呴妴浣哄仯鐠х偟濮搁幀渚婄礆
+     * 根据博客ID列表批量查询博客。
      *
-     * @param sourceIdList 閸楁艾顓笽D閸掓銆?
-     * @return 閸楁艾顓归崚妤勩€?
+     * @param sourceIdList 博客ID列表
+     * @return 博客列表
      */
     List<BlogVO> getBlogListByIds(List<Long> sourceIdList);
+
     /**
-     * 缂冾噣銆?閸欐牗绉风純顕€銆婇崡姘吂
+     * 判断博客是否置顶。
      *
-     * @param blog 閸楁艾顓圭€圭偘缍嬮敍鍫濆瘶閸氱嵒D閸滃瞼鐤嗘い鍓佸Ц閹緤绱?
-     * @return 閹垮秳缍旂紒鎾寸亯
+     * @param blog 博客信息
+     * @return 是否置顶
      */
     boolean isPin(Blog blog);
+
     /**
-     * 閹靛綊鍣洪弴瀛樻煀閸楁艾顓归悙纭呯閺?
+     * 批量更新博客点赞数。
      *
-     * @param updateMap 閸楁艾顓笽D娑撳海鍋ｇ挧鐐存殶閻ㄥ嫭妲х亸?
-     * @return 閺囧瓨鏌婄紒鎾寸亯
+     * @param updateMap 博客ID与点赞数映射
+     * @return 更新结果
      */
     Boolean updateLikeCountBatch(Map<Long, Integer> updateMap);
+
     /**
-     * 閹靛綊鍣洪弴瀛樻煀閸楁艾顓圭拠鍕啈閺?
+     * 批量更新博客评论数。
      *
-     * @param updateMap 閸楁艾顓笽D娑撳氦鐦庣拋鐑樻殶閻ㄥ嫭妲х亸?
-     * @return 閺囧瓨鏌婄紒鎾寸亯
+     * @param updateMap 博客ID与评论数映射
+     * @return 更新结果
      */
     Boolean updateCommentCountBatch(Map<Long, Integer> updateMap);
+
     /**
-     * 閹靛綊鍣洪弴瀛樻煀閸楁艾顓归弨鎯版閺?
+     * 批量更新博客收藏数。
      *
-     * @param updateMap 閸楁艾顓笽D娑撳孩鏁归挊蹇旀殶閻ㄥ嫭妲х亸?
-     * @return 閺囧瓨鏌婄紒鎾寸亯
+     * @param updateMap 博客ID与收藏数映射
+     * @return 更新结果
      */
     Boolean updateStarCountBatch(Map<Long, Integer> updateMap);
+
     /**
-     * 閸忋劑鍎撮崣鎴濈閸楁艾顓?
+     * 全量发布博客数据到搜索索引。
      *
-     * @return 閸忋劑鍎撮崣鎴濈缂佹挻鐏?
+     * @return 执行结果
      */
     String allPublish();
 
     /**
-     * 閹靛綊鍣洪崣鎴濈閸楁艾顓归懛鐭盨缁便垹绱?
+     * 发布指定博客数据到搜索索引。
      *
-     * @param ids 閸楁艾顓笽D閺佹壆绮?
-     * @return 閸欐垵绔风紒鎾寸亯
+     * @param ids 博客ID数组
+     * @return 执行结果
      */
     String publish(String[] ids);
+
     /**
-     * 閼惧嘲褰囬崡姘吂閻愮绂愰弫?
+     * 获取博客点赞数。
      *
-     * @param sourceId 閸楁艾顓笽D
-     * @return 閻愮绂愰弫浼村櫤
+     * @param sourceId 博客ID
+     * @return 点赞数
      */
     Integer getBlogLikeCount(Long sourceId);
+
     /**
-     * 閼惧嘲褰囬崡姘吂閺€鎯版閺?
+     * 获取博客收藏数。
      *
-     * @param sourceId 閸楁艾顓笽D
-     * @return 閺€鎯版閺佷即鍣?
+     * @param sourceId 博客ID
+     * @return 收藏数
      */
     Integer getBlogStarCount(Long sourceId);
+
     /**
-     * 閼惧嘲褰囬崡姘吂閹粯鏆?
+     * 获取博客总数。
      *
-     * @return 閸楁艾顓归幀缁樻殶
+     * @return 博客总数
      */
     Integer getBlogTotal();
+
     /**
-     * 閺屻儴顕楅悽銊﹀煕閸楁艾顓归弫浼村櫤
+     * 获取用户发布的博客数量。
      *
-     * @param userId 閻劍鍩汭D
-     * @return 閸楁艾顓归弫浼村櫤
+     * @param userId 用户ID
+     * @return 博客数量
      */
     Integer getBlogCount(Long userId);
 
     /**
-     * 閺屻儴顕楅悽銊﹀煕閸楁艾顓归懢宄扮繁閻ㄥ嫭鈧崵鍋ｇ挧鐐存殶
+     * 获取用户博客获赞总数。
      *
-     * @param userId 閻劍鍩汭D
-     * @return 閻愮绂愰幀缁樻殶
+     * @param userId 用户ID
+     * @return 获赞总数
      */
     Integer getLikeCount(Long userId);
+
     /**
-     * 閸掗攱鏌婇崡姘吂缂傛挸鐡ㄩ敍鍫ｎ嚊閹?+ 閸掓銆?+ 閸掑棛琚敍?
+     * 刷新博客缓存。
      *
-     * @return 閸掗攱鏌婄紒鎾寸亯
+     * @return 执行结果
      */
     String flashCache();
+
     /**
-     * 閺囧瓨鏌婇崡姘吂閻樿埖鈧緤绱欑€光剝鐗抽柅姘崇箖/閹锋帞绮烽敍?
+     * 更新博客审核状态。
      *
-     * @param targetId 閸楁艾顓笽D
-     * @param status   閸楁艾顓归悩鑸碘偓?
-     * @param reason   閹锋帞绮烽崢鐔锋礈閿涘牓鈧俺绻冮弮鏈佃礋null閿?
-     * @return 閺囧瓨鏌婄紒鎾寸亯
+     * @param targetId 博客ID
+     * @param status 状态值
+     * @param reason 审核原因
+     * @return 更新结果
      */
     Boolean updateBlogStatus(Long targetId, Integer status, String reason);
 
+    /**
+     * 按标题模糊搜索博客列表。
+     *
+     * @param keyword 搜索关键词
+     * @return 博客列表
+     */
     List<BlogVO> searchBlogs(String keyword);
 }
