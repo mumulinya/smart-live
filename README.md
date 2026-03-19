@@ -25,20 +25,21 @@
 - [📖 项目简介](#项目简介)
 - [🧭 5 分钟读懂项目](#5分钟读懂项目)
 - [🎨 效果预览](#效果预览)
+- [🚀 快速开始](#快速开始)
+- [📄 项目文档](#项目文档)
 - [✨ 功能特性](#功能特性)
 - [🔧 技术栈](#技术栈)
 - [🏗️ 系统架构](#系统架构)
 - [📁 项目结构](#项目结构)
+- [🤔 技术选型理由](#技术选型理由)
 - [🌊 核心业务链路](#核心业务链路)
 - [📌 开源使用提示](#开源使用提示)
-- [🚀 快速开始](#快速开始)
 - [📈 性能压测报告](#性能压测报告)
 - [🚧 难点踩坑与解决方案](#难点踩坑与解决方案)
 - [🧠 项目沉淀](#项目沉淀)
 - [❓ 常见问题 FAQ](#常见问题)
 - [🚧 未来规划 Roadmap](#未来规划)
 - [📦 项目仓库](#项目仓库)
-- [📄 项目文档](#项目文档)
 - [🤝 参与贡献](#参与贡献)
 - [📄 开源协议](#开源协议)
 - [📞 联系我](#联系我)
@@ -220,6 +221,147 @@
 |                      **积分中心**                      |                        **签到与抽奖**                        |                                                        |
 |    ![points](docs/screenshots/points-page.png)     |        ![sign-in](docs/screenshots/sign-in.png)         |                                                        |
 
+
+## <a id="快速开始"></a>🚀 快速开始
+
+### 使用建议
+
+- 首次接入建议优先使用“本地开发模式”，这样更容易核对模块、Nacos 配置和数据库脚本。
+- 如果只想快速了解仓库结构、模块依赖、端口和配置来源，先看 [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md)。
+- docker 目录保留了一套编排资产，但其中仍有历史模块命名和脚本残留，使用前请先校对实际 Maven 模块。
+
+### 环境要求
+
+| 组件 | 版本要求 | 说明 |
+|:---|:---|:---|
+| JDK | 17+ | 后端运行环境 |
+| Maven | 3.8+ | Java 构建 |
+| MySQL | 8.0+ | 核心业务数据 |
+| Redis | 6.0+ | 缓存、分布式锁、Feed |
+| Nacos | 2.x | 注册中心与配置中心 |
+| RabbitMQ | 3.12+ | 异步消息与延迟队列 |
+| Elasticsearch | 7.17+ | 搜索与索引 |
+| Milvus | 2.3+ | 向量检索与 RAG |
+| MinIO | 稳定版 | 文件服务与 Milvus 依赖 |
+| XXL-JOB | 2.4+ | 定时任务调度 |
+| Sentinel | 1.8+ | 流量治理，可按需启用 |
+| Node.js | 16+ | 前端构建，可选 |
+| Docker / Compose | 24+ / v2+ | 容器化启动，可选 |
+
+### 方式一：本地开发模式（推荐）
+
+~~~bash
+# 1. 克隆项目
+git clone https://gitee.com/mumulinya/smart-live.git
+cd smart-live
+
+# 2. 初始化数据库
+#    按顺序导入 sql/ 目录下的脚本：
+#    ① ry_20250523.sql                 → 核心系统表（用户/角色/菜单等）
+#    ② ry_config_20250902.sql          → Nacos 配置表
+#    ③ ry_seata_20210128.sql           → Seata 分布式事务表
+#    ④ quartz.sql                      → Quartz 定时任务表
+#    ⑤ product.sql                     → 商品模块表
+#    ⑥ payment.sql                     → 支付记录表
+#    ⑦ wallet.sql                      → 钱包模块表
+#    ⑧ points.sql                      → 积分模块表
+#    ⑨ chat_system_notice_20260212.sql → 系统通知表
+
+# 3. 启动中间件
+#    基础必需：Nacos、MySQL、Redis、RabbitMQ
+#    按功能启用：Elasticsearch、Milvus、MinIO、XXL-JOB、Sentinel
+
+# 4. 初始化 Nacos 配置
+#    导入 ry_config_20250902.sql 后，至少检查以下 dataId：
+#    - application-dev.yml
+#    - smartLive-*-dev.yml
+#    - xxl-job-common.yml（如需运行定时任务）
+
+# 5. 构建项目
+mvn clean install -DskipTests
+
+# 6. 按顺序启动服务
+#    ① 认证中心
+mvn spring-boot:run -pl smartLive-auth
+#    ② 网关服务
+mvn spring-boot:run -pl smartLive-gateway
+#    ③ 基础业务模块（按需启动）
+mvn spring-boot:run -pl smartLive-modules/smartLive-system
+mvn spring-boot:run -pl smartLive-modules/smartLive-user
+mvn spring-boot:run -pl smartLive-modules/smartLive-shop
+mvn spring-boot:run -pl smartLive-modules/smartLive-search
+#    ④ 进阶模块（按需启动）
+mvn spring-boot:run -pl smartLive-modules/smartLive-product
+mvn spring-boot:run -pl smartLive-modules/smartLive-order
+mvn spring-boot:run -pl smartLive-modules/smartLive-interaction
+mvn spring-boot:run -pl smartLive-modules/smartLive-chat
+mvn spring-boot:run -pl smartLive-modules/smartLive-im
+mvn spring-boot:run -pl smartLive-modules/smartLive-ai
+mvn spring-boot:run -pl smartLive-modules/smartLive-wallet
+mvn spring-boot:run -pl smartLive-modules/smartLive-points
+~~~
+
+### 方式二：增量部署脚本（生产推荐）
+
+~~~bash
+# 快速部署单个修改的模块（性能提升 10-15 倍）
+chmod +x deploy.sh
+./deploy.sh HEAD~1              # 只编译并上传修改的模块
+
+# 典型场景：修改了 smartLive-blog 和 smartLive-interaction 模块
+# 不需要：编译全部 17 个微服务模块（耗时 30 分钟）
+# 只需要：编译 smartLive-blog + smartLive-interaction（耗时 1-2 分钟）
+#        上传 2 个 jar（耗时 10 秒）
+#        重启 2 个服务（耗时 2 分钟）
+# 总耗时：3 分钟 vs 45 分钟（原来的方式）
+
+# 部署统计
+# - 编译时间：30 分钟 → 1-2 分钟（快 20 倍）
+# - 上传时间：10 分钟 → 10 秒（快 60 倍）
+# - 重启时间：5 分钟 → 2 分钟
+# - 总部署时间：45 分钟 → 3 分钟（快 15 倍！）
+~~~
+
+**使用建议：**
+- 本地开发频繁迭代时，使用增量部署脚本
+- CI/CD 流水线中可集成此脚本实现自动化快速部署
+- 脚本内置 SSH 连接和自动备份机制，首次使用请修改 deploy.sh 中的服务器配置
+- 支持指定对比分支：`./deploy.sh origin/dev` 与上游分支对比后部署
+
+### 方式三：Docker Compose（进阶）
+
+~~~bash
+# 1. 构建项目产物
+mvn clean install -DskipTests
+
+# 2. 进入 docker 目录
+cd docker
+
+# 3. 启动前先核对 docker/ 下模块映射是否与当前 Maven 模块一致
+docker compose up -d
+~~~
+
+> 当前 docker 目录仍保留历史模块命名与复制脚本，请将其视为"需要校对后再用"的编排样例，而不是无条件可用的唯一事实来源。
+
+### 方式四：Windows 启动脚本（暂不推荐）
+
+bin/ 目录下的 .bat 脚本仍有旧项目路径残留，未完全与当前 smartLive-* 模块目录对齐。除非你已经自行校正这些脚本，否则建议直接使用上面的 Maven 命令启动服务。
+
+~~~bash
+bin/package.bat            # 打包全部模块
+bin/clean.bat              # 清理构建产物
+# 其余 run-*.bat 在使用前请先校对目标目录
+~~~
+
+## <a id="项目文档"></a>📚 项目文档
+
+- 📘 [在线文档](http://doc.smartLive.vip)
+- 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
+- 🖼️ [视觉导览](docs/SHOWCASE.md) — 按用户链路整理页面截图、系统总览图与核心时序图
+- 📌 [开源使用说明](docs/OPEN_SOURCE.md) — 依赖矩阵、端口表、配置来源与启动建议
+- 🚀 [部署说明](docs/DEPLOYMENT_GUIDE.md) — Docker Compose、镜像重建、JAR 校验与部署排错
+- 🤝 [贡献指南](CONTRIBUTING.md)
+- 🔐 [安全说明](SECURITY.md)
 
 ## <a id="功能特性"></a>✨ 功能特性
 
@@ -457,53 +599,9 @@
 | Element UI | 后台管理 UI 组件库 |
 | UniApp     | 多端前台用户端     |
 
-## 🤔 技术选型理由 - 为什么选这些而不是其他？
+## <a id="系统架构"></a>🏗️ 系统架构
 
-### Spring Cloud Alibaba vs Kubernetes
-**我的选择：Spring Cloud Alibaba**
-- ✅ **学习成本低**：社区资源丰富、文档完善，适合个人快速落地
-- ✅ **国产支持好**：Nacos、Seata、Sentinel 都是国产优秀方案，生态活跃
-- ✅ **适配场景**：18 个模块的规模用 SCAlibaba 够用，K8s 是重武器
-- ❌ **K8s 不选原因**：学习曲线陡、运维成本高、单人难以驾驭
-
-### Redis vs Memcached
-**我的选择：Redis**
-- ✅ **数据结构丰富**：ZSet、Hash、Stream 支持复杂业务场景（本项目用了所有特性）
-- ✅ **持久化保证**：RDB/AOF 确保关键数据安全（订单、积分等）
-- ✅ **生态活跃**：Redisson 分布式锁、Lettuce 响应式客户端都是上选
-- ❌ **Memcached 不选**：只支持 String，无法实现 ZSet 分层缓存
-
-### Milvus vs Pinecone vs Weaviate
-**我的选择：Milvus**
-- ✅ **开源可控**：部署在自己的服务器，数据安全可控，无服务商锁定
-- ✅ **高性能**：支持百万级向量检索，单机 QPS 可达 10 万+
-- ✅ **Filter 灵活**：元数据过滤支持多维度 RAG 检索（商品品类、评分、时间等）
-- ❌ **Pinecone 不选**：云服务，成本高、数据隐私风险
-- ❌ **Weaviate 不选**：性能不如 Milvus，社区活跃度低
-
-### RabbitMQ vs Kafka
-**我的选择：RabbitMQ**
-- ✅ **业务适配**：消息量中等（日均百万级），RabbitMQ 足够
-- ✅ **运维简单**：单节点即可稳定运行，Kafka 需要分布式集群
-- ✅ **死信队列**：天然支持自动补偿机制（超时订单、失败重试）
-- ❌ **Kafka 不选**：吞吐能力过剩，运维复杂，学习成本高
-- ✅ **Kafka 的场景**：千万级消息、实时流处理时才必要
-
-### Netty + WebSocket vs Spring WebSocket
-**我的选择：Netty + WebSocket**
-- ✅ **性能突破**：NIO 模型支持 10 万+ 并发长连接，Spring WebSocket 不行
-- ✅ **细粒度控制**：心跳、编码解码、会话都能精细优化
-- ✅ **线程模型优化**：Boss/Worker 双线程组充分利用多核 CPU
-- ❌ **Spring WebSocket 不选**：虽然简单，但无法应对大规模长连接场景
-
-### 为什么选 MyBatis Plus 而不是 JPA？
-**我的选择：MyBatis Plus**
-- ✅ **灵活性高**：复杂 SQL 可自定义，中国项目标配
-- ✅ **学习成本低**：SQL 即所见即所得，审核 SQL 容易
-- ✅ **性能可控**：可精细优化 SQL 执行计划
-- ❌ **JPA 不选**：对于国内项目学习曲线陡，HQL 调试困难
-
-
+下面这张图适合先建立全局心智模型，再继续往下看模块拆分和技术选型。
 
 <div align="center">
   <img src="docs/screenshots/architecture.png" alt="SmartLive 系统架构图" width="100%">
@@ -565,6 +663,52 @@ com.smartLive
 └── pom.xml                        // 父 POM
 ```
 
+## <a id="技术选型理由"></a>🤔 技术选型理由 - 为什么选这些而不是其他？
+
+### Spring Cloud Alibaba vs Kubernetes
+**我的选择：Spring Cloud Alibaba**
+- ✅ **学习成本低**：社区资源丰富、文档完善，适合个人快速落地
+- ✅ **国产支持好**：Nacos、Seata、Sentinel 都是国产优秀方案，生态活跃
+- ✅ **适配场景**：18 个模块的规模用 SCAlibaba 够用，K8s 是重武器
+- ❌ **K8s 不选原因**：学习曲线陡、运维成本高、单人难以驾驭
+
+### Redis vs Memcached
+**我的选择：Redis**
+- ✅ **数据结构丰富**：ZSet、Hash、Stream 支持复杂业务场景（本项目用了所有特性）
+- ✅ **持久化保证**：RDB/AOF 确保关键数据安全（订单、积分等）
+- ✅ **生态活跃**：Redisson 分布式锁、Lettuce 响应式客户端都是上选
+- ❌ **Memcached 不选**：只支持 String，无法实现 ZSet 分层缓存
+
+### Milvus vs Pinecone vs Weaviate
+**我的选择：Milvus**
+- ✅ **开源可控**：部署在自己的服务器，数据安全可控，无服务商锁定
+- ✅ **高性能**：支持百万级向量检索，单机 QPS 可达 10 万+
+- ✅ **Filter 灵活**：元数据过滤支持多维度 RAG 检索（商品品类、评分、时间等）
+- ❌ **Pinecone 不选**：云服务，成本高、数据隐私风险
+- ❌ **Weaviate 不选**：性能不如 Milvus，社区活跃度低
+
+### RabbitMQ vs Kafka
+**我的选择：RabbitMQ**
+- ✅ **业务适配**：消息量中等（日均百万级），RabbitMQ 足够
+- ✅ **运维简单**：单节点即可稳定运行，Kafka 需要分布式集群
+- ✅ **死信队列**：天然支持自动补偿机制（超时订单、失败重试）
+- ❌ **Kafka 不选**：吞吐能力过剩，运维复杂，学习成本高
+- ✅ **Kafka 的场景**：千万级消息、实时流处理时才必要
+
+### Netty + WebSocket vs Spring WebSocket
+**我的选择：Netty + WebSocket**
+- ✅ **性能突破**：NIO 模型支持 10 万+ 并发长连接，Spring WebSocket 不行
+- ✅ **细粒度控制**：心跳、编码解码、会话都能精细优化
+- ✅ **线程模型优化**：Boss/Worker 双线程组充分利用多核 CPU
+- ❌ **Spring WebSocket 不选**：虽然简单，但无法应对大规模长连接场景
+
+### 为什么选 MyBatis Plus 而不是 JPA？
+**我的选择：MyBatis Plus**
+- ✅ **灵活性高**：复杂 SQL 可自定义，中国项目标配
+- ✅ **学习成本低**：SQL 即所见即所得，审核 SQL 容易
+- ✅ **性能可控**：可精细优化 SQL 执行计划
+- ❌ **JPA 不选**：对于国内项目学习曲线陡，HQL 调试困难
+
 
 ## <a id="核心业务链路"></a>🌊 核心业务链路
 
@@ -621,137 +765,6 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 - 本地开发可直接复制 config/smartlive-ai-secrets.example.yml 为 config/smartlive-ai-secrets.yml，然后填入你自己的 key。
 
 - 参与 PR、提交信息、文档编码约束与最小自查清单见 [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## <a id="快速开始"></a>🚀 快速开始
-
-### 使用建议
-
-- 首次接入建议优先使用“本地开发模式”，这样更容易核对模块、Nacos 配置和数据库脚本。
-- 如果只想快速了解仓库结构、模块依赖、端口和配置来源，先看 [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md)。
-- docker 目录保留了一套编排资产，但其中仍有历史模块命名和脚本残留，使用前请先校对实际 Maven 模块。
-
-### 环境要求
-
-| 组件 | 版本要求 | 说明 |
-|:---|:---|:---|
-| JDK | 17+ | 后端运行环境 |
-| Maven | 3.8+ | Java 构建 |
-| MySQL | 8.0+ | 核心业务数据 |
-| Redis | 6.0+ | 缓存、分布式锁、Feed |
-| Nacos | 2.x | 注册中心与配置中心 |
-| RabbitMQ | 3.12+ | 异步消息与延迟队列 |
-| Elasticsearch | 7.17+ | 搜索与索引 |
-| Milvus | 2.3+ | 向量检索与 RAG |
-| MinIO | 稳定版 | 文件服务与 Milvus 依赖 |
-| XXL-JOB | 2.4+ | 定时任务调度 |
-| Sentinel | 1.8+ | 流量治理，可按需启用 |
-| Node.js | 16+ | 前端构建，可选 |
-| Docker / Compose | 24+ / v2+ | 容器化启动，可选 |
-
-### 方式一：本地开发模式（推荐）
-
-~~~bash
-# 1. 克隆项目
-git clone https://gitee.com/mumulinya/smart-live.git
-cd smart-live
-
-# 2. 初始化数据库
-#    按顺序导入 sql/ 目录下的脚本：
-#    ① ry_20250523.sql                 → 核心系统表（用户/角色/菜单等）
-#    ② ry_config_20250902.sql          → Nacos 配置表
-#    ③ ry_seata_20210128.sql           → Seata 分布式事务表
-#    ④ quartz.sql                      → Quartz 定时任务表
-#    ⑤ product.sql                     → 商品模块表
-#    ⑥ payment.sql                     → 支付记录表
-#    ⑦ wallet.sql                      → 钱包模块表
-#    ⑧ points.sql                      → 积分模块表
-#    ⑨ chat_system_notice_20260212.sql → 系统通知表
-
-# 3. 启动中间件
-#    基础必需：Nacos、MySQL、Redis、RabbitMQ
-#    按功能启用：Elasticsearch、Milvus、MinIO、XXL-JOB、Sentinel
-
-# 4. 初始化 Nacos 配置
-#    导入 ry_config_20250902.sql 后，至少检查以下 dataId：
-#    - application-dev.yml
-#    - smartLive-*-dev.yml
-#    - xxl-job-common.yml（如需运行定时任务）
-
-# 5. 构建项目
-mvn clean install -DskipTests
-
-# 6. 按顺序启动服务
-#    ① 认证中心
-mvn spring-boot:run -pl smartLive-auth
-#    ② 网关服务
-mvn spring-boot:run -pl smartLive-gateway
-#    ③ 基础业务模块（按需启动）
-mvn spring-boot:run -pl smartLive-modules/smartLive-system
-mvn spring-boot:run -pl smartLive-modules/smartLive-user
-mvn spring-boot:run -pl smartLive-modules/smartLive-shop
-mvn spring-boot:run -pl smartLive-modules/smartLive-search
-#    ④ 进阶模块（按需启动）
-mvn spring-boot:run -pl smartLive-modules/smartLive-product
-mvn spring-boot:run -pl smartLive-modules/smartLive-order
-mvn spring-boot:run -pl smartLive-modules/smartLive-interaction
-mvn spring-boot:run -pl smartLive-modules/smartLive-chat
-mvn spring-boot:run -pl smartLive-modules/smartLive-im
-mvn spring-boot:run -pl smartLive-modules/smartLive-ai
-mvn spring-boot:run -pl smartLive-modules/smartLive-wallet
-mvn spring-boot:run -pl smartLive-modules/smartLive-points
-~~~
-
-### 方式二：增量部署脚本（生产推荐）
-
-~~~bash
-# 快速部署单个修改的模块（性能提升 10-15 倍）
-chmod +x deploy.sh
-./deploy.sh HEAD~1              # 只编译并上传修改的模块
-
-# 典型场景：修改了 smartLive-blog 和 smartLive-interaction 模块
-# 不需要：编译全部 17 个微服务模块（耗时 30 分钟）
-# 只需要：编译 smartLive-blog + smartLive-interaction（耗时 1-2 分钟）
-#        上传 2 个 jar（耗时 10 秒）
-#        重启 2 个服务（耗时 2 分钟）
-# 总耗时：3 分钟 vs 45 分钟（原来的方式）
-
-# 部署统计
-# - 编译时间：30 分钟 → 1-2 分钟（快 20 倍）
-# - 上传时间：10 分钟 → 10 秒（快 60 倍）
-# - 重启时间：5 分钟 → 2 分钟
-# - 总部署时间：45 分钟 → 3 分钟（快 15 倍！）
-~~~
-
-**使用建议：**
-- 本地开发频繁迭代时，使用增量部署脚本
-- CI/CD 流水线中可集成此脚本实现自动化快速部署
-- 脚本内置 SSH 连接和自动备份机制，首次使用请修改 deploy.sh 中的服务器配置
-- 支持指定对比分支：`./deploy.sh origin/dev` 与上游分支对比后部署
-
-### 方式三：Docker Compose（进阶）
-
-~~~bash
-# 1. 构建项目产物
-mvn clean install -DskipTests
-
-# 2. 进入 docker 目录
-cd docker
-
-# 3. 启动前先核对 docker/ 下模块映射是否与当前 Maven 模块一致
-docker compose up -d
-~~~
-
-> 当前 docker 目录仍保留历史模块命名与复制脚本，请将其视为"需要校对后再用"的编排样例，而不是无条件可用的唯一事实来源。
-
-### 方式四：Windows 启动脚本（暂不推荐）
-
-bin/ 目录下的 .bat 脚本仍有旧项目路径残留，未完全与当前 smartLive-* 模块目录对齐。除非你已经自行校正这些脚本，否则建议直接使用上面的 Maven 命令启动服务。
-
-~~~bash
-bin/package.bat            # 打包全部模块
-bin/clean.bat              # 清理构建产物
-# 其余 run-*.bat 在使用前请先校对目标目录
-~~~
 
 ## <a id="性能压测报告"></a>📈 性能压测报告
 
@@ -1039,16 +1052,6 @@ redisTemplate.opsForValue().set(currentKey, "0");
 | **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin) |
 | **smartLive-web** | 用户端前台（Vue 响应式，兼容移动端） | [GitHub](https://github.com/mumulinya/smartLive-web) |
 
-
-## <a id="项目文档"></a>📚 项目文档
-
-- 📘 [在线文档](http://doc.smartLive.vip)
-- 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
-- 🖼️ [视觉导览](docs/SHOWCASE.md) — 按用户链路整理页面截图、系统总览图与核心时序图
-- 📌 [开源使用说明](docs/OPEN_SOURCE.md) — 依赖矩阵、端口表、配置来源与启动建议
-- 🚀 [部署说明](docs/DEPLOYMENT_GUIDE.md) — Docker Compose、镜像重建、JAR 校验与部署排错
-- 🤝 [贡献指南](CONTRIBUTING.md)
-- 🔐 [安全说明](SECURITY.md)
 
 ## <a id="参与贡献"></a>🤝 参与贡献
 
