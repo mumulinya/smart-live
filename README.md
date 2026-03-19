@@ -551,60 +551,26 @@ com.smartLive
 
 ## <a id="核心业务链路"></a>🌊 核心业务链路
 
-### 1. 秒杀抢购全链路时序图
-<div align="center">
-  <img src="docs/diagrams/seckill-flow.png" alt="秒杀抢购全链路时序图" width="100%">
-</div>
+README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后发糊。下面保留每条链路的阅读价值和高清原图入口；如果你想按业务分组查看，可以直接看 [docs/SHOWCASE.md](docs/SHOWCASE.md)。其中最后补上的 5 张是 SVG，可直接放大看，不会发糊。
 
-### 2. UGC 异步审核与分发链路
-<div align="center">
-  <img src="docs/diagrams/ugc-audit-flow.png" alt="UGC 异步审核与分发链路" width="100%">
-</div>
-
-### 3. 统一支付全链路时序图
-<div align="center">
-  <img src="docs/diagrams/unified-pay-sequence.png" alt="统一支付全链路时序图" width="100%">
-</div>
-
-### 4. 每日签到积分链路
-<div align="center">
-  <img src="docs/diagrams/daily-signin-points-sequence.png" alt="每日签到积分链路" width="100%">
-</div>
-
-### 5. 积分抽奖链路
-<div align="center">
-  <img src="docs/diagrams/points-lottery-draw-sequence.png" alt="积分抽奖链路" width="100%">
-</div>
-
-### 6. IM 私聊消息可靠投递链路
-<div align="center">
-  <img src="docs/diagrams/im-private-message-reliable-delivery-sequence.png" alt="IM 私聊消息可靠投递链路" width="100%">
-</div>
-
-### 7. Feed 动态扇出链路
-<div align="center">
-  <img src="docs/diagrams/feed-fanout-sequence.png" alt="Feed 动态扇出链路" width="100%">
-</div>
-
-### 8. 互动数据"双轨同步"链路
-<div align="center">
-  <img src="docs/diagrams/interaction-dual-track-sync-sequence.png" alt="互动数据双轨同步链路" width="100%">
-</div>
-
-### 9. 搜索与向量库同步链路 (ES + Milvus)
-<div align="center">
-  <img src="docs/diagrams/search-es-milvus-sync-sequence.png" alt="搜索与向量库同步链路" width="100%">
-</div>
-
-### 10. 普通下单链路 (非秒杀)
-<div align="center">
-  <img src="docs/diagrams/normal-order-sequence.png" alt="普通下单链路" width="100%">
-</div>
-
-### 11. AI 对话链路 (SSE + 意图路由 + 卡片事件)
-<div align="center">
-  <img src="docs/diagrams/ai-chat-sse-intent-routing-sequence.png" alt="AI 对话链路" width="100%">
-</div>
+| 链路 | 重点看什么 | 高清原图 |
+|:---|:---|:---|
+| 秒杀抢购全链路 | Redis Lua 防超卖、RabbitMQ 异步落单、延迟队列兜底 | [查看原图](docs/diagrams/seckill-flow.png) |
+| UGC 异步审核与分发 | 审核消息投递、责任链处理、回调源服务 | [查看原图](docs/diagrams/ugc-audit-flow.png) |
+| 统一支付全链路 | 下单、支付、回调、钱包状态更新 | [查看原图](docs/diagrams/unified-pay-sequence.png) |
+| 每日签到积分 | 签到、积分发放、幂等与奖励计算 | [查看原图](docs/diagrams/daily-signin-points-sequence.png) |
+| 积分抽奖 | 扣减积分、抽奖结果、奖品发放 | [查看原图](docs/diagrams/points-lottery-draw-sequence.png) |
+| IM 私聊可靠投递 | 长连接、消息持久化、ACK / 重试 | [查看原图](docs/diagrams/im-private-message-reliable-delivery-sequence.png) |
+| Feed 动态扇出 | 发布动态、粉丝分发、读扩散 / 写扩散 | [查看原图](docs/diagrams/feed-fanout-sequence.png) |
+| 互动数据双轨同步 | Redis 热数据、异步回刷 MySQL、热度重算 | [查看原图](docs/diagrams/interaction-dual-track-sync-sequence.png) |
+| 搜索与向量库同步 | ES 索引同步、Milvus 向量写入、异步一致性 | [查看原图](docs/diagrams/search-es-milvus-sync-sequence.png) |
+| 普通下单链路 | 常规下单、支付、状态流转 | [查看原图](docs/diagrams/normal-order-sequence.png) |
+| AI 对话链路 | SSE 流式响应、意图路由、卡片事件 | [查看原图](docs/diagrams/ai-chat-sse-intent-routing-sequence.png) |
+| 登录鉴权与网关透传 | 短信/密码登录、Redis 登录态、Gateway 请求头透传 | [查看 SVG](docs/diagrams/auth-login-gateway-chain.svg) |
+| 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](docs/diagrams/file-upload-avatar-update-chain.svg) |
+| 发布审核与搜索 / 向量同步 | 提交待审、审核责任链、回调源服务、ES/Milvus/热榜更新 | [查看 SVG](docs/diagrams/publish-audit-search-sync-chain.svg) |
+| 关注 Feed 推送与滚动读取 | 粉丝信箱写入、Pipeline 批量 ZSet、ScrollResult 读取聚合 | [查看 SVG](docs/diagrams/follow-feed-scroll-read-chain.svg) |
+| 订单退款与钱包补偿 | 退款状态流转、库存回滚、MQ 退款消息、钱包入账流水 | [查看 SVG](docs/diagrams/order-refund-wallet-compensation-chain.svg) |
 
 
 ## <a id="开源使用提示"></a>📌 开源使用提示

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+  <title id="title">订单退款与钱包补偿链路</title>
+  <desc id="desc">展示订单退款或已支付订单取消后，库存回滚、退款消息投递和钱包入账流水的处理流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .label { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1600" height="920" fill="url(#bg)"/>
+  <rect x="36" y="36" width="1528" height="848" rx="28" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="76" y="96">订单退款与钱包补偿链路</text>
+  <text class="subtitle" x="76" y="132">对应代码：OrderServiceImpl.refund / cancel + sendRefundMessage + WalletServiceImpl.refundOrder</text>
+
+  <text class="section" x="76" y="190">退款主链路</text>
+
+  <rect class="node" x="76" y="228" width="236" height="116"/>
+  <text class="node-title" x="194" y="274" text-anchor="middle">用户 / 管理端 / 定时任务</text>
+  <text class="node-text" x="194" y="302" text-anchor="middle">主动退款或已支付订单取消</text>
+
+  <rect class="node" x="364" y="228" width="290" height="116"/>
+  <text class="node-title" x="509" y="274" text-anchor="middle">smartLive-order</text>
+  <text class="node-text" x="509" y="302" text-anchor="middle">标记 REFUNDED / CANCELLED，记录 refundTime</text>
+
+  <rect class="node" x="706" y="228" width="252" height="116"/>
+  <text class="node-title" x="832" y="274" text-anchor="middle">smartLive-product</text>
+  <text class="node-text" x="832" y="302" text-anchor="middle">秒杀商品时回滚库存并回退销量</text>
+
+  <rect class="mq" x="1010" y="228" width="230" height="116"/>
+  <text class="node-title" x="1125" y="274" text-anchor="middle">退款 MQ</text>
+  <text class="node-text" x="1125" y="302" text-anchor="middle">ORDER_REFUND_EXCHANGE</text>
+
+  <rect class="node" x="1292" y="228" width="230" height="116"/>
+  <text class="node-title" x="1407" y="274" text-anchor="middle">smartLive-wallet</text>
+  <text class="node-text" x="1407" y="302" text-anchor="middle">refundOrder 恢复余额</text>
+
+  <path class="line" d="M312 270 H352"/>
+  <text class="label" x="332" y="256" text-anchor="middle">1. 触发 refund / cancel</text>
+
+  <path class="line" d="M654 270 H694"/>
+  <text class="label" x="674" y="256" text-anchor="middle">2. paid 订单回滚库存 / 销量</text>
+
+  <path class="line" d="M958 270 H998"/>
+  <text class="label" x="978" y="256" text-anchor="middle">3. sendRefundMessage</text>
+
+  <path class="line" d="M1240 270 H1280"/>
+  <text class="label" x="1260" y="256" text-anchor="middle">4. 消费退款消息</text>
+
+  <rect class="store" x="494" y="446" width="286" height="126"/>
+  <text class="node-title" x="637" y="494" text-anchor="middle">OrderRefundMessage</text>
+  <text class="node-text" x="637" y="522" text-anchor="middle">orderId / userId / amount / payType</text>
+
+  <rect class="store" x="862" y="446" width="304" height="126"/>
+  <text class="node-title" x="1014" y="494" text-anchor="middle">钱包余额</text>
+  <text class="node-text" x="1014" y="522" text-anchor="middle">addBalance(userId, refundAmount)</text>
+
+  <rect class="store" x="1248" y="446" width="274" height="126"/>
+  <text class="node-title" x="1385" y="494" text-anchor="middle">WalletTransaction</text>
+  <text class="node-text" x="1385" y="522" text-anchor="middle">插入 refund 动账流水</text>
+
+  <path class="dash" d="M1125 344 V406 H637 V434"/>
+  <text class="label" x="880" y="402" text-anchor="middle">5. 退款消息带上订单号、用户号、支付金额和支付方式</text>
+
+  <path class="line" d="M780 492 H850"/>
+  <text class="label" x="815" y="478" text-anchor="middle">6. 余额入账</text>
+
+  <path class="line" d="M1166 492 H1236"/>
+  <text class="label" x="1201" y="478" text-anchor="middle">7. 记录交易流水</text>
+
+  <rect class="note" x="76" y="664" width="454" height="156"/>
+  <text class="note-title" x="104" y="704">这条链路说明了什么</text>
+  <text class="note-text" x="104" y="740">- 退款不是 order 模块自己改余额，而是通过 MQ 解耦给 wallet 模块处理。</text>
+  <text class="note-text" x="104" y="768">- 已支付订单取消和显式退款，都会复用同一套“退款消息 -> 钱包补偿”机制。</text>
+  <text class="note-text" x="104" y="796">- 这能很好体现跨服务资金链路的职责边界。</text>
+
+  <rect class="note" x="572" y="664" width="454" height="156"/>
+  <text class="note-title" x="600" y="704">代码里最值得看的地方</text>
+  <text class="note-text" x="600" y="740">- refund / cancel 只在 oldStatus 已支付时才触发销量回退和退款消息。</text>
+  <text class="note-text" x="600" y="768">- WalletServiceImpl.refundOrder 会 addBalance 后插入 refund 类型流水。</text>
+  <text class="note-text" x="600" y="796">- 这条链路适合作为“分布式解耦 + 资金补偿”样例展示。</text>
+
+  <rect class="note" x="1068" y="664" width="454" height="156"/>
+  <text class="note-title" x="1096" y="704">文档展示建议</text>
+  <text class="note-text" x="1096" y="740">- 放在钱包、订单、秒杀之间的过渡位置最合适。</text>
+  <text class="note-text" x="1096" y="768">- 和“统一支付全链路”搭配后，交易闭环就更完整了。</text>
+  <text class="note-text" x="1096" y="796">- 如果后面补部署文档，也能顺带解释为什么 MQ 是必须组件。</text>
+</svg>

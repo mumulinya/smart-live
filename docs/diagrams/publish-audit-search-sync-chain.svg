@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" role="img" aria-labelledby="title desc">
+  <title id="title">发布审核与搜索同步链路</title>
+  <desc id="desc">展示商家发布商品或店铺后，经过审核中心回调源服务，并同步 ES、Milvus、热榜等下游的流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .label { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .decision { fill: #f9f4ff; stroke: #c7a4eb; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #7d61bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2c8d63; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .reject { stroke: #c05050; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1600" height="960" fill="url(#bg)"/>
+  <rect x="36" y="36" width="1528" height="888" rx="28" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="76" y="96">发布审核与搜索 / 向量同步链路</text>
+  <text class="subtitle" x="76" y="132">对应代码：ProductServiceImpl.sendAuditMessage / updateProductStatus + AuditServiceImpl.handleAudit</text>
+
+  <text class="section" x="76" y="188">提交与审核主链路</text>
+
+  <rect class="node" x="76" y="224" width="220" height="108"/>
+  <text class="node-title" x="186" y="268" text-anchor="middle">商家后台</text>
+  <text class="node-text" x="186" y="296" text-anchor="middle">新增商品 / 店铺</text>
+
+  <rect class="node" x="340" y="224" width="292" height="108"/>
+  <text class="node-title" x="486" y="268" text-anchor="middle">商品 / 店铺服务</text>
+  <text class="node-text" x="486" y="296" text-anchor="middle">落库为待审状态并发送 AuditMessage</text>
+
+  <rect class="mq" x="676" y="224" width="218" height="108"/>
+  <text class="node-title" x="785" y="268" text-anchor="middle">审核 MQ</text>
+  <text class="node-text" x="785" y="296" text-anchor="middle">AUDIT_DIRECT_EXCHANGE</text>
+
+  <rect class="node" x="938" y="224" width="278" height="108"/>
+  <text class="node-title" x="1077" y="268" text-anchor="middle">smartLive-audit</text>
+  <text class="node-text" x="1077" y="296" text-anchor="middle">createAuditTask + AuditProcessChain</text>
+
+  <rect class="decision" x="1260" y="224" width="262" height="108"/>
+  <text class="node-title" x="1391" y="264" text-anchor="middle">审核决策</text>
+  <text class="node-text" x="1391" y="292" text-anchor="middle">PASS / REJECT / WAITING</text>
+
+  <path class="line" d="M296 264 H328"/>
+  <text class="label" x="312" y="250" text-anchor="middle">1. 提交发布</text>
+
+  <path class="line" d="M632 264 H664"/>
+  <text class="label" x="648" y="250" text-anchor="middle">2. 发送 AuditMessage</text>
+
+  <path class="line" d="M894 264 H926"/>
+  <text class="label" x="910" y="250" text-anchor="middle">3. 异步消费</text>
+
+  <path class="line" d="M1216 264 H1248"/>
+  <text class="label" x="1232" y="250" text-anchor="middle">4. 责任链给出结论</text>
+
+  <rect class="node" x="340" y="420" width="292" height="118"/>
+  <text class="node-title" x="486" y="466" text-anchor="middle">回调源服务</text>
+  <text class="node-text" x="486" y="494" text-anchor="middle">updateProductStatus / updateShopStatus</text>
+
+  <rect class="store" x="736" y="418" width="252" height="122"/>
+  <text class="node-title" x="862" y="464" text-anchor="middle">ES / Milvus</text>
+  <text class="node-text" x="862" y="492" text-anchor="middle">publish() 触发批量插入或删除</text>
+
+  <rect class="store" x="1042" y="418" width="220" height="122"/>
+  <text class="node-title" x="1152" y="464" text-anchor="middle">Redis 热榜</text>
+  <text class="node-text" x="1152" y="492" text-anchor="middle">热门榜 / 计算队列更新</text>
+
+  <rect class="mq" x="1316" y="418" width="206" height="122"/>
+  <text class="node-title" x="1419" y="464" text-anchor="middle">通知 / Feed</text>
+  <text class="node-text" x="1419" y="492" text-anchor="middle">驳回通知或商品动态</text>
+
+  <path class="dash" d="M1391 332 V392 H486 V408"/>
+  <text class="label" x="919" y="388" text-anchor="middle">5. 审核策略通过 RemoteProductService / RemoteShopService 回调源服务</text>
+
+  <path class="pass" d="M632 452 H724"/>
+  <text class="label" x="678" y="438" text-anchor="middle">PASS: publish 同步索引</text>
+
+  <path class="pass" d="M632 500 H1030"/>
+  <text class="label" x="831" y="516" text-anchor="middle">PASS: 上架后加入热榜 / 计算集合</text>
+
+  <path class="dash" d="M632 478 H1304"/>
+  <text class="label" x="968" y="464" text-anchor="middle">商品 PASS 还会 sendNewProductMessageToMQ 推给粉丝</text>
+
+  <path class="reject" d="M1391 332 V388 H1419 V406"/>
+  <text class="label" x="1450" y="388">REJECT: 审核驳回系统通知</text>
+
+  <path class="reject" d="M632 528 H724"/>
+  <text class="label" x="678" y="560" text-anchor="middle">REJECT: 发送 ES / Milvus 删除消息</text>
+
+  <text class="label" x="1298" y="356">WAITING: 保持待审，人工审核页继续处理</text>
+
+  <rect class="note" x="76" y="642" width="454" height="182"/>
+  <text class="note-title" x="104" y="682">为什么这张图比通用审核图更有用</text>
+  <text class="note-text" x="104" y="718">- 它把“发布”这件事和“审核结果如何改变业务状态”直接连起来了。</text>
+  <text class="note-text" x="104" y="746">- 开源读者不需要先懂全部 audit 模块，也能知道上线、下架、索引同步各是谁负责。</text>
+  <text class="note-text" x="104" y="774">- 这类图很适合放在 README 或 Showcase 做业务闭环说明。</text>
+
+  <rect class="note" x="572" y="642" width="454" height="182"/>
+  <text class="note-title" x="600" y="682">你能从代码里对上哪些点</text>
+  <text class="note-text" x="600" y="718">- createAuditTask 先落审单，再跑 AuditProcessChain。</text>
+  <text class="note-text" x="600" y="746">- PASS 时 product / shop 都会 publish 到 ES 和 Milvus，并更新热榜相关缓存。</text>
+  <text class="note-text" x="600" y="774">- REJECT 时 audit 模块会发系统通知，源服务会做 rejectReason 和删除同步。</text>
+
+  <rect class="note" x="1068" y="642" width="454" height="182"/>
+  <text class="note-title" x="1096" y="682">适合补充到文档的阅读语境</text>
+  <text class="note-text" x="1096" y="718">- 说明 SmartLive 不是“简单 CRUD 后台”，而是带有审核和检索链路的真实业务系统。</text>
+  <text class="note-text" x="1096" y="746">- 也能自然衔接到搜索、AI 检索、Feed 分发这些后续能力。</text>
+  <text class="note-text" x="1096" y="774">- 如果以后继续补文档，这张图还能延伸出“人工审核工作台”说明。</text>
+</svg>
