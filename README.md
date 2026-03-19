@@ -161,8 +161,27 @@
 - **分布式 IM 与 6 维审核链**：基于 **Netty** 实现 WebSocket 长连接集群与分布式 Session；采用 **责任链工厂模式** 搭配 DFA 敏感词引擎构建覆盖 6 大业务线的异步审核流水线。
 - **跨库数据异步一致性**：组合应用 **RabbitMQ** 消息可靠投递以及 **XXL-JOB** 定时对账批量落库任务，如同“塔防”般保障 MySQL、Elasticsearch、Redis 与 Milvus 四端数据的最终形态一致。
 
+## <a id="5分钟读懂项目"></a>🧭 5 分钟读懂项目
+
+第一次看这个仓库，建议先按下面这条路径阅读，不要一上来就尝试把全部模块和中间件一次性跑齐。
+
+<div align="center">
+  <img src="docs/diagrams/open-source-reading-path.svg" alt="SmartLive 开源文档阅读路径" width="100%">
+</div>
+
+| 你的目标 | 先看什么 | 再看什么 | 结果 |
+|:---|:---|:---|:---|
+| 快速判断项目值不值得继续看 | [README.md](README.md) | [docs/SHOWCASE.md](docs/SHOWCASE.md) | 先看清业务范围、系统架构、真实页面和核心链路 |
+| 第一次把服务跑起来 | [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md) | [README.md 的快速开始](#快速开始) | 先跑最小可运行链路，避免一次性踩完全部依赖坑 |
+| 体验 AI / 搜索 / 审核 / 积分全链路 | [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md) | [docs/SHOWCASE.md](docs/SHOWCASE.md) | 先补齐依赖矩阵，再对照截图和业务链路逐项验证 |
+| 准备本地部署或服务器演示 | [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) | [SECURITY.md](SECURITY.md) | 明确 Docker、构建产物、配置注入与部署排错边界 |
+
+> 推荐起步顺序：`smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop -> smartLive-search`。先验证登录、店铺、搜索和后台管理，再补 AI、IM、积分、支付等进阶能力。
+
 
 ## <a id="效果预览"></a>🎨 效果预览
+
+如果你想按业务链路分组查看截图、架构图和核心时序图，可以直接看 [docs/SHOWCASE.md](docs/SHOWCASE.md)。
 
 |                      用户认证/登录                       |                          首页聚合流                          |                         动态关注流                          |
 |:--------------------------------------------------:|:-------------------------------------------------------:|:------------------------------------------------------:|
@@ -806,7 +825,7 @@ bin/clean.bat              # 清理构建产物
   3. 责任传递模型：设计了标准的 `AuditProcessChain` 责任链，依据 Spring `@Order` 将具体校验节点串联顺次检查。只要有一环抛出异常凭证，即中止并记录违规，通过 `RabbitMQ` 异步反向通知 `Chat` 模块下发站内信告知用户被拒绝原因；通过则回调改变源数据状态为“已发布”。系统更具备完善的链路异常兜底能力（自动转人工待审），极大地解耦了业务线与安全防线。
 
 
-## <a id="常见问题"></a>❓ 我通过这个项目学到的东西
+## <a id="项目沉淀"></a>🧠 我通过这个项目学到的东西
 
 ### 🏗️ 架构设计维度
 - **从 0 到 1 的微服务架构设计**：如何科学地拆分 18+ 个高内聚、低耦合的模块，避免大泥球架构
@@ -1042,7 +1061,9 @@ redisTemplate.opsForValue().set(currentKey, "0");
 
 - 📘 [在线文档](http://doc.smartLive.vip)
 - 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
+- 🖼️ [视觉导览](docs/SHOWCASE.md) — 按用户链路整理页面截图、系统总览图与核心时序图
 - 📌 [开源使用说明](docs/OPEN_SOURCE.md) — 依赖矩阵、端口表、配置来源与启动建议
+- 🚀 [部署说明](docs/DEPLOYMENT_GUIDE.md) — Docker Compose、镜像重建、JAR 校验与部署排错
 - 🤝 [贡献指南](CONTRIBUTING.md)
 - 🔐 [安全说明](SECURITY.md)
 
