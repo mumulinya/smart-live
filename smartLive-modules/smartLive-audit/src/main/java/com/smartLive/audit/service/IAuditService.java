@@ -31,7 +31,7 @@ public interface IAuditService extends IService<AuditTask> {
     /**
      * 审核操作
      *
-     * @param id 任务ID
+     * @param id     任务ID
      * @param status 状态(1-审核通过, 2-人工驳回, 3-自动驳回)
      * @param reason 驳回原因
      * @return 结果
@@ -40,11 +40,14 @@ public interface IAuditService extends IService<AuditTask> {
 
     /**
      * 创建审核任务
+     *
      * @param auditMessage 审核消息
+     * @return 审核任务编号
      */
     Long createAuditTask(com.smartLive.common.rabbitmq.domain.AuditMessage auditMessage);
     /**
      * 处理审核任务
+     *
      * @param auditMessage 审核消息
      */
     void handleAudit(AuditMessage auditMessage);

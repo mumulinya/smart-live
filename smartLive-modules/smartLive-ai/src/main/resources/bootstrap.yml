@@ -12,11 +12,6 @@ spring:
   application:
     name: smartLive-ai
   rabbitmq:
-    username: smart-live
-    password: 123167
-    host: 192.168.182.20
-    virtual-host: smart-live
-    port: 5672
     listener:
       simple:
         acknowledge-mode: manual
@@ -101,6 +96,7 @@ spring:
         file-extension: yml
         shared-configs:
           - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+          - rabbitmq-common.yml
 smartlive:
   ai:
     chat-model-bean: openAiChatModel

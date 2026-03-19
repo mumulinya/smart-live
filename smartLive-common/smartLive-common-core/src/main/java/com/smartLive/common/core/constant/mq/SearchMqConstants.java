@@ -1,11 +1,11 @@
 package com.smartLive.common.core.constant.mq;
 
 /**
- * 搜索与同步模�?MQ 常量（ES与Milvus�?
+ * 搜索与同步模块 MQ 常量（ES 与 Milvus）
  */
 public interface SearchMqConstants {
     /**
-     * ES 交换�?
+     * ES 交换机
      */
     String ES_SYNC_EXCHANGE = "es.sync.direct.exchange";
     // 插入队列
@@ -16,23 +16,23 @@ public interface SearchMqConstants {
     String ES_SYNC_DELETE_QUEUE = "es.sync.delete.queue";
     // 用户资源队列
     String ES_SYNC_USER_RESOURCE_QUEUE = "es.sync.user.resource.queue";
-    // 插入路由�?
+    // 插入路由键
     String ES_SYNC_INSERT_ROUTING_KEY = "es.sync.insert";
     String ES_SYNC_USER_RESOURCE_INSERT_ROUTING_KEY = "es.sync.user.resource.insert";
-    // 批量插入路由�?
+    // 批量插入路由键
     String ES_SYNC_BATCH_INSERT_ROUTING_KEY = "es.sync.batch.insert";
-    // 单个删除路由�?
+    // 单个删除路由键
     String ES_SYNC_DELETE_ROUTING_KEY = "es.sync.delete";
 
     /**
-     * Milvus 交换�?
+     * Milvus 交换机
      */
     String MILVUS_SYNC_EXCHANGE = "milvus.sync.direct.exchange";
     // Milvus 队列名称
     String MILVUS_SYNC_INSERT_QUEUE = "milvus.sync.insert.queue";
     String MILVUS_SYNC_BATCH_INSERT_QUEUE = "milvus.sync.batch.insert.queue";
     String MILVUS_SYNC_DELETE_QUEUE = "milvus.sync.delete.queue";
-    // Milvus 路由�?
+    // Milvus 路由键
     String MILVUS_SYNC_INSERT_ROUTING_KEY = "milvus.sync.insert";
     String MILVUS_SYNC_DELETE_ROUTING_KEY = "milvus.sync.delete";
     String MILVUS_SYNC_BATCH_INSERT_ROUTING_KEY = "milvus.sync.batch.insert";

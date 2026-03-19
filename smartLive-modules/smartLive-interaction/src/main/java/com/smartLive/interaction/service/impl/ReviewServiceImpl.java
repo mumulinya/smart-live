@@ -1121,9 +1121,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             }
             int finalPage = page;
             executorService.submit(() -> {
-                log.info("async sync review batch thread={}, page={}", Thread.currentThread().getName(), finalPage);
                 sendReviewMilvusBatchMessage(reviews);
-                log.info("缂傚倷鐒﹀畷妯衡枖閺囥垹鐓濈紒鍗炴櫒闂備焦瀵х粙鎴︽嚐椤栨縿浜归柛灞剧矋閺嗘粓鏌涢幇鍏告喚闁稿孩鍟坿濠碉紕鍋戦崐婵嗩焽瑜旈幃楣冾敆閸曨偆顓洪梺瑙勬緲婢у海绮堟径鎰厸濞达絽鍢插畵鍡涙煕?{}", Thread.currentThread().getName(), finalPage, reviews.size());
             });
             page++;
         }

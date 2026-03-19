@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Factory to retrieve the appropriate AuditStrategy.
+ * 审核策略工厂
  */
 @Component
 public class AuditStrategyFactory {
@@ -17,6 +17,12 @@ public class AuditStrategyFactory {
     private final Map<Integer, AuditStrategy> strategyMap = new HashMap<>();
     private final AuditStrategy defaultStrategy;
 
+    /**
+     * 构建审核策略工厂
+     *
+     * @param strategies     已注册的审核策略
+     * @param defaultStrategy 默认策略
+     */
     @Autowired
     public AuditStrategyFactory(List<AuditStrategy> strategies, DefaultAuditStrategy defaultStrategy) {
         this.defaultStrategy = defaultStrategy;
@@ -26,9 +32,10 @@ public class AuditStrategyFactory {
     }
 
     /**
-     * Get strategy by business type.
-     * @param bizType The business type ID
-     * @return The specific strategy or the default strategy if not found
+     * 根据业务类型获取审核策略
+     *
+     * @param bizType 业务类型编码
+     * @return 对应策略；未匹配则返回默认策略
      */
     public AuditStrategy getStrategy(Integer bizType) {
         return Optional.ofNullable(strategyMap.get(bizType)).orElse(defaultStrategy);

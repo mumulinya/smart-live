@@ -5,10 +5,12 @@ import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.config.SingleServerConfig;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.boot.autoconfigure.data.redis.LettuceClientConfigurationBuilderCustomizer;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +19,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.util.StringUtils;
 
 /**
  * redis配置
@@ -50,12 +53,27 @@ public class RedisConfig extends CachingConfigurerSupport
     }
 
     @Bean
-    public RedissonClient redissonClient() {
-        //配置类
+    public RedissonClient redissonClient(
+            @Value("${spring.data.redis.host:${spring.redis.host:127.0.0.1}}") String host,
+            @Value("${spring.data.redis.port:${spring.redis.port:6379}}") int port,
+            @Value("${spring.data.redis.username:${spring.redis.username:}}") String username,
+            @Value("${spring.data.redis.password:${spring.redis.password:}}") String password,
+            @Value("${spring.data.redis.database:${spring.redis.database:0}}") int database) {
+        // 读取 Spring Redis 配置，避免部署时固定写死本机地址
         Config config = new Config();
-        //单机模式 添加单点地址 可以使用config.useClusterServers()添加集群地址
-        config.useSingleServer().setAddress("redis://127.0.0.1:6379");
-        //创建客户端
+        // 单机模式下使用 Redis 连接信息创建客户端
+        SingleServerConfig singleServerConfig = config.useSingleServer()
+                .setAddress("redis://" + host + ":" + port)
+                .setDatabase(database);
+        if (StringUtils.hasText(username))
+        {
+            singleServerConfig.setUsername(username);
+        }
+        if (StringUtils.hasText(password))
+        {
+            singleServerConfig.setPassword(password);
+        }
+        // 创建客户端
         return Redisson.create(config);
     }
 

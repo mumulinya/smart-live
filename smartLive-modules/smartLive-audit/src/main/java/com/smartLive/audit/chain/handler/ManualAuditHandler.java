@@ -15,6 +15,11 @@ import org.springframework.stereotype.Component;
 @Order(300)
 public class ManualAuditHandler implements AuditProcessHandler {
 
+    /**
+     * 将未终态的任务统一转入人工审核
+     *
+     * @param context 审核上下文
+     */
     @Override
     public void handle(AuditProcessContext context) {
         if (context == null || context.isFinished()) {
@@ -24,4 +29,3 @@ public class ManualAuditHandler implements AuditProcessHandler {
         log.info("任务已转人工审核，taskId={}", context.getAuditTaskId());
     }
 }
-

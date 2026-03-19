@@ -47,6 +47,11 @@ public class AuditContentExtractor {
 
     /**
      * 按字段名追加文本，避免空值干扰
+     *
+     * @param sb           拼接器
+     * @param map          审核快照
+     * @param key          字段名
+     * @param addLineBreak 是否追加换行
      */
     private void appendIfExists(StringBuilder sb, Map<String, Object> map, String key, boolean addLineBreak) {
         Object value = map.get(key);

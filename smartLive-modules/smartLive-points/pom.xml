@@ -70,12 +70,6 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
-        <!-- smartLive Common Swagger -->
-        <dependency>
-            <groupId>com.smartLive</groupId>
-            <artifactId>smartLive-common-rabbitmq</artifactId>
-        </dependency>
-
         <!--hutool-->
         <dependency>
             <groupId>cn.hutool</groupId>

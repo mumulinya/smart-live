@@ -13,11 +13,6 @@ spring:
     # 应用名称
     name: smartLive-interaction
   rabbitmq:
-    username: smart-live
-    password: 123167
-    host: 192.168.182.20
-    virtual-host: smart-live
-    port: 5672
     listener:
       simple:
         acknowledge-mode: manual   #none：关闭ack  manual：手动ack  auto：自动ack
@@ -44,7 +39,11 @@ spring:
             - data-id: application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
               group: DEFAULT_GROUP
               refresh: true
-           # 2. 引入 XXL-JOB 公共配置
+            # 2. 引入 RabbitMQ 公共配置
+            - data-id: rabbitmq-common.yml
+              group: DEFAULT_GROUP
+              refresh: true
+            # 3. 引入 XXL-JOB 公共配置
             - data-id: xxl-job-common.yml
               group: DEFAULT_GROUP
               refresh: true # 支持动态刷新

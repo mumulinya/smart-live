@@ -132,7 +132,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             order.setShopIds(shopIds);
             order.setExcludedStatuses(Arrays.asList(OrderStatusConstants.UNPAID, OrderStatusConstants.CANCELLED));
         }
-
+        // 获取订单列表
         List<Order> orderList = orderMapper.selectOrderList(order);
         if (orderList == null || orderList.isEmpty())
         {

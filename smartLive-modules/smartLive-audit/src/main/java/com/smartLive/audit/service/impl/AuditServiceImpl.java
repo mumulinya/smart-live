@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Audit service implementation
+ * 审核服务实现
  */
 @Service
 @Slf4j
@@ -42,6 +42,12 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
     @Autowired
     private AuditProcessChain auditProcessChain;
 
+    /**
+     * 查询审核任务列表
+     *
+     * @param auditTask 查询条件
+     * @return 审核任务列表
+     */
     @Override
     public List<AuditTaskVO> selectAuditList(AuditTask auditTask) {
         LambdaQueryWrapper<AuditTask> lqw = Wrappers.lambdaQuery();
@@ -69,6 +75,12 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 查询审核任务详情
+     *
+     * @param id 审核任务编号
+     * @return 审核任务详情
+     */
     @Override
     public AuditTaskVO getAuditDetail(Long id) {
         AuditTask task = this.getById(id);
@@ -88,6 +100,12 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
 
         return vo;
     }
+    /**
+     * 创建审核任务并落库
+     *
+     * @param auditMessage 审核消息
+     * @return 审核任务编号
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createAuditTask(AuditMessage auditMessage) {
@@ -105,6 +123,14 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
         }
         return null;
     }
+    /**
+     * 执行审核动作并更新业务状态
+     *
+     * @param id     审核任务编号
+     * @param status 审核状态
+     * @param reason 审核原因
+     * @return 是否更新成功
+     */
     @Override
     public boolean auditAction(Long id, Integer status, String reason) {
         AuditTask task = this.getById(id);
@@ -127,6 +153,12 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
         return updated;
     }
 
+    /**
+     * 发送审核驳回系统通知
+     *
+     * @param task   审核任务
+     * @param reason 驳回原因
+     */
     private void createRejectSystemNotice(AuditTask task, String reason) {
         if (task.getSubmitterId() == null) {
             return;
@@ -151,6 +183,12 @@ public class AuditServiceImpl extends ServiceImpl<AuditTaskMapper, AuditTask> im
         }
     }
 
+    /**
+     * 构建驳回通知标题
+     *
+     * @param bizType 业务类型
+     * @return 标题文案
+     */
     private String buildRejectTitle(Integer bizType) {
         if (bizType == null) {
             return "审核未通过";

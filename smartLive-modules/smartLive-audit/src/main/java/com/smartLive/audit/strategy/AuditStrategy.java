@@ -8,37 +8,40 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Audit Strategy Interface
- * Handles business-specific logic for different audit types.
+ * 审核策略接口
+ * 负责处理不同业务类型的审核逻辑
  */
 @Component
 public interface AuditStrategy {
 
     /**
-     * Returns the business type this strategy handles.
-     * @return Business Type ID (e.g., 4 for Voucher)
+     * 获取当前策略支持的业务类型编码
+     *
+     * @return 业务类型编码
      */
     Integer getBizType();
 
     /**
-     * Analyzes the task to determine if it is high risk.
-     * @param task The audit task containing content snapshot
-     * @return true if high risk, false otherwise
+     * 判断审核任务是否高风险
+     *
+     * @param task 审核任务
+     * @return 是否高风险
      */
     boolean isHighRisk(AuditTask task);
 
     /**
-     * Handle audit result callback
+     * 处理审核结果回调
      *
-     * @param targetId The business ID (e.g., blogId, voucherId)
-     * @param status   The audit status (e.g., 1: Pass, 2: Reject)
-     * @param reason   The rejection reason
+     * @param targetId 目标业务编号
+     * @param status   审核状态
+     * @param reason   驳回原因
      */
     boolean handleAuditResult(Long targetId, Integer status, String reason);
     /**
-     * Get submitter name
-     * @param submitterId
-     * @return
+     * 获取提交人名称
+     *
+     * @param submitterId 提交人编号
+     * @return 提交人名称
      */
-    public String getSubmitterName(Long submitterId);
+    String getSubmitterName(Long submitterId);
 }

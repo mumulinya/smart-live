@@ -16,6 +16,11 @@ public class AuditProcessChain {
 
     private final List<AuditProcessHandler> handlers;
 
+    /**
+     * 构建审核责任链
+     *
+     * @param handlers 处理器列表（按 @Order 排序）
+     */
     @Autowired
     public AuditProcessChain(List<AuditProcessHandler> handlers) {
         this.handlers = handlers;
@@ -39,4 +44,3 @@ public class AuditProcessChain {
         }
     }
 }
-

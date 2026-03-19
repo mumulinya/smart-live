@@ -1,6 +1,6 @@
 Spring Boot Version: ${spring-boot.version}
 Spring Application Name: ${spring.application.name}
-    /                       \                                                                     |\    /|
+  11  /                       \                                                                     |\    /|
    /X/                       \X\                                                                  ___| \,,/_/
   |XX\         _____         /XX|                                                              ---__/ \/    \
   |XXX\     _/       \_     /XXX|___________                                                  __--/     (D)  \

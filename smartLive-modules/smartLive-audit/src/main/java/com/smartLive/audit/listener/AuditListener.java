@@ -79,7 +79,12 @@ public class AuditListener {
     }
 
     /**
-     * 监听审核机制异常导致的死信队列
+     * 处理审核死信消息
+     *
+     * @param auditMessage 审核消息
+     * @param channel      MQ 通道
+     * @param deliveryTag  投递标识
+     * @throws IOException IO 异常
      */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = AiAuditMqConstants.AUDIT_DLQ_QUEUE, durable = "true"),

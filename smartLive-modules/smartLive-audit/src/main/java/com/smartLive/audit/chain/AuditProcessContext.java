@@ -28,23 +28,49 @@ public class AuditProcessContext {
      */
     private String reason;
 
+    /**
+     * 构建审核责任链上下文
+     *
+     * @param auditTaskId  审核任务编号
+     * @param auditMessage 审核消息
+     */
     public AuditProcessContext(Long auditTaskId, AuditMessage auditMessage) {
         this.auditTaskId = auditTaskId;
         this.auditMessage = auditMessage;
     }
 
+    /**
+     * 获取审核任务编号
+     *
+     * @return 审核任务编号
+     */
     public Long getAuditTaskId() {
         return auditTaskId;
     }
 
+    /**
+     * 获取审核消息
+     *
+     * @return 审核消息
+     */
     public AuditMessage getAuditMessage() {
         return auditMessage;
     }
 
+    /**
+     * 获取当前决策
+     *
+     * @return 审核决策
+     */
     public AuditDecision getDecision() {
         return decision;
     }
 
+    /**
+     * 获取审核说明
+     *
+     * @return 审核说明
+     */
     public String getReason() {
         return reason;
     }
@@ -80,4 +106,3 @@ public class AuditProcessContext {
         return decision != AuditDecision.CONTINUE;
     }
 }
-

@@ -24,6 +24,11 @@ public class SensitiveWordAuditHandler implements AuditProcessHandler {
     @Autowired
     private AuditContentExtractor auditContentExtractor;
 
+    /**
+     * 执行敏感词审核
+     *
+     * @param context 审核上下文
+     */
     @Override
     public void handle(AuditProcessContext context) {
         if (context == null || context.isFinished() || context.getAuditMessage() == null) {
@@ -41,4 +46,3 @@ public class SensitiveWordAuditHandler implements AuditProcessHandler {
         log.info("敏感词审核未通过，taskId={}, words={}", context.getAuditTaskId(), sensitiveWords);
     }
 }
-

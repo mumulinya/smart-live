@@ -1,5 +1,5 @@
 com.smartLive.common.core.utils.SpringUtils
 com.smartLive.common.core.utils.SensitiveWordUtil
 com.smartLive.common.core.config.ThreadPoolConfig
-com.smartLive.common.core.config.MybatisPlusConfig
+com.smartLive.common.core.config.MyBatisPlusConfig
 com.smartLive.common.core.config.JacksonConfig

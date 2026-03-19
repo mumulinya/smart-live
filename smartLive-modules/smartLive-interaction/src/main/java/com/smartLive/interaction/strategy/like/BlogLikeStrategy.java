@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+/**
+ * 博客点赞策略实现
+ */
 @RequiredArgsConstructor
 @Component
 @Slf4j
@@ -25,13 +28,31 @@ public class BlogLikeStrategy extends AbstractInteractionStrategy implements Lik
 
     @Override
     public void transLikeCountFromRedis2DB(Map<Long, Integer> updateMap) {
-        log.info("正在调用博客服务，同步数据");
-        // 调用博客服务的批量更新接口
-        Boolean b = remoteBlogService.updateLikeCountBatch(updateMap);
-        if (b) {
-            log.info("同步数据成功");
-        } else {
-            log.info("同步数据失败");
+        if (updateMap == null || updateMap.isEmpty()) {
+            return;
+        }
+
+        try {
+            Boolean result = remoteBlogService.updateLikeCountBatch(updateMap);
+            if (!result) {
+                throw new RuntimeException("博客点赞数更新失败");
+            }
+        } catch (Exception e) {
+            log.error("博客点赞数同步失败", e);
+        }
+    }
+
+    @Override
+    public Integer getLikeCount(Long sourceId) {
+        if (sourceId == null || sourceId <= 0) {
+            return 0;
+        }
+
+        try {
+            return remoteBlogService.getBlogLikeCount(sourceId);
+        } catch (Exception e) {
+            log.error("获取博客点赞数异常: sourceId={}", sourceId, e);
+            return 0;
         }
     }
 
@@ -48,16 +69,5 @@ public class BlogLikeStrategy extends AbstractInteractionStrategy implements Lik
     @Override
     protected String getActionType() {
         return UserResourceActionTypeConstants.USER_RESOURCE_ACTION_LIKE;
-    }
-
-    /**
-     * 获取点赞数
-     *
-     * @param sourceId 业务ID
-     * @return 点赞数
-     */
-    @Override
-    public Integer getLikeCount(Long sourceId) {
-        return remoteBlogService.getBlogLikeCount(sourceId);
     }
 }

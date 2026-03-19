@@ -29,6 +29,11 @@ public class AiAuditHandler implements AuditProcessHandler {
         this.auditContentExtractor = auditContentExtractor;
     }
 
+    /**
+     * 执行 AI 审核逻辑
+     *
+     * @param context 审核上下文
+     */
     @Override
     public void handle(AuditProcessContext context) {
         if (context == null || context.isFinished() || context.getAuditMessage() == null) {
@@ -83,6 +88,12 @@ public class AiAuditHandler implements AuditProcessHandler {
                 context.getAuditTaskId(), context.getAuditMessage().getBizType(), reason);
     }
 
+    /**
+     * 将业务类型映射为 AI 审核类型
+     *
+     * @param bizType 业务类型编码
+     * @return AI 审核类型标识
+     */
     private String resolveAuditType(Integer bizType) {
         if (GlobalBizTypeEnum.BLOG.getCode().equals(bizType)) {
             return "blog";

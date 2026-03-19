@@ -9,8 +9,8 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerA
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 
 /**
- * 文件服务
- * 
+ * 审核服务模块
+ *
  * @author smartLive
  */
 @EnableCustomConfig
@@ -18,6 +18,11 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 @SpringBootApplication
 public class SmartLiveAuditApplication
 {
+    /**
+     * 启动入口
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args)
     {
         SpringApplication.run(SmartLiveAuditApplication.class, args);

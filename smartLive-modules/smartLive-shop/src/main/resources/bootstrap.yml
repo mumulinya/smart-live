@@ -19,11 +19,6 @@ spring:
         enabled: true #开启重试
     publisher-confirm-type: correlated # 开启发生着确认模式，可选值：correlated、none、manual
     publisher-returns: true # 开启返回确认
-    username: smart-live
-    password: 123167
-    host: 192.168.182.20
-    virtual-host: smart-live
-    port: 5672
   profiles:
     # 环境配置
     active: dev
@@ -53,7 +48,11 @@ spring:
           - data-id: application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
             group: DEFAULT_GROUP
             refresh: true
-          # 2. 引入 XXL-JOB 公共配置
+          # 2. 引入 RabbitMQ 公共配置
+          - data-id: rabbitmq-common.yml
+            group: DEFAULT_GROUP
+            refresh: true
+          # 3. 引入 XXL-JOB 公共配置
           - data-id: xxl-job-common.yml
             group: DEFAULT_GROUP
             refresh: true # 支持动态刷新

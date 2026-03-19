@@ -24,6 +24,9 @@ public class AuditController extends BaseController {
 
     /**
      * 查询审核任务列表
+     *
+     * @param auditTask 查询条件
+     * @return 审核任务列表
      */
     @GetMapping("/list")
     public TableDataInfo list(AuditTask auditTask) {
@@ -34,6 +37,9 @@ public class AuditController extends BaseController {
 
     /**
      * 获取审核详情
+     *
+     * @param id 审核任务编号
+     * @return 审核详情
      */
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {
@@ -43,6 +49,9 @@ public class AuditController extends BaseController {
     /**
      * 提交审核结果
      * 参数：id, status (1-审核通过, 2-人工驳回), reason
+     *
+     * @param body 请求体
+     * @return 操作结果
      */
     @PostMapping("/action")
     public AjaxResult action(@RequestBody Map<String, Object> body) {

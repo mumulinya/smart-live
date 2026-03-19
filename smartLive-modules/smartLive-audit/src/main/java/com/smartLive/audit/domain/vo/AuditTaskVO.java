@@ -51,7 +51,10 @@ public class AuditTaskVO{
     private Date createTime;
 
     /**
-     * 从Entity转换为VO
+     * 从实体转换为 VO
+     *
+     * @param entity 审核任务实体
+     * @return 审核任务 VO
      */
     public static AuditTaskVO fromEntity(AuditTask entity) {
         if (entity == null) {
@@ -59,7 +62,7 @@ public class AuditTaskVO{
         }
         AuditTaskVO vo = new AuditTaskVO();
         BeanUtils.copyProperties(entity, vo);
-        // Note: auditContent is copied as Map initially, will be overwritten by Strategy
+        // 审核快照先拷贝为 Map，后续由策略覆盖
         return vo;
     }
 }
