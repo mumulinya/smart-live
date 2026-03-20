@@ -76,7 +76,7 @@ spring:
         embedding-dimension: 1024
         metric-type: COSINE
         index-type: FLAT
-        initialize-schema: false
+        initialize-schema: ${SPRING_AI_VECTORSTORE_MILVUS_INITIALIZE_SCHEMA:true}
         collection-name: smartLive_vector_store
         recreate-collection: false
     rag:

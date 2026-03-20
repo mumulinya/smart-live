@@ -186,6 +186,7 @@
 
 ## 7. 如何继续阅读
 
+- 想按页面继续看用户端 App / 管理端 UI：看 [PAGE_GALLERY.md](PAGE_GALLERY.md)
 - 想把项目跑起来：看 [OPEN_SOURCE.md](OPEN_SOURCE.md)
 - 想做本地或服务器部署：看 [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 - 想参与贡献：看 [../CONTRIBUTING.md](../CONTRIBUTING.md)

@@ -14,7 +14,7 @@
 [![Star](https://gitee.com/mumulinya/smart-live/badge/star.svg?theme=dark)](https://gitee.com/mumulinya/smart-live/stargazers)
 [![Personal Project](https://img.shields.io/badge/个人独立项目-从零设计开发-ff69b4.svg)]()
 
-[在线文档](http://doc.smartLive.vip) · [演示地址](http://www.smartLive.vip) · [视觉导览](docs/SHOWCASE.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
+[视觉导览](docs/SHOWCASE.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
 
 ---
 
@@ -172,6 +172,7 @@
 | 你的目标 | 先看什么 | 再看什么 | 结果 |
 |:---|:---|:---|:---|
 | 快速判断项目值不值得继续看 | [README.md](README.md) | [docs/SHOWCASE.md](docs/SHOWCASE.md) | 先看清业务范围、系统架构、真实页面和核心链路 |
+| 想先理解模块拆分和代码边界 | [系统架构](#系统架构) | [项目结构](#项目结构) | 先建立全局心智模型，再回头读具体业务模块 |
 | 第一次把服务跑起来 | [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md) | [README.md 的快速开始](#快速开始) | 先跑最小可运行链路，避免一次性踩完全部依赖坑 |
 | 体验 AI / 搜索 / 审核 / 积分全链路 | [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md) | [docs/SHOWCASE.md](docs/SHOWCASE.md) | 先补齐依赖矩阵，再对照截图和业务链路逐项验证 |
 | 准备本地部署或服务器演示 | [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) | [SECURITY.md](SECURITY.md) | 明确 Docker、构建产物、配置注入与部署排错边界 |
@@ -181,27 +182,23 @@
 
 ## <a id="效果预览"></a>🎨 效果预览
 
-如果你想按业务链路分组查看截图、架构图和核心时序图，可以直接看 [docs/SHOWCASE.md](docs/SHOWCASE.md)。
+README 这里先保留最主要的 6 个页面入口；想按 App / 管理端继续看页面、补截图或找源码位置，可以直接跳到 [docs/PAGE_GALLERY.md](docs/PAGE_GALLERY.md)。
 
-|                      用户认证/登录                       |                          首页聚合流                          |                         动态关注流                          |
-|:--------------------------------------------------:|:-------------------------------------------------------:|:------------------------------------------------------:|
-|     ![login](docs/screenshots/login-page.png)      |       ![homepage](docs/screenshots/homepage.png)        |        ![feed](docs/screenshots/feed-flow.png)         |
-|                     **全文检索结果**                     |                       **首页热门榜单**                        |                     **地图找店(LBS)**                      |
-|   ![search](docs/screenshots/search-results.png)   |        ![hot](docs/screenshots/hot-ranking.png)         |         ![map](docs/screenshots/map-view.png)          |
-|                     **店铺分类列表**                     |                        **店铺详情页**                        |                       **商品详情页**                        |
-|    ![shop-list](docs/screenshots/shop-list.png)    |        ![shop](docs/screenshots/shop-detail.png)        |    ![product](docs/screenshots/product-detail.png)     |
-|                     **限时秒杀专区**                     |                       **内容创作发布**                        |                      **互动评论/评价**                       |
-|   ![seckill](docs/screenshots/seckill-page.png)    |      ![publish](docs/screenshots/publish-page.png)      |    ![comment](docs/screenshots/comment-section.png)    |
-|                     **消息交互中心**                     |                      **系统通知/违规过滤**                      |                       **即时通讯聊天**                       |
-| ![msg-center](docs/screenshots/message-center.png) | ![sys-notify](docs/screenshots/system-notification.png) |          ![im](docs/screenshots/im-chat.png)           |
-|                    **AI 智能助手**                     |                       **用户行为数据**                        |                        **个人中心**                        |
-|        ![ai](docs/screenshots/ai-chat.png)         |    ![user-search](docs/screenshots/user-search.png)     |     ![profile](docs/screenshots/profile-page.png)      |
-|                    **我的发布/笔记**                     |                         **草稿箱**                         |                        **我的收藏**                        |
-|   ![user-posts](docs/screenshots/user-posts.png)   |        ![drafts](docs/screenshots/draft-box.png)        | ![user-favorites](docs/screenshots/user-favorites.png) |
-|                    **关注/粉丝列表**                     |                        **我的订单**                         |                        **我的钱包**                        |
-|    ![follow](docs/screenshots/follow-list.png)     |        ![order](docs/screenshots/order-page.png)        |      ![wallet](docs/screenshots/wallet-page.png)       |
-|                      **积分中心**                      |                        **签到与抽奖**                        |                                                        |
-|    ![points](docs/screenshots/points-page.png)     |        ![sign-in](docs/screenshots/sign-in.png)         |                                                        |
+| 登录与身份进入 | 首页四榜热榜 | 搜索与地图找店 |
+|:---:|:---:|:---:|
+| [![login](docs/screenshots/login-page.png)](docs/PAGE_GALLERY.md#app-login-entry) | [![hot](docs/screenshots/hot-ranking.png)](docs/PAGE_GALLERY.md#app-home-hot) | [![map](docs/screenshots/map-view.png)](docs/PAGE_GALLERY.md#app-search-map) |
+| [查看登录页与账号入口](docs/PAGE_GALLERY.md#app-login-entry) | [查看首页四榜热榜](docs/PAGE_GALLERY.md#app-home-hot) | [查看搜索结果与 LBS 找店](docs/PAGE_GALLERY.md#app-search-map) |
+
+| 店铺与商品详情 | 社交消息与即时通讯 | AI 与订单资产 |
+|:---:|:---:|:---:|
+| [![shop](docs/screenshots/shop-detail.png)](docs/PAGE_GALLERY.md#app-shop-product) | [![im](docs/screenshots/app-chat-detail.png)](docs/PAGE_GALLERY.md#app-social-message) | [![ai](docs/screenshots/ai-chat.png)](docs/PAGE_GALLERY.md#app-ai-order-assets) |
+| [查看店铺页、商品页与内容发布](docs/PAGE_GALLERY.md#app-shop-product) | [查看动态、消息中心与 IM](docs/PAGE_GALLERY.md#app-social-message) | [查看 AI、订单、钱包与积分](docs/PAGE_GALLERY.md#app-ai-order-assets) |
+
+### 🧩 更多页面入口
+
+- 想看用户端 App 的详细页面和待补截图位：看 [docs/PAGE_GALLERY.md - 用户端 App](docs/PAGE_GALLERY.md#app-pages)
+- 想看管理端 UI 的详细页面和待补截图位：看 [docs/PAGE_GALLERY.md - 管理端 UI](docs/PAGE_GALLERY.md#admin-pages)
+- 想按业务链路看截图、架构图和核心时序图：看 [docs/SHOWCASE.md](docs/SHOWCASE.md)
 
 
 ## <a id="快速开始"></a>🚀 快速开始
@@ -877,36 +874,57 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 
 ## <a id="难点踩坑与解决方案"></a>🚧 难点踩坑与解决方案
 
-### 1. IM 即时通讯中的 WebSocket 连接保活与内存泄漏问题
-* **挑战**：在初期实现聊天集群化时，发现网关频繁报 `504 Timeout`，且服务器内存以每天 300MB 的速度缓慢泄露，连接断开后并未被回收。
-* **排查**：使用 `Arthas` 导出堆快照（Heap Dump）并通过 MAT 分析，发现是 Netty 的 `ChannelGroup` 中积压了大量半死连接（Half-Open TCP），且心跳定时任务（HashedWheelTimer）未能正确感知和清理这些僵尸节点。
-* **解决方案**：
-  1. 实现了基于 `IdleStateHandler` 的精准服务端心跳检测机制（例如超过 60 秒未收到 PING 包直接调用 `ctx.close()` 强杀连接）。
-  2. 修复了客户端意外断网时未能感知并在 `ChannelGroup` 中手动 `remove` 的逻辑。
-  3. 将连接会话同步维护到 Redis 集群的 Hash 结构中以支持分布式环境下的状态一致性。上线后内存曲线恢复平稳。
+### 缓存与一致性
 
-### 2. 社交计数（点赞/收藏）的高频写穿透
+#### 1. 社交计数（点赞/收藏）的高频写穿透
 * **挑战**：内容曝光时会出现突发的高频点赞/取消点赞动作，起初直接双写 Redis+MySQL 导致极高的 DB 事务开销甚至死锁频发。
 * **解决方案**：引入了 **"Redis Hash 增量原子更新 + 定时快照批量归档"** 方案。
   1. 所有互动计数及状态实时累加在 Redis 的特定前缀缓存中。
   2. XXL-JOB 每隔 5 分钟执行一次快照归档任务：使用 `RENAME` 指令将当前全量热数据原子重命名为归档 Key。
   3. 异步线程消费归档 Key 并在应用层做状态融合聚合后，按照 `ON DUPLICATE KEY UPDATE` 批量 Upsert 回写 MySQL。彻底解耦读写路径，使得点赞的 TPS 上限只取决于 Redis 甚至网络带宽。
 
-### 3. 高并发秒杀场景下的“超卖”与“少卖”治理
+#### 2. 高频更新场景下 Redis 缓存与数据库的一致性窗口问题
+* **挑战**：项目里同时存在详情缓存、列表缓存、计数缓存、热榜缓存，店铺、商品、博客、评价等对象又都可能被高频更新。如果简单采用“查库后写缓存”或“更新时同步覆盖所有缓存”，不仅写放大严重，还会让热点数据在并发下频繁抖动，甚至出现列表和详情短时间不一致的问题。
+* **解决方案**：采用 **"写库后删缓存 + 逻辑过期后台重建 + 批量缓存管理"** 的组合方案。
+  1. 详情读链路统一走 `CacheClient`，对热点数据采用“空值缓存防穿透 + 逻辑过期防击穿 + 互斥锁异步重建”，即使缓存过期也优先返回旧值，再由后台线程补新值。
+  2. 写路径以数据库为准：店铺、商品、博客等更新成功后，不直接在业务代码里强行重写所有缓存，而是删除对应详情 Key、列表 Key、热榜 Key 或触发刷新方法，尽量缩短脏数据窗口并降低写扩散成本。
+  3. 对需要批量召回的列表场景，再引入 `RedisMultiCacheManager` 做统一管理，把“批量回填、逻辑过期、空值缓存、异步重建”收敛到基础设施层，避免每个业务模块自己维护一套分散的缓存协议。
+
+### 交易与补偿
+
+#### 3. 高并发秒杀场景下的“超卖”与“少卖”治理
 * **挑战**：在秒杀场景初期，单靠数据库行锁扣减库存导致 CPU 飙升、连接池爆满；改为 Redis 缓存单边预扣后，又在极端网络抖动或 JVM 宕机时，出现了用户重复抢购，以及订单生成后超时未支付导致的“少卖”现象（即库存锁定但未成交，导致其他真实用户无法抢购）。
 * **解决方案**：引入了 **"Redis Lua 原子校验预扣 + RabbitMQ 延迟队列闭环"** 方案。
   1. 使用 Lua 脚本将“一人一单校验”与“预扣减库存”封装为原子操作并在 Redis 中执行，将 99% 的无效或者恶意流量直接阻拦在缓存层。
   2. Lua 扣减成功后立即通过 MQ 发送异步消息，后端工作服务异步消费消息完成真实订单的落库，实现极致削峰。
   3. 针对超时不支付情况，投递含订单 ID 的 TTL 延迟死信消息（例如 15 分钟）。消费者收到后核实实际支付状态，若未支付则自动调用内部逆向接口：关单、回滚 MySQL 真实库存、并通过重新执行对应 Lua 脚本补偿 Redis 的库存容量表，形成完美的库存状态闭环。
 
-### 4. 社交动态 Feed 流中的传统分页“数据偏移”问题
+#### 4. 订单取消、退款、超时任务同时存在时的状态边界问题
+* **挑战**：同一笔订单可能同时面临用户主动取消、用户主动退款、延迟队列超时取消、定时任务过期兜底等多条路径。如果没有严格的状态边界，就容易出现重复回滚库存、重复发送退款消息、钱包重复入账这类严重问题。
+* **解决方案**：按 **"状态校验优先，补偿动作后置"** 的原则收敛所有入口。
+  1. `cancel`、`refund`、延迟消息消费者、过期任务都先判断订单旧状态，只允许合法状态迁移；未支付订单只做关单与库存恢复，已支付订单才进入退款补偿链。
+  2. 库存恢复、销量回滚、退款 MQ、钱包入账这几步不再散落在不同入口里，而是由订单服务统一编排，避免不同入口各自实现一套补偿逻辑。
+  3. 钱包侧基于退款消息和流水表继续做幂等处理，形成“订单状态校验 -> 商品恢复 -> 退款消息 -> 钱包入账”的清晰责任边界。
+
+### 推荐与社交
+
+#### 5. 社交动态 Feed 流中的传统分页“数据偏移”问题
 * **挑战**：在用户浏览主页的粉丝动态或热榜 Feed 流时，由于系统无时无刻不在产生新的内容，传统基于数据库 `LIMIT offset, size` 的拉链式翻页操作体验极差——用户翻到下一页时，常常会看见上一页已经看过的重复数据（由于顶部新动态不断插入，底部数据被整体向下挤压导致了偏移）。
 * **解决方案**：摒弃传统分页机制，自研实现 **"基于 Redis ZSet 的滚动分页（Scroll Pagination）"**。
   1. 业务层面：在动态发布时，将产生互动的业务数据 ID 与时间戳（作为 Score）写入到用户的聚合流（Redis ZSet）中。
   2. 交互层面：前端获取数据不仅携带 `pageSize`，还必须带上当前页最后一条记录的时间戳 `maxScore` 和偏移值 `offset`。
   3. 数据召回层面：后端利用 Redis 的 `ZREVRANGEBYSCORE key maxScore 0 LIMIT offset pageSize` 命令，以用户屏幕底部的最后一条记录的准确时间戳作为绝对锚点进行查阅。彻底解决了动态高频写入场景下分页查询的内容错位痛点。
 
-### 5. 异构 UGC 内容的审核堆积与链路阻塞（责任链模式）
+#### 6. 首页热门榜单的冷启动与长期霸榜问题
+* **挑战**：首页同时展示热门店铺榜、热门代金券榜、热门团购榜、热门博客榜。如果只按单一字段排序，新内容几乎没有曝光机会；如果完全依赖实时互动，又会出现老内容长期霸榜、榜单缺乏流动性的问题。
+* **解决方案**：引入 **"增量算分 + Top N 合并 + 凌晨全量重建"** 的双层热榜维护方案。
+  1. 各业务线的上架、销量、点赞、评论、评分等变化先进入各自的 `calcQueue`，由 XXL-JOB 周期性触发增量计算。
+  2. 计算时先通过 `RENAME` 将当轮待处理数据切到 `TEMP` 快照，再把新候选集与历史榜单 `Top N` 合并，避免老榜被瞬间洗空，也避免新内容完全没有机会进入候选池。
+  3. 不同业务类型采用不同热度公式，并加入时间衰减、销量、评分、互动等权重；每天凌晨再执行全量重建任务，兜底修正长时间运行带来的局部偏差。
+
+### 内容治理
+
+#### 7. 异构 UGC 内容的审核堆积与链路阻塞（责任链模式）
 * **挑战**：平台有 6 条不同的核心内容生产线（博客、商品、店铺、评论、评价、用户资料），需要经过文本违规过滤、AI 情绪倾向判定、人工抽检等多个审核流程。如果全部同步调用或在各业务代码里手写复杂的校验逻辑，会导致接口耗时达到秒级以上，且任何审核节点的变更都会引发所有业务线的回归测试。
 * **解决方案**：构建 **"策略工厂化路由 + 异步审核责任链（Chain of Responsibility）"** 安全防线平台。
   1. 流量削峰与解耦：所有业务线的内容提交后，先存为“待审核”状态。系统仅投递一条标准的 `AuditMessage` 凭证至 RabbitMQ 队列，让用户侧接口极速返回“发布成功，等待审核”。

@@ -1,6 +1,6 @@
-<svg width="1200" height="640" viewBox="0 0 1200 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="1360" height="700" viewBox="0 0 1360 700" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="640" gradientUnits="userSpaceOnUse">
+    <linearGradient id="bg" x1="0" y1="0" x2="1360" y2="700" gradientUnits="userSpaceOnUse">
       <stop stop-color="#F7FAFF"/>
       <stop offset="1" stop-color="#FFF7ED"/>
     </linearGradient>
@@ -24,66 +24,69 @@
       <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.10"/>
     </filter>
     <style>
-      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #0F172A; }
-      .subtitle { font: 400 17px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #475569; }
-      .card-title { font: 700 24px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #0F172A; }
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #0F172A; }
+      .subtitle { font: 400 18px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #475569; }
+      .card-title { font: 700 23px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #0F172A; }
       .card-label { font: 700 16px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #1D4ED8; }
       .card-body { font: 400 15px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #334155; }
-      .foot { font: 600 16px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #7C2D12; }
+      .foot { font: 600 17px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #7C2D12; }
     </style>
   </defs>
 
-  <rect width="1200" height="640" rx="32" fill="url(#bg)"/>
-  <rect x="36" y="32" width="1128" height="576" rx="28" fill="#FFFFFF" fill-opacity="0.78" stroke="#E2E8F0"/>
+  <rect width="1360" height="700" rx="32" fill="url(#bg)"/>
+  <rect x="36" y="32" width="1288" height="636" rx="28" fill="#FFFFFF" fill-opacity="0.78" stroke="#E2E8F0"/>
 
-  <text x="600" y="86" text-anchor="middle" class="title">SmartLive 开源文档阅读路径</text>
-  <text x="600" y="118" text-anchor="middle" class="subtitle">先理解项目，再运行最小链路，最后再做完整体验和部署，第一次接入会稳很多。</text>
+  <text x="680" y="90" text-anchor="middle" class="title">SmartLive 开源文档阅读路径</text>
+  <text x="680" y="124" text-anchor="middle" class="subtitle">先理解项目，再运行最小链路，最后再做完整体验和部署，第一次接入会更稳。</text>
 
-  <path d="M276 284H372" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M540 284H636" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M804 284H900" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M372 284L356 272M372 284L356 296" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M636 284L620 272M636 284L620 296" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M900 284L884 272M900 284L884 296" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-
-  <g filter="url(#shadow)">
-    <rect x="72" y="170" width="204" height="226" rx="24" fill="url(#cardBlue)" stroke="#7DD3FC"/>
-    <rect x="336" y="170" width="204" height="226" rx="24" fill="url(#cardOrange)" stroke="#FDBA74"/>
-    <rect x="600" y="170" width="204" height="226" rx="24" fill="url(#cardGreen)" stroke="#86EFAC"/>
-    <rect x="864" y="170" width="264" height="226" rx="24" fill="url(#cardPurple)" stroke="#D8B4FE"/>
-  </g>
-
-  <text x="102" y="212" class="card-label">01 READ FIRST</text>
-  <text x="102" y="250" class="card-title">README.md</text>
-  <text x="102" y="286" class="card-body">项目定位</text>
-  <text x="102" y="314" class="card-body">系统架构</text>
-  <text x="102" y="342" class="card-body">业务截图</text>
-  <text x="102" y="370" class="card-body">核心链路</text>
-
-  <text x="366" y="212" class="card-label" fill="#C2410C">02 RUN FIRST</text>
-  <text x="366" y="250" class="card-title">docs/OPEN_SOURCE.md</text>
-  <text x="366" y="286" class="card-body">依赖矩阵</text>
-  <text x="366" y="314" class="card-body">端口表</text>
-  <text x="366" y="342" class="card-body">启动顺序</text>
-  <text x="366" y="370" class="card-body">已知注意事项</text>
-
-  <text x="630" y="212" class="card-label" fill="#15803D">03 DEPLOY NEXT</text>
-  <text x="630" y="250" class="card-title">docs/DEPLOYMENT_GUIDE.md</text>
-  <text x="630" y="286" class="card-body">Docker Compose</text>
-  <text x="630" y="314" class="card-body">镜像重建</text>
-  <text x="630" y="342" class="card-body">JAR 校验</text>
-  <text x="630" y="370" class="card-body">部署排错</text>
-
-  <text x="894" y="212" class="card-label" fill="#7C3AED">04 CONTRIBUTE</text>
-  <text x="894" y="250" class="card-title">CONTRIBUTING.md</text>
-  <text x="894" y="286" class="card-body">分支规范</text>
-  <text x="894" y="314" class="card-body">提交格式</text>
-  <text x="894" y="342" class="card-body">自查清单</text>
-  <text x="894" y="370" class="card-body">安全边界</text>
+  <path d="M340 300H380" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M640 300H680" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M940 300H980" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M380 300L364 288M380 300L364 312" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M680 300L664 288M680 300L664 312" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M980 300L964 288M980 300L964 312" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
 
   <g filter="url(#shadow)">
-    <rect x="120" y="448" width="960" height="112" rx="24" fill="#FFF7ED" stroke="#FED7AA"/>
+    <rect x="80" y="180" width="260" height="236" rx="24" fill="url(#cardBlue)" stroke="#7DD3FC"/>
+    <rect x="380" y="180" width="260" height="236" rx="24" fill="url(#cardOrange)" stroke="#FDBA74"/>
+    <rect x="680" y="180" width="260" height="236" rx="24" fill="url(#cardGreen)" stroke="#86EFAC"/>
+    <rect x="980" y="180" width="260" height="236" rx="24" fill="url(#cardPurple)" stroke="#D8B4FE"/>
   </g>
-  <text x="600" y="492" text-anchor="middle" class="foot">第一次接入最稳的路径</text>
-  <text x="600" y="526" text-anchor="middle" class="subtitle">先启动 auth、gateway、system、user、shop、search，先确认登录、店铺、搜索和后台管理可用。</text>
+
+  <text x="108" y="222" class="card-label">01 READ FIRST</text>
+  <text x="108" y="260" class="card-title">README.md</text>
+  <text x="108" y="306" class="card-body">项目定位</text>
+  <text x="108" y="336" class="card-body">系统架构</text>
+  <text x="108" y="366" class="card-body">业务截图</text>
+  <text x="108" y="396" class="card-body">核心链路</text>
+
+  <text x="408" y="222" class="card-label" fill="#C2410C">02 RUN FIRST</text>
+  <text x="408" y="260" class="card-title">OPEN_SOURCE.md</text>
+  <text x="408" y="306" class="card-body">依赖矩阵</text>
+  <text x="408" y="336" class="card-body">端口表</text>
+  <text x="408" y="366" class="card-body">启动顺序</text>
+  <text x="408" y="396" class="card-body">已知注意事项</text>
+
+  <text x="708" y="222" class="card-label" fill="#15803D">03 DEPLOY NEXT</text>
+  <text x="708" y="256" class="card-title">
+    <tspan x="708" dy="0">DEPLOYMENT</tspan>
+    <tspan x="708" dy="28">GUIDE.md</tspan>
+  </text>
+  <text x="708" y="320" class="card-body">Docker Compose</text>
+  <text x="708" y="350" class="card-body">镜像重建</text>
+  <text x="708" y="380" class="card-body">JAR 校验</text>
+  <text x="708" y="410" class="card-body">部署排错</text>
+
+  <text x="1008" y="222" class="card-label" fill="#7C3AED">04 CONTRIBUTE</text>
+  <text x="1008" y="260" class="card-title">CONTRIBUTING.md</text>
+  <text x="1008" y="306" class="card-body">分支规范</text>
+  <text x="1008" y="336" class="card-body">提交格式</text>
+  <text x="1008" y="366" class="card-body">自查清单</text>
+  <text x="1008" y="396" class="card-body">安全边界</text>
+
+  <g filter="url(#shadow)">
+    <rect x="120" y="472" width="1120" height="116" rx="24" fill="#FFF7ED" stroke="#FED7AA"/>
+  </g>
+  <text x="680" y="518" text-anchor="middle" class="foot">第一次接入最稳的路径</text>
+  <text x="680" y="554" text-anchor="middle" class="subtitle">先启动 auth、gateway、system、user、shop、search，先确认登录、店铺、搜索和后台管理可用。</text>
 </svg>
