@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>Feed 发布扇出与系统通知链路</title>
+  <desc id='desc'>展示动态发布后如何构建 FeedEventMessage，经 MQ 交给关注模块批量写入粉丝信箱，并同步生成系统通知。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>Feed 发布扇出与系统通知链路</text>
+  <text class='subtitle' x='74' y='132'>对应代码：BlogServiceImpl + FollowListener.handleSendNormalToFollowers + FollowServiceImpl.pushToFollowers</text>
+  <text class='section' x='74' y='188'>1. 动态发布后异步扇出</text>
+  <rect class='node' x='70' y='220' width='270' height='140'/>
+  <text class='node-title' x='205' y='270' text-anchor='middle'>发布博客 / 商品动态</text>
+  <text class='node-text' x='205' y='304' text-anchor='middle'>用户提交内容</text>
+  <text class='node-text' x='205' y='328' text-anchor='middle'>或商品状态变化</text>
+  <rect class='node' x='410' y='220' width='280' height='140'/>
+  <text class='node-title' x='550' y='270' text-anchor='middle'>源业务服务</text>
+  <text class='node-text' x='550' y='304' text-anchor='middle'>构建 FeedEventMessage</text>
+  <text class='node-text' x='550' y='328' text-anchor='middle'>保留 bizId 和时间戳</text>
+  <rect class='gateway' x='760' y='220' width='240' height='140'/>
+  <text class='node-title' x='880' y='270' text-anchor='middle'>Feed MQ</text>
+  <text class='node-text' x='880' y='304' text-anchor='middle'>异步投递事件</text>
+  <text class='node-text' x='880' y='328' text-anchor='middle'>削峰解耦</text>
+  <rect class='node' x='1070' y='220' width='280' height='140'/>
+  <text class='node-title' x='1210' y='270' text-anchor='middle'>FollowListener</text>
+  <text class='node-text' x='1210' y='304' text-anchor='middle'>幂等消费</text>
+  <text class='node-text' x='1210' y='328' text-anchor='middle'>进入关注模块</text>
+  <rect class='store' x='1420' y='220' width='310' height='140'/>
+  <text class='node-title' x='1575' y='270' text-anchor='middle'>FollowServiceImpl</text>
+  <text class='node-text' x='1575' y='304' text-anchor='middle'>pushToFollowers</text>
+  <text class='node-text' x='1575' y='328' text-anchor='middle'>准备写粉丝信箱</text>
+  <path class='line' d='M340 290 H398'/>
+  <text class='step' x='369' y='194' text-anchor='middle'>1. 发布成功</text>
+  <text class='step' x='369' y='214' text-anchor='middle'>不直接同步扇出</text>
+  <path class='line' d='M690 290 H748'/>
+  <text class='step' x='719' y='194' text-anchor='middle'>2. 构建事件</text>
+  <text class='step' x='719' y='214' text-anchor='middle'>交给 MQ 分发</text>
+  <path class='line' d='M1000 290 H1058'/>
+  <text class='step' x='1029' y='194' text-anchor='middle'>3. 幂等消费</text>
+  <text class='step' x='1029' y='214' text-anchor='middle'>避免重复推送</text>
+  <path class='line' d='M1350 290 H1408'/>
+  <text class='step' x='1379' y='194' text-anchor='middle'>4. 进入关注模块</text>
+  <text class='step' x='1379' y='214' text-anchor='middle'>开始粉丝扩散</text>
+  <text class='section' x='74' y='468'>2. 写粉丝信箱与消息通知</text>
+  <rect class='store' x='90' y='500' width='320' height='140'/>
+  <text class='node-title' x='250' y='550' text-anchor='middle'>Redis follow:fans</text>
+  <text class='node-text' x='250' y='584' text-anchor='middle'>拿到粉丝列表</text>
+  <text class='node-text' x='250' y='608' text-anchor='middle'>按业务类型分类</text>
+  <rect class='gateway' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>Pipeline 批量写</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>feed:zset:*</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>减少网络往返</text>
+  <rect class='node' x='910' y='500' width='320' height='140'/>
+  <text class='node-title' x='1070' y='550' text-anchor='middle'>SystemNoticeCreateDTO</text>
+  <text class='node-text' x='1070' y='584' text-anchor='middle'>商品类动态同步提醒</text>
+  <text class='node-text' x='1070' y='608' text-anchor='middle'>通知消息中心</text>
+  <rect class='node' x='1320' y='500' width='340' height='140'/>
+  <text class='node-title' x='1490' y='550' text-anchor='middle'>用户动态流</text>
+  <text class='node-text' x='1490' y='584' text-anchor='middle'>消息中心可见</text>
+  <text class='node-text' x='1490' y='608' text-anchor='middle'>后续再走滚动读取</text>
+  <path class='line' d='M410 570 H488'/>
+  <text class='step' x='449' y='474' text-anchor='middle'>5. 查询粉丝</text>
+  <text class='step' x='449' y='494' text-anchor='middle'>拿到写扩散目标</text>
+  <path class='line' d='M820 570 H898'/>
+  <text class='step' x='859' y='474' text-anchor='middle'>6. 批量写入 ZSet</text>
+  <text class='step' x='859' y='494' text-anchor='middle'>时间戳作为 score</text>
+  <path class='line' d='M1230 570 H1308'/>
+  <text class='step' x='1269' y='474' text-anchor='middle'>7. 可选通知</text>
+  <text class='step' x='1269' y='494' text-anchor='middle'>消息中心同步提醒</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- Feed 扇出不会阻塞发布接口，真正的扩散工作放在 MQ 后面。</text>
+  <text class='note-text' x='102' y='836'>- 粉丝信箱本质是按用户分桶的 Redis ZSet，适合高频写。</text>
+  <text class='note-text' x='102' y='866'>- 商品类动态还会顺手生成系统通知，提升触达率。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- FollowListener 负责把 FeedEventMessage 可靠地转成 pushToFollowers 调用。</text>
+  <text class='note-text' x='682' y='836'>- FollowServiceImpl 用 Pipeline 批量写 ZSet，适合大 V 场景。</text>
+  <text class='note-text' x='682' y='866'>- createSystemNotice 让 Feed 和消息中心形成联动。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图更适合解释“写扩散”，而不是滚动读取。</text>
+  <text class='note-text' x='1262' y='836'>- 可以和 follow-feed-scroll-read-chain.svg 形成一推一拉两张配图。</text>
+  <text class='note-text' x='1262' y='866'>- 首页里保留入口就好，详细页再展开。</text>
+</svg>

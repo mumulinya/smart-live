@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">订单生命周期兜底处理链路</title>
+  <desc id="desc">展示 XXL-JOB 如何在订单生命周期中补上两类兜底动作：临期提醒和过期处理，并通过系统通知、库存回滚、销量回滚和退款 MQ 保证订单闭环。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1052" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">订单生命周期兜底处理链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：OrderExpireJobHandler.orderSoonExpireJobHandler / orderExpireJobHandler + OrderServiceImpl.expired + ChatListener.consumeSystemNotice</text>
+
+  <text class="section" x="74" y="188">1. 临期提醒任务：已支付但快到期的订单，先提醒用户</text>
+
+  <rect class="mq" x="70" y="220" width="320" height="150"/>
+  <text class="node-title" x="230" y="276" text-anchor="middle">XXL-JOB</text>
+  <text class="node-text" x="230" y="312" text-anchor="middle">orderSoonExpireJobHandler</text>
+  <text class="node-text" x="230" y="338" text-anchor="middle">每天扫描未来 3 天即将过期订单</text>
+
+  <rect class="node" x="490" y="220" width="340" height="150"/>
+  <text class="node-title" x="660" y="276" text-anchor="middle">smartLive-order</text>
+  <text class="node-text" x="660" y="312" text-anchor="middle">筛选 status = PAID</text>
+  <text class="node-text" x="660" y="338" text-anchor="middle">且 expireTime 落在临期窗口内</text>
+
+  <rect class="mq" x="930" y="220" width="300" height="150"/>
+  <text class="node-title" x="1080" y="276" text-anchor="middle">SYSTEM_NOTICE_EXCHANGE</text>
+  <text class="node-text" x="1080" y="312" text-anchor="middle">发送订单过期提醒</text>
+  <text class="node-text" x="1080" y="338" text-anchor="middle">附带 orderVO extraData</text>
+
+  <rect class="store" x="1330" y="220" width="360" height="150"/>
+  <text class="node-title" x="1510" y="276" text-anchor="middle">ChatListener / SystemNoticeService</text>
+  <text class="node-text" x="1510" y="312" text-anchor="middle">插入系统通知记录</text>
+  <text class="node-text" x="1510" y="338" text-anchor="middle">并 WebSocket 实时推送给用户</text>
+
+  <path class="line" d="M390 295 H478"/>
+  <text class="step" x="434" y="280" text-anchor="middle">1. 扫描临期订单</text>
+
+  <path class="line" d="M830 295 H918"/>
+  <text class="step" x="874" y="280" text-anchor="middle">2. 投递提醒 MQ</text>
+
+  <path class="line" d="M1230 295 H1318"/>
+  <text class="step" x="1274" y="280" text-anchor="middle">3. 通知入库并推送</text>
+
+  <text class="section" x="74" y="468">2. 过期处理任务：已支付且已过期的订单，自动进入补偿流程</text>
+
+  <rect class="mq" x="70" y="510" width="320" height="160"/>
+  <text class="node-title" x="230" y="568" text-anchor="middle">XXL-JOB</text>
+  <text class="node-text" x="230" y="604" text-anchor="middle">orderExpireJobHandler</text>
+  <text class="node-text" x="230" y="630" text-anchor="middle">扫描 expireTime 已过期的</text>
+  <text class="node-text" x="230" y="656" text-anchor="middle">PAID 订单</text>
+
+  <rect class="node" x="490" y="510" width="360" height="160"/>
+  <text class="node-title" x="670" y="568" text-anchor="middle">OrderServiceImpl.expired</text>
+  <text class="node-text" x="670" y="604" text-anchor="middle">状态改为 EXPIRED</text>
+  <text class="node-text" x="670" y="630" text-anchor="middle">并读取 oldStatus 决定补偿动作</text>
+
+  <rect class="store" x="950" y="510" width="320" height="160"/>
+  <text class="node-title" x="1110" y="568" text-anchor="middle">商品侧补偿</text>
+  <text class="node-text" x="1110" y="604" text-anchor="middle">秒杀商品 recoverStock</text>
+  <text class="node-text" x="1110" y="630" text-anchor="middle">已支付场景 decrementSales</text>
+
+  <rect class="mq" x="1370" y="510" width="300" height="160"/>
+  <text class="node-title" x="1520" y="568" text-anchor="middle">退款 MQ</text>
+  <text class="node-text" x="1520" y="604" text-anchor="middle">sendRefundMessage</text>
+  <text class="node-text" x="1520" y="630" text-anchor="middle">驱动 wallet 恢复余额</text>
+
+  <path class="line" d="M390 590 H478"/>
+  <text class="step" x="434" y="576" text-anchor="middle">4. 扫描已过期订单</text>
+
+  <path class="line" d="M850 590 H938"/>
+  <text class="step" x="894" y="576" text-anchor="middle">5. 执行 expired</text>
+
+  <path class="line" d="M1270 590 H1358"/>
+  <text class="step" x="1314" y="576" text-anchor="middle">6. 发送退款消息</text>
+
+  <text class="section" x="74" y="768">3. 兜底任务的价值：提醒和补偿两条线都不会漏</text>
+
+  <rect class="decision" x="160" y="810" width="340" height="150"/>
+  <text class="node-title" x="330" y="866" text-anchor="middle">提醒兜底</text>
+  <text class="node-text" x="330" y="902" text-anchor="middle">临期未使用的已支付订单</text>
+  <text class="node-text" x="330" y="928" text-anchor="middle">会被定时提醒，减少权益流失</text>
+
+  <rect class="decision" x="610" y="810" width="340" height="150"/>
+  <text class="node-title" x="780" y="866" text-anchor="middle">状态兜底</text>
+  <text class="node-text" x="780" y="902" text-anchor="middle">过期后仍停留在 PAID 的订单</text>
+  <text class="node-text" x="780" y="928" text-anchor="middle">会被批量改成 EXPIRED</text>
+
+  <rect class="decision" x="1060" y="810" width="340" height="150"/>
+  <text class="node-title" x="1230" y="866" text-anchor="middle">资金与库存兜底</text>
+  <text class="node-text" x="1230" y="902" text-anchor="middle">库存回滚、销量回滚、退款 MQ</text>
+  <text class="node-text" x="1230" y="928" text-anchor="middle">保证订单生命周期最终一致</text>
+
+  <path class="dash" d="M670 670 V740 H330 V798"/>
+  <text class="step" x="500" y="728" text-anchor="middle">7. 提醒线</text>
+
+  <path class="dash" d="M670 670 V798"/>
+  <text class="step" x="670" y="728" text-anchor="middle">8. 状态线</text>
+
+  <path class="dash" d="M1520 670 V740 H1230 V798"/>
+  <text class="step" x="1375" y="728" text-anchor="middle">9. 补偿线</text>
+
+  <rect class="note" x="70" y="980" width="500" height="100"/>
+  <text class="note-title" x="102" y="1022">这张图和超时取消图的区别</text>
+  <text class="note-text" x="102" y="1052">- 超时取消图讲“未支付 15 分钟自动取消”；这张图讲“已支付订单的后续生命周期兜底”。</text>
+
+  <rect class="note" x="650" y="980" width="500" height="100"/>
+  <text class="note-title" x="682" y="1022">代码上最关键的点</text>
+  <text class="note-text" x="682" y="1052">- orderSoonExpireJobHandler 发通知，orderExpireJobHandler 调 expired，两个任务职责分得很清楚。</text>
+
+  <rect class="note" x="1230" y="980" width="500" height="100"/>
+  <text class="note-title" x="1262" y="1022">文档展示建议</text>
+  <text class="note-text" x="1262" y="1052">- 它适合放在调度专题里，专门说明“不是所有订单状态都靠用户手动推动”。</text>
+</svg>

@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">订单核销、店铺销量与积分奖励链路</title>
+  <desc id="desc">展示订单核销时的门店校验、订单状态更新、店铺销量增加，以及通过 MQ 发放消费积分并写积分流水的主链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1052" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">订单核销、店铺销量与积分奖励链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：OrderServiceImpl.use + incrementShopSales + send OrderPointsMessage + PointsListener.handleOrderPoints</text>
+
+  <text class="section" x="74" y="188">1. 核销入口与订单侧处理</text>
+
+  <rect class="node" x="70" y="220" width="290" height="150"/>
+  <text class="node-title" x="215" y="274" text-anchor="middle">商家端 / 核销员</text>
+  <text class="node-text" x="215" y="308" text-anchor="middle">扫描核销码或输入订单号</text>
+  <text class="node-text" x="215" y="334" text-anchor="middle">调用 /order/use</text>
+
+  <rect class="node" x="450" y="220" width="330" height="150"/>
+  <text class="node-title" x="615" y="274" text-anchor="middle">smartLive-order</text>
+  <text class="node-text" x="615" y="308" text-anchor="middle">校验 verifyShopId 与订单状态</text>
+  <text class="node-text" x="615" y="334" text-anchor="middle">将订单更新为 VERIFIED</text>
+
+  <rect class="store" x="870" y="220" width="330" height="150"/>
+  <text class="node-title" x="1035" y="274" text-anchor="middle">smartLive-shop / product</text>
+  <text class="node-text" x="1035" y="308" text-anchor="middle">incrementShopSales(order)</text>
+  <text class="node-text" x="1035" y="334" text-anchor="middle">增加店铺销量并刷新相关缓存</text>
+
+  <rect class="mq" x="1290" y="220" width="290" height="150"/>
+  <text class="node-title" x="1435" y="274" text-anchor="middle">积分 MQ</text>
+  <text class="node-text" x="1435" y="308" text-anchor="middle">POINTS_DIRECT_EXCHANGE</text>
+  <text class="node-text" x="1435" y="334" text-anchor="middle">order.verify 路由键</text>
+
+  <path class="line" d="M360 295 H438"/>
+  <text class="step" x="399" y="280" text-anchor="middle">1. 发起核销</text>
+
+  <path class="line" d="M780 295 H858"/>
+  <text class="step" x="819" y="280" text-anchor="middle">2. 校验门店并更新状态</text>
+
+  <path class="line" d="M1200 295 H1278"/>
+  <text class="step" x="1239" y="280" text-anchor="middle">3. 增加店铺销量并发送积分消息</text>
+
+  <text class="section" x="74" y="470">2. 积分服务消费消息并写奖励流水</text>
+
+  <rect class="node" x="210" y="520" width="360" height="160"/>
+  <text class="node-title" x="390" y="576" text-anchor="middle">PointsListener</text>
+  <text class="node-text" x="390" y="612" text-anchor="middle">消费 order.verify 消息</text>
+  <text class="node-text" x="390" y="638" text-anchor="middle">Redis 幂等校验，避免重复发分</text>
+
+  <rect class="store" x="680" y="520" width="360" height="160"/>
+  <text class="node-title" x="860" y="576" text-anchor="middle">PointsService.addPoints</text>
+  <text class="node-text" x="860" y="612" text-anchor="middle">按 payAmount 计算奖励积分</text>
+  <text class="node-text" x="860" y="638" text-anchor="middle">更新用户积分钱包</text>
+
+  <rect class="store" x="1150" y="520" width="360" height="160"/>
+  <text class="node-title" x="1330" y="576" text-anchor="middle">PointsRecord</text>
+  <text class="node-text" x="1330" y="612" text-anchor="middle">写入 CONSUME_REWARD 流水</text>
+  <text class="node-text" x="1330" y="638" text-anchor="middle">便于后续账务追踪</text>
+
+  <path class="line" d="M1435 370 V450 H390 V508"/>
+  <text class="step" x="920" y="434" text-anchor="middle">4. 积分服务异步消费核销消息</text>
+
+  <path class="line" d="M570 600 H668"/>
+  <text class="step" x="619" y="586" text-anchor="middle">5. 计算并增加积分</text>
+
+  <path class="line" d="M1040 600 H1138"/>
+  <text class="step" x="1089" y="586" text-anchor="middle">6. 记录积分流水</text>
+
+  <rect class="note" x="70" y="790" width="500" height="220"/>
+  <text class="note-title" x="102" y="834">这条链路最能体现什么</text>
+  <text class="note-text" x="102" y="868">- 核销不是只改订单状态，还会触发店铺经营数据和用户积分奖励两个后续动作。</text>
+  <text class="note-text" x="102" y="896">- 积分发放通过 MQ 异步解耦，避免核销接口被账务逻辑拖慢。</text>
+  <text class="note-text" x="102" y="924">- 积分监听侧带 Redis 幂等，能抗重复投递。</text>
+
+  <rect class="note" x="650" y="790" width="500" height="220"/>
+  <text class="note-title" x="682" y="834">代码里能直接对上的点</text>
+  <text class="note-text" x="682" y="868">- OrderServiceImpl.use 会校验 verifyShopId，更新 verifiedTime / verifyShopId，再调用 incrementShopSales。</text>
+  <text class="note-text" x="682" y="896">- 随后发送 OrderPointsMessage，消息里带 userId、orderId、payAmount 和业务类型。</text>
+  <text class="note-text" x="682" y="924">- PointsListener.handleOrderPoints 会幂等消费，再落到 PointsService.addPoints。</text>
+
+  <rect class="note" x="1230" y="790" width="500" height="220"/>
+  <text class="note-title" x="1262" y="834">文档展示建议</text>
+  <text class="note-text" x="1262" y="868">- 这张图适合和普通下单 / 退款链路一起看，补齐交易履约后的经营闭环。</text>
+  <text class="note-text" x="1262" y="896">- 如果面试里讲这条链路，可以重点强调“核销后异步奖励”而不是单纯的状态变更。</text>
+  <text class="note-text" x="1262" y="924">- 这是商家经营与用户激励之间的一条关键连接线。</text>
+</svg>

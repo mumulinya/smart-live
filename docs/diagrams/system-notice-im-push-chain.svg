@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1140" viewBox="0 0 1800 1140" role="img" aria-labelledby="title desc">
+  <title id="title">系统通知入库与 IM 推送链路</title>
+  <desc id="desc">展示订单、审核、关注等业务事件如何统一汇入系统通知 MQ，经 chat 模块入库后，再由 im 模块推送到在线用户的主链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1140" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1072" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">系统通知入库与 IM 推送链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：OrderExpireJobHandler / AuditServiceImpl.createRejectSystemNotice / FollowServiceImpl.createSystemNotice + ChatListener.consumeSystemNotice + SystemNoticeServiceImpl.createAndPush + ImPushConsumer</text>
+
+  <text class="section" x="74" y="188">1. 多个业务模块统一向系统通知通道投递消息</text>
+
+  <rect class="node" x="70" y="220" width="300" height="160"/>
+  <text class="node-title" x="220" y="278" text-anchor="middle">订单 / 审核 / 关注等业务</text>
+  <text class="node-text" x="220" y="314" text-anchor="middle">订单临期提醒、审核驳回</text>
+  <text class="node-text" x="220" y="340" text-anchor="middle">关注提醒等事件产生通知</text>
+
+  <rect class="mq" x="460" y="220" width="300" height="160"/>
+  <text class="node-title" x="610" y="278" text-anchor="middle">SYSTEM_NOTICE_EXCHANGE</text>
+  <text class="node-text" x="610" y="314" text-anchor="middle">统一承接系统通知消息</text>
+  <text class="node-text" x="610" y="340" text-anchor="middle">避免各业务直接耦合 chat</text>
+
+  <rect class="node" x="850" y="220" width="320" height="160"/>
+  <text class="node-title" x="1010" y="278" text-anchor="middle">ChatListener</text>
+  <text class="node-text" x="1010" y="314" text-anchor="middle">consumeSystemNotice</text>
+  <text class="node-text" x="1010" y="340" text-anchor="middle">消费并校验通知 DTO</text>
+
+  <rect class="store" x="1260" y="220" width="320" height="160"/>
+  <text class="node-title" x="1420" y="278" text-anchor="middle">SystemNoticeService</text>
+  <text class="node-text" x="1420" y="314" text-anchor="middle">createAndPush 落通知记录</text>
+  <text class="node-text" x="1420" y="340" text-anchor="middle">再转给 IM 推送通道</text>
+
+  <path class="line" d="M370 300 H448"/>
+  <text class="step" x="409" y="286" text-anchor="middle">1. 业务发送通知</text>
+
+  <path class="line" d="M760 300 H838"/>
+  <text class="step" x="799" y="286" text-anchor="middle">2. chat 统一消费</text>
+
+  <path class="line" d="M1170 300 H1248"/>
+  <text class="step" x="1209" y="286" text-anchor="middle">3. 通知入库并准备推送</text>
+
+  <text class="section" x="74" y="490">2. chat 入库后，IM 模块只负责在线推送与离线容错</text>
+
+  <rect class="store" x="170" y="540" width="320" height="170"/>
+  <text class="node-title" x="330" y="596" text-anchor="middle">SystemNotice / ChatMessage</text>
+  <text class="node-text" x="330" y="632" text-anchor="middle">通知内容、接收人、业务类型</text>
+  <text class="node-text" x="330" y="658" text-anchor="middle">先持久化，保证通知可回看</text>
+
+  <rect class="mq" x="590" y="540" width="300" height="170"/>
+  <text class="node-title" x="740" y="596" text-anchor="middle">im.push.user</text>
+  <text class="node-text" x="740" y="632" text-anchor="middle">推送目标用户消息</text>
+  <text class="node-text" x="740" y="658" text-anchor="middle">消息里带 userId 与通知体</text>
+
+  <rect class="node" x="990" y="540" width="320" height="170"/>
+  <text class="node-title" x="1150" y="596" text-anchor="middle">ImPushConsumer</text>
+  <text class="node-text" x="1150" y="632" text-anchor="middle">读取在线 session 映射</text>
+  <text class="node-text" x="1150" y="658" text-anchor="middle">判断目标用户是否在线</text>
+
+  <rect class="decision" x="1410" y="540" width="300" height="170"/>
+  <text class="node-title" x="1560" y="596" text-anchor="middle">Netty 长连接</text>
+  <text class="node-text" x="1560" y="632" text-anchor="middle">在线：实时推送到 Channel</text>
+  <text class="node-text" x="1560" y="658" text-anchor="middle">离线：保留未读，等下次拉取</text>
+
+  <path class="line" d="M1420 380 V460 H330 V528"/>
+  <text class="step" x="880" y="444" text-anchor="middle">4. 通知先落库，避免只推不存</text>
+
+  <path class="line" d="M490 625 H578"/>
+  <text class="step" x="534" y="610" text-anchor="middle">5. 转发到 IM 推送通道</text>
+
+  <path class="line" d="M890 625 H978"/>
+  <text class="step" x="934" y="610" text-anchor="middle">6. 查在线状态</text>
+
+  <path class="line" d="M1310 625 H1398"/>
+  <text class="step" x="1354" y="610" text-anchor="middle">7. 在线实时推送</text>
+
+  <text class="section" x="74" y="840">3. 通知中心与即时通讯分层，让生产者只关心“发通知”</text>
+
+  <rect class="note" x="120" y="880" width="500" height="180"/>
+  <text class="note-title" x="152" y="924">这张图说明什么</text>
+  <text class="note-text" x="152" y="958">- 订单、审核、关注都不直接操作 IM，而是统一投递到系统通知通道。</text>
+  <text class="note-text" x="152" y="986">- chat 负责入库和通知模型，im 只负责在线推送，这样分层更清晰。</text>
+  <text class="note-text" x="152" y="1014">- 即使用户离线，通知也不会丢，因为已经先落库。</text>
+
+  <rect class="note" x="680" y="880" width="500" height="180"/>
+  <text class="note-title" x="712" y="924">代码里能直接对上的点</text>
+  <text class="note-text" x="712" y="958">- OrderExpireJobHandler、AuditServiceImpl、FollowServiceImpl 都会发送系统通知消息。</text>
+  <text class="note-text" x="712" y="986">- ChatListener.consumeSystemNotice 消费后，SystemNoticeServiceImpl.createAndPush 会入库再 push。</text>
+  <text class="note-text" x="712" y="1014">- ImPushConsumer 根据在线用户映射决定是否立刻推送到 Netty Channel。</text>
+
+  <rect class="note" x="1240" y="880" width="490" height="180"/>
+  <text class="note-title" x="1272" y="924">展示建议</text>
+  <text class="note-text" x="1272" y="958">- 这张图很适合放在“消息可靠”亮点附近，说明你不仅有私聊，还有系统通知通道。</text>
+  <text class="note-text" x="1272" y="986">- 如果面试官问模块边界，这张图很好讲清楚 chat 和 im 的职责拆分。</text>
+  <text class="note-text" x="1272" y="1014">- 它也能补足之前私聊链路图没有覆盖的系统消息场景。</text>
+</svg>

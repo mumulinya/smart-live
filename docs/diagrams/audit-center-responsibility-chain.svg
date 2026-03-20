@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">审核中心责任链与业务回写链路</title>
+  <desc id="desc">展示各业务模块提交审核任务后，经由审核消息、敏感词检查、AI 初审、人工复核，再回写原业务状态并发送系统通知的主链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1052" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">审核中心责任链与业务回写链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：AuditListener.handleAuditCreate + AuditServiceImpl.handleAudit / applyAuditDecision + SensitiveWordAuditHandler + AiAuditHandler</text>
+
+  <text class="section" x="74" y="188">1. 业务侧提交审核任务并进入审核中心</text>
+
+  <rect class="node" x="70" y="220" width="320" height="150"/>
+  <text class="node-title" x="230" y="274" text-anchor="middle">博客 / 评价 / 店铺等业务</text>
+  <text class="node-text" x="230" y="308" text-anchor="middle">createAuditTask 生成审核单</text>
+  <text class="node-text" x="230" y="334" text-anchor="middle">并发送 audit.create 消息</text>
+
+  <rect class="mq" x="490" y="220" width="280" height="150"/>
+  <text class="node-title" x="630" y="274" text-anchor="middle">审核 MQ</text>
+  <text class="node-text" x="630" y="308" text-anchor="middle">AUDIT_EXCHANGE</text>
+  <text class="node-text" x="630" y="334" text-anchor="middle">创建审核任务消息</text>
+
+  <rect class="node" x="870" y="220" width="320" height="150"/>
+  <text class="node-title" x="1030" y="274" text-anchor="middle">AuditListener</text>
+  <text class="node-text" x="1030" y="308" text-anchor="middle">消费消息并做幂等校验</text>
+  <text class="node-text" x="1030" y="334" text-anchor="middle">调用 auditService.handleAudit</text>
+
+  <rect class="store" x="1290" y="220" width="320" height="150"/>
+  <text class="node-title" x="1450" y="274" text-anchor="middle">AuditTask</text>
+  <text class="node-text" x="1450" y="308" text-anchor="middle">持久化审核对象、业务类型</text>
+  <text class="node-text" x="1450" y="334" text-anchor="middle">状态从 PENDING 进入处理流</text>
+
+  <path class="line" d="M390 295 H478"/>
+  <text class="step" x="434" y="280" text-anchor="middle">1. 发送审核消息</text>
+
+  <path class="line" d="M770 295 H858"/>
+  <text class="step" x="814" y="280" text-anchor="middle">2. 异步消费并落任务</text>
+
+  <path class="line" d="M1190 295 H1278"/>
+  <text class="step" x="1234" y="280" text-anchor="middle">3. 准备进入责任链</text>
+
+  <text class="section" x="74" y="470">2. 责任链依次做敏感词、AI、人工复核</text>
+
+  <rect class="decision" x="140" y="520" width="290" height="160"/>
+  <text class="node-title" x="285" y="576" text-anchor="middle">敏感词审核</text>
+  <text class="node-text" x="285" y="612" text-anchor="middle">命中则直接 reject</text>
+  <text class="node-text" x="285" y="638" text-anchor="middle">未命中再继续后续审核</text>
+
+  <rect class="decision" x="510" y="520" width="300" height="160"/>
+  <text class="node-title" x="660" y="576" text-anchor="middle">AI 初审</text>
+  <text class="node-text" x="660" y="612" text-anchor="middle">blog / review 调 AI 审核</text>
+  <text class="node-text" x="660" y="638" text-anchor="middle">通过则待人工，失败则驳回</text>
+
+  <rect class="decision" x="890" y="520" width="300" height="160"/>
+  <text class="node-title" x="1040" y="576" text-anchor="middle">人工复核</text>
+  <text class="node-text" x="1040" y="612" text-anchor="middle">ManualAuditHandler 接管</text>
+  <text class="node-text" x="1040" y="638" text-anchor="middle">决定 approve / reject</text>
+
+  <rect class="store" x="1270" y="520" width="320" height="160"/>
+  <text class="node-title" x="1430" y="576" text-anchor="middle">AuditStrategy 回写</text>
+  <text class="node-text" x="1430" y="612" text-anchor="middle">applyAuditDecision 回调源服务</text>
+  <text class="node-text" x="1430" y="638" text-anchor="middle">更新业务状态与可见性</text>
+
+  <path class="line" d="M1450 370 V450 H285 V508"/>
+  <text class="step" x="870" y="434" text-anchor="middle">4. AuditTask 进入责任链</text>
+
+  <path class="line" d="M430 600 H498"/>
+  <text class="step" x="464" y="586" text-anchor="middle">5. 未命中继续</text>
+
+  <path class="line" d="M810 600 H878"/>
+  <text class="step" x="844" y="586" text-anchor="middle">6. 待人工或直接驳回</text>
+
+  <path class="line" d="M1190 600 H1258"/>
+  <text class="step" x="1224" y="586" text-anchor="middle">7. 回写源业务</text>
+
+  <text class="section" x="74" y="780">3. 驳回时发送系统通知，形成审核闭环</text>
+
+  <rect class="mq" x="390" y="820" width="300" height="150"/>
+  <text class="node-title" x="540" y="874" text-anchor="middle">系统通知 MQ</text>
+  <text class="node-text" x="540" y="908" text-anchor="middle">createRejectSystemNotice</text>
+  <text class="node-text" x="540" y="934" text-anchor="middle">构建驳回通知消息</text>
+
+  <rect class="node" x="790" y="820" width="300" height="150"/>
+  <text class="node-title" x="940" y="874" text-anchor="middle">chat / notice</text>
+  <text class="node-text" x="940" y="908" text-anchor="middle">系统通知入库并推送给用户</text>
+  <text class="node-text" x="940" y="934" text-anchor="middle">让发布者感知审核结果</text>
+
+  <path class="dash" d="M1430 680 V750 H540 V808"/>
+  <text class="step" x="980" y="734" text-anchor="middle">8. 驳回分支发送系统通知</text>
+
+  <path class="line" d="M690 895 H778"/>
+  <text class="step" x="734" y="880" text-anchor="middle">9. 通知入库并推送</text>
+
+  <rect class="note" x="1180" y="790" width="550" height="220"/>
+  <text class="note-title" x="1212" y="834">这张图适合怎么讲</text>
+  <text class="note-text" x="1212" y="868">- 它体现的不是单点审核，而是“审核中台”统一承接多业务的能力。</text>
+  <text class="note-text" x="1212" y="896">- 审核责任链把规则审核、AI 审核、人工审核拆开，便于后续扩展更多策略。</text>
+  <text class="note-text" x="1212" y="924">- 审核结果最终会回写源业务，并在驳回场景下通知到用户，闭环更完整。</text>
+</svg>

@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1320" viewBox="0 0 1900 1320" role="img" aria-labelledby="title desc">
+  <title id="title">首页热门榜单算分与热榜维护链路</title>
+  <desc id="desc">展示首页热门店铺榜、热门代金券榜、热门团购榜和热门博客榜如何由多类热度变化推入 calcQueue，经 XXL-JOB 增量重排和凌晨全量重建后，持续写回 Redis 热榜 ZSet，最终供首页四榜读取。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 21px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1900" height="1320" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1832" height="1252" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">首页热门榜单算分与热榜维护链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：SyncDataServiceImpl + ShopServiceImpl.syncSalesData + ProductServiceImpl.syncSalesData + HotRankJobHandler + FullRebuildJobHandler + Shop / Product / BlogHotRankStrategyImpl</text>
+
+  <text class="section" x="74" y="188">1. 热度变化先推入各自 calcQueue，而不是每次首页请求现场算分</text>
+
+  <rect class="store" x="70" y="230" width="510" height="200"/>
+  <text class="node-title" x="325" y="286" text-anchor="middle">店铺热榜候选</text>
+  <text class="node-text" x="325" y="322" text-anchor="middle">审核通过上架时先写入 SHOP_HOT_RANK_KEY</text>
+  <text class="node-text" x="325" y="348" text-anchor="middle">销量同步后 enqueueIds(SHOP_CALC_QUEUE_KEY)</text>
+  <text class="node-text" x="325" y="374" text-anchor="middle">点赞 / 评论 / 收藏回刷后也会继续推进热榜重算</text>
+
+  <rect class="store" x="690" y="230" width="510" height="200"/>
+  <text class="node-title" x="945" y="286" text-anchor="middle">商品双榜候选</text>
+  <text class="node-text" x="945" y="322" text-anchor="middle">审核通过后按 category 预写 voucher / deal 榜</text>
+  <text class="node-text" x="945" y="348" text-anchor="middle">销量同步后 enqueueIds(PRODUCT_CALC_QUEUE_KEY)</text>
+  <text class="node-text" x="945" y="374" text-anchor="middle">收藏等互动回刷后继续推进代金券 / 团购双榜维护</text>
+
+  <rect class="store" x="1310" y="230" width="510" height="200"/>
+  <text class="node-title" x="1565" y="286" text-anchor="middle">博客热榜候选</text>
+  <text class="node-text" x="1565" y="322" text-anchor="middle">点赞 / 评论 / 收藏同步后推入 BLOG_CALC_QUEUE_KEY</text>
+  <text class="node-text" x="1565" y="348" text-anchor="middle">热榜首次初始化时，也会把候选博客批量入队</text>
+  <text class="node-text" x="1565" y="374" text-anchor="middle">后续靠增量互动持续洗牌，不靠首页读取时重排</text>
+
+  <text class="section" x="74" y="510">2. XXL-JOB 增量重排：rename 临时队列，合并老榜 Top N，再重算分值</text>
+
+  <rect class="mq" x="90" y="550" width="340" height="180"/>
+  <text class="node-title" x="260" y="606" text-anchor="middle">calcQueue</text>
+  <text class="node-text" x="260" y="642" text-anchor="middle">SHOP_CALC_QUEUE_KEY</text>
+  <text class="node-text" x="260" y="668" text-anchor="middle">PRODUCT_CALC_QUEUE_KEY</text>
+  <text class="node-text" x="260" y="694" text-anchor="middle">BLOG_CALC_QUEUE_KEY</text>
+
+  <rect class="node" x="500" y="550" width="350" height="180"/>
+  <text class="node-title" x="675" y="606" text-anchor="middle">HotRankJobHandler</text>
+  <text class="node-text" x="675" y="642" text-anchor="middle">shopHotRankJobHandler</text>
+  <text class="node-text" x="675" y="668" text-anchor="middle">productHotRankJobHandler</text>
+  <text class="node-text" x="675" y="694" text-anchor="middle">blogHotRankJobHandler</text>
+
+  <rect class="node" x="920" y="550" width="340" height="180"/>
+  <text class="node-title" x="1090" y="606" text-anchor="middle">HotRankServiceImpl</text>
+  <text class="node-text" x="1090" y="642" text-anchor="middle">按 bizType 路由策略</text>
+  <text class="node-text" x="1090" y="668" text-anchor="middle">交给 HotRankStrategyFactory</text>
+  <text class="node-text" x="1090" y="694" text-anchor="middle">统一调 calculateAndRefreshRank</text>
+
+  <rect class="decision" x="1330" y="550" width="500" height="180"/>
+  <text class="node-title" x="1580" y="606" text-anchor="middle">增量重排核心动作</text>
+  <text class="node-text" x="1580" y="642" text-anchor="middle">rename(calcQueue, TEMP) 原子切批</text>
+  <text class="node-text" x="1580" y="668" text-anchor="middle">candidateIds = 活跃 ID + 老榜 Top 50</text>
+  <text class="node-text" x="1580" y="694" text-anchor="middle">批量拉资源后重算分值并写回 ZSet</text>
+
+  <path class="line" d="M430 640 H488"/>
+  <text class="step" x="459" y="624" text-anchor="middle">1. 定时取批</text>
+  <path class="line" d="M850 640 H908"/>
+  <text class="step" x="879" y="624" text-anchor="middle">2. 路由策略</text>
+  <path class="line" d="M1260 640 H1318"/>
+  <text class="step" x="1289" y="624" text-anchor="middle">3. 增量洗牌</text>
+
+  <text class="section" x="74" y="810">3. 三类首页榜单各自独立算分，再写回独立热榜 ZSet</text>
+
+  <rect class="store" x="70" y="850" width="560" height="220"/>
+  <text class="node-title" x="350" y="908" text-anchor="middle">店铺榜算分</text>
+  <text class="node-text" x="350" y="944" text-anchor="middle">base 60 + sold x 0.3 + score x 0.4 + comments x 0.2 + stars x 0.1</text>
+  <text class="node-text" x="350" y="970" text-anchor="middle">不做时间衰减，长期靠销量、口碑和收藏驱动</text>
+  <text class="node-text" x="350" y="996" text-anchor="middle">写回 RedisConstants.SHOP_HOT_RANK_KEY</text>
+
+  <rect class="store" x="670" y="850" width="560" height="220"/>
+  <text class="node-title" x="950" y="908" text-anchor="middle">商品双榜算分</text>
+  <text class="node-text" x="950" y="944" text-anchor="middle">base 60 / 80 + sold x 0.4 + stars x 0.3 + reviews x 0.2 + fans x 0.1</text>
+  <text class="node-text" x="950" y="970" text-anchor="middle">category=1 写 voucher 榜，category=2 写 deal 榜</text>
+  <text class="node-text" x="950" y="996" text-anchor="middle">秒杀商品冷启动分更高，但仍是双榜分治</text>
+
+  <rect class="store" x="1270" y="850" width="560" height="220"/>
+  <text class="node-title" x="1550" y="908" text-anchor="middle">博客榜算分</text>
+  <text class="node-text" x="1550" y="944" text-anchor="middle">base 50 + liked x 0.4 + comments x 0.3 + stared x 0.2 + timeDecay x 0.1</text>
+  <text class="node-text" x="1550" y="970" text-anchor="middle">30 天线性时间衰减，保证新内容有曝光机会</text>
+  <text class="node-text" x="1550" y="996" text-anchor="middle">写回 RedisConstants.BLOG_HOT_RANK_KEY</text>
+
+  <path class="dash" d="M1580 730 V780 H350 V838"/>
+  <text class="step" x="960" y="768" text-anchor="middle">4. 各榜单独立算分，不混成一个总榜</text>
+
+  <text class="section" x="74" y="1148">4. 凌晨全量重建兜底，首页读链路只负责取榜，不负责重算</text>
+
+  <rect class="node" x="100" y="1180" width="520" height="90"/>
+  <text class="node-title" x="360" y="1234" text-anchor="middle">FullRebuildJobHandler</text>
+  <text class="node-text" x="360" y="1260" text-anchor="middle">凌晨分批拉全量 ID，按 200 一批重算，删旧榜后重建新榜</text>
+
+  <rect class="decision" x="700" y="1180" width="520" height="90"/>
+  <text class="node-title" x="960" y="1234" text-anchor="middle">首页读取四榜</text>
+  <text class="node-text" x="960" y="1260" text-anchor="middle">热门店铺榜、热门代金券榜、热门团购榜、热门博客榜都直接读 Redis ZSet</text>
+
+  <rect class="note" x="1300" y="1158" width="530" height="112"/>
+  <text class="note-title" x="1332" y="1200">这张图适合怎么讲</text>
+  <text class="note-text" x="1332" y="1230">- 首页不是把所有内容揉成一个推荐池，而是四个独立热榜并行维护，再统一聚合展示。</text>
+  <text class="note-text" x="1332" y="1254">- 增量洗牌保证实时性，凌晨全量重建保证长期准确性。</text>
+
+  <path class="line" d="M620 1225 H688"/>
+  <text class="step" x="654" y="1210" text-anchor="middle">5. 全量兜底</text>
+  <path class="line" d="M1220 1225 H1288"/>
+  <text class="step" x="1254" y="1210" text-anchor="middle">6. 首页读取</text>
+</svg>

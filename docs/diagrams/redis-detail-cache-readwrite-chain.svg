@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1180" viewBox="0 0 1800 1180" role="img" aria-labelledby="title desc">
+  <title id="title">详情页缓存读写链路</title>
+  <desc id="desc">展示项目详情页如何通过 CacheClient 处理命中、空值防穿透、逻辑过期重建，以及业务写入后删除缓存等待下次重建的完整主链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1180" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1112" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">详情页缓存读写链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：ShopServiceImpl.queryById + CacheClient.queryWithLogicalExpireAndPassThrough + flashShopRedisCache / flashRedisBlogCache / deleteObject(cache:key)</text>
+
+  <text class="section" x="74" y="188">1. 读链路：详情查询统一走 CacheClient 三层防护</text>
+
+  <rect class="node" x="70" y="220" width="280" height="160"/>
+  <text class="node-title" x="210" y="278" text-anchor="middle">详情页请求</text>
+  <text class="node-text" x="210" y="314" text-anchor="middle">店铺、博客、商品、用户详情</text>
+  <text class="node-text" x="210" y="340" text-anchor="middle">都会先查缓存</text>
+
+  <rect class="node" x="430" y="220" width="340" height="160"/>
+  <text class="node-title" x="600" y="278" text-anchor="middle">Service.queryById</text>
+  <text class="node-text" x="600" y="314" text-anchor="middle">ShopService / BlogService / ProductService</text>
+  <text class="node-text" x="600" y="340" text-anchor="middle">统一委托给 CacheClient</text>
+
+  <rect class="store" x="850" y="220" width="340" height="160"/>
+  <text class="node-title" x="1020" y="278" text-anchor="middle">Redis 详情 Key</text>
+  <text class="node-text" x="1020" y="314" text-anchor="middle">cache:shop:* / cache:blog:* / cache:product:*</text>
+  <text class="node-text" x="1020" y="340" text-anchor="middle">值是 RedisData 或空串占位</text>
+
+  <rect class="decision" x="1270" y="220" width="420" height="160"/>
+  <text class="node-title" x="1480" y="278" text-anchor="middle">CacheClient 判定</text>
+  <text class="node-text" x="1480" y="314" text-anchor="middle">命中新鲜数据、命中空值、还是命中过期数据</text>
+  <text class="node-text" x="1480" y="340" text-anchor="middle">必要时加锁并异步重建</text>
+
+  <path class="line" d="M350 300 H418"/>
+  <text class="step" x="384" y="286" text-anchor="middle">1. 请求进服务层</text>
+
+  <path class="line" d="M770 300 H838"/>
+  <text class="step" x="804" y="286" text-anchor="middle">2. 先查详情缓存</text>
+
+  <path class="line" d="M1190 300 H1258"/>
+  <text class="step" x="1224" y="286" text-anchor="middle">3. 判断命中类型</text>
+
+  <text class="section" x="74" y="470">2. 三种分支：新鲜命中、空值防穿透、过期后异步重建</text>
+
+  <rect class="store" x="90" y="520" width="320" height="180"/>
+  <text class="node-title" x="250" y="580" text-anchor="middle">新鲜命中</text>
+  <text class="node-text" x="250" y="616" text-anchor="middle">RedisData.expireTime 还没到</text>
+  <text class="node-text" x="250" y="642" text-anchor="middle">直接返回详情对象</text>
+
+  <rect class="decision" x="480" y="520" width="320" height="180"/>
+  <text class="node-title" x="640" y="580" text-anchor="middle">空值命中</text>
+  <text class="node-text" x="640" y="616" text-anchor="middle">缓存里是空串</text>
+  <text class="node-text" x="640" y="642" text-anchor="middle">直接返回 null，避免穿透</text>
+
+  <rect class="node" x="870" y="520" width="340" height="180"/>
+  <text class="node-title" x="1040" y="580" text-anchor="middle">数据库回源</text>
+  <text class="node-text" x="1040" y="616" text-anchor="middle">缓存 miss 或首次访问</text>
+  <text class="node-text" x="1040" y="642" text-anchor="middle">从业务表查 status / audit_status 正常数据</text>
+
+  <rect class="mq" x="1280" y="520" width="410" height="180"/>
+  <text class="node-title" x="1485" y="580" text-anchor="middle">逻辑过期重建</text>
+  <text class="node-text" x="1485" y="616" text-anchor="middle">命中过期数据时 tryLock</text>
+  <text class="node-text" x="1485" y="642" text-anchor="middle">返回旧数据，同时线程池异步 setWithLogicalExpire</text>
+
+  <path class="dash" d="M1480 380 V470 H250 V508"/>
+  <text class="step" x="900" y="454" text-anchor="middle">4. 未过期：直接返回，最快路径</text>
+
+  <path class="dash" d="M1480 380 V500 H640 V508"/>
+  <text class="step" x="1120" y="484" text-anchor="middle">5. 空值占位：2 分钟内拦住不存在对象</text>
+
+  <path class="line" d="M1480 380 V470 H1040 V508"/>
+  <text class="step" x="1260" y="454" text-anchor="middle">6. 首次 miss：查库并写回缓存</text>
+
+  <path class="line" d="M1480 380 V508"/>
+  <text class="step" x="1480" y="454" text-anchor="middle">7. 过期：返回旧值并异步重建</text>
+
+  <text class="section" x="74" y="810">3. 写链路：更新业务数据后只删缓存，让下一次读请求自然重建</text>
+
+  <rect class="node" x="160" y="850" width="340" height="180"/>
+  <text class="node-title" x="330" y="910" text-anchor="middle">后台更新 / 审核通过 / 发布</text>
+  <text class="node-text" x="330" y="946" text-anchor="middle">店铺、博客、商品状态变化</text>
+  <text class="node-text" x="330" y="972" text-anchor="middle">或内容被编辑、重新发布</text>
+
+  <rect class="decision" x="610" y="850" width="320" height="180"/>
+  <text class="node-title" x="770" y="910" text-anchor="middle">删详情缓存</text>
+  <text class="node-text" x="770" y="946" text-anchor="middle">flashShopRedisCache / flashRedisBlogCache</text>
+  <text class="node-text" x="770" y="972" text-anchor="middle">deleteObject(cache:key)</text>
+
+  <rect class="store" x="1040" y="850" width="320" height="180"/>
+  <text class="node-title" x="1200" y="910" text-anchor="middle">等待下一次读请求</text>
+  <text class="node-text" x="1200" y="946" text-anchor="middle">不主动同步整页缓存</text>
+  <text class="node-text" x="1200" y="972" text-anchor="middle">由下一次读取自然回填</text>
+
+  <rect class="store" x="1470" y="850" width="220" height="180"/>
+  <text class="node-title" x="1580" y="910" text-anchor="middle">新详情值</text>
+  <text class="node-text" x="1580" y="946" text-anchor="middle">重新带逻辑过期</text>
+  <text class="node-text" x="1580" y="972" text-anchor="middle">回到缓存层</text>
+
+  <path class="line" d="M500 940 H598"/>
+  <text class="step" x="549" y="926" text-anchor="middle">8. 写后删缓存</text>
+
+  <path class="line" d="M930 940 H1028"/>
+  <text class="step" x="979" y="926" text-anchor="middle">9. 下次读再重建</text>
+
+  <path class="dash" d="M1360 940 H1458"/>
+  <text class="step" x="1409" y="926" text-anchor="middle">10. 重新写入详情缓存</text>
+
+  <rect class="note" x="70" y="1060" width="520" height="90"/>
+  <text class="note-title" x="102" y="1098">这张图最值得讲的点</text>
+  <text class="note-text" x="102" y="1126">- 详情页不是简单 GET / SET，而是“空值防穿透 + 逻辑过期 + 互斥锁重建 + 写后删缓存”的组合拳。</text>
+
+  <rect class="note" x="650" y="1060" width="520" height="90"/>
+  <text class="note-title" x="682" y="1098">为什么写后删缓存</text>
+  <text class="note-text" x="682" y="1126">- 因为详情对象字段多、更新源多，直接强刷缓存更容易写脏；删掉后由读流量自然回填更稳。</text>
+
+  <rect class="note" x="1230" y="1060" width="500" height="90"/>
+  <text class="note-title" x="1262" y="1098">适合挂在哪</text>
+  <text class="note-text" x="1262" y="1126">- 这张图适合放在性能优化、缓存设计、面试八股“缓存三大问题”对应答案附近。</text>
+</svg>

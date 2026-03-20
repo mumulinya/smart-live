@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1220" viewBox="0 0 1800 1220" role="img" aria-labelledby="title desc">
+  <title id="title">XXL-JOB 定时任务体系总览</title>
+  <desc id="desc">展示 smartLive 项目中 26 个 XXL-JOB 定时任务如何分成订单生命周期、秒杀生命周期、互动同步、热榜增量、热榜全量重建、销量同步六大类，并分别落到 Redis、MySQL、MQ 和热榜维护场景。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1220" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1152" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">XXL-JOB 定时任务体系总览</text>
+  <text class="subtitle" x="74" y="132">对应代码：OrderExpireJobHandler + ProductSeckillJobHandler + InteractionSyncXxlJob + HotRankJobHandler + FullRebuildJobHandler + ProductSalesSyncJob + ShopSalesSyncJob</text>
+
+  <text class="section" x="74" y="188">1. 全仓库调度统一走 XXL-JOB，当前共 26 个任务</text>
+
+  <rect class="node" x="600" y="220" width="600" height="150"/>
+  <text class="node-title" x="900" y="276" text-anchor="middle">XXL-JOB Admin / 执行器</text>
+  <text class="node-text" x="900" y="312" text-anchor="middle">统一扫描 @XxlJob 入口，按不同 CRON 调度任务</text>
+  <text class="node-text" x="900" y="338" text-anchor="middle">大部分 Job 内部再交给 executorService 异步执行</text>
+
+  <text class="section" x="74" y="438">2. 26 个任务分成 6 组，分别负责生命周期、同步与榜单维护</text>
+
+  <rect class="node" x="70" y="470" width="500" height="190"/>
+  <text class="node-title" x="320" y="526" text-anchor="middle">订单生命周期任务（2）</text>
+  <text class="node-text" x="320" y="562" text-anchor="middle">orderSoonExpireJobHandler / orderExpireJobHandler</text>
+  <text class="node-text" x="320" y="588" text-anchor="middle">扫描已支付且临期或已过期订单</text>
+  <text class="node-text" x="320" y="614" text-anchor="middle">发送系统通知，并触发 expired / 退款补偿逻辑</text>
+
+  <rect class="mq" x="650" y="470" width="500" height="190"/>
+  <text class="node-title" x="900" y="526" text-anchor="middle">秒杀生命周期任务（4）</text>
+  <text class="node-text" x="900" y="562" text-anchor="middle">seckillPreHeat / SoonEnd / Recovery / StockCheck</text>
+  <text class="node-text" x="900" y="588" text-anchor="middle">预热 Redis 秒杀库存，临期营销提醒，结束后清理缓存</text>
+  <text class="node-text" x="900" y="614" text-anchor="middle">并在库存校对任务里修正 MySQL 与 Redis 偏差</text>
+
+  <rect class="store" x="1230" y="470" width="500" height="190"/>
+  <text class="node-title" x="1480" y="526" text-anchor="middle">互动同步任务（7）</text>
+  <text class="node-text" x="1480" y="562" text-anchor="middle">All / Like / Comment / Star / Review / Follow / Fans</text>
+  <text class="node-text" x="1480" y="588" text-anchor="middle">把 Redis 热互动数据按业务类型批量回刷 MySQL</text>
+  <text class="node-text" x="1480" y="614" text-anchor="middle">承接点赞、评论、收藏、评价、关注、粉丝最终一致性</text>
+
+  <rect class="decision" x="70" y="730" width="500" height="190"/>
+  <text class="node-title" x="320" y="786" text-anchor="middle">热榜增量任务（5）</text>
+  <text class="node-text" x="320" y="822" text-anchor="middle">blog / shop / product / review / comment HotRank</text>
+  <text class="node-text" x="320" y="848" text-anchor="middle">按业务类型执行 calcHotRankDataByBizType</text>
+  <text class="node-text" x="320" y="874" text-anchor="middle">从 calcQueue 洗牌并更新 Redis 榜单分值</text>
+
+  <rect class="decision" x="650" y="730" width="500" height="190"/>
+  <text class="node-title" x="900" y="786" text-anchor="middle">热榜全量重建任务（6）</text>
+  <text class="node-text" x="900" y="822" text-anchor="middle">allFullRebuild + blog / shop / product / review / comment</text>
+  <text class="node-text" x="900" y="848" text-anchor="middle">凌晨全量拉取对象并重建完整榜单</text>
+  <text class="node-text" x="900" y="874" text-anchor="middle">兜底修正长期偏差、遗漏对象和脏数据</text>
+
+  <rect class="store" x="1230" y="730" width="500" height="190"/>
+  <text class="node-title" x="1480" y="786" text-anchor="middle">销量同步任务（2）</text>
+  <text class="node-text" x="1480" y="822" text-anchor="middle">productSalesSyncJob / shopSalesSyncJob</text>
+  <text class="node-text" x="1480" y="848" text-anchor="middle">把商品销量、店铺销量从 Redis 回写 MySQL</text>
+  <text class="node-text" x="1480" y="874" text-anchor="middle">为经营分析、排行榜和详情页展示提供稳定基线</text>
+
+  <path class="line" d="M900 370 V420 H320 V458"/>
+  <text class="step" x="540" y="410" text-anchor="middle">1. 订单任务</text>
+
+  <path class="line" d="M900 370 V458"/>
+  <text class="step" x="900" y="410" text-anchor="middle">2. 秒杀任务</text>
+
+  <path class="line" d="M900 370 V420 H1480 V458"/>
+  <text class="step" x="1190" y="410" text-anchor="middle">3. 互动同步任务</text>
+
+  <path class="dash" d="M320 660 V718"/>
+  <text class="step" x="320" y="706" text-anchor="middle">4. 热榜增量</text>
+
+  <path class="dash" d="M900 660 V718"/>
+  <text class="step" x="900" y="706" text-anchor="middle">5. 热榜重建</text>
+
+  <path class="dash" d="M1480 660 V718"/>
+  <text class="step" x="1480" y="706" text-anchor="middle">6. 销量同步</text>
+
+  <text class="section" x="74" y="988">3. 这些定时任务最终落到四类系统结果</text>
+
+  <rect class="store" x="80" y="1020" width="360" height="120"/>
+  <text class="node-title" x="260" y="1068" text-anchor="middle">Redis 预热与缓存治理</text>
+  <text class="node-text" x="260" y="1096" text-anchor="middle">秒杀库存预热、缓存清理、库存校对</text>
+
+  <rect class="store" x="500" y="1020" width="360" height="120"/>
+  <text class="node-title" x="680" y="1068" text-anchor="middle">MySQL 最终一致性</text>
+  <text class="node-text" x="680" y="1096" text-anchor="middle">互动计数、商品销量、店铺销量回刷持久层</text>
+
+  <rect class="mq" x="920" y="1020" width="360" height="120"/>
+  <text class="node-title" x="1100" y="1068" text-anchor="middle">MQ / Chat / Feed 触达</text>
+  <text class="node-text" x="1100" y="1096" text-anchor="middle">订单临期提醒、秒杀临期营销、系统通知下发</text>
+
+  <rect class="decision" x="1340" y="1020" width="360" height="120"/>
+  <text class="node-title" x="1520" y="1068" text-anchor="middle">热榜维护与运营兜底</text>
+  <text class="node-text" x="1520" y="1096" text-anchor="middle">增量洗牌 + 凌晨重建，保证榜单长期稳定</text>
+</svg>

@@ -1,4 +1,4 @@
-# SmartLive 开源接入说明
+﻿# SmartLive 开源接入说明
 
 这份文档回答三个问题：
 
@@ -24,13 +24,20 @@
 | [../CONTRIBUTING.md](../CONTRIBUTING.md) | 了解贡献方式、分支约定、提交格式和自查清单 | 准备提 PR 的人 |
 | [../SECURITY.md](../SECURITY.md) | 明确敏感配置、密钥注入、账号信息的边界 | 所有会修改配置的人 |
 
-## 2. 第一次接入建议
+## 2. 按目标阅读更高效
+
+- **第一次认识项目**：先看 [../README.md](../README.md)，再看 `smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop -> smartLive-search`
+- **想看交易闭环**：优先读 `smartLive-product -> smartLive-order -> smartLive-wallet -> smartLive-points`，再结合 README 里的交易链路图
+- **想看社交与推荐**：优先读 `smartLive-blog -> smartLive-interaction -> smartLive-index -> smartLive-search`，再结合 `SHOWCASE.md` 的 Feed / 热榜图
+- **想看 AI 与治理链路**：优先读 `smartLive-ai -> smartLive-audit -> smartLive-chat -> smartLive-im`，再补向量检索、审核责任链和通知推送链路
+
+## 3. 第一次接入建议
 
 - 优先走本地开发模式，不要一开始就把 `docker/` 目录当作唯一事实来源。
 - 先跑“最小可运行链路”，确认登录、店铺、搜索和后台管理可用后，再补 AI、审核、积分、支付等扩展能力。
 - `docker/` 下仍保留部分历史模块命名与复制脚本，使用前要和当前 Maven 模块、当前端口、当前 JAR 名称逐项核对。
 
-## 3. 两条启动路径
+## 4. 两条启动路径
 
 ### 路径一：最小可运行链路
 
@@ -48,7 +55,7 @@
 - 额外模块：`smartLive-product`、`smartLive-order`、`smartLive-interaction`、`smartLive-chat`、`smartLive-im`、`smartLive-ai`、`smartLive-wallet`、`smartLive-points`、`smartLive-blog`、`smartLive-audit`、`smartLive-file`
 - 如果要体验 RAG、向量检索、异步审核、积分抽奖、消息通知或延迟队列链路，必须补齐这些依赖
 
-## 4. 推荐启动顺序
+## 5. 推荐启动顺序
 
 ### 最小链路
 
@@ -76,7 +83,7 @@
 11. `smartLive-file`
 12. `smartLive-index`
 
-## 5. 依赖矩阵
+## 6. 依赖矩阵
 
 | 能力 | 必需依赖 | 备注 |
 |:---|:---|:---|
@@ -88,14 +95,14 @@
 | 定时任务 | XXL-JOB、Nacos | 依赖 `xxl-job-common.yml` |
 | 流量治理 | Sentinel、Nacos | 可按需启用 |
 
-## 6. 配置来源
+## 7. 配置来源
 
 - 本地端口、基础应用名、部分默认连接参数位于各模块的 `bootstrap.yml`。
 - 共享配置和业务配置主要通过 Nacos 提供，初始化数据见 `sql/ry_config_20250902.sql`。
 - `order`、`product`、`interaction` 等模块还依赖 `xxl-job-common.yml`；如果缺少这个 dataId，定时任务相关能力无法正常运行。
 - Docker 相关构建与复制逻辑位于 `docker/` 目录，但其中存在历史脚本，请在使用前自行核对。
 
-## 7. 实际服务端口
+## 8. 实际服务端口
 
 | 服务 | 端口 |
 |:---|:---:|
@@ -120,7 +127,7 @@
 | smartLive-monitor | 9100 |
 | smartLive-sentinel | 8718 |
 
-## 8. 第一天建议验证什么
+## 9. 第一天建议验证什么
 
 - 网关可访问，登录鉴权可用。
 - 用户、店铺、搜索三类基础接口可正常返回。
@@ -128,7 +135,7 @@
 - RabbitMQ、Redis、MySQL 连接日志正常，没有残留 `127.0.0.1` 的错误配置。
 - 如果补了搜索或 AI，确认 Elasticsearch、Milvus 相关连接正常。
 
-## 9. AI 密钥与敏感配置
+## 10. AI 密钥与敏感配置
 
 不要把真实 API key、数据库密码或外网可用的测试账号直接提交到仓库。
 
@@ -144,7 +151,7 @@
 - `RABBITMQ_HOST`
 - `NACOS_HOST`
 
-## 10. 已知注意事项
+## 11. 已知注意事项
 
 - `bin/run-*.bat` 仍保留旧的 `ruoyi-*` 路径，当前不应作为对外主推荐启动方式。
 - `docker/copy.sh`、`docker/deploy.sh` 和 `docker-compose.yml` 中仍有 `marketing`、`map` 等历史命名，使用前请先校对。

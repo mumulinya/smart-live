@@ -1,10 +1,10 @@
-<div align="center">
+﻿<div align="center">
 
 # 🏙️ SmartLive 智评生活
 
-**基于 Spring Cloud Alibaba 的智慧商户微服务平台**
+**基于 Spring Cloud Alibaba，覆盖交易、社交、热榜与 AI/RAG 的本地生活微服务平台**
 
-帮助本地商户解决引流难题，为用户提供智能化的消费决策体验
+聚焦用户发现、决策下单、履约评价、商家经营与内容治理，展示一套完整业务闭环如何工程化落地
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.0-blue.svg)](https://spring.io/projects/spring-cloud)
@@ -48,64 +48,46 @@
 
 ## <a id="项目简介"></a>📖 项目简介
 
-> 🙋 **个人独立项目声明**：本项目从零开始由作者**个人独立设计、编码并持续维护**，
-> 非团队协作或培训项目，有完整 Git 提交记录，可现场代码走查。
+> 🙋 **个人独立项目声明**：本项目由作者从零开始独立设计、编码并持续维护，
+> 非培训项目或拼接式 Demo，仓库内保留了完整的开发与演进记录。
 
 ### 🎯 项目定位
 
-**SmartLive（智评生活）** 是一个**面向本地生活服务的企业级微服务平台**，旨在通过 **AI 智能推荐 + 社交互动 + 内容治理** 的组合拳，解决本地商户"引流难、转化低"和用户"决策复杂、信息过载"的双边痛点。
+**SmartLive（智评生活）** 是一个面向**本地生活服务场景**的微服务平台，围绕“**用户发现 -> 决策下单 -> 履约评价 -> 社交互动 -> 商家经营**”构建完整业务闭环。  
+它不是单一功能演示，而是把**交易、搜索、社交、审核、IM、支付、积分、热榜、AI/RAG** 等能力放进同一套可运行系统里。
 
-### 💼 业务规模
+### 🧩 这个仓库覆盖什么
 
-该平台采用**微服务架构**全量拆分，包含：
-- **18+ 核心业务模块**（用户、店铺、商品、订单、支付、评论、博客、AI、IM 等）
-- **6 大核心功能域**：商户展示、AI 智能推荐、社交互动、即时通讯、营销下单、内容安全
-- **2 端用户支持**：B 端商家管理 + C 端消费者社交
-- **完整的 ToB/ToC 业务闭环**：从发现 → 决策 → 交易 → 评价 → 社交互动
+- **后端微服务主仓库**：覆盖用户、店铺、商品、订单、钱包、互动、博客、搜索、审核、AI、IM 等 **18+** 业务模块。
+- **B/C 双端业务闭环**：既有用户侧的找店、下单、评价、博客、聊天与 AI 问答，也有商家侧的商品管理、经营分析、差评回复与内容治理。
+- **多中间件协同**：Redis、RabbitMQ、Elasticsearch、Milvus、MinIO、XXL-JOB、Nacos、Gateway、Sentinel、Seata 等共同支撑核心链路。
+- **仓库边界清晰**：当前仓库主要是后端与基础设施编排，前端管理端和用户端仓库入口见后文“项目仓库”。
 
-### ⚙️ 技术规模
+### 🔍 开源阅读价值
 
-**后端架构：**
-- 🏗️ **微服务数量**：18+ 个高内聚、低耦合的独立服务
-- 📦 **代码规模**：30,000+ 行核心业务代码、5,000+ 行单元测试
-- 🔄 **中间件集成**：Nacos + Gateway + Sentinel + Seata + RabbitMQ + Redis + Elasticsearch + Milvus 等 10+ 个企业级中间件
-- 📊 **Git 提交**：200+ 条完整的开发历史记录
+| 维度 | 内容 |
+|------|------|
+| 业务范围 | 覆盖本地生活场景中的发现、交易、履约、评价、社交、经营分析与平台治理 |
+| 技术主题 | 微服务拆分、Redis 分层缓存、消息可靠投递、秒杀与订单补偿、热榜计算、AI/RAG 集成 |
+| 文档资产 | 首页导览图、业务链路图、Redis 设计图、XXL-JOB 调度图、真实页面截图 |
+| 适合人群 | 想看完整 Java 微服务项目、准备面试复盘、或想学习“业务闭环 + 工程化设计”落地方式的人 |
 
-**前端覆盖：**
-- 💻 **后台管理端**：Vue + Element UI（商家、运营、管理员）
-- 📱 **用户前台**：Vue 响应式 + UniApp 多端（Web/App/小程序）
+### 📏 项目规模
 
-### 🚀 核心创新点
+| 维度 | 数值 | 说明 |
+|------|------|------|
+| 核心业务模块 | **18+** | 用户、店铺、商品、订单、博客、互动、搜索、AI、IM 等 |
+| 核心能力域 | **6 大类** | 发现推荐、交易履约、社交互动、内容治理、经营分析、基础设施 |
+| 端侧覆盖 | **2 端** | B 端商家管理 + C 端消费者体验 |
+| 核心业务代码 | **30,000+ 行** | 以服务端业务逻辑为主 |
+| 单元测试代码 | **5,000+ 行** | 覆盖主要交易、互动与基础能力 |
+| Git 提交记录 | **200+** | 可回溯完整开发过程 |
 
-1. **极致性能优化**（相比行业平均水平）
-   - 列表查询性能提升 **40 倍**（500ms → 25ms）
-   - 秒杀系统支持 **3,200+ QPS**（单机无超卖）
-   - IM 长连接支持 **10 万+ 并发**（单节点）
+### ✨ 为什么值得继续往下看
 
-2. **智能化核心**
-   - **3 套 AI Agent 方案**（基础、进阶、协作）
-   - **4 大商家经营场景**（回复、建议、文案、分析）
-   - **RAG 向量检索**（Milvus + 3 个独立 VectorStore）
-
-3. **企业级架构设计**
-   - **分布式事务一致性**：Seata 全流程闭环
-   - **数据多源同步**：RabbitMQ + XXL-JOB 保证最终一致性
-   - **灾难恢复**：死信队列 + 定时对账的完整补偿机制
-
-4. **社交互动创新**
-   - **基于 Redis ZSet 的滚动分页**：完美解决传统分页的数据偏移问题
-   - **分层缓存架构**：ZSet 存列表 + String 存详情 + 计数器分离
-   - **推拉结合 Feed 流**：支持百万级粉丝的毫秒级写扩散
-
-### 📈 核心指标
-
-| 指标 | 达成值 | 说明 |
-|------|--------|------|
-| 系统可用性 | **99.9%** | 微服务分布式架构冗余 |
-| 消息可靠性 | **99.99%** | MQ + 死信队列 + 对账机制 |
-| 缓存命中率 | **95%+** | 分层缓存架构优化 |
-| 代码测试覆盖 | **70%+** | 单元测试完整覆盖核心业务 |
-| 部署时间 | **3 分钟** | 增量部署脚本优化（原 45 分钟） |
+- 不是只做“登录 + CRUD”的展示型项目，而是把多业务域和多中间件真正串成闭环。
+- 同时覆盖 **ToC 用户体验、ToB 商家经营、平台审核治理** 三条线，项目视角更完整。
+- 文档里已经补齐了**业务链路、缓存设计、调度体系、截图导览**，阅读成本比传统大仓库低很多。
 
 ### 👨‍💻 个人贡献亮点（本项目核心设计与实现）
 
@@ -610,58 +592,78 @@ bin/clean.bat              # 清理构建产物
 
 ## <a id="项目结构"></a>📁 项目结构
 
-```
-com.smartLive
-├── smartLive-gateway              // 网关模块 [8080]
+下面只展示与阅读项目最相关的目录，省略 `.idea`、`logs`、`arthas-output` 等环境或运行时目录。
+
+```text
+smart-live-Cloud
+├── .github                        // Issue / PR 模板与 Actions 配置
+├── docs                           // 开源文档、链路图、截图导览
+│   ├── diagrams                                   // SVG / PNG 业务链路图
+│   └── screenshots                                // 页面截图与架构图
+├── smartLive-gateway              // API 网关 [8080]
 ├── smartLive-auth                 // 认证中心 [9200]
-├── smartLive-api                  // 接口模块（Feign 客户端、DTO、VO）
-│       ├── smartLive-api-blog                     // 博客接口
-│       ├── smartLive-api-chat                     // 聊天接口
-│       ├── smartLive-api-interaction              // 互动接口
-│       ├── smartLive-api-order                    // 订单接口
-│       ├── smartLive-api-points                   // 积分接口
-│       ├── smartLive-api-product                  // 商品接口
-│       ├── smartLive-api-shop                     // 店铺接口
-│       ├── smartLive-api-system                   // 系统接口
-│       └── smartLive-api-user                     // 用户接口
-├── smartLive-common               // 通用模块
-│       ├── smartLive-common-core                  // 核心工具
-│       ├── smartLive-common-datascope             // 数据权限
-│       ├── smartLive-common-datasource            // 多数据源
-│       ├── smartLive-common-log                   // 日志记录
-│       ├── smartLive-common-redis                 // 缓存服务
-│       ├── smartLive-common-rabbitmq              // 消息队列
-│       ├── smartLive-common-seata                 // 分布式事务
-│       ├── smartLive-common-security              // 安全认证
-│       ├── smartLive-common-sensitive             // 数据脱敏
-│       ├── smartLive-common-swagger               // API 文档
-│       └── smartLive-common-xxl                   // XXL-JOB 定时任务
-├── smartLive-modules              // 业务模块
-│       ├── smartLive-ai                           // AI 智能模块 [9213]
-│       ├── smartLive-audit                        // 审核模块
-│       ├── smartLive-blog                         // 博客笔记 [9211]
-│       ├── smartLive-chat                         // 即时通讯 [9210]
-│       ├── smartLive-file                         // 文件服务 [9209]
-│       ├── smartLive-im                           // IM 消息 [9214]
-│       ├── smartLive-index                        // 首页聚合 [9208]
-│       ├── smartLive-interaction                  // 社交互动 [9207]
-│       ├── smartLive-order                        // 订单管理 [9205]
-│       ├── smartLive-product                      // 商品管理 [9206]
-│       ├── smartLive-points                       // 积分管理 [9215]
-│       ├── smartLive-search                       // 搜索引擎 [9204]
-│       ├── smartLive-shop                         // 店铺管理 [9203]
-│       ├── smartLive-system                       // 系统管理 [9202]
-│       ├── smartLive-user                         // 用户中心 [9201]
-│       └── smartLive-wallet                       // 钱包支付 [9216]
+├── smartLive-api                  // Feign 接口、DTO、VO 定义
+│   ├── smartLive-api-ai                           // AI 接口
+│   ├── smartLive-api-blog                         // 博客接口
+│   ├── smartLive-api-chat                         // 聊天接口
+│   ├── smartLive-api-interaction                  // 互动接口
+│   ├── smartLive-api-order                        // 订单接口
+│   ├── smartLive-api-points                       // 积分接口
+│   ├── smartLive-api-product                      // 商品接口
+│   ├── smartLive-api-shop                         // 店铺接口
+│   ├── smartLive-api-system                       // 系统接口
+│   └── smartLive-api-user                         // 用户接口
+├── smartLive-common               // 通用基础设施
+│   ├── smartLive-common-core                      // 核心工具与公共配置
+│   ├── smartLive-common-datascope                 // 数据权限
+│   ├── smartLive-common-datasource                // 多数据源
+│   ├── smartLive-common-log                       // 日志记录
+│   ├── smartLive-common-rabbitmq                  // MQ 封装
+│   ├── smartLive-common-redis                     // Redis 封装
+│   ├── smartLive-common-seata                     // 分布式事务
+│   ├── smartLive-common-security                  // 安全认证
+│   ├── smartLive-common-sensitive                 // 敏感词 / 脱敏能力
+│   ├── smartLive-common-swagger                   // API 文档
+│   └── smartLive-common-xxl                       // XXL-JOB 定时任务基座
+├── smartLive-modules              // 核心业务模块
+│   ├── smartLive-ai                               // AI 智能 [9213]
+│   ├── smartLive-audit                            // 审核中心 [9212]
+│   ├── smartLive-blog                             // 博客笔记 [9211]
+│   ├── smartLive-chat                             // 聊天会话 [9210]
+│   ├── smartLive-file                             // 文件服务 [9209]
+│   ├── smartLive-im                               // IM 推送 [9214]
+│   ├── smartLive-index                            // 首页聚合 [9208]
+│   ├── smartLive-interaction                      // 互动中心 [9207]
+│   ├── smartLive-order                            // 订单管理 [9205]
+│   ├── smartLive-points                           // 积分管理 [9215]
+│   ├── smartLive-product                          // 商品管理 [9206]
+│   ├── smartLive-search                           // 搜索引擎 [9204]
+│   ├── smartLive-shop                             // 店铺管理 [9203]
+│   ├── smartLive-system                           // 系统管理 [9202]
+│   ├── smartLive-user                             // 用户中心 [9201]
+│   └── smartLive-wallet                           // 钱包支付 [9216]
 ├── smartLive-visual               // 图形化管理
-│       └── smartLive-visual-monitor               // 监控中心 [9100]
-├── smartLive-sentinel             // 限流控制台 [8718]
-├── smartLive-seata-server         // 分布式事务服务端 [7091]
-├── docker                         // Docker 编排
-├── sql                            // 数据库脚本
-├── bin                            // 启动脚本
-└── pom.xml                        // 父 POM
+│   └── smartLive-monitor                          // 监控中心 [9100]
+├── smartLive-sentinel             // Sentinel 控制台 [8718]
+├── smartLive-seata-server         // Seata Server [7091]
+├── arthas                         // Arthas 诊断工具与脚本
+├── bin                            // 本地启动 / 部署脚本
+├── docker                         // Docker 编排与镜像脚本
+├── seata                          // Seata 本地配置与运行目录
+├── skywalking                     // SkyWalking 本地链路追踪环境
+├── sql                            // 数据库初始化脚本
+├── CONTRIBUTING.md                // 贡献约定
+├── SECURITY.md                    // 安全说明
+├── README.md                      // 首页文档
+└── pom.xml                        // Maven 父工程
 ```
+
+**推荐阅读顺序：**
+
+- **第一次认识项目**：`smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop -> smartLive-search`
+- **想看交易闭环**：`smartLive-product -> smartLive-order -> smartLive-wallet -> smartLive-points`
+- **想看社交与推荐**：`smartLive-blog -> smartLive-interaction -> smartLive-index -> smartLive-search`
+- **想看 AI 与治理链路**：`smartLive-ai -> smartLive-audit -> smartLive-chat -> smartLive-im`
 
 ## <a id="技术选型理由"></a>🤔 技术选型理由 - 为什么选这些而不是其他？
 
@@ -712,26 +714,117 @@ com.smartLive
 
 ## <a id="核心业务链路"></a>🌊 核心业务链路
 
-README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后发糊。下面保留每条链路的阅读价值和高清原图入口；如果你想按业务分组查看，可以直接看 [docs/SHOWCASE.md](docs/SHOWCASE.md)。其中最后补上的 5 张是 SVG，可直接放大看，不会发糊。
+README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后发糊。下面统一提供双入口：`SVG` 看主链路展示，`PNG` 看更细的历史设计图；如果你想按业务分组查看，可以直接看 [docs/SHOWCASE.md](docs/SHOWCASE.md)。旧版 PNG 已归档到 [docs/diagrams/legacy-png](docs/diagrams/legacy-png)。
 
-| 链路 | 重点看什么 | 高清原图 |
-|:---|:---|:---|
-| 秒杀抢购全链路 | Redis Lua 防超卖、RabbitMQ 异步落单、延迟队列兜底 | [查看原图](docs/diagrams/seckill-flow.png) |
-| UGC 异步审核与分发 | 审核消息投递、责任链处理、回调源服务 | [查看原图](docs/diagrams/ugc-audit-flow.png) |
-| 统一支付全链路 | 下单、支付、回调、钱包状态更新 | [查看原图](docs/diagrams/unified-pay-sequence.png) |
-| 每日签到积分 | 签到、积分发放、幂等与奖励计算 | [查看原图](docs/diagrams/daily-signin-points-sequence.png) |
-| 积分抽奖 | 扣减积分、抽奖结果、奖品发放 | [查看原图](docs/diagrams/points-lottery-draw-sequence.png) |
-| IM 私聊可靠投递 | 长连接、消息持久化、ACK / 重试 | [查看原图](docs/diagrams/im-private-message-reliable-delivery-sequence.png) |
-| Feed 动态扇出 | 发布动态、粉丝分发、读扩散 / 写扩散 | [查看原图](docs/diagrams/feed-fanout-sequence.png) |
-| 互动数据双轨同步 | Redis 热数据、异步回刷 MySQL、热度重算 | [查看原图](docs/diagrams/interaction-dual-track-sync-sequence.png) |
-| 搜索与向量库同步 | ES 索引同步、Milvus 向量写入、异步一致性 | [查看原图](docs/diagrams/search-es-milvus-sync-sequence.png) |
-| 普通下单链路 | 常规下单、支付、状态流转 | [查看原图](docs/diagrams/normal-order-sequence.png) |
-| AI 对话链路 | SSE 流式响应、意图路由、卡片事件 | [查看原图](docs/diagrams/ai-chat-sse-intent-routing-sequence.png) |
-| 登录鉴权与网关透传 | 短信/密码登录、Redis 登录态、Gateway 请求头透传 | [查看 SVG](docs/diagrams/auth-login-gateway-chain.svg) |
-| 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](docs/diagrams/file-upload-avatar-update-chain.svg) |
-| 发布审核与搜索 / 向量同步 | 提交待审、审核责任链、回调源服务、ES/Milvus/热榜更新 | [查看 SVG](docs/diagrams/publish-audit-search-sync-chain.svg) |
-| 关注 Feed 推送与滚动读取 | 粉丝信箱写入、Pipeline 批量 ZSet、ScrollResult 读取聚合 | [查看 SVG](docs/diagrams/follow-feed-scroll-read-chain.svg) |
-| 订单退款与钱包补偿 | 退款状态流转、库存回滚、MQ 退款消息、钱包入账流水 | [查看 SVG](docs/diagrams/order-refund-wallet-compensation-chain.svg) |
+### 交易与履约
+
+这组优先回答“项目怎么完成下单、支付、退款、核销和履约闭环”。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| 秒杀抢购全链路 | Redis Lua 防超卖、RabbitMQ 异步落单、延迟队列兜底 | [查看 SVG](docs/diagrams/seckill-flow.svg) | [查看 PNG](docs/diagrams/legacy-png/seckill-flow.png) |
+| 普通下单：订单创建与状态流转 | 下单创建、异步落单、支付生效后的状态流转 | [查看 SVG](docs/diagrams/normal-order-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/normal-order-sequence.png) |
+| 统一支付：支付受理、回调与钱包更新 | 支付受理、回调分发、支付记录与钱包状态更新 | [查看 SVG](docs/diagrams/unified-pay-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/unified-pay-sequence.png) |
+| 订单超时取消与库存回滚 | 下单后发送延迟消息、超时未支付自动取消、库存与资格回滚 | [查看 SVG](docs/diagrams/order-timeout-cancel-stock-rollback-chain.svg) | SVG only |
+| 主动取消 / 退款与钱包补偿 | 用户主动取消或退款后的库存回滚、退款 MQ 与钱包流水 | [查看 SVG](docs/diagrams/order-refund-wallet-compensation-chain.svg) | SVG only |
+| 订单核销、店铺销量与积分奖励 | verifyShopId 校验、核销后销量增长、消费积分异步发放 | [查看 SVG](docs/diagrams/order-verification-points-reward-chain.svg) | SVG only |
+
+### 积分与用户激励
+
+这组聚焦签到、抽奖、消费奖励这些用户增长和激励机制。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| 每日签到积分 | 签到、积分发放、幂等与奖励计算 | [查看 SVG](docs/diagrams/daily-signin-points-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/daily-signin-points-sequence.png) |
+| 积分抽奖 | 扣减积分、抽奖结果、奖品发放 | [查看 SVG](docs/diagrams/points-lottery-draw-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/points-lottery-draw-sequence.png) |
+
+### 账户与基础设施
+
+这组主要看登录态、网关透传、文件上传这类基础能力怎么支撑全站业务。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| 登录鉴权与网关透传 | 短信/密码登录、Redis 登录态、Gateway 请求头透传 | [查看 SVG](docs/diagrams/auth-login-gateway-chain.svg) | SVG only |
+| 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](docs/diagrams/file-upload-avatar-update-chain.svg) | SVG only |
+
+### 内容审核与搜索
+
+这组适合看“内容怎么过审、怎么进搜索、用户又是怎么搜出来的”。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| 发布审核与搜索 / 向量同步 | 提交待审、审核责任链、回调源服务、ES/Milvus/热榜更新 | [查看 SVG](docs/diagrams/publish-audit-search-sync-chain.svg) | SVG only |
+| 审核中心责任链与业务回写 | 审核任务落库、敏感词 / AI / 人工审核、驳回通知 | [查看 SVG](docs/diagrams/audit-center-responsibility-chain.svg) | SVG only |
+| 搜索读链路与热词沉淀 | ES 检索、LBS 排序、搜索历史与热搜榜 | [查看 SVG](docs/diagrams/search-read-lbs-ranking-chain.svg) | SVG only |
+
+### 社交与消息
+
+这组重点看 Feed、私聊、系统通知三条社交消息链如何拆分协作。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| 关注 Feed 推送与滚动读取 | 粉丝信箱写入、Pipeline 批量 ZSet、ScrollResult 读取聚合 | [查看 SVG](docs/diagrams/follow-feed-scroll-read-chain.svg) | SVG only |
+| IM 私聊可靠投递 | 长连接、消息持久化、ACK / 重试 | [查看 SVG](docs/diagrams/im-private-message-reliable-delivery-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/im-private-message-reliable-delivery-sequence.png) |
+| 系统通知入库与 IM 推送 | 多业务通知汇聚、通知落库、在线实时推送 | [查看 SVG](docs/diagrams/system-notice-im-push-chain.svg) | SVG only |
+
+### 排行、热度与推荐
+
+这组更偏“首页热门内容和热榜机制”，既看榜单是怎么读出来的，也看热度是怎么持续维护的。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| 首页热门榜单聚合读链路 | 并发拉取热门店铺榜、热门代金券榜、热门团购榜、热门博客榜，再按首页分区聚合返回 | [查看 SVG](docs/diagrams/home-aggregation-recommend-recall-chain.svg) | SVG only |
+| 首页热门榜单算分与热榜维护链路 | 上架、销量、互动变化如何推进四榜 calcQueue，经过增量洗牌与凌晨全量重建后持续写回 Redis 热榜 | [查看 SVG](docs/diagrams/home-hot-rank-score-maintenance-chain.svg) | SVG only |
+| 互动数据回刷与双轨同步（业务视角） | Redis 热数据变化如何驱动回刷、检索同步与热度重算 | [查看 SVG](docs/diagrams/interaction-dual-track-sync-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/interaction-dual-track-sync-sequence.png) |
+| 热榜增量维护与全量重建（业务视角） | calcQueue、Top N merge、榜单更新与凌晨全量兜底 | [查看 SVG](docs/diagrams/hot-rank-wash-rebuild-chain.svg) | SVG only |
+
+### AI 与经营
+
+这组主要展示 AI 对话、商家经营分析和 AI 辅助建议是怎么落进真实业务里的。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| AI 对话链路 | SSE 流式响应、意图路由、卡片事件 | [查看 SVG](docs/diagrams/ai-chat-sse-intent-routing-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/ai-chat-sse-intent-routing-sequence.png) |
+| 店铺经营分析与 AI 经营建议 | 订单分析、评价分析、经营建议与差评关键词抽取合在同一组看 | [分析聚合](docs/diagrams/shop-analysis-aggregation-chain.svg) / [AI 建议](docs/diagrams/shop-suggest-ai-keywords-chain.svg) | SVG only |
+
+### 缓存与性能专题
+
+这组不是业务流程图，而是专门解释 Redis 分层缓存和性能优化设计。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| Redis 缓存分层设计 | 列表、详情、计数、状态、热榜 / Feed 五层缓存拆分 | [查看 SVG](docs/diagrams/redis-layered-cache-architecture.svg) | SVG only |
+| Feed / 列表 ZSet 缓存链路 | ZSet 排序视图、滚动分页、批量详情回填 | [查看 SVG](docs/diagrams/redis-feed-zset-cache-chain.svg) | SVG only |
+| 详情页缓存读写链路 | 逻辑过期、空值缓存、互斥锁重建、写后删缓存 | [查看 SVG](docs/diagrams/redis-detail-cache-readwrite-chain.svg) | SVG only |
+
+### 调度与定时任务
+
+这组不讲单次用户请求，而是把 XXL-JOB 体系单独拎出来：先看总览，再看 4 张任务域子图。
+
+#### 第一层：总览图
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| XXL-JOB 定时任务体系总览 | 26 个定时任务如何拆到订单、秒杀、互动、热榜和销量同步六大类 | [查看 SVG](docs/diagrams/xxl-job-scheduler-overview.svg) | SVG only |
+
+#### 第二层：4 张子图
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| 秒杀预热与库存校准链路 | 预热库存和详情缓存，后续再按订单销量校准 MySQL 与缓存 | [查看 SVG](docs/diagrams/seckill-preheat-stock-calibration-chain.svg) | SVG only |
+| 热榜增量维护与全量重建链路（调度视角） | HotRankJobHandler / FullRebuildJobHandler 如何分发增量维护与全量重建 | [查看 SVG](docs/diagrams/hot-rank-wash-rebuild-chain.svg) | SVG only |
+| 互动数据回刷与双轨同步链路（调度视角） | InteractionSyncXxlJob / SyncDataServiceImpl 如何回刷 MySQL 并联动热榜 | [查看 SVG](docs/diagrams/interaction-dual-track-sync-sequence.svg) | SVG only |
+| 订单生命周期兜底处理链路 | 临期提醒、过期处理、库存销量回滚与退款补偿兜底 | [查看 SVG](docs/diagrams/order-lifecycle-fallback-chain.svg) | SVG only |
+
+### 历史详细图补充
+
+这组主要保留旧设计视角，方便继续深挖。
+
+| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+|:---|:---|:---|:---|
+| UGC 异步审核与分发 | 审核消息投递、责任链处理、回调源服务 | [查看 SVG](docs/diagrams/ugc-audit-flow.svg) | [查看 PNG](docs/diagrams/legacy-png/ugc-audit-flow.png) |
+| Feed 动态扇出 | 发布动态、粉丝分发、读扩散 / 写扩散 | [查看 SVG](docs/diagrams/feed-fanout-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/feed-fanout-sequence.png) |
+| 搜索与向量库同步 | ES 索引同步、Milvus 向量写入、异步一致性 | [查看 SVG](docs/diagrams/search-es-milvus-sync-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/search-es-milvus-sync-sequence.png) |
 
 
 ## <a id="开源使用提示"></a>📌 开源使用提示
@@ -858,6 +951,30 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 - **功能完整性的重要性**：不只是实现核心功能，还要想到超时补偿、异常兜底、数据一致性
 - **用户体验的细节**：Feed 流滚动分页的设计就是为了避免用户看到重复数据
 
+### 🧪 测试与故障定位维度
+- **核心链路越靠近“钱、库存、状态”越要优先补测试**：下单、支付、退款、核销、审核回写这些路径，出了问题影响最大，不能只靠手点验证
+- **分布式问题不能靠猜，要靠链路证据**：关键消息体、业务主键、死信单据、补偿日志、定时任务执行记录，都应该成为排查入口
+- **幂等性是可重试的前提**：只有消费端、定时任务、补偿逻辑都具备幂等能力，系统才敢放心重试，人工排障也更从容
+- **先缩小问题空间，再修问题本身**：排查线上问题时，要先判断是缓存、MQ、数据库、调度还是第三方依赖出了问题，而不是一上来就改代码
+
+### 🧭 技术判断维度
+- **微服务不是拆得越细越好**：真正合理的边界，取决于业务变化频率、数据耦合程度和后续演进成本
+- **不是所有场景都值得上 AI / 向量检索**：只有在“自然语言理解、语义召回、内容生成”真的能提升体验时，AI 才是正收益
+- **很多优化的本质不是换框架，而是找对数据结构**：例如列表、详情、计数分层存储，本质上是数据访问模型设计，而不是 Redis 本身的魔法
+- **能删掉的抽象，往往比新增的抽象更有价值**：复杂系统里，“少一层无意义封装”本身就是代码质量的体现
+
+### 📚 开源表达与复盘维度
+- **好项目不只靠代码，也靠文档和表达**：README、链路图、接入文档、截图导览，会直接决定别人能否在 5 分钟内看懂你的系统
+- **“会做”和“会讲”是两套能力**：真正有说服力的项目经验，必须既能落到代码实现，也能提炼成别人听得懂的架构语言
+- **链路图不是装饰，而是设计说明书**：当你能把业务主链、缓存层、补偿链、调度链讲清楚时，系统边界也会更清晰
+- **复盘文档会反过来暴露问题**：一旦你开始整理文档，就会更容易发现命名混乱、职责重叠、链路缺图和设计断层
+
+### 🧱 独立推进项目维度
+- **复杂项目要从“最小闭环”开始搭建**：先跑通登录、首页、下单、支付、评价，再逐步补 AI、审核、推荐、IM 等扩展能力
+- **单人项目更需要节奏感**：不是一口气把所有模块堆出来，而是按“可运行 -> 可扩展 -> 可优化 -> 可展示”逐层推进
+- **正确性永远先于性能**：库存不能乱、状态不能错、补偿要完整，在这之后再谈 QPS、缓存和吞吐量才有意义
+- **长期项目拼的是持续迭代能力**：能把 200+ 次提交沉淀成一个结构清晰、链路完整、可讲可跑的项目，本身就是一种工程能力
+
 ---
 
 ## <a id="常见问题"></a>❓ 常见问题 FAQ
@@ -868,22 +985,65 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 </details>
 
 <details>
-<summary><b>2. 为什么选 Milvus 而不是 Pinecone 或 pgvector？</b></summary>
+<summary><b>2. 这个仓库包含前端吗？前后端仓库分别是什么？</b></summary>
+当前仓库主要是 **后端微服务主仓库**，负责用户、店铺、商品、订单、互动、搜索、AI、IM、审核、钱包等核心服务，以及中间件编排和部署脚本。  
+前端仓库已单独拆分：
+
+- `smartLive-admin`：后台管理端（Vue + Element UI）
+- `smartLive-web`：用户前台（Vue 响应式，兼容移动端）
+
+对应仓库入口可以直接查看文档中的 [项目仓库](#项目仓库) 一节。
+</details>
+
+<details>
+<summary><b>3. 第一次本地启动，最小需要哪些中间件和模块？</b></summary>
+如果只是想先把系统跑起来并验证主链路，建议优先准备：
+
+- **基础中间件**：MySQL、Redis、Nacos、RabbitMQ
+- **核心服务**：Gateway、Auth、User、Shop、Product、Order、Blog、Interaction、Search
+- **管理端 / 用户端前端**：按你的体验目标选择 `smartLive-admin` 或 `smartLive-web`
+
+AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补。更完整的接入顺序见 [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md)。
+</details>
+
+<details>
+<summary><b>4. AI 模块在这个项目里到底做了什么？</b></summary>
+这个项目里的 AI 不只是“接一个聊天接口”，而是同时覆盖了 **用户端问答检索** 和 **商家端经营辅助** 两条线：
+
+- **用户端**：支持店铺 / 商品 / 评价 / 博客问答、流式 AI 对话、探店博客生成、消费评价生成
+- **商家端**：支持差评回复、经营建议、营销文案生成、经营分析
+- **底层能力**：基于 Spring AI + Milvus，构建店铺、商品、评价、博客等多套向量检索能力，并支持不同 Agent 策略切换
+
+所以它更像一个嵌入业务系统的 AI 中台，而不是单点聊天 Demo。
+</details>
+
+<details>
+<summary><b>5. 为什么项目里同时用了 RabbitMQ 和 XXL-JOB？</b></summary>
+两者职责不同，不是重复建设：
+
+- **RabbitMQ**：负责异步解耦和准实时处理，例如订单创建、库存扣减、审核投递、消息推送、支付回调后的后续动作
+- **XXL-JOB**：负责周期性扫描、补偿兜底和批处理，例如热榜重算、互动数据回刷、秒杀预热、订单超时处理、销量同步
+
+可以把它理解成：MQ 解决“事件驱动”，XXL-JOB 解决“定时调度与补偿兜底”。两者配合起来，才能把实时性和最终一致性同时兼顾。
+</details>
+
+<details>
+<summary><b>6. 为什么选 Milvus 而不是 Pinecone 或 pgvector？</b></summary>
 项目中需要结合 AI 进行相似度检索（例如基于向量空间模型的智能推荐），Milvus 作为云原生的开源向量数据库，支持海量向量的高效检索与动态扩展。相比闭源 SaaS 的 Pinecone 数据更自主可控；相比基于 PostgreSQL 扩展的 pgvector，Milvus 在高并发、大规模向量检索场景下性能更优。
 </details>
 
 <details>
-<summary><b>3. Feed 流查询为什么需要采用特殊的滚动分页？</b></summary>
+<summary><b>7. Feed 流查询为什么需要采用特殊的滚动分页？</b></summary>
 在具有强社交属性的 Feed 瀑布流中，数据写入频率极高。如果采用传统的 `LIMIT offset, size`，当用户翻页时，若有新动态插入头部，会导致整体数据向后位移，用户将在下一页看到重复数据。本项目采用基于 Redis ZSet 的 `ZREVRANGEBYSCORE` 命令，每次查询以上一次最后一条记录的时间戳作为 Score 锚点向下偏移，从而从物理存储结构上彻底规避了“数据错位”的深分页死区。
 </details>
 
 <details>
-<summary><b>4. 分布式环境下的数据一致性是怎么保证的？</b></summary>
+<summary><b>8. 分布式环境下的数据一致性是怎么保证的？</b></summary>
 针对高并发及可容忍短暂延迟的场景（例如下单成功后发布动态、奖励签到积分、审核系统状态回写以及数据同步至 ES/Milvus 等），本项目核心采用**“RabbitMQ 消息可靠投递 + 最终一致性”**方案。通过投递消息到 MQ 来解耦强关联业务，并搭配死信队列记录处理失败的异常单据（如 15 分钟未支付订单的超时释放等）进行自动补偿，极大地保障了微服务集群整体的吞吐量。
 </details>
 
 <details>
-<summary><b>5. 各种缓存并发与提单安全问题是怎么处理的？</b></summary>
+<summary><b>9. 各种缓存并发与提单安全问题是怎么处理的？</b></summary>
 项目中统一定义了 `CacheClient` 工具类进行标准化处理，并在核心链路引入了 **Redisson**：
 - <b>缓存击穿：</b> 针对热点店铺或热门博客的详情查阅，利用**逻辑过期（Logical Expiration）策略**快速响应。当判断缓存逻辑过期时，直接先返回旧数据，然后提交异步线程池去数据库抓取新数据并重建缓存，以此实现高并发下访问数据库的无感削峰；
 - <b>缓存穿透：</b> 对数据库本身不存在的空结果集（如恶意请求伪造的 ID），采用**缓存空对象（Null Object 模式）**短暂存入 Redis（并附带极短的 TTL），有效防止流量直接穿透到底层 DB 导致瘫痪；
@@ -892,12 +1052,12 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 </details>
 
 <details>
-<summary><b>6. Netty WebSocket 为什么不用 Spring WebSocket？</b></summary>
+<summary><b>10. Netty WebSocket 为什么不用 Spring WebSocket？</b></summary>
 在即时通讯（IM）场景中，存在海量长连接并且需要频繁处理心跳包保活。虽然 Spring WebSocket 使用简单，但在处理高并发连接时，基于 NIO、事件驱动的 Netty 能以更少的线程开销极大地提升网络吞吐和减少内存消耗。项目通过自定义握手并在认证时结合 Redis Token 控制，在性能和资源占用上都优于 Spring WebSocket。
 </details>
 
 <details>
-<summary><b>7. 为什么用 ZSet 存列表，String 存详情，不用 Hash？</b></summary>
+<summary><b>11. 为什么用 ZSet 存列表，String 存详情，不用 Hash？</b></summary>
 **分层设计原因：**
 - **列表层（ZSet）**：天生有序支持高效范围查询（ZREVRANGE），避免应用层排序开销。
 - **详情层（String）**：直接存 JSON 对象，读取时无需转换。相比 Hash 逐字段存储更简洁。
@@ -915,7 +1075,7 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 </details>
 
 <details>
-<summary><b>8. AbstractInteractionStrategy 如何支持 10+ 个子类都能同步到 ES？</b></summary>
+<summary><b>12. AbstractInteractionStrategy 如何支持 10+ 个子类都能同步到 ES？</b></summary>
 **模板方法模式在 ES 同步中的应用：**
 
 AbstractInteractionStrategy 定义了 `syncUserResource()` 标准模板方法，包含 5 步流程：
@@ -960,7 +1120,7 @@ public class CommentLikeStrategy extends AbstractInteractionStrategy implements 
 </details>
 
 <details>
-<summary><b>9. 如何高效地同步 Redis 中的 10+ 万互动数据到 MySQL？</b></summary>
+<summary><b>13. 如何高效地同步 Redis 中的 10+ 万互动数据到 MySQL？</b></summary>
 **挑战：** 每天产生的点赞、收藏、评论数可能达到百万级，如何在不阻塞主业务的情况下落库？
 
 **解决方案：双轨制异步架构**
@@ -1176,5 +1336,3 @@ redisTemplate.opsForValue().set(currentKey, "0");
 **最后，感谢你能看到这里！** 🙏
 
 如果你有任何问题或建议，请不要犹豫，直接联系我。我相信好的讨论能让我们都变得更好。
-
-

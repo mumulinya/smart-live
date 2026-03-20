@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>积分抽奖与奖品发放链路</title>
+  <desc id='desc'>展示积分抽奖时的余额校验、奖品配置读取、加权随机抽取，以及扣减积分与发奖的流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>积分抽奖与奖品发放链路</text>
+  <text class='subtitle' x='74' y='132'>对应代码：PointsController.lotteryDraw + PointsServiceImpl.lotteryDraw</text>
+  <text class='section' x='74' y='188'>1. 读取配置并扣减积分</text>
+  <rect class='node' x='70' y='220' width='250' height='140'/>
+  <text class='node-title' x='195' y='270' text-anchor='middle'>用户发起抽奖</text>
+  <text class='node-text' x='195' y='304' text-anchor='middle'>点击 lotteryDraw</text>
+  <text class='node-text' x='195' y='328' text-anchor='middle'>准备消耗积分</text>
+  <rect class='node' x='390' y='220' width='250' height='140'/>
+  <text class='node-title' x='515' y='270' text-anchor='middle'>PointsController</text>
+  <text class='node-text' x='515' y='304' text-anchor='middle'>获取 userId</text>
+  <text class='node-text' x='515' y='328' text-anchor='middle'>调用 service</text>
+  <rect class='store' x='710' y='220' width='300' height='140'/>
+  <text class='node-title' x='860' y='270' text-anchor='middle'>UserPointsWallet</text>
+  <text class='node-text' x='860' y='304' text-anchor='middle'>校验余额 &gt;= LOTTERY_COST</text>
+  <text class='node-text' x='860' y='328' text-anchor='middle'>不足则直接失败</text>
+  <rect class='node' x='1080' y='220' width='280' height='140'/>
+  <text class='node-title' x='1220' y='270' text-anchor='middle'>PointsLotteryPrize</text>
+  <text class='node-text' x='1220' y='304' text-anchor='middle'>读取启用奖品</text>
+  <text class='node-text' x='1220' y='328' text-anchor='middle'>按 sort 排序</text>
+  <rect class='gateway' x='1430' y='220' width='280' height='140'/>
+  <text class='node-title' x='1570' y='270' text-anchor='middle'>weightedRandom</text>
+  <text class='node-text' x='1570' y='304' text-anchor='middle'>按 probability 权重</text>
+  <text class='node-text' x='1570' y='328' text-anchor='middle'>抽取奖品</text>
+  <path class='line' d='M320 290 H378'/>
+  <text class='step' x='349' y='194' text-anchor='middle'>1. 发起抽奖</text>
+  <text class='step' x='349' y='214' text-anchor='middle'>进入 Controller</text>
+  <path class='line' d='M640 290 H698'/>
+  <text class='step' x='669' y='194' text-anchor='middle'>2. 先校验余额</text>
+  <text class='step' x='669' y='214' text-anchor='middle'>避免无效抽奖</text>
+  <path class='line' d='M1010 290 H1068'/>
+  <text class='step' x='1039' y='194' text-anchor='middle'>3. 读取奖品池</text>
+  <text class='step' x='1039' y='214' text-anchor='middle'>计算权重数组</text>
+  <path class='line' d='M1360 290 H1418'/>
+  <text class='step' x='1389' y='194' text-anchor='middle'>4. 执行随机</text>
+  <text class='step' x='1389' y='214' text-anchor='middle'>选出奖品</text>
+  <text class='section' x='74' y='468'>2. 写流水并发放奖品</text>
+  <rect class='node' x='110' y='500' width='300' height='140'/>
+  <text class='node-title' x='260' y='550' text-anchor='middle'>抽奖消耗流水</text>
+  <text class='node-text' x='260' y='584' text-anchor='middle'>PointsRecord</text>
+  <text class='node-text' x='260' y='608' text-anchor='middle'>记录扣减积分</text>
+  <rect class='gateway' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>奖品发放</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>points 直接返还</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>coupon 预留扩展点</text>
+  <rect class='store' x='910' y='500' width='320' height='140'/>
+  <text class='node-title' x='1070' y='550' text-anchor='middle'>更新钱包</text>
+  <text class='node-text' x='1070' y='584' text-anchor='middle'>balance / totalEarned</text>
+  <text class='node-text' x='1070' y='608' text-anchor='middle'>仅 points 奖品需要</text>
+  <rect class='node' x='1320' y='500' width='340' height='140'/>
+  <text class='node-title' x='1490' y='550' text-anchor='middle'>LotteryResultVO</text>
+  <text class='node-text' x='1490' y='584' text-anchor='middle'>奖品名称和类型</text>
+  <text class='node-text' x='1490' y='608' text-anchor='middle'>返回前端展示</text>
+  <path class='line' d='M410 570 H488'/>
+  <text class='step' x='449' y='474' text-anchor='middle'>5. 扣减积分</text>
+  <text class='step' x='449' y='494' text-anchor='middle'>先写消耗流水</text>
+  <path class='line' d='M820 570 H898'/>
+  <text class='step' x='859' y='474' text-anchor='middle'>6. 发奖</text>
+  <text class='step' x='859' y='494' text-anchor='middle'>区分不同奖品类型</text>
+  <path class='line' d='M1230 570 H1308'/>
+  <text class='step' x='1269' y='474' text-anchor='middle'>7. 返回结果</text>
+  <text class='step' x='1269' y='494' text-anchor='middle'>前端展示抽中奖品</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- 抽奖的核心不是 UI，而是先扣积分再发奖，避免透支。</text>
+  <text class='note-text' x='102' y='836'>- 奖品池来自数据库配置，概率调整不需要改代码。</text>
+  <text class='note-text' x='102' y='866'>- coupon 类型已经预留扩展位，后续可以无缝接发券服务。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- lotteryDraw 先检查 wallet，再读取奖品池和权重。</text>
+  <text class='note-text' x='682' y='836'>- 扣减积分和 points 奖励发放都落到 PointsRecord，账务清晰。</text>
+  <text class='note-text' x='682' y='866'>- weightedRandom 是这一条链路的玩法核心。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图适合和签到图配成一组“增长玩法”。</text>
+  <text class='note-text' x='1262' y='836'>- 如果要写简历，可以直接提“加权随机抽奖”。</text>
+  <text class='note-text' x='1262' y='866'>- 展示时重点说清楚奖品配置和账务落库。</text>
+</svg>

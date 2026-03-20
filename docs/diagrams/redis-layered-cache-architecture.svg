@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1220" viewBox="0 0 1840 1220" role="img" aria-labelledby="title desc">
+  <title id="title">Redis 缓存分层设计图</title>
+  <desc id="desc">展示项目中列表缓存、详情缓存、计数缓存、状态缓存以及热榜和 Feed 排行缓存五层 Redis 设计，以及它们在服务层中的职责分工。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1840" height="1220" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1772" height="1152" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">Redis 缓存分层设计图</text>
+  <text class="subtitle" x="74" y="132">对应代码：CacheClient + RedisConstants + InteractionRedisKeyConstants + ZSetIdManager + like / star / follow / feed / detail 查询实现</text>
+
+  <rect class="node" x="560" y="168" width="720" height="100"/>
+  <text class="node-title" x="920" y="220" text-anchor="middle">服务层统一读写入口</text>
+  <text class="node-text" x="920" y="248" text-anchor="middle">Shop / Blog / Product / User / Interaction / Feed 都从这里选择不同缓存层</text>
+
+  <text class="section" x="74" y="316">1. 按读写职责拆成 5 层缓存，而不是把所有数据都塞成一个大 Key</text>
+
+  <rect class="store" x="70" y="350" width="520" height="230"/>
+  <text class="node-title" x="330" y="404" text-anchor="middle">列表缓存</text>
+  <text class="node-text" x="330" y="438" text-anchor="middle">ZSet 存 ID / 排序值，不直接存完整详情</text>
+  <text class="node-text" x="330" y="464" text-anchor="middle">典型 Key：blog:comment:new_rank:* / hot_rank:*</text>
+  <text class="node-text" x="330" y="490" text-anchor="middle">shop:review:new_rank:* / user:star:* / blog:hot:rank:*</text>
+  <text class="node-text" x="330" y="516" text-anchor="middle">典型读法：ZSetIdManager.pageIds / ZREVRANGE / ZREVRANGEBYSCORE</text>
+
+  <rect class="store" x="660" y="350" width="520" height="230"/>
+  <text class="node-title" x="920" y="404" text-anchor="middle">详情缓存</text>
+  <text class="node-text" x="920" y="438" text-anchor="middle">String / RedisData 存单对象详情</text>
+  <text class="node-text" x="920" y="464" text-anchor="middle">典型 Key：cache:shop:* / cache:blog:* / cache:product:*</text>
+  <text class="node-text" x="920" y="490" text-anchor="middle">配合逻辑过期、空值缓存、互斥锁重建</text>
+  <text class="node-text" x="920" y="516" text-anchor="middle">核心入口：CacheClient.queryWithLogicalExpireAndPassThrough</text>
+
+  <rect class="store" x="1250" y="350" width="520" height="230"/>
+  <text class="node-title" x="1510" y="404" text-anchor="middle">计数缓存</text>
+  <text class="node-text" x="1510" y="438" text-anchor="middle">独立 String 计数器，只做 INCR / DECR</text>
+  <text class="node-text" x="1510" y="464" text-anchor="middle">典型 Key：blog:liked:count:* / shop:review:count:*</text>
+  <text class="node-text" x="1510" y="490" text-anchor="middle">user:fans:count:* / blog:comment:count:*</text>
+  <text class="node-text" x="1510" y="516" text-anchor="middle">命中不到时再 fallback 到源表 COUNT 或业务表字段</text>
+
+  <rect class="decision" x="180" y="650" width="660" height="250"/>
+  <text class="node-title" x="510" y="706" text-anchor="middle">状态缓存</text>
+  <text class="node-text" x="510" y="742" text-anchor="middle">登录态、在线态、会话态、行为态都单独缓存</text>
+  <text class="node-text" x="510" y="768" text-anchor="middle">典型 Key：login:token:* / im:online:* / im:session:*</text>
+  <text class="node-text" x="510" y="794" text-anchor="middle">user:liked:* / user:star:* / user:follow:* 用于已点赞 / 已收藏 / 已关注判断</text>
+  <text class="node-text" x="510" y="820" text-anchor="middle">目标：把“当前用户状态”从详情查询里拆出来，减少反复查库</text>
+
+  <rect class="mq" x="980" y="650" width="660" height="250"/>
+  <text class="node-title" x="1310" y="706" text-anchor="middle">热榜 / Feed / 排行缓存</text>
+  <text class="node-text" x="1310" y="742" text-anchor="middle">热点分发和滚动分页全部走 ZSet / Set 组合</text>
+  <text class="node-text" x="1310" y="768" text-anchor="middle">典型 Key：feed:user:* / feed:all:* / blog:hot:rank:* / shop:hot:rank:*</text>
+  <text class="node-text" x="1310" y="794" text-anchor="middle">辅助 Key：queue:calc:* / *_dirty / *_sync_ids / *_calc_ids</text>
+  <text class="node-text" x="1310" y="820" text-anchor="middle">目标：把高频排序、热度重算和大规模粉丝分发都压在 Redis 内存层</text>
+
+  <path class="line" d="M700 268 V320 H330 V338"/>
+  <path class="line" d="M920 268 V338"/>
+  <path class="line" d="M1140 268 V320 H1510 V338"/>
+  <path class="dash" d="M860 268 V620 H510 V638"/>
+  <path class="dash" d="M980 268 V620 H1310 V638"/>
+  <text class="step" x="920" y="300" text-anchor="middle">服务层按场景分流到不同缓存层</text>
+
+  <text class="section" x="74" y="968">2. 这套分层设计为什么有效</text>
+
+  <rect class="note" x="70" y="1000" width="520" height="140"/>
+  <text class="note-title" x="102" y="1042">列表和详情拆开</text>
+  <text class="note-text" x="102" y="1074">- 列表只关心“谁排在前面”，详情只关心“这个对象长什么样”，两者更新频率完全不同。</text>
+  <text class="note-text" x="102" y="1102">- 这就是你 README 里“ZSet 存列表、String 存详情”的真正落地形态。</text>
+
+  <rect class="note" x="660" y="1000" width="520" height="140"/>
+  <text class="note-title" x="692" y="1042">计数和状态再拆一次</text>
+  <text class="note-text" x="692" y="1074">- 点赞数、评论数、粉丝数不放进详情对象里一起刷，避免热点字段拖垮整页缓存。</text>
+  <text class="note-text" x="692" y="1102">- 登录态 / 在线态 / 行为态单独缓存，能显著减少“查详情再补状态”的数据库压力。</text>
+
+  <rect class="note" x="1250" y="1000" width="520" height="140"/>
+  <text class="note-title" x="1282" y="1042">热榜和 Feed 单列</text>
+  <text class="note-text" x="1282" y="1074">- 热榜、Feed、滚动分页都属于“高频排序读”，必须单独成层，不能和普通详情缓存混用。</text>
+  <text class="note-text" x="1282" y="1102">- 这样才撑得住你项目里热榜洗牌、Feed 扇出和滚动读取这些高频场景。</text>
+</svg>

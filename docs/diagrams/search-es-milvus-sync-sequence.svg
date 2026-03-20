@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>搜索索引与向量库同步链路</title>
+  <desc id='desc'>展示店铺、商品、博客、评价等业务变更后，同时进入 Elasticsearch 索引同步和 Milvus 向量同步的双端链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>搜索索引与向量库同步链路</text>
+  <text class='subtitle' x='74' y='132'>对应代码：ShopServiceImpl / ProductServiceImpl / BlogServiceImpl + EsSyncListener + MilvusSyncListener</text>
+  <text class='section' x='74' y='188'>1. 业务变更触发 Elasticsearch 同步</text>
+  <rect class='node' x='70' y='220' width='270' height='140'/>
+  <text class='node-title' x='205' y='270' text-anchor='middle'>店铺 / 商品 / 博客 / 评价</text>
+  <text class='node-text' x='205' y='304' text-anchor='middle'>新增 / 更新 / 删除</text>
+  <text class='node-text' x='205' y='328' text-anchor='middle'>都需要同步检索侧</text>
+  <rect class='node' x='410' y='220' width='290' height='140'/>
+  <text class='node-title' x='555' y='270' text-anchor='middle'>源业务服务</text>
+  <text class='node-text' x='555' y='304' text-anchor='middle'>构建 ContentSyncMessage</text>
+  <text class='node-text' x='555' y='328' text-anchor='middle'>标明 type / indexName</text>
+  <rect class='gateway' x='770' y='220' width='250' height='140'/>
+  <text class='node-title' x='895' y='270' text-anchor='middle'>ES_SYNC_EXCHANGE</text>
+  <text class='node-text' x='895' y='304' text-anchor='middle'>单条 / 批量 / 删除</text>
+  <text class='node-text' x='895' y='328' text-anchor='middle'>统一消息入口</text>
+  <rect class='node' x='1090' y='220' width='280' height='140'/>
+  <text class='node-title' x='1230' y='270' text-anchor='middle'>EsSyncListener</text>
+  <text class='node-text' x='1230' y='304' text-anchor='middle'>StrategyFactory 路由</text>
+  <text class='node-text' x='1230' y='328' text-anchor='middle'>messageId 幂等</text>
+  <rect class='store' x='1440' y='220' width='280' height='140'/>
+  <text class='node-title' x='1580' y='270' text-anchor='middle'>Elasticsearch</text>
+  <text class='node-text' x='1580' y='304' text-anchor='middle'>主索引 + user_resource</text>
+  <text class='node-text' x='1580' y='328' text-anchor='middle'>保持全文检索新鲜度</text>
+  <path class='line' d='M340 290 H398'/>
+  <text class='step' x='369' y='194' text-anchor='middle'>1. 业务变更</text>
+  <text class='step' x='369' y='214' text-anchor='middle'>准备同步检索侧</text>
+  <path class='line' d='M700 290 H758'/>
+  <text class='step' x='729' y='194' text-anchor='middle'>2. 构建同步消息</text>
+  <text class='step' x='729' y='214' text-anchor='middle'>统一承载不同资源</text>
+  <path class='line' d='M1020 290 H1078'/>
+  <text class='step' x='1049' y='194' text-anchor='middle'>3. 幂等消费</text>
+  <text class='step' x='1049' y='214' text-anchor='middle'>避免重复写索引</text>
+  <path class='line' d='M1370 290 H1428'/>
+  <text class='step' x='1399' y='194' text-anchor='middle'>4. 落 ES</text>
+  <text class='step' x='1399' y='214' text-anchor='middle'>主索引和宽表一起维护</text>
+  <text class='section' x='74' y='468'>2. Milvus 向量同步与 RAG 召回</text>
+  <rect class='gateway' x='90' y='500' width='320' height='140'/>
+  <text class='node-title' x='250' y='550' text-anchor='middle'>Milvus Sync MQ</text>
+  <text class='node-text' x='250' y='584' text-anchor='middle'>插入 / 批量 / 删除</text>
+  <text class='node-text' x='250' y='608' text-anchor='middle'>与 ES 解耦</text>
+  <rect class='node' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>MilvusSyncListener</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>messageId 幂等</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>按 type 选策略</text>
+  <rect class='store' x='910' y='500' width='320' height='140'/>
+  <text class='node-title' x='1070' y='550' text-anchor='middle'>4 个 VectorStore</text>
+  <text class='node-text' x='1070' y='584' text-anchor='middle'>shop / product</text>
+  <text class='node-text' x='1070' y='608' text-anchor='middle'>review / blog</text>
+  <rect class='node' x='1320' y='500' width='340' height='140'/>
+  <text class='node-title' x='1490' y='550' text-anchor='middle'>AI 检索 / RAG</text>
+  <text class='node-text' x='1490' y='584' text-anchor='middle'>similaritySearch</text>
+  <text class='node-text' x='1490' y='608' text-anchor='middle'>filter expression 增强召回</text>
+  <path class='line' d='M410 570 H488'/>
+  <text class='step' x='449' y='474' text-anchor='middle'>5. 进入向量链路</text>
+  <text class='step' x='449' y='494' text-anchor='middle'>和 ES 并行推进</text>
+  <path class='line' d='M820 570 H898'/>
+  <text class='step' x='859' y='474' text-anchor='middle'>6. 选择策略</text>
+  <text class='step' x='859' y='494' text-anchor='middle'>不同资源写不同集合</text>
+  <path class='line' d='M1230 570 H1308'/>
+  <text class='step' x='1269' y='474' text-anchor='middle'>7. AI 侧使用</text>
+  <text class='step' x='1269' y='494' text-anchor='middle'>承接语义检索</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- 同一份业务数据会同时服务全文检索和语义检索，两边不是互斥关系。</text>
+  <text class='note-text' x='102' y='836'>- ES 负责关键词、高亮、排序；Milvus 负责向量召回。</text>
+  <text class='note-text' x='102' y='866'>- 双端同步让搜索和 AI 共用同一套业务数据底座。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- EsSyncListener 支持单条、批量、删除和 user_resource 四种入口。</text>
+  <text class='note-text' x='682' y='836'>- MilvusSyncListener 对 shop / product / review / blog 各自用独立策略。</text>
+  <text class='note-text' x='682' y='866'>- Milvus 不可用时，配置里还预留了 SimpleVectorStore fallback。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图适合放在“搜索 / AI 共用底座”位置。</text>
+  <text class='note-text' x='1262' y='836'>- 如果你只想留一张 AI 相关的基础设施图，就留这张。</text>
+  <text class='note-text' x='1262' y='866'>- 和 AI 对话图一起展示，前后关系会更清楚。</text>
+</svg>

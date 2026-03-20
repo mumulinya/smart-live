@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>统一支付：支付受理、回调与钱包更新</title>
+  <desc id='desc'>展示统一支付受理、支付策略路由、PaymentRecord 落库，以及微信、支付宝、余额支付回调后的业务分发与钱包状态更新。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>统一支付：支付受理、回调与钱包更新</text>
+  <text class='subtitle' x='74' y='132'>对应代码：PayController.unifiedOrder + PayServiceImpl.unifiedOrder / processCallback + remoteOrderService.paySuccess</text>
+  <text class='section' x='74' y='188'>1. 统一下单与支付指令生成</text>
+  <rect class='node' x='70' y='220' width='250' height='140'/>
+  <text class='node-title' x='195' y='270' text-anchor='middle'>用户端 / 收银台</text>
+  <text class='node-text' x='195' y='304' text-anchor='middle'>选择支付方式</text>
+  <text class='node-text' x='195' y='328' text-anchor='middle'>发起支付</text>
+  <rect class='node' x='390' y='220' width='260' height='140'/>
+  <text class='node-title' x='520' y='270' text-anchor='middle'>PayController</text>
+  <text class='node-text' x='520' y='304' text-anchor='middle'>接收 UnifiedPayDTO</text>
+  <text class='node-text' x='520' y='328' text-anchor='middle'>透传 userId</text>
+  <rect class='node' x='720' y='220' width='300' height='140'/>
+  <text class='node-title' x='870' y='270' text-anchor='middle'>PayServiceImpl</text>
+  <text class='node-text' x='870' y='304' text-anchor='middle'>校验业务单据</text>
+  <text class='node-text' x='870' y='328' text-anchor='middle'>生成 paySn</text>
+  <rect class='store' x='1090' y='220' width='270' height='140'/>
+  <text class='node-title' x='1225' y='270' text-anchor='middle'>PaymentRecord</text>
+  <text class='node-text' x='1225' y='304' text-anchor='middle'>待支付流水落库</text>
+  <text class='node-text' x='1225' y='328' text-anchor='middle'>发送 PAY_DELAY 消息</text>
+  <rect class='gateway' x='1430' y='220' width='300' height='140'/>
+  <text class='node-title' x='1580' y='270' text-anchor='middle'>PaymentStrategyFactory</text>
+  <text class='node-text' x='1580' y='304' text-anchor='middle'>wechat / alipay / balance</text>
+  <text class='node-text' x='1580' y='328' text-anchor='middle'>返回支付参数</text>
+  <path class='line' d='M320 290 H378'/>
+  <text class='step' x='349' y='194' text-anchor='middle'>1. 点击支付</text>
+  <text class='step' x='349' y='214' text-anchor='middle'>提交业务单据</text>
+  <path class='line' d='M650 290 H708'/>
+  <text class='step' x='679' y='194' text-anchor='middle'>2. 参数与金额校验</text>
+  <text class='step' x='679' y='214' text-anchor='middle'>支持复用未支付流水</text>
+  <path class='line' d='M1020 290 H1078'/>
+  <text class='step' x='1049' y='194' text-anchor='middle'>3. 写支付流水</text>
+  <text class='step' x='1049' y='214' text-anchor='middle'>同时发延迟消息</text>
+  <path class='line' d='M1360 290 H1418'/>
+  <text class='step' x='1389' y='194' text-anchor='middle'>4. 路由策略</text>
+  <text class='step' x='1389' y='214' text-anchor='middle'>生成通道参数</text>
+  <text class='section' x='74' y='468'>2. 回调处理与业务分发</text>
+  <rect class='node' x='90' y='500' width='320' height='140'/>
+  <text class='node-title' x='250' y='550' text-anchor='middle'>微信 / 支付宝 / 余额</text>
+  <text class='node-text' x='250' y='584' text-anchor='middle'>异步回调或主动查询</text>
+  <text class='node-text' x='250' y='608' text-anchor='middle'>确认支付结果</text>
+  <rect class='gateway' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>processCallback</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>金额校验</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>更新流水终态</text>
+  <rect class='store' x='910' y='500' width='320' height='140'/>
+  <text class='node-title' x='1070' y='550' text-anchor='middle'>walletService</text>
+  <text class='node-text' x='1070' y='584' text-anchor='middle'>recordOrderPayment</text>
+  <text class='node-text' x='1070' y='608' text-anchor='middle'>或 recharge</text>
+  <rect class='node' x='1320' y='500' width='340' height='140'/>
+  <text class='node-title' x='1490' y='550' text-anchor='middle'>remoteOrderService</text>
+  <text class='node-text' x='1490' y='584' text-anchor='middle'>paySuccess 更新订单</text>
+  <text class='node-text' x='1490' y='608' text-anchor='middle'>记录支付方式</text>
+  <path class='line' d='M410 570 H488'/>
+  <text class='step' x='449' y='474' text-anchor='middle'>5. 支付结果返回</text>
+  <text class='step' x='449' y='494' text-anchor='middle'>进入统一回调入口</text>
+  <path class='line' d='M820 570 H898'/>
+  <text class='step' x='859' y='474' text-anchor='middle'>6. 业务分发</text>
+  <text class='step' x='859' y='494' text-anchor='middle'>区分充值和订单</text>
+  <path class='line' d='M1230 570 H1308'/>
+  <text class='step' x='1269' y='474' text-anchor='middle'>7. RPC 通知订单</text>
+  <text class='step' x='1269' y='494' text-anchor='middle'>订单改为 PAID</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- PayServiceImpl 把统一下单、主动查询、异步回调都收敛成一套流程。</text>
+  <text class='note-text' x='102' y='836'>- 第三方支付差异被 PaymentStrategyFactory 隔离，主业务不用写分支。</text>
+  <text class='note-text' x='102' y='866'>- 订单支付和钱包充值走同一个支付中枢，只在分发阶段分叉。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- unifiedOrder 会优先复用待支付流水，避免生成重复 paySn。</text>
+  <text class='note-text' x='682' y='836'>- processCallback 先做幂等和金额校验，再执行业务分发。</text>
+  <text class='note-text' x='682' y='866'>- 支付超时会先发 PAY_DELAY 消息，方便后续自动取消。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图适合放在“支付 / 钱包”模块介绍旁边。</text>
+  <text class='note-text' x='1262' y='836'>- 如果要讲支付安全性，可以补一句金额校验和回调幂等。</text>
+  <text class='note-text' x='1262' y='866'>- 和订单页、钱包页截图一起展示会更完整。</text>
+</svg>
