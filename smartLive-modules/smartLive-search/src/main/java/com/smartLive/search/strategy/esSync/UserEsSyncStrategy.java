@@ -77,7 +77,7 @@ public class UserEsSyncStrategy implements EsSyncStrategy {
         for (UserDoc data : docList) {
             validateUser(data);
             String json = objectMapper.writeValueAsString(EsTool.convertToJsonMap(data));
-            bulkRequest.add(new IndexRequest(indexName).id(data.getId().toString()).source(json, XContentType.JSON));
+            bulkRequest.add(new IndexRequest(indexName).id(data.getId()).source(json, XContentType.JSON));
         }
         BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
         return !response.hasFailures();

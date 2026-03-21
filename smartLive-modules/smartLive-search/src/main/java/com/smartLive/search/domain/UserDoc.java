@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.lucene.document.FieldType;
 
 /**
  * 用户索引文档对象
@@ -29,8 +30,7 @@ public class UserDoc extends BaseEntity
     private static final long serialVersionUID = 1L;
 
     /** 用户数字 ID */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private String id;
 
     /** 用户昵称 (支持模糊搜索) */
     private String nickName;

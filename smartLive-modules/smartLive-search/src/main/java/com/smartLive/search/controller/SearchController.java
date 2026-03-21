@@ -64,9 +64,9 @@ public class SearchController {
                 if (item instanceof UserDoc) {
                     UserDoc user = (UserDoc) item;
                     FollowDTO followDTO = new FollowDTO();
-                    followDTO.setUserId(user.getId());
+                    followDTO.setUserId(Long.valueOf(user.getId()));
                     followDTO.setSourceType(GlobalBizTypeEnum.USER.getCode());
-                    followDTO.setSourceId(user.getId());
+                    followDTO.setSourceId(Long.valueOf(user.getId()));
                     Boolean isFollow = remoteFollowService.isFollowed(followDTO);
                         user.setIsFollow(isFollow);
                 }

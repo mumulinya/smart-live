@@ -3,6 +3,7 @@ package com.smartLive.ai.strategy.milvus;
 import com.smartLive.ai.entity.DOC.ShopDoc;
 import com.smartLive.ai.utils.EsTool;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import java.util.Objects;
  * 店铺Milvus策略类。
  */
 @Component
+@Slf4j
 public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
 
     @Autowired
@@ -137,16 +139,30 @@ public class ShopMilvusStrategy implements MilvusSyncStrategy<ShopDoc> {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-        shopVectorStore.delete(ids);
-        shopVectorStore.delete(String.format("id in [%s]", String.join(", ", ids)));
+        safeDeleteByIds(ids);
     }
 
     /**
      * 按ID删除数据。
      */
     private void deleteById(String id) {
-        shopVectorStore.delete(List.of(id));
-        shopVectorStore.delete(String.format("id == %s", id));
+        if (id == null || id.isBlank()) {
+            return;
+        }
+        safeDeleteByIds(List.of(id));
+    }
+
+    /**
+     * 安全删除，删除不支持或数据不存在时直接跳过。
+     */
+    private void safeDeleteByIds(List<String> ids) {
+        try {
+            shopVectorStore.delete(ids);
+        } catch (UnsupportedOperationException ex) {
+            log.warn("shopVectorStore does not support delete, skip ids={}", ids);
+        } catch (Exception ex) {
+            log.warn("shopVectorStore delete skipped, ids={}, reason={}", ids, ex.getMessage());
+        }
     }
 
     /**

@@ -23,6 +23,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +63,12 @@ public class SearchServiceImpl implements ISearchService {
             // 获取索引预定义的默认搜索字段
             String[] searchFields = EsTool.getDefaultSearchFields(indexName);
             sourceBuilder.query(QueryBuilders.multiMatchQuery(keyword, searchFields));
+            // 非数字 keyword，过滤掉 id 字段
+            if (!keyword.matches("\\d+")) {
+                searchFields = Arrays.stream(searchFields)
+                        .filter(f -> !f.equals("id"))
+                        .toArray(String[]::new);
+            }
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());
         }

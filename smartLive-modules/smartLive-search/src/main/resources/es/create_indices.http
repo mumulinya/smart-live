@@ -114,7 +114,7 @@ PUT /user_index
   "mappings": {
     "dynamic": false,
     "properties": {
-      "id": { "type": "long" },
+      "id": { "type": "keyword" },
       "nickName": {
         "type": "text",
         "analyzer": "ik_max_word",

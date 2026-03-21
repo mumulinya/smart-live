@@ -182,22 +182,66 @@
 
 ## <a id="效果预览"></a>🎨 效果预览
 
-README 这里先保留最主要的 6 个页面入口；想按 App / 管理端继续看页面、补截图或找源码位置，可以直接跳到 [docs/PAGE_GALLERY.md](docs/PAGE_GALLERY.md)。
+README 这里先保留最主要的 App 端核心页面，用更接近手机竖屏的方式展示；想继续按 App / 管理端 Web 看完整页面和源码位置，可以直接跳到 [docs/PAGE_GALLERY.md](docs/PAGE_GALLERY.md)。
 
-| 登录与身份进入 | 首页四榜热榜 | 搜索与地图找店 |
-|:---:|:---:|:---:|
-| [![login](docs/screenshots/login-page.png)](docs/PAGE_GALLERY.md#app-login-entry) | [![hot](docs/screenshots/hot-ranking.png)](docs/PAGE_GALLERY.md#app-home-hot) | [![map](docs/screenshots/map-view.png)](docs/PAGE_GALLERY.md#app-search-map) |
-| [查看登录页与账号入口](docs/PAGE_GALLERY.md#app-login-entry) | [查看首页四榜热榜](docs/PAGE_GALLERY.md#app-home-hot) | [查看搜索结果与 LBS 找店](docs/PAGE_GALLERY.md#app-search-map) |
+### 1. 登录与身份进入
 
-| 店铺与商品详情 | 社交消息与即时通讯 | AI 与订单资产 |
-|:---:|:---:|:---:|
-| [![shop](docs/screenshots/shop-detail.png)](docs/PAGE_GALLERY.md#app-shop-product) | [![im](docs/screenshots/app-chat-detail.png)](docs/PAGE_GALLERY.md#app-social-message) | [![ai](docs/screenshots/ai-chat.png)](docs/PAGE_GALLERY.md#app-ai-order-assets) |
-| [查看店铺页、商品页与内容发布](docs/PAGE_GALLERY.md#app-shop-product) | [查看动态、消息中心与 IM](docs/PAGE_GALLERY.md#app-social-message) | [查看 AI、订单、钱包与积分](docs/PAGE_GALLERY.md#app-ai-order-assets) |
+<p align="center">
+  <a href="docs/PAGE_GALLERY.md#app-login-entry"><img src="docs/screenshots/login-page.png" alt="login" width="300"></a>
+</p>
+
+登录页负责建立账号入口和用户身份，是第一次进入 App 的起点。  
+[查看登录页与账号入口](docs/PAGE_GALLERY.md#app-login-entry)
+
+### 2. 首页入口与热榜榜单
+
+<p align="center">
+  <a href="docs/PAGE_GALLERY.md#app-home-hot"><img src="docs/screenshots/homepage.png" alt="home-hot" width="300"></a>
+</p>
+
+首页承接分类入口、热门内容流和榜单跳转，是用户发现内容和店铺的主入口。  
+[查看首页入口、热门内容与热榜榜单](docs/PAGE_GALLERY.md#app-home-hot)
+
+### 3. 搜索与地图找店
+
+<p align="center">
+  <a href="docs/PAGE_GALLERY.md#app-search-map"><img src="docs/screenshots/map-view.png" alt="map" width="300"></a>
+</p>
+
+搜索页支持关键词、热词和位置感知，地图模式进一步放大了附近找店体验。  
+[查看搜索结果与 LBS 找店](docs/PAGE_GALLERY.md#app-search-map)
+
+### 4. 店铺与商品详情
+
+<p align="center">
+  <a href="docs/PAGE_GALLERY.md#app-shop-product"><img src="docs/screenshots/shop-detail.png" alt="shop" width="300"></a>
+</p>
+
+详情页承接店铺介绍、商品购买、评价查看和内容互动，是下单前的核心决策页。  
+[查看店铺页、商品页与内容发布](docs/PAGE_GALLERY.md#app-shop-product)
+
+### 5. 社交消息与即时通讯
+
+<p align="center">
+  <a href="docs/PAGE_GALLERY.md#app-social-message"><img src="docs/screenshots/app-chat-detail.png" alt="im" width="300"></a>
+</p>
+
+这里集中展示了会话列表、系统通知和私聊消息，是社交互动与消息流转的主要承接页。  
+[查看动态、消息中心与 IM](docs/PAGE_GALLERY.md#app-social-message)
+
+### 6. AI 与订单资产
+
+<p align="center">
+  <a href="docs/PAGE_GALLERY.md#app-ai-capability"><img src="docs/screenshots/app-ai-order-card.png" alt="ai-order" width="300"></a>
+</p>
+
+AI 页不只负责对话，还能返回推荐卡片、生成内容，并直接承接下单结果和订单跳转。  
+[查看 AI 对话、会话与 AIGC](docs/PAGE_GALLERY.md#app-ai-capability)
 
 ### 🧩 更多页面入口
 
-- 想看用户端 App 的详细页面和待补截图位：看 [docs/PAGE_GALLERY.md - 用户端 App](docs/PAGE_GALLERY.md#app-pages)
-- 想看管理端 UI 的详细页面和待补截图位：看 [docs/PAGE_GALLERY.md - 管理端 UI](docs/PAGE_GALLERY.md#admin-pages)
+- 想看用户端 App 的详细页面导览：看 [docs/PAGE_GALLERY.md - 用户端 App](docs/PAGE_GALLERY.md#app-pages)
+- 想看管理端 Web 的详细页面导览：看 [docs/PAGE_GALLERY.md - 管理端 Web](docs/PAGE_GALLERY.md#admin-pages)
 - 想按业务链路看截图、架构图和核心时序图：看 [docs/SHOWCASE.md](docs/SHOWCASE.md)
 
 

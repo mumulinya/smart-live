@@ -16,67 +16,239 @@
   <img src="./screenshots/architecture.png" alt="SmartLive 系统架构图" width="100%">
 </div>
 
-- 前台用户端、后台管理端通过网关统一进入微服务体系。
+- 前台用户端 App、后台管理端 Web 通过网关统一进入微服务体系。
 - 中间层覆盖用户、店铺、商品、订单、互动、AI、IM、审核、积分、钱包等业务域。
 - 基础设施层包含 Redis、RabbitMQ、Elasticsearch、Milvus、MinIO、XXL-JOB 等中间件。
 
 ## <a id="showcase-discovery"></a>2. 用户发现与决策
 
-| 登录与首页 | 搜索与榜单 | 地图与店铺 |
-|:---:|:---:|:---:|
-| ![login](./screenshots/login-page.png) | ![search-results](./screenshots/search-results.png) | ![map-view](./screenshots/map-view.png) |
-| 统一登录入口，支持移动端用户鉴权 | 支持全文检索、热词和排序策略 | 支持基于位置的找店和附近推荐 |
+### 登录入口
 
-| 首页聚合流 | 热门榜单 | 店铺详情 |
-|:---:|:---:|:---:|
-| ![homepage](./screenshots/homepage.png) | ![hot-ranking](./screenshots/hot-ranking.png) | ![shop-detail](./screenshots/shop-detail.png) |
-| 首页聚合商户、活动和分类入口 | 热度榜单直观展示热门内容和商户 | 详情页承接店铺介绍、商品、评价与互动 |
+<p align="center">
+  <img src="./screenshots/login-page.png" alt="login" width="300">
+</p>
+
+统一登录入口，支持移动端用户鉴权。
+
+### 搜索与地图
+
+<p align="center">
+  <img src="./screenshots/map-view.png" alt="map-view" width="300">
+</p>
+
+支持基于位置的找店和附近推荐。
+
+### 搜索结果
+
+<p align="center">
+  <img src="./screenshots/search-results.png" alt="search-results" width="300">
+</p>
+
+支持全文检索、热词和排序策略。
+
+### 首页入口
+
+<p align="center">
+  <img src="./screenshots/homepage.png" alt="homepage" width="300">
+</p>
+
+首页展示分类、优惠专区和秒杀入口。
+
+### 热门内容流
+
+<p align="center">
+  <img src="./screenshots/hot-ranking.png" alt="hot-ranking" width="300">
+</p>
+
+热门页展示内容流与分区切换。
+
+### 热门店铺榜
+
+<p align="center">
+  <img src="./screenshots/app-top-shops.png" alt="app-top-shops" width="300">
+</p>
+
+独立店铺热榜页展示热门商户。
+
+### 热门商品榜
+
+<p align="center">
+  <img src="./screenshots/app-top-products.png" alt="app-top-products" width="300">
+</p>
+
+独立商品热榜页展示热门商品。
+
+### 店铺详情
+
+<p align="center">
+  <img src="./screenshots/shop-detail.png" alt="shop-detail" width="300">
+</p>
+
+详情页承接店铺介绍、商品、评价与互动。
 
 ## <a id="showcase-trade"></a>3. 交易与增长
 
-| 商品详情 | 秒杀专区 | 订单中心 |
-|:---:|:---:|:---:|
-| ![product-detail](./screenshots/product-detail.png) | ![seckill-page](./screenshots/seckill-page.png) | ![order-page](./screenshots/order-page.png) |
-| 商品详情承接下单、收藏、评价入口 | 秒杀专区对应 Redis Lua + MQ 异步削峰链路 | 订单中心展示待支付、进行中、已完成订单 |
+### 商品详情
 
-| 钱包中心 | 积分中心 | 签到抽奖 |
-|:---:|:---:|:---:|
-| ![wallet-page](./screenshots/wallet-page.png) | ![points-page](./screenshots/points-page.png) | ![sign-in](./screenshots/sign-in.png) |
-| 钱包展示余额、消费和支付记录 | 积分中心承接签到、抽奖和成长体系 | 连续签到与抽奖是增长玩法入口 |
+<p align="center">
+  <img src="./screenshots/product-detail.png" alt="product-detail" width="300">
+</p>
+
+商品详情承接下单、收藏、评价入口。
+
+### 秒杀专区
+
+<p align="center">
+  <img src="./screenshots/seckill-page.png" alt="seckill-page" width="300">
+</p>
+
+秒杀专区对应 Redis Lua + MQ 异步削峰链路。
+
+### 订单中心
+
+<p align="center">
+  <img src="./screenshots/order-page.png" alt="order-page" width="300">
+</p>
+
+订单中心展示待支付、进行中、已完成订单。
+
+### 钱包中心
+
+<p align="center">
+  <img src="./screenshots/wallet-page.png" alt="wallet-page" width="300">
+</p>
+
+钱包展示余额、消费和支付记录。
+
+### 积分中心
+
+<p align="center">
+  <img src="./screenshots/points-page.png" alt="points-page" width="300">
+</p>
+
+积分中心承接签到、抽奖和成长体系。
+
+### 签到抽奖
+
+<p align="center">
+  <img src="./screenshots/sign-in.png" alt="sign-in" width="300">
+</p>
+
+连续签到与抽奖是增长玩法入口。
 
 ## <a id="showcase-social"></a>4. 内容、社交与消息
 
-| 动态流 | 发布页 | 评论区 |
-|:---:|:---:|:---:|
-| ![feed-flow](./screenshots/feed-flow.png) | ![publish-page](./screenshots/publish-page.png) | ![comment-section](./screenshots/comment-section.png) |
-| 动态流展示关注内容与推荐内容混合分发 | 支持内容创作与草稿管理 | 评论和评价承接互动计数与审核链路 |
+### 动态流
 
-| 我的发布 | 我的收藏 | 关注列表 |
-|:---:|:---:|:---:|
-| ![user-posts](./screenshots/user-posts.png) | ![user-favorites](./screenshots/user-favorites.png) | ![follow-list](./screenshots/follow-list.png) |
-| 个人主页可查看已发布内容 | 收藏列表承接内容回访与转化 | 关注与粉丝关系支撑 Feed 分发 |
+<p align="center">
+  <img src="./screenshots/feed-flow.png" alt="feed-flow" width="300">
+</p>
 
-| 消息中心 | 系统通知 | IM 私聊 |
-|:---:|:---:|:---:|
-| ![message-center](./screenshots/message-center.png) | ![system-notification](./screenshots/system-notification.png) | ![im-chat](./screenshots/im-chat.png) |
-| 消息中心汇总互动与业务通知 | 审核结果、系统提醒会通过站内通知下发 | IM 支撑实时聊天和会话管理 |
+动态流展示关注内容与推荐内容混合分发。
+
+### 发布页
+
+<p align="center">
+  <img src="./screenshots/publish-page.png" alt="publish-page" width="300">
+</p>
+
+支持内容创作与草稿管理。
+
+### 评论区
+
+<p align="center">
+  <img src="./screenshots/comment-section.png" alt="comment-section" width="300">
+</p>
+
+评论和评价承接互动计数与审核链路。
+
+### 我的发布
+
+<p align="center">
+  <img src="./screenshots/user-posts.png" alt="user-posts" width="300">
+</p>
+
+个人主页可查看已发布内容。
+
+### 我的收藏
+
+<p align="center">
+  <img src="./screenshots/user-favorites.png" alt="user-favorites" width="300">
+</p>
+
+收藏列表承接内容回访与转化。
+
+### 关注列表
+
+<p align="center">
+  <img src="./screenshots/follow-list.png" alt="follow-list" width="300">
+</p>
+
+关注与粉丝关系支撑 Feed 分发。
+
+### 会话列表
+
+<p align="center">
+  <img src="./screenshots/app-chat-list.png" alt="app-chat-list" width="300">
+</p>
+
+会话列表承接私聊入口与未读状态。
+
+### 系统通知
+
+<p align="center">
+  <img src="./screenshots/app-system-notice.png" alt="app-system-notice" width="300">
+</p>
+
+审核结果、系统提醒会通过站内通知下发。
+
+### IM 私聊
+
+<p align="center">
+  <img src="./screenshots/app-chat-detail.png" alt="app-chat-detail" width="300">
+</p>
+
+私聊详情展示实时聊天与消息流转。
 
 ## <a id="showcase-ai"></a>5. AI 与用户画像
 
-| AI 助手 | 用户行为检索 | 个人中心 |
-|:---:|:---:|:---:|
-| ![ai-chat](./screenshots/ai-chat.png) | ![user-search](./screenshots/user-search.png) | ![profile-page](./screenshots/profile-page.png) |
-| AI 助手支持对话、推荐、经营辅助等场景 | 行为检索承接点赞、收藏、发布等数据回查 | 个人中心聚合用户资料、内容与资产入口 |
+### AI 推荐结果卡片
+
+<p align="center">
+  <img src="./screenshots/app-ai-recommend-card.png" alt="app-ai-recommend-card" width="300">
+</p>
+
+AI 推荐卡片承接商品与团购推荐结果。
+
+### AI 下单结果与订单卡片
+
+<p align="center">
+  <img src="./screenshots/app-ai-order-card.png" alt="app-ai-order-card" width="300">
+</p>
+
+下单结果会直接展示订单号、状态轮询和跳转入口。
+
+### AI 会话列表
+
+<p align="center">
+  <img src="./screenshots/app-ai-session-list.png" alt="app-ai-session-list" width="300">
+</p>
+
+会话列表承接历史会话和快速恢复。
+
+### 个人中心
+
+<p align="center">
+  <img src="./screenshots/profile-page.png" alt="profile-page" width="300">
+</p>
+
+个人中心聚合用户资料、内容与资产入口。
 
 ## <a id="showcase-chains"></a>6. 核心链路图集
 
-这批图用于细看系统设计，不适合直接压缩内嵌在首页里看。这里统一提供双入口：`SVG` 看主链路展示，`PNG` 看更细的历史设计图。旧版 PNG 已归档到 [./diagrams/legacy-png](./diagrams/legacy-png)。
-
-这里也按主题分组展示。前面的分组更适合第一次快速读项目，最后的“历史详细图补充”主要保留旧设计视角，方便继续深挖。
+这里统一提供双入口：`SVG` 看主链路展示，`PNG` 看更细的历史设计图。旧版 PNG 已归档到 [./diagrams/legacy-png](./diagrams/legacy-png)。
 
 ### <a id="chains-trade"></a>交易与履约
-
-这组优先回答“项目怎么完成下单、支付、退款、核销和履约闭环”。
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
@@ -89,8 +261,6 @@
 
 ### 积分与用户激励
 
-这组聚焦签到、抽奖、消费奖励这些用户增长和激励机制。
-
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
 | 每日签到积分 | 签到、积分发放、幂等与奖励计算 | [查看 SVG](./diagrams/daily-signin-points-sequence.svg) | [查看 PNG](./diagrams/legacy-png/daily-signin-points-sequence.png) |
@@ -98,16 +268,12 @@
 
 ### 账户与基础设施
 
-这组主要看登录态、网关透传、文件上传这类基础能力怎么支撑全站业务。
-
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
 | 登录鉴权与网关透传 | 短信/密码登录、Redis 登录态、Gateway 请求头透传 | [查看 SVG](./diagrams/auth-login-gateway-chain.svg) | SVG only |
 | 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](./diagrams/file-upload-avatar-update-chain.svg) | SVG only |
 
 ### <a id="chains-search"></a>内容审核与搜索
-
-这组适合看“内容怎么过审、怎么进搜索、用户又是怎么搜出来的”。
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
@@ -117,8 +283,6 @@
 
 ### <a id="chains-social"></a>社交与消息
 
-这组重点看 Feed、私聊、系统通知三条社交消息链如何拆分协作。
-
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
 | 关注 Feed 推送与滚动读取 | 粉丝信箱写入、Pipeline 批量 ZSet、ScrollResult 读取聚合 | [查看 SVG](./diagrams/follow-feed-scroll-read-chain.svg) | SVG only |
@@ -126,8 +290,6 @@
 | 系统通知入库与 IM 推送 | 多业务通知汇聚、通知落库、在线实时推送 | [查看 SVG](./diagrams/system-notice-im-push-chain.svg) | SVG only |
 
 ### <a id="chains-rank"></a>排行、热度与推荐
-
-这组更偏“首页热门内容和热榜机制”，既看榜单是怎么读出来的，也看热度是怎么持续维护的。
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
@@ -138,16 +300,12 @@
 
 ### <a id="chains-ai"></a>AI 与经营
 
-这组主要展示 AI 对话、商家经营分析和 AI 辅助建议是怎么落进真实业务里的。
-
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
 | AI 对话链路 | SSE 流式响应、意图路由、卡片事件 | [查看 SVG](./diagrams/ai-chat-sse-intent-routing-sequence.svg) | [查看 PNG](./diagrams/legacy-png/ai-chat-sse-intent-routing-sequence.png) |
 | 店铺经营分析与 AI 经营建议 | 订单分析、评价分析、经营建议与差评关键词抽取合在同一组看 | [分析聚合](./diagrams/shop-analysis-aggregation-chain.svg) / [AI 建议](./diagrams/shop-suggest-ai-keywords-chain.svg) | SVG only |
 
 ### <a id="chains-cache"></a>缓存与性能专题
-
-这组不是业务流程图，而是专门解释 Redis 分层缓存和性能优化设计。
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
@@ -156,8 +314,6 @@
 | 详情页缓存读写链路 | 逻辑过期、空值缓存、互斥锁重建、写后删缓存 | [查看 SVG](./diagrams/redis-detail-cache-readwrite-chain.svg) | SVG only |
 
 ### <a id="chains-schedule"></a>调度与定时任务
-
-这组不讲单次用户请求，而是把 XXL-JOB 体系单独拎出来：先看总览，再看 4 张任务域子图。
 
 #### 第一层：总览图
 
@@ -176,8 +332,6 @@
 
 ### 历史详细图补充
 
-这组主要保留旧设计视角，方便继续深挖。
-
 | 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
 |:---|:---|:---|:---|
 | UGC 异步审核与分发 | 审核消息投递、责任链处理、回调源服务 | [查看 SVG](./diagrams/ugc-audit-flow.svg) | [查看 PNG](./diagrams/legacy-png/ugc-audit-flow.png) |
@@ -186,7 +340,7 @@
 
 ## 7. 如何继续阅读
 
-- 想按页面继续看用户端 App / 管理端 UI：看 [PAGE_GALLERY.md](PAGE_GALLERY.md)
+- 想按页面继续看用户端 App / 管理端 Web：看 [PAGE_GALLERY.md](PAGE_GALLERY.md)
 - 想把项目跑起来：看 [OPEN_SOURCE.md](OPEN_SOURCE.md)
 - 想做本地或服务器部署：看 [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 - 想参与贡献：看 [../CONTRIBUTING.md](../CONTRIBUTING.md)

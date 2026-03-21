@@ -3,6 +3,7 @@ package com.smartLive.ai.strategy.milvus;
 import com.smartLive.ai.entity.DOC.BlogDoc;
 import com.smartLive.ai.utils.EsTool;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.util.Objects;
  * 博客Milvus策略类。
  */
 @Component
+@Slf4j
 public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
 
     @Autowired
@@ -138,16 +140,30 @@ public class BlogMilvusStrategy implements MilvusSyncStrategy<BlogDoc> {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-        blogVectorStore.delete(ids);
-        blogVectorStore.delete(String.format("id in [%s]", String.join(", ", ids)));
+        safeDeleteByIds(ids);
     }
 
     /**
      * 按ID删除数据。
      */
     private void deleteById(String id) {
-        blogVectorStore.delete(List.of(id));
-        blogVectorStore.delete(String.format("id == %s", id));
+        if (id == null || id.isBlank()) {
+            return;
+        }
+        safeDeleteByIds(List.of(id));
+    }
+
+    /**
+     * 安全删除，删除不支持或数据不存在时直接跳过。
+     */
+    private void safeDeleteByIds(List<String> ids) {
+        try {
+            blogVectorStore.delete(ids);
+        } catch (UnsupportedOperationException ex) {
+            log.warn("blogVectorStore does not support delete, skip ids={}", ids);
+        } catch (Exception ex) {
+            log.warn("blogVectorStore delete skipped, ids={}, reason={}", ids, ex.getMessage());
+        }
     }
 
     /**

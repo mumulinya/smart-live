@@ -110,11 +110,14 @@ public class MilvusSyncListener {
      * 处理批量插入同步。
      */
     public void handleBatchInsert(ContentBatchSyncMessage request, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, @Header(required = false, name = AmqpHeaders.MESSAGE_ID) String messageId) throws IOException {
+        log.info("Milvus batch insert start, type={},data={}", request.getType(), request.getData());
         if (request == null || request.getData() == null) {
+            log.info("Milvus batch insert failed, data is empty");
+            log.info("Milvus batch insert result: {}, type={}", false, request);
             channel.basicAck(deliveryTag, false);
             return;
         }
-       log.info("Milvus batch insert start, type={},data={}", request.getType(), request.getData());
+        log.info("Milvus batch insert start, type={},data={}", request.getType(), request.getData());
         if (messageId == null || messageId.isEmpty()) {
             log.error("[MQ幂等] Milvus批量同步消息缺失 messageId，拒绝消费");
             channel.basicNack(deliveryTag, false, false);
