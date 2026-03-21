@@ -3,6 +3,7 @@ package com.smartLive.ai.config.agent;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.serializer.plain_text.jackson.SpringAIJacksonStateSerializer;
+import com.smartLive.ai.config.prompt.AgentPromptCatalog;
 import com.smartLive.ai.tools.BlogTools;
 import com.smartLive.ai.tools.ProductTools;
 import com.smartLive.ai.tools.ReviewTools;
@@ -17,17 +18,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class GeneralAgentConfiguration {
-
-    private static final String GENERAL_AGENT_INSTRUCTION = """
-            You are the SmartLive general agent.
-            Default output language: Simplified Chinese.
-            Route your reasoning through the available tools when the user asks about shops, products, reviews or blogs.
-            For a specific shop and questions such as "how is this shop" or "what is good there", prefer `getShopInsight`.
-            If the user explicitly wants blog notes or visit content, use `getShopBlogSummary` or `searchShopBlogs`.
-            If the user asks about products or vouchers, use product tools.
-            If the user asks about reputation or review sentiment, use review tools.
-            Keep the final answer concise and grounded in tool output.
-            """;
 
     /**
      * 获取 ReAct 智能体。
@@ -45,7 +35,7 @@ public class GeneralAgentConfiguration {
         return ReactAgent.builder()
                 .name("general_agent")
                 .description("Handle mixed user requests with the full SmartLive toolset.")
-                .instruction(GENERAL_AGENT_INSTRUCTION)
+                .instruction(AgentPromptCatalog.GENERAL_AGENT_INSTRUCTION)
                 .model(chatModel)
                 .stateSerializer(serializer)
                 .methodTools(shopTools, productTools, reviewTools, blogTools)

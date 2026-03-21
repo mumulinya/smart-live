@@ -80,12 +80,13 @@ public class ProductRagService implements IProductRagService {
             CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> remoteProductService.purchaseProduct(productId, userId));
             Long result = future.get();
             if (result != null) {
-                return "Purchase succeeded, orderId=" + result;
+                // 返回 JSON 格式，orderId 用引号包裹为字符串，避免前端 JSON.parse 大整数精度丢失
+                return "{\"success\": true, \"orderId\": \"" + result + "\"}";
             }
-            return "Purchase failed";
+            return "{\"success\": false, \"message\": \"Purchase failed\"}";
         } catch (Exception e) {
             log.error("Purchase failed", e);
-            return "Purchase failed";
+            return "{\"success\": false, \"message\": \"Purchase failed: " + e.getMessage() + "\"}";
         }
     }
 
