@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1560" viewBox="0 0 2360 1560" role="img" aria-labelledby="title desc">
+  <title id="title">订单生命周期兜底处理链路（详细版）</title>
+  <desc id="desc">展示 XXL-JOB 如何对已支付订单做临期提醒和过期处理，补足 MQ 实时链路之外的日级兜底与运营通知。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .warn { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1560" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1504" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">订单生命周期兜底处理链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：OrderExpireJobHandler.orderSoonExpireJobHandler / orderExpireJobHandler + IOrderService.expired + chat 系统通知 MQ</text>
+
+  <text class="section" x="70" y="182">1. 临期提醒：每天扫描“已支付且 3 天内过期”的订单</text>
+
+  <rect class="node" x="70" y="220" width="320" height="170"/>
+  <text class="node-title" x="230" y="282" text-anchor="middle">XXL-JOB</text>
+  <text class="node-text" x="230" y="318" text-anchor="middle">orderSoonExpireJobHandler</text>
+  <text class="node-text" x="230" y="344" text-anchor="middle">建议每天一次执行</text>
+
+  <rect class="store" x="470" y="220" width="420" height="170"/>
+  <text class="node-title" x="680" y="282" text-anchor="middle">订单表筛选条件</text>
+  <text class="node-text" x="680" y="318" text-anchor="middle">status == PAID</text>
+  <text class="node-text" x="680" y="344" text-anchor="middle">expireTime 在 now ~ now+3天 之间</text>
+
+  <rect class="mq" x="970" y="220" width="430" height="170"/>
+  <text class="node-title" x="1185" y="282" text-anchor="middle">SystemNoticeCreateDTO</text>
+  <text class="node-text" x="1185" y="318" text-anchor="middle">title=订单过期提醒</text>
+  <text class="node-text" x="1185" y="344" text-anchor="middle">extraData 带 OrderVO 供前端跳详情</text>
+
+  <rect class="mq" x="1480" y="220" width="360" height="170"/>
+  <text class="node-title" x="1660" y="282" text-anchor="middle">SYSTEM_NOTICE_EXCHANGE</text>
+  <text class="node-text" x="1660" y="318" text-anchor="middle">routing=SYSTEM_NOTICE_ROUTING</text>
+  <text class="node-text" x="1660" y="344" text-anchor="middle">异步投递给 chat 模块</text>
+
+  <rect class="node" x="1920" y="220" width="360" height="170"/>
+  <text class="node-title" x="2100" y="282" text-anchor="middle">用户端系统消息</text>
+  <text class="node-text" x="2100" y="318" text-anchor="middle">提醒“订单即将过期”</text>
+  <text class="node-text" x="2100" y="344" text-anchor="middle">引导尽快核销 / 使用</text>
+
+  <path class="line" d="M390 305 H458"/>
+  <text class="step" x="424" y="289" text-anchor="middle">1. 日级扫描</text>
+  <path class="line" d="M890 305 H958"/>
+  <text class="step" x="924" y="289" text-anchor="middle">2. 构造提醒</text>
+  <path class="line" d="M1400 305 H1468"/>
+  <text class="step" x="1434" y="289" text-anchor="middle">3. 发通知 MQ</text>
+  <path class="line" d="M1840 305 H1908"/>
+  <text class="step" x="1874" y="289" text-anchor="middle">4. 到达用户侧</text>
+
+  <text class="section" x="70" y="454">2. 过期处理：每天扫描“已支付且已经过期”的订单并推进 expired 逻辑</text>
+
+  <rect class="node" x="90" y="490" width="320" height="180"/>
+  <text class="node-title" x="250" y="552" text-anchor="middle">XXL-JOB</text>
+  <text class="node-text" x="250" y="588" text-anchor="middle">orderExpireJobHandler</text>
+  <text class="node-text" x="250" y="614" text-anchor="middle">建议每天凌晨执行</text>
+  <text class="node-text" x="250" y="640" text-anchor="middle">对过期订单做兜底收口</text>
+
+  <rect class="store" x="500" y="490" width="420" height="180"/>
+  <text class="node-title" x="710" y="552" text-anchor="middle">订单表筛选条件</text>
+  <text class="node-text" x="710" y="588" text-anchor="middle">status == PAID</text>
+  <text class="node-text" x="710" y="614" text-anchor="middle">expireTime &lt;= now</text>
+  <text class="node-text" x="710" y="640" text-anchor="middle">说明订单已经过了有效期</text>
+
+  <rect class="node" x="1010" y="490" width="360" height="180"/>
+  <text class="node-title" x="1190" y="552" text-anchor="middle">orderService.expired</text>
+  <text class="node-text" x="1190" y="588" text-anchor="middle">修改订单状态为已过期</text>
+  <text class="node-text" x="1190" y="614" text-anchor="middle">进入补偿 / 退款处理入口</text>
+  <text class="node-text" x="1190" y="640" text-anchor="middle">保证过期订单不长期停留在 PAID</text>
+
+  <rect class="decision" x="1460" y="490" width="370" height="180"/>
+  <text class="node-title" x="1645" y="552" text-anchor="middle">补偿结果</text>
+  <text class="node-text" x="1645" y="588" text-anchor="middle">库存 / 状态回收</text>
+  <text class="node-text" x="1645" y="614" text-anchor="middle">后续可接原路退款或钱包补偿</text>
+  <text class="node-text" x="1645" y="640" text-anchor="middle">与交易链保持最终一致</text>
+
+  <rect class="store" x="1920" y="490" width="360" height="180"/>
+  <text class="node-title" x="2100" y="552" text-anchor="middle">订单生命周期收口</text>
+  <text class="node-text" x="2100" y="588" text-anchor="middle">PAID -&gt; EXPIRED</text>
+  <text class="node-text" x="2100" y="614" text-anchor="middle">不让异常订单无限滞留</text>
+  <text class="node-text" x="2100" y="640" text-anchor="middle">方便运营与财务核对</text>
+
+  <path class="line" d="M410 580 H488"/>
+  <text class="step" x="449" y="564" text-anchor="middle">5. 定时扫已过期订单</text>
+  <path class="line" d="M920 580 H998"/>
+  <text class="step" x="959" y="564" text-anchor="middle">6. 进入 expired</text>
+  <path class="line" d="M1370 580 H1448"/>
+  <text class="step" x="1409" y="564" text-anchor="middle">7. 推进补偿</text>
+  <path class="line" d="M1830 580 H1908"/>
+  <text class="step" x="1869" y="564" text-anchor="middle">8. 生命周期收口</text>
+
+  <text class="section" x="70" y="742">3. 这套调度为什么不能完全靠 MQ 取代</text>
+
+  <rect class="decision" x="130" y="782" width="500" height="200"/>
+  <text class="node-title" x="380" y="846" text-anchor="middle">MQ 更适合“事件发生当下”</text>
+  <text class="node-text" x="380" y="882" text-anchor="middle">下单、支付、退款、库存这些实时链路</text>
+  <text class="node-text" x="380" y="908" text-anchor="middle">强调秒级推进，不适合每天回看全量存量数据</text>
+  <text class="node-text" x="380" y="934" text-anchor="middle">一旦错过事件，也不擅长做日级补扫</text>
+
+  <rect class="decision" x="730" y="782" width="500" height="200"/>
+  <text class="node-title" x="980" y="846" text-anchor="middle">XXL-JOB 负责“存量兜底”</text>
+  <text class="node-text" x="980" y="882" text-anchor="middle">临期提醒、过期处理、批量扫描</text>
+  <text class="node-text" x="980" y="908" text-anchor="middle">任务可视化、手动补跑、失败告警更直观</text>
+  <text class="node-text" x="980" y="934" text-anchor="middle">适合日级或小时级的生命周期治理</text>
+
+  <rect class="decision" x="1330" y="782" width="500" height="200"/>
+  <text class="node-title" x="1580" y="846" text-anchor="middle">两者配合后的边界</text>
+  <text class="node-text" x="1580" y="882" text-anchor="middle">实时事件：MQ</text>
+  <text class="node-text" x="1580" y="908" text-anchor="middle">兜底巡检：XXL-JOB</text>
+  <text class="node-text" x="1580" y="934" text-anchor="middle">最终形成完整订单生命周期治理</text>
+
+  <rect class="note" x="1930" y="782" width="350" height="200"/>
+  <text class="note-title" x="1962" y="846">代码锚点</text>
+  <text class="note-text" x="1962" y="882">- orderSoonExpireJobHandler：查 3 天内到期订单并发系统提醒。</text>
+  <text class="note-text" x="1962" y="910">- orderExpireJobHandler：查已过期订单并调 orderService.expired。</text>
+  <text class="note-text" x="1962" y="938">- createDTO.extraData：把 OrderVO 透给聊天通知页。</text>
+</svg>

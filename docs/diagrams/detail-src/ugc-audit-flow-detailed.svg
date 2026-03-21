@@ -1,0 +1,211 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2340" height="1640" viewBox="0 0 2340 1640" role="img" aria-labelledby="title desc">
+  <title id="title">UGC 异步审核与分发（详细版）</title>
+  <desc id="desc">展示博客与评价等 UGC 内容提交后，如何发起 AuditMessage、创建 AuditTask、执行敏感词和 AI 审核，并把结果回写到内容状态、搜索索引和系统通知。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .reject { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2340" height="1640" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2284" height="1584" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">UGC 异步审核与分发（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：BlogServiceImpl.saveBlog / sendAuditMessage + ReviewServiceImpl.submitReview / sendAuditMessage + AuditListener.handleAuditCreate + AuditServiceImpl.handleAudit / auditAction + ChatListener.consumeSystemNotice</text>
+
+  <text class="section" x="70" y="182">1. 博客 / 评价提交后，内容先落业务表，再异步发 AuditMessage，而不是在请求线程里同步审核</text>
+
+  <rect class="node" x="70" y="220" width="300" height="170"/>
+  <text class="node-title" x="220" y="280" text-anchor="middle">用户端 App</text>
+  <text class="node-text" x="220" y="316" text-anchor="middle">提交博客或评价</text>
+  <text class="node-text" x="220" y="342" text-anchor="middle">内容里可能带文字、图片、目标店铺/商品</text>
+
+  <rect class="node" x="430" y="220" width="380" height="170"/>
+  <text class="node-title" x="620" y="280" text-anchor="middle">BlogService / ReviewService</text>
+  <text class="node-text" x="620" y="316" text-anchor="middle">先保存内容实体</text>
+  <text class="node-text" x="620" y="342" text-anchor="middle">草稿直接返回，正式发布才继续发审核消息</text>
+
+  <rect class="store" x="870" y="220" width="340" height="170"/>
+  <text class="node-title" x="1040" y="280" text-anchor="middle">Blog / Review</text>
+  <text class="node-text" x="1040" y="316" text-anchor="middle">正文、图片、目标资源、用户 ID</text>
+  <text class="node-text" x="1040" y="342" text-anchor="middle">后续审核结果会回写 audit_status / reject_reason</text>
+
+  <rect class="mq" x="1270" y="220" width="360" height="170"/>
+  <text class="node-title" x="1450" y="280" text-anchor="middle">AuditMessage</text>
+  <text class="node-text" x="1450" y="316" text-anchor="middle">blog：直接 beanToMap(blog)</text>
+  <text class="node-text" x="1450" y="342" text-anchor="middle">review：封装 AuditReviewBO 再发 MQ</text>
+
+  <rect class="node" x="1690" y="220" width="320" height="170"/>
+  <text class="node-title" x="1850" y="280" text-anchor="middle">AuditListener</text>
+  <text class="node-text" x="1850" y="316" text-anchor="middle">消费 AUDIT_QUEUE</text>
+  <text class="node-text" x="1850" y="342" text-anchor="middle">先做 messageId 幂等校验</text>
+
+  <rect class="store" x="2070" y="220" width="210" height="170"/>
+  <text class="node-title" x="2175" y="280" text-anchor="middle">AuditTask</text>
+  <text class="node-text" x="2175" y="316" text-anchor="middle">status=WAITING</text>
+  <text class="node-text" x="2175" y="342" text-anchor="middle">保留全链路追踪</text>
+
+  <path class="line" d="M370 305 H418"/>
+  <text class="step" x="394" y="289" text-anchor="middle">1. 提交</text>
+  <path class="line" d="M810 305 H858"/>
+  <text class="step" x="834" y="289" text-anchor="middle">2. 落业务表</text>
+  <path class="line" d="M1210 305 H1258"/>
+  <text class="step" x="1234" y="289" text-anchor="middle">3. 发审核消息</text>
+  <path class="line" d="M1630 305 H1678"/>
+  <text class="step" x="1654" y="289" text-anchor="middle">4. MQ 消费</text>
+  <path class="line" d="M2010 305 H2058"/>
+  <text class="step" x="2034" y="289" text-anchor="middle">5. 建审核任务</text>
+
+  <text class="section" x="70" y="464">2. 审核链会先做敏感词，再尝试 AI 审核；未得到明确自动结论时进入 WAIT_MANUAL</text>
+
+  <rect class="decision" x="100" y="500" width="360" height="190"/>
+  <text class="node-title" x="280" y="564" text-anchor="middle">SensitiveWordAuditHandler</text>
+  <text class="node-text" x="280" y="600" text-anchor="middle">extractText(auditContent)</text>
+  <text class="node-text" x="280" y="626" text-anchor="middle">命中敏感词则直接 reject</text>
+  <text class="node-text" x="280" y="652" text-anchor="middle">reason = 敏感词列表</text>
+
+  <rect class="decision" x="560" y="500" width="380" height="190"/>
+  <text class="node-title" x="750" y="564" text-anchor="middle">AiAuditHandler</text>
+  <text class="node-text" x="750" y="600" text-anchor="middle">只对 blog / review 调用 RemoteAiAuditService</text>
+  <text class="node-text" x="750" y="626" text-anchor="middle">pass=true 时也不是直接放行，而是 waitManual</text>
+  <text class="node-text" x="750" y="652" text-anchor="middle">RPC 异常则跳过，交给人工兜底</text>
+
+  <rect class="decision" x="1040" y="500" width="320" height="190"/>
+  <text class="node-title" x="1200" y="564" text-anchor="middle">WAIT_MANUAL</text>
+  <text class="node-text" x="1200" y="600" text-anchor="middle">AuditTask 继续保持 WAITING</text>
+  <text class="node-text" x="1200" y="626" text-anchor="middle">管理端审核页再决定通过 / 驳回</text>
+  <text class="node-text" x="1200" y="652" text-anchor="middle">不会自动触发搜索分发</text>
+
+  <rect class="store" x="1460" y="500" width="300" height="190"/>
+  <text class="node-title" x="1610" y="564" text-anchor="middle">PASS</text>
+  <text class="node-text" x="1610" y="600" text-anchor="middle">auditAction(PASS)</text>
+  <text class="node-text" x="1610" y="626" text-anchor="middle">更新任务状态</text>
+  <text class="node-text" x="1610" y="652" text-anchor="middle">进入业务回写与搜索分发</text>
+
+  <rect class="danger" x="1860" y="500" width="320" height="190"/>
+  <text class="node-title" x="2020" y="564" text-anchor="middle">REJECT</text>
+  <text class="node-text" x="2020" y="600" text-anchor="middle">auditAction(REJECT)</text>
+  <text class="node-text" x="2020" y="626" text-anchor="middle">写 reject_reason</text>
+  <text class="node-text" x="2020" y="652" text-anchor="middle">并发系统通知</text>
+
+  <path class="line" d="M2180 305 V470 H280 V488"/>
+  <text class="step" x="1220" y="454" text-anchor="middle">6. 执行审核责任链</text>
+  <path class="dash" d="M460 595 H548"/>
+  <text class="step" x="504" y="579" text-anchor="middle">7. 未命中敏感词</text>
+  <path class="dash" d="M940 595 H1028"/>
+  <text class="step" x="984" y="579" text-anchor="middle">8. AI 通过也转人工</text>
+  <path class="pass" d="M1360 565 H1448"/>
+  <text class="step" x="1404" y="549" text-anchor="middle">9. 人工 / 自动通过</text>
+  <path class="reject" d="M1360 625 H1848"/>
+  <text class="step" x="1604" y="609" text-anchor="middle">10. 敏感词或 AI 直接驳回</text>
+
+  <text class="section" x="70" y="774">3. 审核结果不会停在 audit 模块，而是继续回写业务状态、同步搜索与通知用户</text>
+
+  <rect class="node" x="90" y="810" width="420" height="190"/>
+  <text class="node-title" x="300" y="874" text-anchor="middle">AuditStrategy.handleAuditResult</text>
+  <text class="node-text" x="300" y="910" text-anchor="middle">按 bizType 区分 BLOG / REVIEW</text>
+  <text class="node-text" x="300" y="936" text-anchor="middle">调用各自源服务更新 audit_status / status</text>
+  <text class="node-text" x="300" y="962" text-anchor="middle">并决定是否继续 publish / delete 同步</text>
+
+  <rect class="store" x="590" y="810" width="420" height="190"/>
+  <text class="node-title" x="800" y="874" text-anchor="middle">Blog / Review 状态回写</text>
+  <text class="node-text" x="800" y="910" text-anchor="middle">PASS：允许被 queryHot / queryById 命中</text>
+  <text class="node-text" x="800" y="936" text-anchor="middle">REJECT：保留 reject_reason，前台不可见</text>
+  <text class="node-text" x="800" y="962" text-anchor="middle">修改内容后会再次 sendAuditMessage</text>
+
+  <rect class="mq" x="1090" y="810" width="440" height="190"/>
+  <text class="node-title" x="1310" y="874" text-anchor="middle">Search / Milvus 同步消息</text>
+  <text class="node-text" x="1310" y="910" text-anchor="middle">PASS：publish() 触发批量写入 ES 与向量库</text>
+  <text class="node-text" x="1310" y="936" text-anchor="middle">REJECT：发送删除同步消息，移出索引 / collection</text>
+  <text class="node-text" x="1310" y="962" text-anchor="middle">评价额外会同步订单评价状态</text>
+
+  <rect class="mq" x="1610" y="810" width="320" height="190"/>
+  <text class="node-title" x="1770" y="874" text-anchor="middle">SYSTEM_NOTICE_EXCHANGE</text>
+  <text class="node-text" x="1770" y="910" text-anchor="middle">驳回时 createRejectSystemNotice</text>
+  <text class="node-text" x="1770" y="936" text-anchor="middle">把 title / reason / extraData 发给 chat</text>
+  <text class="node-text" x="1770" y="962" text-anchor="middle">用户端系统通知页可见</text>
+
+  <rect class="store" x="2010" y="810" width="260" height="190"/>
+  <text class="node-title" x="2140" y="874" text-anchor="middle">最终用户感知</text>
+  <text class="node-text" x="2140" y="910" text-anchor="middle">通过：内容可见、可搜、可被 AI 检索</text>
+  <text class="node-text" x="2140" y="936" text-anchor="middle">驳回：收到系统通知</text>
+  <text class="node-text" x="2140" y="962" text-anchor="middle">待人工：仍在审核队列</text>
+
+  <path class="pass" d="M1760 595 V770 H300 V798"/>
+  <text class="step" x="1030" y="754" text-anchor="middle">11. PASS 后回写内容状态</text>
+  <path class="pass" d="M510 905 H578"/>
+  <text class="step" x="544" y="889" text-anchor="middle">12. 写业务表</text>
+  <path class="pass" d="M1010 905 H1078"/>
+  <text class="step" x="1044" y="889" text-anchor="middle">13. 搜索 / 向量同步</text>
+  <path class="reject" d="M2180 625 V770 H1770 V798"/>
+  <text class="step" x="1975" y="754" text-anchor="middle">14. 驳回则发系统通知</text>
+  <path class="dash" d="M1930 905 H1998"/>
+  <text class="step" x="1964" y="889" text-anchor="middle">15. 用户看到结果</text>
+
+  <text class="section" x="70" y="1084">4. 这条 UGC 审核链和“商品/店铺审核”很像，但关注点不同：更强调内容文本、复审和用户通知</text>
+
+  <rect class="node" x="120" y="1120" width="420" height="210"/>
+  <text class="node-title" x="330" y="1184" text-anchor="middle">博客内容的特点</text>
+  <text class="node-text" x="330" y="1220" text-anchor="middle">saveBlog 里除了 sendAuditMessage，还会发 FeedEventMessage</text>
+  <text class="node-text" x="330" y="1246" text-anchor="middle">queryById / queryHot 最终仍会用 audit_status=PASS 做过滤</text>
+  <text class="node-text" x="330" y="1272" text-anchor="middle">所以审核通过前不会被正常读链路命中</text>
+
+  <rect class="node" x="620" y="1120" width="420" height="210"/>
+  <text class="node-title" x="830" y="1184" text-anchor="middle">评价内容的特点</text>
+  <text class="node-text" x="830" y="1220" text-anchor="middle">ReviewService 会补齐目标资源标题 / 图片后再发 AuditMessage</text>
+  <text class="node-text" x="830" y="1246" text-anchor="middle">正式提交后还会回写订单评价状态、同步向量库</text>
+  <text class="node-text" x="830" y="1272" text-anchor="middle">修改评价时也会重新回到待审态</text>
+
+  <rect class="node" x="1120" y="1120" width="420" height="210"/>
+  <text class="node-title" x="1330" y="1184" text-anchor="middle">为什么要保留 WAIT_MANUAL</text>
+  <text class="node-text" x="1330" y="1220" text-anchor="middle">敏感词和 AI 只能覆盖一部分场景</text>
+  <text class="node-text" x="1330" y="1246" text-anchor="middle">AI pass 也只是“初审通过，待人工复核”</text>
+  <text class="node-text" x="1330" y="1272" text-anchor="middle">这样可以避免纯机审误放行</text>
+
+  <rect class="store" x="1620" y="1120" width="620" height="210"/>
+  <text class="node-title" x="1930" y="1184" text-anchor="middle">最终可验证的结果</text>
+  <text class="node-text" x="1930" y="1220" text-anchor="middle">博客：热榜 / 详情 / 搜索只会出现 audit_status=PASS 的内容。</text>
+  <text class="node-text" x="1930" y="1246" text-anchor="middle">评价：PASS 后进入 ES / Milvus；REJECT 则从索引移除，且用户能在系统通知看到驳回原因。</text>
+  <text class="node-text" x="1930" y="1272" text-anchor="middle">人工审核页继续处理 WAITING 任务，形成完整闭环。</text>
+
+  <text class="section" x="70" y="1424">5. 这张详细图比展示版多补了哪些内部机制</text>
+
+  <rect class="note" x="70" y="1460" width="700" height="134"/>
+  <text class="note-title" x="102" y="1502">补充 A：UGC 审核不是“只有一个 MQ 队列”，而是“业务表 + 审核表 + 搜索表”三段式</text>
+  <text class="note-text" x="102" y="1532">- 博客 / 评价先落本表，再创建 AuditTask；通过后再驱动搜索与向量库，不会在一个表里直接改完全部状态。</text>
+  <text class="note-text" x="102" y="1560">- 这样既方便前台读链路过滤，也便于后台审核页追踪每一笔任务。</text>
+
+  <rect class="note" x="820" y="1460" width="700" height="134"/>
+  <text class="note-title" x="852" y="1502">补充 B：AI 审核在这里是“辅助判定”，不是完全替代人工</text>
+  <text class="note-text" x="852" y="1532">- AiAuditHandler 只覆盖 blog / review；AI 初审通过时走 waitManual，而不是直接 PASS。</text>
+  <text class="note-text" x="852" y="1560">- 敏感词命中则直接 reject，RPC 异常则继续保留 WAITING，避免误判造成内容丢失。</text>
+
+  <rect class="note" x="1570" y="1460" width="700" height="134"/>
+  <text class="note-title" x="1602" y="1502">代码锚点</text>
+  <text class="note-text" x="1602" y="1532">- BlogServiceImpl.saveBlog / ReviewServiceImpl.submitReview：先保存内容，再构造 AuditMessage。</text>
+  <text class="note-text" x="1602" y="1560">- AuditServiceImpl.auditAction：统一负责任务状态更新、业务回写和驳回通知。</text>
+</svg>

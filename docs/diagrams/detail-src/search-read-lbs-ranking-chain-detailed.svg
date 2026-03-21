@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1600" viewBox="0 0 2360 1600" role="img" aria-labelledby="title desc">
+  <title id="title">搜索读链路与热词沉淀（详细版）</title>
+  <desc id="desc">展示关键词搜索、周边店铺搜索、排序策略、搜索历史和热搜榜在 ES 与 Redis 上协同工作的读链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1600" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1544" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">搜索读链路与热词沉淀（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：SearchController + SearchServiceImpl + ShopSortStrategyFactory + ResponseConverter + Redis 搜索历史 / 热搜榜</text>
+
+  <text class="section" x="70" y="182">1. 用户发起搜索时，先进入 SearchController 按业务场景分流</text>
+
+  <rect class="node" x="70" y="220" width="260" height="170"/>
+  <text class="node-title" x="200" y="282" text-anchor="middle">用户端 App</text>
+  <text class="node-text" x="200" y="318" text-anchor="middle">输入关键词 / 附近找店</text>
+  <text class="node-text" x="200" y="344" text-anchor="middle">选择距离、评分、价格等筛选</text>
+
+  <rect class="node" x="410" y="220" width="420" height="170"/>
+  <text class="node-title" x="620" y="282" text-anchor="middle">SearchController</text>
+  <text class="node-text" x="620" y="318" text-anchor="middle">/shops：周边店铺搜索</text>
+  <text class="node-text" x="620" y="344" text-anchor="middle">/products / /blogs / /users：专项搜索</text>
+
+  <rect class="decision" x="910" y="220" width="420" height="170"/>
+  <text class="node-title" x="1120" y="282" text-anchor="middle">请求类型分流</text>
+  <text class="node-text" x="1120" y="318" text-anchor="middle">普通关键词搜索：multiMatch</text>
+  <text class="node-text" x="1120" y="344" text-anchor="middle">周边店铺搜索：geo + filters + sortStrategy</text>
+
+  <rect class="store" x="1410" y="220" width="430" height="170"/>
+  <text class="node-title" x="1625" y="282" text-anchor="middle">SearchServiceImpl</text>
+  <text class="node-text" x="1625" y="318" text-anchor="middle">组装 SearchRequest / SearchSourceBuilder</text>
+  <text class="node-text" x="1625" y="344" text-anchor="middle">分页、高亮、布尔过滤全部在这里完成</text>
+
+  <rect class="store" x="1920" y="220" width="360" height="170"/>
+  <text class="node-title" x="2100" y="282" text-anchor="middle">Elasticsearch</text>
+  <text class="node-text" x="2100" y="318" text-anchor="middle">shops / products / blogs / users</text>
+  <text class="node-text" x="2100" y="344" text-anchor="middle">执行全文检索与过滤</text>
+
+  <path class="line" d="M330 305 H398"/>
+  <text class="step" x="364" y="289" text-anchor="middle">1. 发起搜索</text>
+  <path class="line" d="M830 305 H898"/>
+  <text class="step" x="864" y="289" text-anchor="middle">2. 进入控制器</text>
+  <path class="line" d="M1330 305 H1398"/>
+  <text class="step" x="1364" y="289" text-anchor="middle">3. 组装查询</text>
+  <path class="line" d="M1840 305 H1908"/>
+  <text class="step" x="1874" y="289" text-anchor="middle">4. 发往 ES</text>
+
+  <text class="section" x="70" y="454">2. 周边店铺场景会额外叠加地理围栏、过滤条件和排序策略</text>
+
+  <rect class="decision" x="120" y="494" width="430" height="190"/>
+  <text class="node-title" x="335" y="556" text-anchor="middle">BoolQuery 组装</text>
+  <text class="node-text" x="335" y="592" text-anchor="middle">keyword -&gt; name / area / address multiMatch</text>
+  <text class="node-text" x="335" y="618" text-anchor="middle">filters -&gt; minScore / maxPrice / category term</text>
+  <text class="node-text" x="335" y="644" text-anchor="middle">distance + lat/lon -&gt; geoDistanceQuery</text>
+
+  <rect class="node" x="640" y="494" width="430" height="190"/>
+  <text class="node-title" x="855" y="556" text-anchor="middle">ShopSortStrategyFactory</text>
+  <text class="node-text" x="855" y="592" text-anchor="middle">根据 sortBy 选择距离 / 评分 / 价格策略</text>
+  <text class="node-text" x="855" y="618" text-anchor="middle">buildSortAndQuery 统一追加 sort 规则</text>
+  <text class="node-text" x="855" y="644" text-anchor="middle">避免控制器直接拼复杂排序</text>
+
+  <rect class="store" x="1160" y="494" width="430" height="190"/>
+  <text class="node-title" x="1375" y="556" text-anchor="middle">ES SearchResponse</text>
+  <text class="node-text" x="1375" y="592" text-anchor="middle">命中店铺文档 + 高亮字段</text>
+  <text class="node-text" x="1375" y="618" text-anchor="middle">distance sortValue / score</text>
+  <text class="node-text" x="1375" y="644" text-anchor="middle">分页数据 total / hits</text>
+
+  <rect class="node" x="1680" y="494" width="420" height="190"/>
+  <text class="node-title" x="1890" y="556" text-anchor="middle">ResponseConverter</text>
+  <text class="node-text" x="1890" y="592" text-anchor="middle">convertToShopList</text>
+  <text class="node-text" x="1890" y="618" text-anchor="middle">把距离转文本、把高亮回填到响应对象</text>
+  <text class="node-text" x="1890" y="644" text-anchor="middle">最终返回 SearchResult.success</text>
+
+  <path class="line" d="M550 589 H628"/>
+  <text class="step" x="589" y="573" text-anchor="middle">5. 追加 geo / filter</text>
+  <path class="line" d="M1070 589 H1148"/>
+  <text class="step" x="1109" y="573" text-anchor="middle">6. 策略排序</text>
+  <path class="line" d="M1590 589 H1668"/>
+  <text class="step" x="1629" y="573" text-anchor="middle">7. 转前端对象</text>
+
+  <text class="section" x="70" y="756">3. 搜索历史和热搜榜不走 ES，走 Redis 侧路做体验增强</text>
+
+  <rect class="store" x="100" y="796" width="450" height="190"/>
+  <text class="node-title" x="325" y="858" text-anchor="middle">搜索历史 ZSet</text>
+  <text class="node-text" x="325" y="894" text-anchor="middle">SEARCH_INDEX_HISTORY_KEY + userId</text>
+  <text class="node-text" x="325" y="920" text-anchor="middle">新增时先 remove 重复项，再按时间戳写入</text>
+  <text class="node-text" x="325" y="946" text-anchor="middle">只保留最近 10 条并设置过期时间</text>
+
+  <rect class="store" x="650" y="796" width="420" height="190"/>
+  <text class="node-title" x="860" y="858" text-anchor="middle">热搜榜 ZSet</text>
+  <text class="node-text" x="860" y="894" text-anchor="middle">SEARCH_HOT_KEYWORDS</text>
+  <text class="node-text" x="860" y="920" text-anchor="middle">recordSearch 对关键词 incrementScore</text>
+  <text class="node-text" x="860" y="946" text-anchor="middle">取 reverseRangeWithScores 前 10</text>
+
+  <rect class="decision" x="1170" y="796" width="470" height="190"/>
+  <text class="node-title" x="1405" y="858" text-anchor="middle">用户搜索体验</text>
+  <text class="node-text" x="1405" y="894" text-anchor="middle">搜索页展示最近历史</text>
+  <text class="node-text" x="1405" y="920" text-anchor="middle">首页展示热门搜索词</text>
+  <text class="node-text" x="1405" y="946" text-anchor="middle">和 ES 检索结果一起构成完整搜索体验</text>
+
+  <rect class="note" x="1730" y="796" width="550" height="190"/>
+  <text class="note-title" x="1762" y="858">代码锚点</text>
+  <text class="note-text" x="1762" y="894">- SearchController./shops：周边店铺搜索入口。</text>
+  <text class="note-text" x="1762" y="922">- SearchServiceImpl.searchShops：boolQuery + geoDistance + sortStrategy。</text>
+  <text class="note-text" x="1762" y="950">- insertSearchHistory / recordSearch：分别维护个人历史和全站热搜。</text>
+
+  <path class="dash" d="M300 390 V760"/>
+  <path class="dash" d="M860 390 V760"/>
+  <path class="dash" d="M1625 390 V760"/>
+
+  <text class="section" x="70" y="1082">4. 这张详细图补了两个边界说明</text>
+
+  <rect class="note" x="70" y="1120" width="700" height="170"/>
+  <text class="note-title" x="102" y="1162">补充 A：读链路和索引同步链路是分开的</text>
+  <text class="note-text" x="102" y="1192">- 这张图只讲“怎么搜”，不讲 ES 和 Milvus 如何被业务消息驱动更新。</text>
+  <text class="note-text" x="102" y="1220">- 读链路依赖 SearchServiceImpl 与 ResponseConverter，写链路则走另一张“搜索 / 向量同步链路”。</text>
+  <text class="note-text" x="102" y="1248">- 这样读者更容易区分“读查询”与“索引维护”的职责边界。</text>
+
+  <rect class="note" x="830" y="1120" width="700" height="170"/>
+  <text class="note-title" x="862" y="1162">补充 B：Redis 在搜索里承担的是体验增强，不是全文检索主库</text>
+  <text class="note-text" x="862" y="1192">- 搜索结果主来源仍是 ES，Redis 主要存历史、热搜、榜单等轻量体验数据。</text>
+  <text class="note-text" x="862" y="1220">- 这样既保留全文搜索能力，也把高频轻读做到更快。</text>
+  <text class="note-text" x="862" y="1248">- 这也是项目里同时存在 ES、Redis 热榜和热搜 ZSet 的原因。</text>
+</svg>

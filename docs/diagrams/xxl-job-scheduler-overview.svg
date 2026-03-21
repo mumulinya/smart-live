@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1220" viewBox="0 0 1800 1220" role="img" aria-labelledby="title desc">
   <title id="title">XXL-JOB 定时任务体系总览</title>
-  <desc id="desc">展示 smartLive 项目中 26 个 XXL-JOB 定时任务如何分成订单生命周期、秒杀生命周期、互动同步、热榜增量、热榜全量重建、销量同步六大类，并分别落到 Redis、MySQL、MQ 和热榜维护场景。</desc>
+<desc id="desc">展示 smartLive 项目中 28 个 XXL-JOB 定时任务如何分成订单生命周期、秒杀生命周期、互动同步、热榜增量、热榜全量重建、销量同步六大类，并分别落到 Redis、MySQL、MQ 和热榜维护场景。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#fbfcff"/>
@@ -34,14 +34,14 @@
   <text class="title" x="74" y="96">XXL-JOB 定时任务体系总览</text>
   <text class="subtitle" x="74" y="132">对应代码：OrderExpireJobHandler + ProductSeckillJobHandler + InteractionSyncXxlJob + HotRankJobHandler + FullRebuildJobHandler + ProductSalesSyncJob + ShopSalesSyncJob</text>
 
-  <text class="section" x="74" y="188">1. 全仓库调度统一走 XXL-JOB，当前共 26 个任务</text>
+  <text class="section" x="74" y="188">1. 全仓库调度统一走 XXL-JOB，当前共 28 个任务</text>
 
   <rect class="node" x="600" y="220" width="600" height="150"/>
   <text class="node-title" x="900" y="276" text-anchor="middle">XXL-JOB Admin / 执行器</text>
   <text class="node-text" x="900" y="312" text-anchor="middle">统一扫描 @XxlJob 入口，按不同 CRON 调度任务</text>
   <text class="node-text" x="900" y="338" text-anchor="middle">大部分 Job 内部再交给 executorService 异步执行</text>
 
-  <text class="section" x="74" y="438">2. 26 个任务分成 6 组，分别负责生命周期、同步与榜单维护</text>
+  <text class="section" x="74" y="438">2. 28 个任务分成 6 组，分别负责生命周期、同步与榜单维护</text>
 
   <rect class="node" x="70" y="470" width="500" height="190"/>
   <text class="node-title" x="320" y="526" text-anchor="middle">订单生命周期任务（2）</text>

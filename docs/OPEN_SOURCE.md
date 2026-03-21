@@ -1,5 +1,7 @@
 ﻿# SmartLive 开源接入说明
 
+**文档导航：** [README 首页](../README.md) · [视觉导览](SHOWCASE.md) · [页面导览](PAGE_GALLERY.md)
+
 这份文档回答三个问题：
 
 1. 第一次接入这个仓库，应该先看什么。

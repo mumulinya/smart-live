@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2320" height="1620" viewBox="0 0 2320 1620" role="img" aria-labelledby="title desc">
+  <title id="title">积分抽奖（详细版）</title>
+  <desc id="desc">展示积分中心查询钱包、读取奖池、发起抽奖、扣减积分、加权命中奖品并写入积分流水的完整流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .reject { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2320" height="1620" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2264" height="1564" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">积分抽奖（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：PointsServiceImpl.getWalletInfo / getLotteryConfig / lotteryDraw / insertRecord / weightedRandom</text>
+
+  <text class="section" x="70" y="182">1. 进入积分中心时，先查钱包，再查启用中的奖品配置</text>
+
+  <rect class="node" x="70" y="220" width="280" height="160"/>
+  <text class="node-title" x="210" y="278" text-anchor="middle">用户端积分中心</text>
+  <text class="node-text" x="210" y="314" text-anchor="middle">打开积分页</text>
+  <text class="node-text" x="210" y="340" text-anchor="middle">查看余额 / 等级 / 抽奖配置</text>
+
+  <rect class="node" x="420" y="220" width="360" height="160"/>
+  <text class="node-title" x="600" y="278" text-anchor="middle">PointsService.getWalletInfo</text>
+  <text class="node-text" x="600" y="314" text-anchor="middle">查用户钱包，不存在则初始化</text>
+  <text class="node-text" x="600" y="340" text-anchor="middle">计算等级 / 连续签到 / 权益</text>
+
+  <rect class="store" x="850" y="220" width="300" height="160"/>
+  <text class="node-title" x="1000" y="278" text-anchor="middle">UserPointsWallet</text>
+  <text class="node-text" x="1000" y="314" text-anchor="middle">balance / totalEarned</text>
+  <text class="node-text" x="1000" y="340" text-anchor="middle">consecutiveDays / lastSignDate</text>
+
+  <rect class="node" x="1220" y="220" width="360" height="160"/>
+  <text class="node-title" x="1400" y="278" text-anchor="middle">PointsService.getLotteryConfig</text>
+  <text class="node-text" x="1400" y="314" text-anchor="middle">查询启用状态奖品</text>
+  <text class="node-text" x="1400" y="340" text-anchor="middle">按 sort 排序组装前端配置</text>
+
+  <rect class="store" x="1650" y="220" width="320" height="160"/>
+  <text class="node-title" x="1810" y="278" text-anchor="middle">PointsLotteryPrize</text>
+  <text class="node-text" x="1810" y="314" text-anchor="middle">name / type / value</text>
+  <text class="node-text" x="1810" y="340" text-anchor="middle">probability / status / sort</text>
+
+  <rect class="node" x="2040" y="220" width="200" height="160"/>
+  <text class="node-title" x="2140" y="278" text-anchor="middle">LotteryConfigVO</text>
+  <text class="node-text" x="2140" y="314" text-anchor="middle">costPerDraw=50</text>
+  <text class="node-text" x="2140" y="340" text-anchor="middle">prizes[]</text>
+
+  <path class="line" d="M350 300 H408"/>
+  <text class="step" x="379" y="284" text-anchor="middle">1. 查钱包</text>
+  <path class="line" d="M780 300 H838"/>
+  <text class="step" x="809" y="284" text-anchor="middle">2. 查或建钱包</text>
+  <path class="line" d="M1150 300 H1208"/>
+  <text class="step" x="1179" y="284" text-anchor="middle">3. 查奖池配置</text>
+  <path class="line" d="M1580 300 H1638"/>
+  <text class="step" x="1609" y="284" text-anchor="middle">4. 读取启用奖品</text>
+  <path class="line" d="M1970 300 H2028"/>
+  <text class="step" x="1999" y="284" text-anchor="middle">5. 返回配置</text>
+
+  <text class="section" x="70" y="454">2. 发起抽奖时，先校验余额，再扣减 50 积分并记录消耗流水</text>
+
+  <rect class="node" x="110" y="500" width="320" height="180"/>
+  <text class="node-title" x="270" y="560" text-anchor="middle">用户点击“开始抽奖”</text>
+  <text class="node-text" x="270" y="596" text-anchor="middle">调用 lotteryDraw(userId)</text>
+  <text class="node-text" x="270" y="622" text-anchor="middle">希望拿到 LotteryResultVO</text>
+  <text class="node-text" x="270" y="648" text-anchor="middle">前端再播放转盘动画</text>
+
+  <rect class="node" x="520" y="500" width="360" height="180"/>
+  <text class="node-title" x="700" y="560" text-anchor="middle">PointsService.lotteryDraw</text>
+  <text class="node-text" x="700" y="596" text-anchor="middle">重新查钱包，保证余额是最新值</text>
+  <text class="node-text" x="700" y="622" text-anchor="middle">如果 balance &lt; 50 直接抛 BusinessException</text>
+  <text class="node-text" x="700" y="648" text-anchor="middle">否则进入扣减与开奖流程</text>
+
+  <rect class="decision" x="970" y="500" width="280" height="180"/>
+  <text class="node-title" x="1110" y="560" text-anchor="middle">余额是否充足</text>
+  <text class="node-text" x="1110" y="596" text-anchor="middle">LOTTERY_COST = 50</text>
+  <text class="node-text" x="1110" y="622" text-anchor="middle">不足直接中断</text>
+  <text class="node-text" x="1110" y="648" text-anchor="middle">充足才继续开奖</text>
+
+  <rect class="danger" x="1340" y="500" width="300" height="180"/>
+  <text class="node-title" x="1490" y="560" text-anchor="middle">余额不足</text>
+  <text class="node-text" x="1490" y="596" text-anchor="middle">抛出 BusinessException</text>
+  <text class="node-text" x="1490" y="622" text-anchor="middle">提示当前余额与所需积分</text>
+  <text class="node-text" x="1490" y="648" text-anchor="middle">本次不写任何流水</text>
+
+  <rect class="store" x="1730" y="500" width="280" height="180"/>
+  <text class="node-title" x="1870" y="560" text-anchor="middle">UserPointsWallet</text>
+  <text class="node-text" x="1870" y="596" text-anchor="middle">balance -= 50</text>
+  <text class="node-text" x="1870" y="622" text-anchor="middle">updateById(wallet)</text>
+  <text class="node-text" x="1870" y="648" text-anchor="middle">扣减后余额立即生效</text>
+
+  <rect class="store" x="2080" y="500" width="180" height="180"/>
+  <text class="node-title" x="2170" y="560" text-anchor="middle">PointsRecord</text>
+  <text class="node-text" x="2170" y="596" text-anchor="middle">type=2</text>
+  <text class="node-text" x="2170" y="622" text-anchor="middle">bizType=2</text>
+  <text class="node-text" x="2170" y="648" text-anchor="middle">“积分抽奖消耗”</text>
+
+  <path class="line" d="M430 590 H508"/>
+  <text class="step" x="469" y="574" text-anchor="middle">6. 发起抽奖</text>
+  <path class="line" d="M880 590 H958"/>
+  <text class="step" x="919" y="574" text-anchor="middle">7. 校验余额</text>
+  <path class="reject" d="M1250 590 H1328"/>
+  <text class="step" x="1289" y="574" text-anchor="middle">8. 不足则报错</text>
+  <path class="pass" d="M1250 620 H1718"/>
+  <text class="step" x="1484" y="604" text-anchor="middle">9. 先扣积分</text>
+  <path class="pass" d="M2010 590 H2068"/>
+  <text class="step" x="2039" y="574" text-anchor="middle">10. 写消耗流水</text>
+
+  <text class="section" x="70" y="758">3. 中奖逻辑用加权随机选奖品；点数奖会再次入账，券类奖保留扩展位</text>
+
+  <rect class="node" x="120" y="800" width="380" height="200"/>
+  <text class="node-title" x="310" y="864" text-anchor="middle">weightedRandom(weights)</text>
+  <text class="node-text" x="310" y="900" text-anchor="middle">按 probability 汇总 totalWeight</text>
+  <text class="node-text" x="310" y="926" text-anchor="middle">ThreadLocalRandom 随机命中区间</text>
+  <text class="node-text" x="310" y="952" text-anchor="middle">返回 prizeIndex</text>
+
+  <rect class="store" x="580" y="800" width="340" height="200"/>
+  <text class="node-title" x="750" y="864" text-anchor="middle">命中奖品</text>
+  <text class="node-text" x="750" y="900" text-anchor="middle">prizeId / prizeName</text>
+  <text class="node-text" x="750" y="926" text-anchor="middle">prizeType / prizeValue</text>
+  <text class="node-text" x="750" y="952" text-anchor="middle">来自启用中的奖池列表</text>
+
+  <rect class="decision" x="1000" y="800" width="300" height="200"/>
+  <text class="node-title" x="1150" y="864" text-anchor="middle">奖品类型判断</text>
+  <text class="node-text" x="1150" y="900" text-anchor="middle">points 且 value &gt; 0</text>
+  <text class="node-text" x="1150" y="926" text-anchor="middle">则继续加余额</text>
+  <text class="node-text" x="1150" y="952" text-anchor="middle">coupon 则走预留分支</text>
+
+  <rect class="store" x="1380" y="800" width="340" height="200"/>
+  <text class="node-title" x="1550" y="864" text-anchor="middle">积分奖再次入账</text>
+  <text class="node-text" x="1550" y="900" text-anchor="middle">重新 selectById(userId)</text>
+  <text class="node-text" x="1550" y="926" text-anchor="middle">balance += prizeValue</text>
+  <text class="node-text" x="1550" y="952" text-anchor="middle">totalEarned += prizeValue</text>
+
+  <rect class="store" x="1800" y="800" width="250" height="200"/>
+  <text class="node-title" x="1925" y="864" text-anchor="middle">PointsRecord</text>
+  <text class="node-text" x="1925" y="900" text-anchor="middle">type=1</text>
+  <text class="node-text" x="1925" y="926" text-anchor="middle">bizType=1</text>
+  <text class="node-text" x="1925" y="952" text-anchor="middle">“抽奖获得：奖品名”</text>
+
+  <rect class="mq" x="2130" y="800" width="130" height="200"/>
+  <text class="node-title" x="2195" y="864" text-anchor="middle">coupon</text>
+  <text class="node-text" x="2195" y="900" text-anchor="middle">代码里</text>
+  <text class="node-text" x="2195" y="926" text-anchor="middle">只留了</text>
+  <text class="node-text" x="2195" y="952" text-anchor="middle">发券扩展位</text>
+
+  <path class="line" d="M500 900 H568"/>
+  <text class="step" x="534" y="884" text-anchor="middle">11. 抽权重</text>
+  <path class="line" d="M920 900 H988"/>
+  <text class="step" x="954" y="884" text-anchor="middle">12. 判类型</text>
+  <path class="pass" d="M1300 880 H1368"/>
+  <text class="step" x="1334" y="864" text-anchor="middle">13. points 奖</text>
+  <path class="pass" d="M1720 900 H1788"/>
+  <text class="step" x="1754" y="884" text-anchor="middle">14. 写收益流水</text>
+  <path class="dash" d="M1300 940 H2118"/>
+  <text class="step" x="1709" y="924" text-anchor="middle">15. coupon 奖暂预留发券服务</text>
+
+  <text class="section" x="70" y="1084">4. 前端最终拿到的是奖品结果，积分页再次刷新时会读到新的钱包与流水</text>
+
+  <rect class="node" x="240" y="1120" width="380" height="190"/>
+  <text class="node-title" x="430" y="1182" text-anchor="middle">LotteryResultVO</text>
+  <text class="node-text" x="430" y="1218" text-anchor="middle">prizeId / prizeName</text>
+  <text class="node-text" x="430" y="1244" text-anchor="middle">prizeType / prizeValue</text>
+  <text class="node-text" x="430" y="1270" text-anchor="middle">前端据此展示抽奖结果弹窗</text>
+
+  <rect class="node" x="760" y="1120" width="420" height="190"/>
+  <text class="node-title" x="970" y="1182" text-anchor="middle">积分中心下一次刷新</text>
+  <text class="node-text" x="970" y="1218" text-anchor="middle">再次走 getWalletInfo</text>
+  <text class="node-text" x="970" y="1244" text-anchor="middle">重新计算等级、余额与权益</text>
+  <text class="node-text" x="970" y="1270" text-anchor="middle">并重新读取积分流水列表</text>
+
+  <rect class="store" x="1320" y="1120" width="400" height="190"/>
+  <text class="node-title" x="1520" y="1182" text-anchor="middle">积分流水页</text>
+  <text class="node-text" x="1520" y="1218" text-anchor="middle">同时看到两条记录：</text>
+  <text class="node-text" x="1520" y="1244" text-anchor="middle">1) 抽奖消耗 50</text>
+  <text class="node-text" x="1520" y="1270" text-anchor="middle">2) 若中奖积分则新增奖励记录</text>
+
+  <path class="line" d="M620 1215 H748"/>
+  <text class="step" x="684" y="1199" text-anchor="middle">16. 返回结果</text>
+  <path class="dash" d="M1180 1215 H1308"/>
+  <text class="step" x="1244" y="1199" text-anchor="middle">17. 下一次刷新可见</text>
+
+  <text class="section" x="70" y="1394">5. 这张详细图比展示版多补了哪些实现细节</text>
+
+  <rect class="note" x="70" y="1430" width="700" height="126"/>
+  <text class="note-title" x="102" y="1472">补充 A：积分抽奖与签到共用同一套钱包 / 流水模型</text>
+  <text class="note-text" x="102" y="1502">- getWalletInfo 会顺带计算等级、权益、是否今日已签到；签到成功也会写 UserPointsWallet 和 PointsRecord。</text>
+  <text class="note-text" x="102" y="1530">- 抽奖不是单独的钱包体系，而是直接复用积分余额与累计获得值。</text>
+
+  <rect class="note" x="810" y="1430" width="700" height="126"/>
+  <text class="note-title" x="842" y="1472">补充 B：真实发奖只有积分奖闭环，券类奖留了扩展口</text>
+  <text class="note-text" x="842" y="1502">- 当前代码里 points 奖会真正回写 balance 和 totalEarned；coupon 类型只留了“可在此处调用发券服务”的注释。</text>
+  <text class="note-text" x="842" y="1530">- 所以这张图把 coupon 明确画成预留分支，避免文档过度承诺。</text>
+
+  <rect class="note" x="1550" y="1430" width="700" height="126"/>
+  <text class="note-title" x="1582" y="1472">代码锚点</text>
+  <text class="note-text" x="1582" y="1502">- lotteryDraw：先扣 50 再 weightedRandom，再决定是否补回积分奖。</text>
+  <text class="note-text" x="1582" y="1530">- insertRecord：抽奖消耗与中奖收益都统一走 PointsRecord，前端流水页天然可追溯。</text>
+</svg>

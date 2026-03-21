@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1660" viewBox="0 0 2360 1660" role="img" aria-labelledby="title desc">
+  <title id="title">XXL-JOB 定时任务体系总览（详细版）</title>
+  <desc id="desc">展示 smartLive 项目中 XXL-JOB 后台任务如何分组到订单、秒杀、互动、热榜和销量同步等领域，并解释为什么不能只靠 MQ。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .good { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1660" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1604" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">XXL-JOB 定时任务体系总览（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：OrderExpireJobHandler + ProductSeckillJobHandler + InteractionSyncXxlJob + HotRankJobHandler + FullRebuildJobHandler + ProductSalesSyncJob + ShopSalesSyncJob</text>
+
+  <text class="section" x="70" y="182">1. 后台统一调度 28 条任务配置，代码侧核心逻辑集中在 26 个 @XxlJob</text>
+
+  <rect class="node" x="720" y="220" width="420" height="170"/>
+  <text class="node-title" x="930" y="284" text-anchor="middle">XXL-JOB Admin</text>
+  <text class="node-text" x="930" y="320" text-anchor="middle">统一维护任务配置、CRON、日志和手动触发</text>
+  <text class="node-text" x="930" y="346" text-anchor="middle">当前后台页展示 28 条任务配置</text>
+
+  <rect class="node" x="1220" y="220" width="420" height="170"/>
+  <text class="node-title" x="1430" y="284" text-anchor="middle">执行器集群</text>
+  <text class="node-text" x="1430" y="320" text-anchor="middle">order / product / interaction 等执行器接任务</text>
+  <text class="node-text" x="1430" y="346" text-anchor="middle">多数 Job 内部再委托 executorService 异步执行</text>
+
+  <path class="line" d="M1140 305 H1208"/>
+  <text class="step" x="1174" y="288" text-anchor="middle">1. 调度下发</text>
+
+  <text class="section" x="70" y="458">2. 调度职责分成 6 组，每一组都对应不同的“兜底 / 批处理 / 重建”场景</text>
+
+  <rect class="node" x="70" y="500" width="520" height="220"/>
+  <text class="node-title" x="330" y="562" text-anchor="middle">订单生命周期（2）</text>
+  <text class="node-text" x="330" y="598" text-anchor="middle">orderSoonExpireJobHandler</text>
+  <text class="node-text" x="330" y="624" text-anchor="middle">orderExpireJobHandler</text>
+  <text class="node-text" x="330" y="650" text-anchor="middle">扫描临期订单，发系统提醒；扫描过期订单，执行 expired / 退款补偿</text>
+  <text class="node-text" x="330" y="676" text-anchor="middle">它补的是“按时间维度兜底”的能力，不是事件实时链</text>
+
+  <rect class="mq" x="640" y="500" width="520" height="220"/>
+  <text class="node-title" x="900" y="562" text-anchor="middle">秒杀生命周期（4）</text>
+  <text class="node-text" x="900" y="598" text-anchor="middle">seckillPreHeatJobHandler</text>
+  <text class="node-text" x="900" y="624" text-anchor="middle">seckillSoonEndJobHandler / seckillRecoveryJobHandler / seckillStockCheckJobHandler</text>
+  <text class="node-text" x="900" y="650" text-anchor="middle">负责 Redis 库存预热、临期营销提醒、结束后缓存清理、库存一致性校准</text>
+  <text class="node-text" x="900" y="676" text-anchor="middle">它补的是“活动窗口”和“缓存生命周期”的能力</text>
+
+  <rect class="store" x="1210" y="500" width="520" height="220"/>
+  <text class="node-title" x="1470" y="562" text-anchor="middle">互动数据回刷（7）</text>
+  <text class="node-text" x="1470" y="598" text-anchor="middle">interactionSyncAll / Like / Comment / Star / Review / Follow / Fans</text>
+  <text class="node-text" x="1470" y="624" text-anchor="middle">把 Redis 热计数、关注关系、粉丝关系按类型批量回写 MySQL</text>
+  <text class="node-text" x="1470" y="650" text-anchor="middle">它补的是“高频写先落 Redis，最终一致落库”的能力</text>
+
+  <rect class="decision" x="1780" y="500" width="520" height="220"/>
+  <text class="node-title" x="2040" y="562" text-anchor="middle">热榜增量维护（5）</text>
+  <text class="node-text" x="2040" y="598" text-anchor="middle">blog / shop / product / review / comment HotRankJobHandler</text>
+  <text class="node-text" x="2040" y="624" text-anchor="middle">按业务类型消费 calcQueue，洗牌并刷新 Redis 榜单分值</text>
+  <text class="node-text" x="2040" y="650" text-anchor="middle">它补的是“实时榜单不能每次请求都现场算”的能力</text>
+
+  <rect class="decision" x="360" y="800" width="720" height="220"/>
+  <text class="node-title" x="720" y="862" text-anchor="middle">热榜全量重建（6）</text>
+  <text class="node-text" x="720" y="898" text-anchor="middle">allFullRebuildRankJob + blog / shop / product / review / comment FullRebuildRankJob</text>
+  <text class="node-text" x="720" y="924" text-anchor="middle">凌晨拉全量对象，重建完整榜单，修复长期偏差、漏算对象和脏数据</text>
+  <text class="node-text" x="720" y="950" text-anchor="middle">它补的是“增量榜单跑久了总会漂，需要周期性重建基线”的能力</text>
+
+  <rect class="store" x="1280" y="800" width="720" height="220"/>
+  <text class="node-title" x="1640" y="862" text-anchor="middle">销量同步（2）</text>
+  <text class="node-text" x="1640" y="898" text-anchor="middle">productSalesSyncJob / shopSalesSyncJob</text>
+  <text class="node-text" x="1640" y="924" text-anchor="middle">把商品销量、店铺销量从 Redis 回写 MySQL</text>
+  <text class="node-text" x="1640" y="950" text-anchor="middle">它补的是“详情页快计数”和“经营分析慢口径”之间的同步落地</text>
+
+  <path class="line" d="M1430 390 V450 H330 V488"/>
+  <text class="step" x="880" y="434" text-anchor="middle">2. 订单类调度</text>
+  <path class="line" d="M1430 390 V430 H900 V488"/>
+  <text class="step" x="1165" y="418" text-anchor="middle">3. 秒杀类调度</text>
+  <path class="line" d="M1430 390 V430 H1470 V488"/>
+  <text class="step" x="1450" y="418" text-anchor="middle">4. 互动同步</text>
+  <path class="line" d="M1430 390 V430 H2040 V488"/>
+  <text class="step" x="1735" y="418" text-anchor="middle">5. 热榜增量</text>
+  <path class="dash" d="M720 720 V788"/>
+  <text class="step" x="720" y="776" text-anchor="middle">6. 夜间全量重建</text>
+  <path class="dash" d="M1640 720 V788"/>
+  <text class="step" x="1640" y="776" text-anchor="middle">7. 销量回刷</text>
+
+  <text class="section" x="70" y="1094">3. 为什么不是只靠 MQ：XXL-JOB 和 MQ 解决的是两类不同问题</text>
+
+  <rect class="mq" x="70" y="1140" width="1040" height="220"/>
+  <text class="node-title" x="590" y="1202" text-anchor="middle">MQ 更擅长“事件发生后立刻推进”</text>
+  <text class="node-text" x="590" y="1238" text-anchor="middle">下单后扣库存、退款后钱包补偿、审核后推搜索同步，这些都属于实时事件驱动。</text>
+  <text class="node-text" x="590" y="1264" text-anchor="middle">优点是实时；缺点是它只知道“刚刚发生了什么”，不擅长扫全局、找漏单、做大批量重建。</text>
+  <text class="node-text" x="590" y="1290" text-anchor="middle">所以 MQ 不能替代“每天凌晨全量热榜重建”或“扫所有临期订单发提醒”。</text>
+
+  <rect class="decision" x="1250" y="1140" width="1040" height="220"/>
+  <text class="node-title" x="1770" y="1202" text-anchor="middle">XXL-JOB 更擅长“按时间窗口扫描、补偿、批处理重建”</text>
+  <text class="node-text" x="1770" y="1238" text-anchor="middle">它可以每天固定时间扫全库、扫 Redis 脏集合、补偿异常、重建榜单，并提供人工可视化运维入口。</text>
+  <text class="node-text" x="1770" y="1264" text-anchor="middle">优点是可观测、可重跑、适合批量；缺点是它不负责实时链路的第一时间推进。</text>
+  <text class="node-text" x="1770" y="1290" text-anchor="middle">所以这套系统同时保留 MQ 和 XXL-JOB，分别承担“实时性”和“最终一致性 / 运维兜底”。</text>
+
+  <text class="section" x="70" y="1438">4. 调度最终落到四类可见结果</text>
+
+  <rect class="store" x="120" y="1478" width="500" height="120"/>
+  <text class="node-title" x="370" y="1528" text-anchor="middle">Redis 缓存生命周期治理</text>
+  <text class="node-text" x="370" y="1556" text-anchor="middle">秒杀库存预热、缓存清理、库存校准</text>
+
+  <rect class="store" x="690" y="1478" width="500" height="120"/>
+  <text class="node-title" x="940" y="1528" text-anchor="middle">MySQL 最终一致回写</text>
+  <text class="node-text" x="940" y="1556" text-anchor="middle">互动计数、商品销量、店铺销量的持久化落库</text>
+
+  <rect class="mq" x="1260" y="1478" width="500" height="120"/>
+  <text class="node-title" x="1510" y="1528" text-anchor="middle">通知与营销触达</text>
+  <text class="node-text" x="1510" y="1556" text-anchor="middle">订单临期提醒、秒杀临期提醒、系统通知下发</text>
+
+  <rect class="decision" x="1830" y="1478" width="390" height="120"/>
+  <text class="node-title" x="2025" y="1528" text-anchor="middle">热榜长期稳定</text>
+  <text class="node-text" x="2025" y="1556" text-anchor="middle">增量洗牌 + 全量重建共同兜底</text>
+</svg>

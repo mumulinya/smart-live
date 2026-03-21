@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1780" viewBox="0 0 2400 1780" role="img" aria-labelledby="title desc">
+  <title id="title">秒杀抢购全链路（详细版）</title>
+  <desc id="desc">展示秒杀商品从预热、Lua 原子扣减、异步建单、库存批量落库、超时取消回滚，到临期提醒和结束回收的完整生命周期。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .warn { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2400" height="1780" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2344" height="1724" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">秒杀抢购全链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：ProductSeckillJobHandler + SeckillPurchaseStrategy + OrderListener.handleSeckillOrder / handlePayOrder / handleCancelOrder + ProductListener.batchDeductStock</text>
+
+  <text class="section" x="70" y="182">1. 活动开始前先预热 Redis，用户抢购时只打 Lua 脚本与 MQ，不直接打数据库</text>
+
+  <rect class="node" x="70" y="220" width="280" height="190"/>
+  <text class="node-title" x="210" y="288" text-anchor="middle">XXL-JOB 预热任务</text>
+  <text class="node-text" x="210" y="324" text-anchor="middle">seckillPreHeatJobHandler</text>
+  <text class="node-text" x="210" y="350" text-anchor="middle">扫描未来 2 小时内的秒杀商品</text>
+
+  <rect class="store" x="430" y="220" width="360" height="190"/>
+  <text class="node-title" x="610" y="288" text-anchor="middle">Redis 秒杀态</text>
+  <text class="node-text" x="610" y="324" text-anchor="middle">SECKILL_STOCK_KEY + productId</text>
+  <text class="node-text" x="610" y="350" text-anchor="middle">CACHE_PRODUCT_KEY + productId</text>
+
+  <rect class="node" x="870" y="220" width="280" height="190"/>
+  <text class="node-title" x="1010" y="288" text-anchor="middle">用户端 App</text>
+  <text class="node-text" x="1010" y="324" text-anchor="middle">进入秒杀详情页</text>
+  <text class="node-text" x="1010" y="350" text-anchor="middle">点击抢购</text>
+
+  <rect class="node" x="1230" y="220" width="360" height="190"/>
+  <text class="node-title" x="1410" y="288" text-anchor="middle">SeckillPurchaseStrategy</text>
+  <text class="node-text" x="1410" y="324" text-anchor="middle">RedisIdWorker 生成 orderId</text>
+  <text class="node-text" x="1410" y="350" text-anchor="middle">执行 seckill.lua</text>
+
+  <rect class="decision" x="1670" y="220" width="300" height="190"/>
+  <text class="node-title" x="1820" y="288" text-anchor="middle">Lua 原子结果</text>
+  <text class="node-text" x="1820" y="324" text-anchor="middle">0 成功</text>
+  <text class="node-text" x="1820" y="350" text-anchor="middle">1 无库存 / 2 重复下单 / 3 活动结束</text>
+
+  <rect class="mq" x="2050" y="220" width="270" height="190"/>
+  <text class="node-title" x="2185" y="288" text-anchor="middle">ORDER_SECKILL_QUEUE</text>
+  <text class="node-text" x="2185" y="324" text-anchor="middle">只在脚本成功后发送</text>
+  <text class="node-text" x="2185" y="350" text-anchor="middle">异步建单</text>
+
+  <path class="line" d="M350 315 H418"/>
+  <text class="step" x="384" y="297" text-anchor="middle">1. 预热库存与详情</text>
+  <path class="dash" d="M790 315 H858"/>
+  <text class="step" x="824" y="297" text-anchor="middle">2. 用户开始抢购</text>
+  <path class="line" d="M1150 315 H1218"/>
+  <text class="step" x="1184" y="297" text-anchor="middle">3. 调用秒杀策略</text>
+  <path class="line" d="M1590 315 H1658"/>
+  <text class="step" x="1624" y="297" text-anchor="middle">4. Lua 原子校验</text>
+  <path class="line" d="M1970 315 H2038"/>
+  <text class="step" x="2004" y="297" text-anchor="middle">5. 成功才发 MQ</text>
+
+  <text class="section" x="70" y="500">2. 秒杀订单建单与库存落库：消息异步建单，库存批量 CAS 扣减</text>
+
+  <rect class="node" x="70" y="540" width="350" height="190"/>
+  <text class="node-title" x="245" y="608" text-anchor="middle">OrderListener.handleSeckillOrder</text>
+  <text class="node-text" x="245" y="644" text-anchor="middle">messageId 幂等</text>
+  <text class="node-text" x="245" y="670" text-anchor="middle">DB 已存在则直接 ACK</text>
+
+  <rect class="store" x="500" y="540" width="340" height="190"/>
+  <text class="node-title" x="670" y="608" text-anchor="middle">OrderService.createOrder</text>
+  <text class="node-text" x="670" y="644" text-anchor="middle">排除 EXPIRED / CANCELLED / REFUNDED</text>
+  <text class="node-text" x="670" y="670" text-anchor="middle">保存 UNPAID 正式订单</text>
+
+  <rect class="mq" x="920" y="540" width="320" height="190"/>
+  <text class="node-title" x="1080" y="608" text-anchor="middle">PRODUCT_STOCK_EXCHANGE</text>
+  <text class="node-text" x="1080" y="644" text-anchor="middle">发送 StockDeductMessage</text>
+  <text class="node-text" x="1080" y="670" text-anchor="middle">productId / orderId / count</text>
+
+  <rect class="mq" x="1320" y="540" width="320" height="190"/>
+  <text class="node-title" x="1480" y="608" text-anchor="middle">ORDER_DELAY_EXCHANGE</text>
+  <text class="node-text" x="1480" y="644" text-anchor="middle">订单超时延迟检查</text>
+  <text class="node-text" x="1480" y="670" text-anchor="middle">15 分钟后回查支付</text>
+
+  <rect class="node" x="1720" y="540" width="320" height="190"/>
+  <text class="node-title" x="1880" y="608" text-anchor="middle">ProductListener.batchDeductStock</text>
+  <text class="node-text" x="1880" y="644" text-anchor="middle">按商品聚合本批次扣减量</text>
+  <text class="node-text" x="1880" y="670" text-anchor="middle">对同批消息做 MQ 幂等</text>
+
+  <rect class="store" x="2120" y="540" width="220" height="190"/>
+  <text class="node-title" x="2230" y="608" text-anchor="middle">MySQL CAS</text>
+  <text class="node-text" x="2230" y="644" text-anchor="middle">stock &gt;= count</text>
+  <text class="node-text" x="2230" y="670" text-anchor="middle">正式扣库</text>
+
+  <path class="line" d="M2320 315 V500 H245 V528"/>
+  <text class="step" x="1220" y="482" text-anchor="middle">6. 秒杀订单消息进入建单监听</text>
+  <path class="line" d="M420 635 H488"/>
+  <text class="step" x="454" y="617" text-anchor="middle">7. 创建正式订单</text>
+  <path class="line" d="M840 635 H908"/>
+  <text class="step" x="874" y="617" text-anchor="middle">8. 发扣库消息</text>
+  <path class="dash" d="M840 700 H1308"/>
+  <text class="step" x="1074" y="718" text-anchor="middle">9. 同时发延迟回查消息</text>
+  <path class="line" d="M1640 635 H1708"/>
+  <text class="step" x="1674" y="617" text-anchor="middle">10. 批量扣库</text>
+  <path class="line" d="M2040 635 H2108"/>
+  <text class="step" x="2074" y="617" text-anchor="middle">11. CAS 落库</text>
+
+  <text class="section" x="70" y="820">3. 扣库失败与超时未支付都会回滚，但回滚来源不同</text>
+
+  <rect class="danger" x="70" y="860" width="360" height="200"/>
+  <text class="node-title" x="250" y="930" text-anchor="middle">库存扣减失败</text>
+  <text class="node-text" x="250" y="966" text-anchor="middle">rows == 0</text>
+  <text class="node-text" x="250" y="992" text-anchor="middle">发 ORDER_CANCEL_QUEUE 回滚订单</text>
+
+  <rect class="node" x="510" y="860" width="360" height="200"/>
+  <text class="node-title" x="690" y="930" text-anchor="middle">OrderListener.handleCancelOrder</text>
+  <text class="node-text" x="690" y="966" text-anchor="middle">MQ 幂等</text>
+  <text class="node-text" x="690" y="992" text-anchor="middle">未处于 CANCELLED 才执行 cancel</text>
+
+  <rect class="node" x="950" y="860" width="360" height="200"/>
+  <text class="node-title" x="1130" y="930" text-anchor="middle">OrderListener.handlePayOrder</text>
+  <text class="node-text" x="1130" y="966" text-anchor="middle">延迟消息到期后查询订单</text>
+  <text class="node-text" x="1130" y="992" text-anchor="middle">UNPAID 才走 cancel</text>
+
+  <rect class="decision" x="1390" y="860" width="380" height="200"/>
+  <text class="node-title" x="1580" y="930" text-anchor="middle">OrderService.cancel</text>
+  <text class="node-text" x="1580" y="966" text-anchor="middle">status=CANCELLED</text>
+  <text class="node-text" x="1580" y="992" text-anchor="middle">秒杀商品会 recoverStock(productId, userId)</text>
+
+  <rect class="store" x="1850" y="860" width="420" height="200"/>
+  <text class="node-title" x="2060" y="930" text-anchor="middle">recoverStock / recoverRedisStockAndEligibility</text>
+  <text class="node-text" x="2060" y="966" text-anchor="middle">恢复 DB 库存</text>
+  <text class="node-text" x="2060" y="992" text-anchor="middle">恢复 Redis 秒杀库存 + 移除用户已抢标记</text>
+
+  <path class="warn" d="M2230 635 V790 H250 V848"/>
+  <text class="step" x="1230" y="772" text-anchor="middle">12. CAS 扣库失败时走订单回滚队列</text>
+  <path class="warn" d="M430 960 H498"/>
+  <text class="step" x="464" y="942" text-anchor="middle">13. 强制 cancel</text>
+  <path class="dash" d="M1480 730 V820 H1130 V848"/>
+  <text class="step" x="1305" y="802" text-anchor="middle">14. 超时未支付则也走 cancel</text>
+  <path class="line" d="M870 960 H938"/>
+  <text class="step" x="904" y="942" text-anchor="middle">15. 超时回查</text>
+  <path class="line" d="M1310 960 H1378"/>
+  <text class="step" x="1344" y="942" text-anchor="middle">16. 更新订单状态</text>
+  <path class="line" d="M1770 960 H1838"/>
+  <text class="step" x="1804" y="942" text-anchor="middle">17. 回滚库存与资格</text>
+
+  <text class="section" x="70" y="1150">4. XXL-JOB 再负责秒杀窗口管理：预热、临期提醒、结束回收、库存校准</text>
+
+  <rect class="node" x="70" y="1190" width="480" height="220"/>
+  <text class="node-title" x="310" y="1260" text-anchor="middle">seckillPreHeatJobHandler</text>
+  <text class="node-text" x="310" y="1296" text-anchor="middle">开始前 2 小时把库存与商品详情预热到 Redis</text>
+  <text class="node-text" x="310" y="1322" text-anchor="middle">降低活动开始瞬间对数据库的冲击</text>
+
+  <rect class="mq" x="620" y="1190" width="480" height="220"/>
+  <text class="node-title" x="860" y="1260" text-anchor="middle">seckillSoonEndJobHandler</text>
+  <text class="node-text" x="860" y="1296" text-anchor="middle">结束前 30 分钟发 SOON_END 消息</text>
+  <text class="node-text" x="860" y="1322" text-anchor="middle">驱动 Feed 流临期提醒营销</text>
+
+  <rect class="node" x="1170" y="1190" width="520" height="220"/>
+  <text class="node-title" x="1430" y="1260" text-anchor="middle">seckillRecoveryJobHandler</text>
+  <text class="node-text" x="1430" y="1296" text-anchor="middle">活动结束后下架秒杀商品</text>
+  <text class="node-text" x="1430" y="1322" text-anchor="middle">删除 Redis 秒杀库存 / 通知 Key / 商品详情缓存</text>
+
+  <rect class="store" x="1760" y="1190" width="520" height="220"/>
+  <text class="node-title" x="2020" y="1260" text-anchor="middle">seckillStockCheckJobHandler</text>
+  <text class="node-text" x="2020" y="1296" text-anchor="middle">根据订单销量重新校准商品 stock / sold</text>
+  <text class="node-text" x="2020" y="1322" text-anchor="middle">修复活动窗口内可能产生的库存偏差</text>
+
+  <rect class="note" x="70" y="1460" width="700" height="220"/>
+  <text class="note-title" x="102" y="1504">边界 A：Lua 只是预扣 Redis，不是最终扣数据库库存</text>
+  <text class="note-text" x="102" y="1540">- seckill.lua 负责库存检查、判重下单和预占资格的原子性。</text>
+  <text class="note-text" x="102" y="1568">- 真正的数据库扣库还是在 ProductListener.batchDeductStock 里做 CAS。</text>
+  <text class="note-text" x="102" y="1596">- 这也是为什么会存在“Lua 成功但 CAS 失败，再发回滚消息”的兜底链。</text>
+
+  <rect class="note" x="830" y="1460" width="700" height="220"/>
+  <text class="note-title" x="862" y="1504">边界 B：秒杀链路同时用到了 Redis、MQ 和 XXL-JOB</text>
+  <text class="note-text" x="862" y="1540">- Redis 负责高并发前置判断和库存预占。</text>
+  <text class="note-text" x="862" y="1568">- MQ 负责异步建单、库存落库、超时取消与失败回滚。</text>
+  <text class="note-text" x="862" y="1596">- XXL-JOB 负责活动窗口、临期营销、回收和定期校准。</text>
+
+  <rect class="note" x="1590" y="1460" width="690" height="220"/>
+  <text class="note-title" x="1622" y="1504">代码锚点</text>
+  <text class="note-text" x="1622" y="1540">- SeckillPurchaseStrategy.purchase：Lua 原子预扣、写占位、投 ORDER_SECKILL。</text>
+  <text class="note-text" x="1622" y="1568">- OrderService.createOrder：正式建单、发扣库消息和 ORDER_DELAY。</text>
+  <text class="note-text" x="1622" y="1596">- ProductListener.batchDeductStock：批量 CAS 扣库，失败则发 ORDER_CANCEL。</text>
+  <text class="note-text" x="1622" y="1624">- ProductSeckillJobHandler：预热、临期提醒、结束回收、库存同步。</text>
+</svg>

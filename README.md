@@ -14,7 +14,7 @@
 [![Star](https://gitee.com/mumulinya/smart-live/badge/star.svg?theme=dark)](https://gitee.com/mumulinya/smart-live/stargazers)
 [![Personal Project](https://img.shields.io/badge/个人独立项目-从零设计开发-ff69b4.svg)]()
 
-[视觉导览](docs/SHOWCASE.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
+[视觉导览](docs/SHOWCASE.md) · [页面导览](docs/PAGE_GALLERY.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
 
 ---
 
@@ -242,6 +242,8 @@ AI 页不只负责对话，还能返回推荐卡片、生成内容，并直接�
 
 - 想看用户端 App 的详细页面导览：看 [docs/PAGE_GALLERY.md - 用户端 App](docs/PAGE_GALLERY.md#app-pages)
 - 想看管理端 Web 的详细页面导览：看 [docs/PAGE_GALLERY.md - 管理端 Web](docs/PAGE_GALLERY.md#admin-pages)
+- 想看我的发布、草稿箱、我的收藏页、我的关注页、个人中心这些用户资产页：看 [docs/PAGE_GALLERY.md - 内容创作、社交关系与个人中心](docs/PAGE_GALLERY.md#app-content-creation)
+- 想看 XXL-JOB 调度后台、任务列表和执行器管理：看 [docs/PAGE_GALLERY.md - XXL-JOB 调度后台](docs/PAGE_GALLERY.md#admin-scheduler)
 - 想按业务链路看截图、架构图和核心时序图：看 [docs/SHOWCASE.md](docs/SHOWCASE.md)
 
 
@@ -570,6 +572,17 @@ bin/clean.bat              # 清理构建产物
 | 线程监控  | 线程池状态      |
 | 连接池监视 | 数据库连接池状态分析 |
 
+#### ⏰ 调度中心 (XXL-JOB)
+| 功能 | 说明 |
+|:---|:---|
+| 调度总览 | 通过 XXL-JOB 后台统一查看任务、执行器、调度状态与运行日志 |
+| 订单兜底 | 定时扫描超时订单、临期订单，承接过期作废、提醒通知与退款补偿 |
+| 秒杀生命周期 | 承接秒杀预热、库存校准、临期提醒、到期回收等全生命周期任务 |
+| 热榜维护 | 增量洗牌 + 凌晨全量重建，保证首页四榜持续刷新且避免长期霸榜 |
+| 互动回刷 | 点赞、收藏、评论、评价等脏数据定时回刷，配合 ES / 热榜双轨同步 |
+| 销量批处理 | 商品销量、店铺销量定时汇总回写，避免高频写库直接打到主链路 |
+| 执行器拆分 | 按 order / product / interaction 等模块拆分执行器，降低任务串扰并便于运维排障 |
+
 #### 🛡️ 认证授权 (smartLive-auth) [9300]
 | 功能   | 说明          |
 |:-----|:------------|
@@ -755,84 +768,84 @@ smart-live-Cloud
 
 ## <a id="核心业务链路"></a>🌊 核心业务链路
 
-README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后发糊。下面统一提供双入口：`SVG` 看主链路展示，`PNG` 看更细的历史设计图；如果你想按业务分组查看，可以直接看 [docs/SHOWCASE.md](docs/SHOWCASE.md)。旧版 PNG 已归档到 [docs/diagrams/legacy-png](docs/diagrams/legacy-png)。
+README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后发糊。下面统一提供双入口：`SVG` 看主链路展示，`详细版 SVG` 看更细的实现步骤；如果你想按业务分组查看，可以直接看 [docs/SHOWCASE.md](docs/SHOWCASE.md)。
 
 ### 交易与履约
 
 这组优先回答“项目怎么完成下单、支付、退款、核销和履约闭环”。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 秒杀抢购全链路 | Redis Lua 防超卖、RabbitMQ 异步落单、延迟队列兜底 | [查看 SVG](docs/diagrams/seckill-flow.svg) | [查看 PNG](docs/diagrams/legacy-png/seckill-flow.png) |
-| 普通下单：订单创建与状态流转 | 下单创建、异步落单、支付生效后的状态流转 | [查看 SVG](docs/diagrams/normal-order-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/normal-order-sequence.png) |
-| 统一支付：支付受理、回调与钱包更新 | 支付受理、回调分发、支付记录与钱包状态更新 | [查看 SVG](docs/diagrams/unified-pay-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/unified-pay-sequence.png) |
-| 订单超时取消与库存回滚 | 下单后发送延迟消息、超时未支付自动取消、库存与资格回滚 | [查看 SVG](docs/diagrams/order-timeout-cancel-stock-rollback-chain.svg) | SVG only |
-| 主动取消 / 退款与钱包补偿 | 用户主动取消或退款后的库存回滚、退款 MQ 与钱包流水 | [查看 SVG](docs/diagrams/order-refund-wallet-compensation-chain.svg) | SVG only |
+| 秒杀抢购全链路 | Redis Lua 防超卖、RabbitMQ 异步落单、延迟队列兜底 | [查看 SVG](docs/diagrams/seckill-flow.svg) | [查看详细 SVG](docs/diagrams/detail-src/seckill-flow-detailed.svg) |
+| 普通下单：订单创建与状态流转 | 下单创建、异步落单、支付生效后的状态流转 | [查看 SVG](docs/diagrams/normal-order-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/normal-order-sequence-detailed.svg) |
+| 统一支付：支付受理、回调与钱包更新 | 支付受理、回调分发、支付记录与钱包状态更新 | [查看 SVG](docs/diagrams/unified-pay-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/unified-pay-sequence-detailed.svg) |
+| 订单超时取消与库存回滚 | 下单后发送延迟消息、超时未支付自动取消、库存与资格回滚 | [查看 SVG](docs/diagrams/order-timeout-cancel-stock-rollback-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/order-timeout-cancel-stock-rollback-chain-detailed.svg) |
+| 主动取消 / 退款与钱包补偿 | 用户主动取消或退款后的库存回滚、退款 MQ 与钱包流水 | [查看 SVG](docs/diagrams/order-refund-wallet-compensation-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/order-refund-wallet-compensation-chain-detailed.svg) |
 | 订单核销、店铺销量与积分奖励 | verifyShopId 校验、核销后销量增长、消费积分异步发放 | [查看 SVG](docs/diagrams/order-verification-points-reward-chain.svg) | SVG only |
 
 ### 积分与用户激励
 
 这组聚焦签到、抽奖、消费奖励这些用户增长和激励机制。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 每日签到积分 | 签到、积分发放、幂等与奖励计算 | [查看 SVG](docs/diagrams/daily-signin-points-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/daily-signin-points-sequence.png) |
-| 积分抽奖 | 扣减积分、抽奖结果、奖品发放 | [查看 SVG](docs/diagrams/points-lottery-draw-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/points-lottery-draw-sequence.png) |
+| 每日签到积分 | 签到、积分发放、幂等与奖励计算 | [查看 SVG](docs/diagrams/daily-signin-points-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/daily-signin-points-sequence-detailed.svg) |
+| 积分抽奖 | 扣减积分、抽奖结果、奖品发放 | [查看 SVG](docs/diagrams/points-lottery-draw-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/points-lottery-draw-sequence-detailed.svg) |
 
 ### 账户与基础设施
 
 这组主要看登录态、网关透传、文件上传这类基础能力怎么支撑全站业务。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 登录鉴权与网关透传 | 短信/密码登录、Redis 登录态、Gateway 请求头透传 | [查看 SVG](docs/diagrams/auth-login-gateway-chain.svg) | SVG only |
+| 登录鉴权与网关透传 | 短信/密码登录、Redis 登录态、Gateway 请求头透传 | [查看 SVG](docs/diagrams/auth-login-gateway-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/auth-login-gateway-chain-detailed.svg) |
 | 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](docs/diagrams/file-upload-avatar-update-chain.svg) | SVG only |
 
 ### 内容审核与搜索
 
 这组适合看“内容怎么过审、怎么进搜索、用户又是怎么搜出来的”。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 发布审核与搜索 / 向量同步 | 提交待审、审核责任链、回调源服务、ES/Milvus/热榜更新 | [查看 SVG](docs/diagrams/publish-audit-search-sync-chain.svg) | SVG only |
+| 发布审核与搜索 / 向量同步 | 提交待审、审核责任链、回调源服务、ES/Milvus/热榜更新 | [查看 SVG](docs/diagrams/publish-audit-search-sync-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/publish-audit-search-sync-chain-detailed.svg) |
 | 审核中心责任链与业务回写 | 审核任务落库、敏感词 / AI / 人工审核、驳回通知 | [查看 SVG](docs/diagrams/audit-center-responsibility-chain.svg) | SVG only |
-| 搜索读链路与热词沉淀 | ES 检索、LBS 排序、搜索历史与热搜榜 | [查看 SVG](docs/diagrams/search-read-lbs-ranking-chain.svg) | SVG only |
+| 搜索读链路与热词沉淀 | ES 检索、LBS 排序、搜索历史与热搜榜 | [查看 SVG](docs/diagrams/search-read-lbs-ranking-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/search-read-lbs-ranking-chain-detailed.svg) |
 
 ### 社交与消息
 
 这组重点看 Feed、私聊、系统通知三条社交消息链如何拆分协作。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 关注 Feed 推送与滚动读取 | 粉丝信箱写入、Pipeline 批量 ZSet、ScrollResult 读取聚合 | [查看 SVG](docs/diagrams/follow-feed-scroll-read-chain.svg) | SVG only |
-| IM 私聊可靠投递 | 长连接、消息持久化、ACK / 重试 | [查看 SVG](docs/diagrams/im-private-message-reliable-delivery-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/im-private-message-reliable-delivery-sequence.png) |
+| 关注 Feed 推送与滚动读取 | 粉丝信箱写入、Pipeline 批量 ZSet、ScrollResult 读取聚合 | [查看 SVG](docs/diagrams/follow-feed-scroll-read-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/follow-feed-scroll-read-chain-detailed.svg) |
+| IM 私聊可靠投递 | 长连接、消息持久化、ACK / 重试 | [查看 SVG](docs/diagrams/im-private-message-reliable-delivery-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/im-private-message-reliable-delivery-sequence-detailed.svg) |
 | 系统通知入库与 IM 推送 | 多业务通知汇聚、通知落库、在线实时推送 | [查看 SVG](docs/diagrams/system-notice-im-push-chain.svg) | SVG only |
 
 ### 排行、热度与推荐
 
 这组更偏“首页热门内容和热榜机制”，既看榜单是怎么读出来的，也看热度是怎么持续维护的。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | 首页热门榜单聚合读链路 | 并发拉取热门店铺榜、热门代金券榜、热门团购榜、热门博客榜，再按首页分区聚合返回 | [查看 SVG](docs/diagrams/home-aggregation-recommend-recall-chain.svg) | SVG only |
 | 首页热门榜单算分与热榜维护链路 | 上架、销量、互动变化如何推进四榜 calcQueue，经过增量洗牌与凌晨全量重建后持续写回 Redis 热榜 | [查看 SVG](docs/diagrams/home-hot-rank-score-maintenance-chain.svg) | SVG only |
-| 互动数据回刷与双轨同步（业务视角） | Redis 热数据变化如何驱动回刷、检索同步与热度重算 | [查看 SVG](docs/diagrams/interaction-dual-track-sync-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/interaction-dual-track-sync-sequence.png) |
+| 互动数据回刷与双轨同步（业务视角） | Redis 热数据变化如何驱动回刷、检索同步与热度重算 | [查看 SVG](docs/diagrams/interaction-dual-track-sync-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/interaction-dual-track-sync-sequence-detailed.svg) |
 | 热榜增量维护与全量重建（业务视角） | calcQueue、Top N merge、榜单更新与凌晨全量兜底 | [查看 SVG](docs/diagrams/hot-rank-wash-rebuild-chain.svg) | SVG only |
 
 ### AI 与经营
 
 这组主要展示 AI 对话、商家经营分析和 AI 辅助建议是怎么落进真实业务里的。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| AI 对话链路 | SSE 流式响应、意图路由、卡片事件 | [查看 SVG](docs/diagrams/ai-chat-sse-intent-routing-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/ai-chat-sse-intent-routing-sequence.png) |
+| AI 对话链路 | SSE 流式响应、意图路由、卡片事件 | [查看 SVG](docs/diagrams/ai-chat-sse-intent-routing-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/ai-chat-sse-intent-routing-sequence-detailed.svg) |
 | 店铺经营分析与 AI 经营建议 | 订单分析、评价分析、经营建议与差评关键词抽取合在同一组看 | [分析聚合](docs/diagrams/shop-analysis-aggregation-chain.svg) / [AI 建议](docs/diagrams/shop-suggest-ai-keywords-chain.svg) | SVG only |
 
 ### 缓存与性能专题
 
 这组不是业务流程图，而是专门解释 Redis 分层缓存和性能优化设计。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | Redis 缓存分层设计 | 列表、详情、计数、状态、热榜 / Feed 五层缓存拆分 | [查看 SVG](docs/diagrams/redis-layered-cache-architecture.svg) | SVG only |
 | Feed / 列表 ZSet 缓存链路 | ZSet 排序视图、滚动分页、批量详情回填 | [查看 SVG](docs/diagrams/redis-feed-zset-cache-chain.svg) | SVG only |
@@ -842,30 +855,39 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 
 这组不讲单次用户请求，而是把 XXL-JOB 体系单独拎出来：先看总览，再看 4 张任务域子图。
 
+- 当前调度中心实际挂了 `28` 个任务、`6` 个执行器配置，其中 `3` 个执行器在线，统一由 [smartLive-common-xxl](smartLive-common/smartLive-common-xxl) 提供注册基座。
+- 订单生命周期兜底：负责临期提醒、未支付自动关闭、已支付过期处理、库存与退款补偿收口。
+- 秒杀生命周期管理：负责活动预热、库存与详情缓存预热、到期回收，以及后续销量/库存校准。
+- 互动与推荐同步：负责关注、粉丝、点赞、评论、评价等热数据回刷 MySQL，并持续推进热榜计算。
+- 热榜维护与重建：负责按分钟消费 `calcQueue` 做增量洗牌，并在凌晨执行全量重建兜底。
+- 销量同步与批处理：负责商品、店铺销量等批量落库与跨库状态收敛，避免只靠实时消息长期漂移。
+- 为什么不是只靠 MQ：MQ 负责“事件一发生就推进”，XXL-JOB 负责“定时扫描、补偿兜底、批量重建和可视化运维”；两者配合，才能同时保证实时性和最终一致性。
+- 想看真实后台页、任务列表和执行器管理截图：看 [docs/PAGE_GALLERY.md - XXL-JOB 调度后台](docs/PAGE_GALLERY.md#admin-scheduler)
+
 #### 第一层：总览图
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| XXL-JOB 定时任务体系总览 | 26 个定时任务如何拆到订单、秒杀、互动、热榜和销量同步六大类 | [查看 SVG](docs/diagrams/xxl-job-scheduler-overview.svg) | SVG only |
+| XXL-JOB 定时任务体系总览 | 28 个定时任务如何拆到订单、秒杀、互动、热榜和销量同步六大类 | [查看 SVG](docs/diagrams/xxl-job-scheduler-overview.svg) | [查看详细 SVG](docs/diagrams/detail-src/xxl-job-scheduler-overview-detailed.svg) |
 
 #### 第二层：4 张子图
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | 秒杀预热与库存校准链路 | 预热库存和详情缓存，后续再按订单销量校准 MySQL 与缓存 | [查看 SVG](docs/diagrams/seckill-preheat-stock-calibration-chain.svg) | SVG only |
 | 热榜增量维护与全量重建链路（调度视角） | HotRankJobHandler / FullRebuildJobHandler 如何分发增量维护与全量重建 | [查看 SVG](docs/diagrams/hot-rank-wash-rebuild-chain.svg) | SVG only |
 | 互动数据回刷与双轨同步链路（调度视角） | InteractionSyncXxlJob / SyncDataServiceImpl 如何回刷 MySQL 并联动热榜 | [查看 SVG](docs/diagrams/interaction-dual-track-sync-sequence.svg) | SVG only |
-| 订单生命周期兜底处理链路 | 临期提醒、过期处理、库存销量回滚与退款补偿兜底 | [查看 SVG](docs/diagrams/order-lifecycle-fallback-chain.svg) | SVG only |
+| 订单生命周期兜底处理链路 | 临期提醒、过期处理、库存销量回滚与退款补偿兜底 | [查看 SVG](docs/diagrams/order-lifecycle-fallback-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/order-lifecycle-fallback-chain-detailed.svg) |
 
 ### 历史详细图补充
 
 这组主要保留旧设计视角，方便继续深挖。
 
-| 链路 | 重点看什么 | 展示版 SVG | 详细版 PNG |
+| 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| UGC 异步审核与分发 | 审核消息投递、责任链处理、回调源服务 | [查看 SVG](docs/diagrams/ugc-audit-flow.svg) | [查看 PNG](docs/diagrams/legacy-png/ugc-audit-flow.png) |
-| Feed 动态扇出 | 发布动态、粉丝分发、读扩散 / 写扩散 | [查看 SVG](docs/diagrams/feed-fanout-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/feed-fanout-sequence.png) |
-| 搜索与向量库同步 | ES 索引同步、Milvus 向量写入、异步一致性 | [查看 SVG](docs/diagrams/search-es-milvus-sync-sequence.svg) | [查看 PNG](docs/diagrams/legacy-png/search-es-milvus-sync-sequence.png) |
+| UGC 异步审核与分发 | 审核消息投递、责任链处理、回调源服务 | [查看 SVG](docs/diagrams/ugc-audit-flow.svg) | [查看详细 SVG](docs/diagrams/detail-src/ugc-audit-flow-detailed.svg) |
+| Feed 动态扇出 | 发布动态、粉丝分发、读扩散 / 写扩散 | [查看 SVG](docs/diagrams/feed-fanout-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/feed-fanout-sequence-detailed.svg) |
+| 搜索与向量库同步 | ES 索引同步、Milvus 向量写入、异步一致性 | [查看 SVG](docs/diagrams/search-es-milvus-sync-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/search-es-milvus-sync-sequence-detailed.svg) |
 
 
 ## <a id="开源使用提示"></a>📌 开源使用提示
@@ -1398,3 +1420,4 @@ redisTemplate.opsForValue().set(currentKey, "0");
 **最后，感谢你能看到这里！** 🙏
 
 如果你有任何问题或建议，请不要犹豫，直接联系我。我相信好的讨论能让我们都变得更好。
+

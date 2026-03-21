@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1520" viewBox="0 0 2200 1520" role="img" aria-labelledby="title desc">
+  <title id="title">订单超时取消与库存回滚链路（详细版）</title>
+  <desc id="desc">展示用户下单、订单创建、延迟消息检查、未支付取消、库存回滚，以及扣库存失败触发取消队列的完整流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .warn { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2200" height="1520" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2144" height="1464" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">订单超时取消与库存回滚链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：NormalPurchaseStrategy / SeckillPurchaseStrategy + OrderListener.handleBuyOrder / handlePayOrder / handleCancelOrder + OrderServiceImpl.cancel + ProductServiceImpl.recoverStock</text>
+
+  <text class="section" x="70" y="182">1. 下单请求先写占位，再通过 MQ 完成正式建单</text>
+
+  <rect class="node" x="70" y="220" width="250" height="150"/>
+  <text class="node-title" x="195" y="275" text-anchor="middle">用户端 App</text>
+  <text class="node-text" x="195" y="309" text-anchor="middle">普通购买 / 秒杀抢购</text>
+  <text class="node-text" x="195" y="335" text-anchor="middle">先生成 orderId</text>
+
+  <rect class="store" x="390" y="220" width="320" height="150"/>
+  <text class="node-title" x="550" y="275" text-anchor="middle">Product 策略层</text>
+  <text class="node-text" x="550" y="309" text-anchor="middle">写 order:status:{id}=CREATING</text>
+  <text class="node-text" x="550" y="335" text-anchor="middle">秒杀场景先经 Lua 预扣库存</text>
+
+  <rect class="mq" x="780" y="220" width="270" height="150"/>
+  <text class="node-title" x="915" y="275" text-anchor="middle">订单创建 MQ</text>
+  <text class="node-text" x="915" y="309" text-anchor="middle">ORDER_DIRECT_EXCHANGE</text>
+  <text class="node-text" x="915" y="335" text-anchor="middle">buy / seckill 路由</text>
+
+  <rect class="node" x="1120" y="220" width="360" height="150"/>
+  <text class="node-title" x="1300" y="275" text-anchor="middle">OrderListener.handleBuyOrder</text>
+  <text class="node-text" x="1300" y="309" text-anchor="middle">messageId 幂等校验</text>
+  <text class="node-text" x="1300" y="335" text-anchor="middle">DB 已存在则直接 ACK</text>
+
+  <rect class="store" x="1550" y="220" width="280" height="150"/>
+  <text class="node-title" x="1690" y="275" text-anchor="middle">订单表</text>
+  <text class="node-text" x="1690" y="309" text-anchor="middle">保存正式订单</text>
+  <text class="node-text" x="1690" y="335" text-anchor="middle">初始状态 UNPAID</text>
+
+  <rect class="mq" x="1900" y="220" width="220" height="150"/>
+  <text class="node-title" x="2010" y="275" text-anchor="middle">延迟队列</text>
+  <text class="node-text" x="2010" y="309" text-anchor="middle">ORDER_DELAY_EXCHANGE</text>
+  <text class="node-text" x="2010" y="335" text-anchor="middle">15 分钟后回查支付</text>
+
+  <path class="line" d="M320 295 H378"/>
+  <text class="step" x="349" y="280" text-anchor="middle">1. 发起下单</text>
+  <path class="line" d="M710 295 H768"/>
+  <text class="step" x="739" y="280" text-anchor="middle">2. 投递建单消息</text>
+  <path class="line" d="M1050 295 H1108"/>
+  <text class="step" x="1079" y="280" text-anchor="middle">3. 幂等建单</text>
+  <path class="line" d="M1480 295 H1538"/>
+  <text class="step" x="1509" y="280" text-anchor="middle">4. 写入订单</text>
+  <path class="line" d="M1830 295 H1888"/>
+  <text class="step" x="1859" y="280" text-anchor="middle">5. 发送延迟消息</text>
+
+  <text class="section" x="70" y="446">2. 建单成功后同时触发库存链与超时检测链</text>
+
+  <rect class="mq" x="230" y="490" width="320" height="160"/>
+  <text class="node-title" x="390" y="548" text-anchor="middle">扣库存 MQ</text>
+  <text class="node-text" x="390" y="584" text-anchor="middle">PRODUCT_STOCK_EXCHANGE</text>
+  <text class="node-text" x="390" y="610" text-anchor="middle">正式扣减库存 / 校验可售</text>
+
+  <rect class="store" x="650" y="490" width="340" height="160"/>
+  <text class="node-title" x="820" y="548" text-anchor="middle">订单占位清理</text>
+  <text class="node-text" x="820" y="584" text-anchor="middle">删除 order:status:{id}=CREATING</text>
+  <text class="node-text" x="820" y="610" text-anchor="middle">后续查询直接走真实订单</text>
+
+  <rect class="danger" x="1090" y="490" width="360" height="160"/>
+  <text class="node-title" x="1270" y="548" text-anchor="middle">库存扣减失败分支</text>
+  <text class="node-text" x="1270" y="584" text-anchor="middle">商品侧发送 ORDER_CANCEL_QUEUE</text>
+  <text class="node-text" x="1270" y="610" text-anchor="middle">要求订单模块强制 cancel</text>
+
+  <rect class="node" x="1550" y="490" width="350" height="160"/>
+  <text class="node-title" x="1725" y="548" text-anchor="middle">OrderListener.handleCancelOrder</text>
+  <text class="node-text" x="1725" y="584" text-anchor="middle">MQ 幂等后查询订单状态</text>
+  <text class="node-text" x="1725" y="610" text-anchor="middle">非 CANCELLED 才执行 cancel</text>
+
+  <path class="dash" d="M1690 370 V430 H390 V478"/>
+  <text class="step" x="1040" y="414" text-anchor="middle">6. 建单后正式扣库存</text>
+  <path class="dash" d="M1690 370 V450 H820 V478"/>
+  <text class="step" x="1255" y="472" text-anchor="middle">7. 删除创建占位</text>
+  <path class="warn" d="M550 570 H1078"/>
+  <text class="step" x="814" y="554" text-anchor="middle">8. 扣库存失败时进入订单回滚队列</text>
+  <path class="warn" d="M1450 570 H1538"/>
+  <text class="step" x="1494" y="554" text-anchor="middle">9. 消费取消消息</text>
+
+  <text class="section" x="70" y="742">3. 延迟消息到期后，只对未支付订单执行 cancel 与库存回滚</text>
+
+  <rect class="node" x="70" y="790" width="360" height="180"/>
+  <text class="node-title" x="250" y="850" text-anchor="middle">OrderListener.handlePayOrder</text>
+  <text class="node-text" x="250" y="886" text-anchor="middle">消费 ORDER_DELAY_QUEUE</text>
+  <text class="node-text" x="250" y="912" text-anchor="middle">messageId 幂等 + 查询订单</text>
+  <text class="node-text" x="250" y="938" text-anchor="middle">空订单或已支付直接 ACK</text>
+
+  <rect class="decision" x="520" y="790" width="340" height="180"/>
+  <text class="node-title" x="690" y="850" text-anchor="middle">支付状态判断</text>
+  <text class="node-text" x="690" y="886" text-anchor="middle">order == null：结束</text>
+  <text class="node-text" x="690" y="912" text-anchor="middle">status == PAID：结束</text>
+  <text class="node-text" x="690" y="938" text-anchor="middle">status == UNPAID：进入 cancel</text>
+
+  <rect class="node" x="950" y="790" width="360" height="180"/>
+  <text class="node-title" x="1130" y="850" text-anchor="middle">OrderService.cancel</text>
+  <text class="node-text" x="1130" y="886" text-anchor="middle">updateOrder(status=CANCELLED)</text>
+  <text class="node-text" x="1130" y="912" text-anchor="middle">记录 oldStatus 供补偿判断</text>
+  <text class="node-text" x="1130" y="938" text-anchor="middle">UNPAID 时不会触发退款 MQ</text>
+
+  <rect class="store" x="1400" y="790" width="360" height="180"/>
+  <text class="node-title" x="1580" y="850" text-anchor="middle">remoteProductService.recoverStock</text>
+  <text class="node-text" x="1580" y="886" text-anchor="middle">activityType==1 且商品上架时回滚库存</text>
+  <text class="node-text" x="1580" y="912" text-anchor="middle">恢复 DB 库存</text>
+  <text class="node-text" x="1580" y="938" text-anchor="middle">并继续恢复 Redis 秒杀库存资格</text>
+
+  <rect class="store" x="1850" y="790" width="280" height="180"/>
+  <text class="node-title" x="1990" y="850" text-anchor="middle">Redis 秒杀状态</text>
+  <text class="node-text" x="1990" y="886" text-anchor="middle">recoverRedisStockAndEligibility</text>
+  <text class="node-text" x="1990" y="912" text-anchor="middle">库存 +1</text>
+  <text class="node-text" x="1990" y="938" text-anchor="middle">移除用户已抢标记</text>
+
+  <path class="line" d="M2010 370 V720 H250 V778"/>
+  <text class="step" x="1130" y="704" text-anchor="middle">10. 延迟消息到期后回查支付状态</text>
+  <path class="line" d="M430 880 H508"/>
+  <text class="step" x="469" y="864" text-anchor="middle">11. 判断是否仍未支付</text>
+  <path class="line" d="M860 880 H938"/>
+  <text class="step" x="899" y="864" text-anchor="middle">12. 未支付则 cancel</text>
+  <path class="line" d="M1310 880 H1388"/>
+  <text class="step" x="1349" y="864" text-anchor="middle">13. 回滚库存</text>
+  <path class="dash" d="M1760 880 H1838"/>
+  <text class="step" x="1799" y="864" text-anchor="middle">14. 恢复 Redis 资格</text>
+
+  <text class="section" x="70" y="1050">4. 这张详细图补充了 SVG 里没有展开的两个关键点</text>
+
+  <rect class="note" x="70" y="1088" width="660" height="180"/>
+  <text class="note-title" x="102" y="1132">关键补充 A：为什么要同时存在“延迟消息”和“取消队列”</text>
+  <text class="note-text" x="102" y="1164">- 延迟消息负责“到时间回查支付状态”，处理的是超时未支付自动取消。</text>
+  <text class="note-text" x="102" y="1192">- 取消队列负责“库存扣减失败后的强制回滚”，处理的是建单后异步扣库失败。</text>
+  <text class="note-text" x="102" y="1220">- 两条链路都可能进入 OrderService.cancel，但触发原因不同，文档里分开讲更清楚。</text>
+
+  <rect class="note" x="770" y="1088" width="660" height="180"/>
+  <text class="note-title" x="802" y="1132">关键补充 B：为什么 UNPAID 场景没有钱包退款</text>
+  <text class="note-text" x="802" y="1164">- cancel 内部只有 oldStatus &gt;= PAID 才会 decrementSales 和 sendRefundMessage。</text>
+  <text class="note-text" x="802" y="1192">- 本图关注的是“超时未支付”，因此这条链最终只做状态变更和库存回滚。</text>
+  <text class="note-text" x="802" y="1220">- 如果是主动取消已支付订单，资金补偿会走另一张“主动取消 / 退款与钱包补偿链路”。</text>
+
+  <rect class="note" x="1470" y="1088" width="660" height="180"/>
+  <text class="note-title" x="1502" y="1132">代码锚点</text>
+  <text class="note-text" x="1502" y="1164">- handleBuyOrder：保存订单、删除占位、发送 ORDER_DELAY_EXCHANGE。</text>
+  <text class="note-text" x="1502" y="1192">- handlePayOrder：只在 status == UNPAID 时调用 cancel。</text>
+  <text class="note-text" x="1502" y="1220">- handleCancelOrder：商品扣库失败时走 ORDER_CANCEL_QUEUE，兜底强制取消。</text>
+  <text class="note-text" x="1502" y="1248">- recoverStock：恢复 DB 库存后，再恢复 Redis 库存与秒杀资格。</text>
+ </svg>
