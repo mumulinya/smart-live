@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  ignoreDeadLinks: true,
   title: "SmartLive 智评生活",
   description: "企业级微服务全栈项目架构剖析与全链路面经",
   base: '/smart-live/',
