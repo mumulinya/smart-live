@@ -14,6 +14,8 @@
 [![Star](https://gitee.com/mumulinya/smart-live/badge/star.svg?theme=dark)](https://gitee.com/mumulinya/smart-live/stargazers)
 [![Personal Project](https://img.shields.io/badge/个人独立项目-从零设计开发-ff69b4.svg)]()
 
+### 📚 **[项目在线文档网站 (含核心架构与面经)](https://mumulinya.github.io/smartLive-Cloud/)**
+
 [视觉导览](docs/SHOWCASE.md) · [页面导览](docs/PAGE_GALLERY.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
 
 ---

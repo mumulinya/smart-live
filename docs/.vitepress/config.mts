@@ -2,16 +2,20 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   ignoreDeadLinks: true,
+  lastUpdated: true,
+  markdown: {
+    lineNumbers: true
+  },
   title: "SmartLive 智评生活",
   description: "企业级微服务全栈项目架构剖析与全链路面经",
-  base: '/smart-live/',
+  base: '/smartLive-Cloud/',
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
       { text: '🎯 快速入门', link: '/OPEN_SOURCE' },
       { text: '👁️ 视觉导览', link: '/SHOWCASE' },
       { text: '🔥 核心链路', link: '/core-links/秒杀抢购全链路详解' },
-      { text: '源码仓库', link: 'https://github.com/mumulinya/smart-live' },
+      { text: '源码仓库', link: 'https://github.com/mumulinya/smartLive-Cloud' }
     ],
 
     sidebar: [
@@ -48,7 +52,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/mumulinya/smart-live' }
+      { icon: 'github', link: 'https://github.com/mumulinya/smartLive-Cloud' }
     ],
 
     outline: {

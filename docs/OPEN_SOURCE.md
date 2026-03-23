@@ -1,4 +1,6 @@
-﻿# SmartLive 开源接入说明
+# SmartLive 开源接入说明
+
+👉 **完整的图文精美排版文档，请访问：[SmartLive 在线文档网站](https://mumulinya.github.io/smartLive-Cloud/)**
 
 **文档导航：** [README 首页](../README.md) · [视觉导览](SHOWCASE.md) · [页面导览](PAGE_GALLERY.md)
 
