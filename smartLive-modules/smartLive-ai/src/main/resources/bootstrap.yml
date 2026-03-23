@@ -101,7 +101,7 @@ smartlive:
   ai:
     chat-model-bean: openAiChatModel
     framework:
-      enabled: false  #开启智能agent
+      enabled: true  #开启智能agent
     autonomy:
       max-iterations: 6
       max-plan-steps: 4

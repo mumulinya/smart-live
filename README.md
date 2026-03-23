@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🏙️ SmartLive 智评生活
 
@@ -33,6 +33,7 @@
 - [📁 项目结构](#项目结构)
 - [🤔 技术选型理由](#技术选型理由)
 - [🌊 核心业务链路](#核心业务链路)
+- [🔥 核心链路与面经](#核心链路与面经)
 - [📌 开源使用提示](#开源使用提示)
 - [📈 性能压测报告](#性能压测报告)
 - [🚧 难点踩坑与解决方案](#难点踩坑与解决方案)
@@ -888,6 +889,29 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 | UGC 异步审核与分发 | 审核消息投递、责任链处理、回调源服务 | [查看 SVG](docs/diagrams/ugc-audit-flow.svg) | [查看详细 SVG](docs/diagrams/detail-src/ugc-audit-flow-detailed.svg) |
 | Feed 动态扇出 | 发布动态、粉丝分发、读扩散 / 写扩散 | [查看 SVG](docs/diagrams/feed-fanout-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/feed-fanout-sequence-detailed.svg) |
 | 搜索与向量库同步 | ES 索引同步、Milvus 向量写入、异步一致性 | [查看 SVG](docs/diagrams/search-es-milvus-sync-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/search-es-milvus-sync-sequence-detailed.svg) |
+
+
+## <a id="核心链路与面经"></a>🔥 核心链路与面经
+
+本项目不仅提供企业级源码，更配备了 **9 大核心业务全链路深度剖析**（含高并发、可靠性、AI 架构等设计难点及大厂面试级别 Q&A），助你彻底吃透底层逻辑，碾压面试官！
+
+### 📚 核心链路深度解析
+
+| 链路领域 | 深度解析文档 | 核心看点 |
+|:---|:---|:---|
+| **高并发与缓存** | 🔗 [秒杀抢购全链路详解](docs/core-links/秒杀抢购全链路详解.md) | Redis Lua 原子操作、MQ 异步削峰、延迟队列补单与回滚 |
+| | 🔗 [Redis分层缓存链路详解](docs/core-links/Redis分层缓存链路详解.md) | 列表/详情/计数三分层、空值穿透/逻辑过期击穿治理、ZSet 游标 |
+| **交易与一致性** | 🔗 [订单、支付与退款补偿链路](docs/core-links/2.%20下单_统一支付_退款补偿链路.md) | 策略路由支付、状态校验优先边界、补偿任务闭环 |
+| **高可用与可靠性** | 🔗 [RabbitMQ消息可靠性全链路详解](docs/core-links/RabbitMQ消息可靠性全链路详解.md) | 消息防丢失/防重复/防乱序、死信队列闭环、幂等消费基座 |
+| **社交与数据双写** | 🔗 [Feed 推送与滚动读取 + 互动同步](docs/core-links/4.%20Feed%20推送与滚动读取%20+%20互动双轨同步链路.md) | 推拉结合模型、ZSet 滚动分页解决数据偏移、并发快照落库 |
+| **内容治理** | 🔗 [审核中心责任链 + 搜索向量同步](docs/core-links/5.%20审核中心责任链%20+%20发布审核与搜索%20向量同步链路.md) | 责任链设计模式、多级审核管道、双流并行索引与向量构建 |
+| **搜索与推荐** | 🔗 [搜索读链路 + 热词沉淀链路](docs/core-links/6.%20搜索读链路%20+%20热词沉淀链路.md) | 距离热度综合排序、ZINCRBY 热搜榜机制 |
+| **大盘维护** | 🔗 [热榜增量洗牌与全量重建链路](docs/core-links/7.%20热榜增量洗牌与全量重建链路.md) | 应对冷启动与防霸榜、增量评分 + 凌晨全量兜底 |
+| **AI 赋能** | 🔗 [AI Agent 策略路由与 RAG 生成](docs/core-links/8.%20AI%20Agent策略路由与RAG多维增强生成链路.md) | Spring AI RAG 向量检索落地、自主分类与上下文编排 |
+
+### 👨‍💻 全链路学习与复盘总结
+
+- 🔗 **[学习复盘与定投总结表](docs/core-links/SmartLive_Java_Internship_Review_Plan_Updated.md)**：带你全面追踪并温习本项目每一条核心架构链路的设计难点与表达重点。
 
 
 ## <a id="开源使用提示"></a>📌 开源使用提示
