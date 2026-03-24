@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2260" height="1440" viewBox="0 0 2260 1440" role="img" aria-labelledby="title desc">
+  <title id="title">Feed / 列表 ZSet 缓存链路（详细版）</title>
+  <desc id="desc">展示 FeedServiceImpl.queryFeedList、ZSet 滚动分页、批量详情装配和滚动游标返回的完整流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbfcff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#255792"/></marker>
+    <style>
+      .title{font:700 36px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#17365e}.subtitle{font:500 18px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#4f6d8f}.section{font:700 24px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1d4b81}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#153454}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#36516d}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#25496f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#23425f}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506983}.node{fill:#fff;stroke:#a8c2e2;stroke-width:2;rx:24}.store{fill:#f3fbf5;stroke:#a7d6b7;stroke-width:2;rx:24}.decision{fill:#f8f3ff;stroke:#c7a6ea;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d7e3f4;stroke-width:1.5;rx:20}.line{stroke:#255792;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d92c0;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="2260" height="1440" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2204" height="1384" rx="30" fill="#fff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">Feed / 列表 ZSet 缓存链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：feedServiceImpl.queryFeedList + RedisService.getCacheZSetReverseRangeByScore + ResourceStrategyFactory + ZSetIdManager</text>
+
+  <text class="section" x="70" y="182">1. Feed 列表不是 offset 分页，而是按 max + offset 做滚动分页</text>
+  <rect class="node" x="70" y="220" width="280" height="160"/>
+  <text class="node-title" x="210" y="278" text-anchor="middle">用户端 Feed 页</text>
+  <text class="node-text" x="210" y="314" text-anchor="middle">携带 feedType / max / offset</text>
+  <text class="node-text" x="210" y="340" text-anchor="middle">请求下一批动态</text>
+  <rect class="node" x="430" y="220" width="400" height="160"/>
+  <text class="node-title" x="630" y="278" text-anchor="middle">feedServiceImpl.queryFeedList</text>
+  <text class="node-text" x="630" y="314" text-anchor="middle">先从 UserContextHolder 取 userId</text>
+  <text class="node-text" x="630" y="340" text-anchor="middle">根据 feedType 拼出 fullKey</text>
+  <rect class="store" x="910" y="220" width="420" height="160"/>
+  <text class="node-title" x="1120" y="278" text-anchor="middle">Redis ZSet Feed Key</text>
+  <text class="node-text" x="1120" y="314" text-anchor="middle">如 follow:{userId}</text>
+  <text class="node-text" x="1120" y="340" text-anchor="middle">score = publishTime，value 含 action:type:id</text>
+  <rect class="decision" x="1410" y="220" width="400" height="160"/>
+  <text class="node-title" x="1610" y="278" text-anchor="middle">reverseRangeByScore</text>
+  <text class="node-text" x="1610" y="314" text-anchor="middle">按 score 倒序，带 max / offset</text>
+  <text class="node-text" x="1610" y="340" text-anchor="middle">解决深翻页和重复 score 问题</text>
+  <rect class="store" x="1890" y="220" width="280" height="160"/>
+  <text class="node-title" x="2030" y="278" text-anchor="middle">tuples</text>
+  <text class="node-text" x="2030" y="314" text-anchor="middle">value + score</text>
+  <text class="node-text" x="2030" y="340" text-anchor="middle">作为滚动窗口</text>
+  <path class="line" d="M350 300 H418"/><text class="step" x="384" y="284" text-anchor="middle">1. 带游标请求</text>
+  <path class="line" d="M830 300 H898"/><text class="step" x="864" y="284" text-anchor="middle">2. 找 ZSet key</text>
+  <path class="line" d="M1330 300 H1398"/><text class="step" x="1364" y="284" text-anchor="middle">3. 按分数滚动查</text>
+  <path class="line" d="M1810 300 H1878"/><text class="step" x="1844" y="284" text-anchor="middle">4. 得到 tuples</text>
+
+  <text class="section" x="70" y="444">2. 服务层会先解析 value，再按业务类型分组，最后批量装配详情</text>
+  <rect class="decision" x="120" y="490" width="420" height="180"/>
+  <text class="node-title" x="330" y="552" text-anchor="middle">解析 tuple.value</text>
+  <text class="node-text" x="330" y="588" text-anchor="middle">支持 new:product:id</text>
+  <text class="node-text" x="330" y="614" text-anchor="middle">也支持 shopId:new:product:id</text>
+  <text class="node-text" x="330" y="640" text-anchor="middle">拆出 action / bizType / resourceId / shopId</text>
+  <rect class="store" x="650" y="490" width="420" height="180"/>
+  <text class="node-title" x="860" y="552" text-anchor="middle">groupedMap</text>
+  <text class="node-text" x="860" y="588" text-anchor="middle">按 bizType -> id -> actions 聚合</text>
+  <text class="node-text" x="860" y="614" text-anchor="middle">同一资源多个动作可合并处理</text>
+  <text class="node-text" x="860" y="640" text-anchor="middle">同时统计 minTime / offset</text>
+  <rect class="node" x="1180" y="490" width="420" height="180"/>
+  <text class="node-title" x="1390" y="552" text-anchor="middle">ResourceStrategyFactory</text>
+  <text class="node-text" x="1390" y="588" text-anchor="middle">先拿 Shop 策略补店铺信息</text>
+  <text class="node-text" x="1390" y="614" text-anchor="middle">再按业务类型拿 Blog/Product 策略</text>
+  <text class="node-text" x="1390" y="640" text-anchor="middle">统一批量查 resourceList</text>
+  <rect class="store" x="1710" y="490" width="420" height="180"/>
+  <text class="node-title" x="1920" y="552" text-anchor="middle">FeedVO 列表</text>
+  <text class="node-text" x="1920" y="588" text-anchor="middle">补 action、publishTime、dataType</text>
+  <text class="node-text" x="1920" y="614" text-anchor="middle">商品场景额外拼 shopName / shopLogo</text>
+  <text class="node-text" x="1920" y="640" text-anchor="middle">最后按 publishTime 倒序返回</text>
+  <path class="line" d="M540 580 H638"/><text class="step" x="589" y="564" text-anchor="middle">5. 解析 value</text>
+  <path class="line" d="M1070 580 H1168"/><text class="step" x="1119" y="564" text-anchor="middle">6. 分组聚合</text>
+  <path class="line" d="M1600 580 H1698"/><text class="step" x="1649" y="564" text-anchor="middle">7. 批量装配详情</text>
+
+  <text class="section" x="70" y="718">3. 最终返回的不是 Page，而是 ScrollResult(minTime + offset)</text>
+  <rect class="node" x="250" y="760" width="500" height="180"/>
+  <text class="node-title" x="500" y="822" text-anchor="middle">ScrollResult</text>
+  <text class="node-text" x="500" y="858" text-anchor="middle">list = FeedVO 列表</text>
+  <text class="node-text" x="500" y="884" text-anchor="middle">minTime = 本批最小 score</text>
+  <text class="node-text" x="500" y="910" text-anchor="middle">offset = 相同 minTime 的偏移量</text>
+  <rect class="store" x="930" y="760" width="540" height="180"/>
+  <text class="node-title" x="1200" y="822" text-anchor="middle">前端下一次请求</text>
+  <text class="node-text" x="1200" y="858" text-anchor="middle">带上新的 max = minTime</text>
+  <text class="node-text" x="1200" y="884" text-anchor="middle">带上 offset，避免相同时间戳重复或丢失</text>
+  <text class="node-text" x="1200" y="910" text-anchor="middle">比 pageNo 分页更适合高频动态流</text>
+  <rect class="store" x="1650" y="760" width="420" height="180"/>
+  <text class="node-title" x="1860" y="822" text-anchor="middle">其他 ZSet 列表场景</text>
+  <text class="node-text" x="1860" y="858" text-anchor="middle">热门榜单、共同关注、排序视图</text>
+  <text class="node-text" x="1860" y="884" text-anchor="middle">也都复用相似的 ZSet 分页思想</text>
+  <path class="dash" d="M2130 670 V730 H500 V748"/><text class="step" x="1315" y="714" text-anchor="middle">8. 结果带着滚动游标返回前端</text>
+
+  <text class="section" x="70" y="1012">4. 这张详细图补充的关键点</text>
+  <rect class="note" x="70" y="1050" width="660" height="220"/>
+  <text class="note-title" x="102" y="1094">补充 A：为什么不用传统 pageNo</text>
+  <text class="note-text" x="102" y="1126">- Feed 是持续插入的新流，pageNo 在高频动态下会产生偏移和重复。</text>
+  <text class="note-text" x="102" y="1154">- 用 max + offset，可以稳定处理相同时间戳和深翻页问题。</text>
+  <text class="note-text" x="102" y="1182">- 这是这条读链和普通列表页最大的不同。</text>
+  <rect class="note" x="800" y="1050" width="660" height="220"/>
+  <text class="note-title" x="832" y="1094">补充 B：为什么先按类型分组再查详情</text>
+  <text class="note-text" x="832" y="1126">- Feed 里可能混博客、商品等多种资源，不能逐条远程查。</text>
+  <text class="note-text" x="832" y="1154">- 先 groupedMap，再走 ResourceStrategyFactory 批量查，是为了减少 RPC/DB 次数。</text>
+  <text class="note-text" x="832" y="1182">- 这也是它能支撑高并发读取的关键点。</text>
+  <rect class="note" x="1530" y="1050" width="660" height="220"/>
+  <text class="note-title" x="1562" y="1094">代码锚点</text>
+  <text class="note-text" x="1562" y="1126">- feedServiceImpl.queryFeedList：滚动分页、groupedMap、FeedVO 装配。</text>
+  <text class="note-text" x="1562" y="1154">- getCacheZSetReverseRangeByScore：按 score 倒序查 ZSet。</text>
+  <text class="note-text" x="1562" y="1182">- ResourceStrategyFactory：按业务类型批量取资源详情。</text>
+</svg>

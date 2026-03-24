@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#f7f9fc"/>
+  <rect x="24" y="24" width="1552" height="852" rx="28" fill="#ffffff" stroke="#d8e2f0" stroke-width="2"/>
+  <text x="800" y="78" text-anchor="middle" font-size="34" font-weight="700" fill="#16335b">死信队列与延迟消息在项目中的真实落点</text>
+  <text x="800" y="116" text-anchor="middle" font-size="18" fill="#4c6485">DLX/DLQ 已配置；订单与支付超时链路使用 x-delayed-message 插件；死信方法内容目前偏轻量</text>
+
+  <rect x="90" y="180" width="640" height="510" rx="24" fill="#f9fbff" stroke="#d7e3f3"/>
+  <text x="410" y="226" text-anchor="middle" font-size="28" font-weight="700" fill="#16335b">A. 死信队列真实情况</text>
+
+  <rect x="130" y="280" width="180" height="60" rx="16" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="220" y="317" text-anchor="middle" font-size="18" fill="#16335b">业务交换机</text>
+
+  <rect x="370" y="280" width="180" height="60" rx="16" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="460" y="317" text-anchor="middle" font-size="18" fill="#16335b">业务队列</text>
+
+  <rect x="370" y="400" width="180" height="60" rx="16" fill="#fef1ef" stroke="#ff9a8a"/>
+  <text x="460" y="437" text-anchor="middle" font-size="18" fill="#16335b">NACK / 重试耗尽</text>
+
+  <rect x="370" y="520" width="180" height="60" rx="16" fill="#f5efff" stroke="#b79dff"/>
+  <text x="460" y="557" text-anchor="middle" font-size="18" fill="#16335b">DLX / DLQ</text>
+
+  <rect x="130" y="520" width="180" height="60" rx="16" fill="#fff6ea" stroke="#ffb66b"/>
+  <text x="220" y="557" text-anchor="middle" font-size="18" fill="#16335b">死信消费者入口</text>
+
+  <path d="M310 310 L370 310" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="370,310 352,300 352,320" fill="#3e6bb3"/>
+  <path d="M460 340 L460 400" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="460,400 450,382 470,382" fill="#3e6bb3"/>
+  <path d="M460 460 L460 520" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="460,520 450,502 470,502" fill="#3e6bb3"/>
+  <path d="M370 550 L310 550" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="310,550 328,540 328,560" fill="#3e6bb3"/>
+
+  <text x="120" y="644" font-size="18" fill="#35527a">- order / product / search / ai / wallet 等模块都已经配置 DLX/DLQ</text>
+  <text x="120" y="676" font-size="18" fill="#35527a">- `handleDeadLetter(...)` 入口已经存在</text>
+  <text x="120" y="708" font-size="18" fill="#35527a">- 当前多数方法以日志记录和基础 ACK 为主</text>
+
+  <rect x="870" y="180" width="640" height="510" rx="24" fill="#f9fbff" stroke="#d7e3f3"/>
+  <text x="1190" y="226" text-anchor="middle" font-size="28" font-weight="700" fill="#16335b">B. 延迟消息真实情况</text>
+
+  <rect x="920" y="280" width="180" height="60" rx="16" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="1010" y="317" text-anchor="middle" font-size="18" fill="#16335b">发送端 setDelay</text>
+
+  <rect x="1160" y="280" width="220" height="60" rx="16" fill="#fff6ea" stroke="#ffb66b"/>
+  <text x="1270" y="317" text-anchor="middle" font-size="18" fill="#16335b">x-delayed-message</text>
+
+  <rect x="1160" y="400" width="220" height="60" rx="16" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="1270" y="437" text-anchor="middle" font-size="18" fill="#16335b">到期后路由到队列</text>
+
+  <rect x="1160" y="520" width="220" height="60" rx="16" fill="#f5efff" stroke="#b79dff"/>
+  <text x="1270" y="557" text-anchor="middle" font-size="18" fill="#16335b">订单 / 支付超时消费</text>
+
+  <path d="M1100 310 L1160 310" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="1160,310 1142,300 1142,320" fill="#3e6bb3"/>
+  <path d="M1270 340 L1270 400" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="1270,400 1260,382 1280,382" fill="#3e6bb3"/>
+  <path d="M1270 460 L1270 520" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="1270,520 1260,502 1280,502" fill="#3e6bb3"/>
+
+  <text x="900" y="644" font-size="18" fill="#35527a">- `OrderListener.handlePayOrder(...)` 使用延迟插件检查未支付订单</text>
+  <text x="900" y="676" font-size="18" fill="#35527a">- `PaymentListener.handlePayTimeout(...)` 使用同一方案处理支付超时</text>
+  <text x="900" y="708" font-size="18" fill="#35527a">- 所以项目主实现不是 TTL + DLX 排头阻塞方案</text>
+
+  <rect x="90" y="740" width="1420" height="92" rx="20" fill="#fffaf2" stroke="#f0d3a8"/>
+  <text x="800" y="782" text-anchor="middle" font-size="22" font-weight="700" fill="#9a5c0d">文档最准确的口径</text>
+  <text x="800" y="815" text-anchor="middle" font-size="18" fill="#35527a">死信体系已经配置完成，但死信后的统一补偿治理还在继续完善；延迟超时主链路已经明确使用插件方案。</text>
+</svg>

@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2280" height="1460" viewBox="0 0 2280 1460" role="img" aria-labelledby="title desc">
+  <title id="title">秒杀预热与库存校准链路（详细版）</title>
+  <desc id="desc">展示秒杀预热任务、临期提醒任务、结束回收任务和库存同步校准任务的完整职责边界。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbfcff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#255792"/></marker>
+    <style>
+      .title{font:700 36px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#17365e}.subtitle{font:500 18px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#4f6d8f}.section{font:700 24px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1d4b81}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#153454}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#36516d}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#25496f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#23425f}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506983}.node{fill:#fff;stroke:#a8c2e2;stroke-width:2;rx:24}.store{fill:#f3fbf5;stroke:#a7d6b7;stroke-width:2;rx:24}.decision{fill:#f8f3ff;stroke:#c7a6ea;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d7e3f4;stroke-width:1.5;rx:20}.line{stroke:#255792;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d92c0;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="2280" height="1460" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2224" height="1404" rx="30" fill="#fff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">秒杀预热与库存校准链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：ProductSeckillJobHandler.seckillPreHeatJobHandler / seckillSoonEndJobHandler / seckillRecoveryJobHandler / seckillStockCheckJobHandler</text>
+
+  <text class="section" x="70" y="182">1. 预热任务：把 2 小时内即将开始的秒杀库存和详情提前放进 Redis</text>
+  <rect class="node" x="80" y="220" width="360" height="170"/>
+  <text class="node-title" x="260" y="282" text-anchor="middle">seckillPreHeatJobHandler</text>
+  <text class="node-text" x="260" y="318" text-anchor="middle">每分钟扫描一次</text>
+  <text class="node-text" x="260" y="344" text-anchor="middle">查未来 2 小时内开始的秒杀商品</text>
+  <rect class="store" x="540" y="220" width="380" height="170"/>
+  <text class="node-title" x="730" y="282" text-anchor="middle">MySQL 商品表</text>
+  <text class="node-text" x="730" y="318" text-anchor="middle">status=ON_SHELF</text>
+  <text class="node-text" x="730" y="344" text-anchor="middle">activityType=SECKILL 且 beginTime 将近</text>
+  <rect class="decision" x="1020" y="220" width="360" height="170"/>
+  <text class="node-title" x="1200" y="282" text-anchor="middle">幂等判断</text>
+  <text class="node-text" x="1200" y="318" text-anchor="middle">SECKILL_STOCK_KEY 已存在则跳过</text>
+  <text class="node-text" x="1200" y="344" text-anchor="middle">避免重复预热</text>
+  <rect class="store" x="1480" y="220" width="340" height="170"/>
+  <text class="node-title" x="1650" y="282" text-anchor="middle">Redis 秒杀库存</text>
+  <text class="node-text" x="1650" y="318" text-anchor="middle">SECKILL_STOCK_KEY + productId</text>
+  <text class="node-text" x="1650" y="344" text-anchor="middle">写入库存供 Lua 原子扣减</text>
+  <rect class="store" x="1920" y="220" width="280" height="170"/>
+  <text class="node-title" x="2060" y="282" text-anchor="middle">详情缓存</text>
+  <text class="node-text" x="2060" y="318" text-anchor="middle">CACHE_PRODUCT_KEY</text>
+  <text class="node-text" x="2060" y="344" text-anchor="middle">防止开抢瞬间击穿</text>
+  <path class="line" d="M440 305 H528"/><text class="step" x="484" y="289" text-anchor="middle">1. 扫描即将开场商品</text>
+  <path class="line" d="M920 305 H1008"/><text class="step" x="964" y="289" text-anchor="middle">2. 判断是否已预热</text>
+  <path class="line" d="M1380 305 H1468"/><text class="step" x="1424" y="289" text-anchor="middle">3. 写库存</text>
+  <path class="dash" d="M1820 305 H1908"/><text class="step" x="1864" y="289" text-anchor="middle">4. 预热详情</text>
+
+  <text class="section" x="70" y="454">2. 临期提醒和结束回收是两类不同任务：一个做营销触达，一个做状态回收</text>
+  <rect class="node" x="120" y="500" width="420" height="180"/>
+  <text class="node-title" x="330" y="562" text-anchor="middle">seckillSoonEndJobHandler</text>
+  <text class="node-text" x="330" y="598" text-anchor="middle">扫描 30 分钟内即将结束的秒杀商品</text>
+  <text class="node-text" x="330" y="624" text-anchor="middle">sendProductActionMessageToMQ(SOON_END)</text>
+  <text class="node-text" x="330" y="650" text-anchor="middle">设置 SECKILL_NOTIFY_KEY 防重</text>
+  <rect class="node" x="660" y="500" width="420" height="180"/>
+  <text class="node-title" x="870" y="562" text-anchor="middle">seckillRecoveryJobHandler</text>
+  <text class="node-text" x="870" y="598" text-anchor="middle">扫描已过期的秒杀商品</text>
+  <text class="node-text" x="870" y="624" text-anchor="middle">status -> EXPIRED</text>
+  <text class="node-text" x="870" y="650" text-anchor="middle">删除库存 key / 通知 key / 详情缓存</text>
+  <rect class="store" x="1200" y="500" width="440" height="180"/>
+  <text class="node-title" x="1420" y="562" text-anchor="middle">营销触达与状态回收</text>
+  <text class="node-text" x="1420" y="598" text-anchor="middle">SoonEnd：Feed 推送“即将结束”营造紧迫感</text>
+  <text class="node-text" x="1420" y="624" text-anchor="middle">Recovery：活动结束后释放 Redis 和缓存资源</text>
+  <rect class="decision" x="1760" y="500" width="360" height="180"/>
+  <text class="node-title" x="1940" y="562" text-anchor="middle">边界差异</text>
+  <text class="node-text" x="1940" y="598" text-anchor="middle">SoonEnd 不改状态</text>
+  <text class="node-text" x="1940" y="624" text-anchor="middle">Recovery 才正式结束活动</text>
+  <path class="dash" d="M330 390 V460"/><text class="step" x="354" y="438">5. 临期提醒</text>
+  <path class="dash" d="M870 390 V460"/><text class="step" x="894" y="438">6. 到期回收</text>
+  <path class="line" d="M1080 590 H1188"/><text class="step" x="1134" y="574" text-anchor="middle">7. 两类结果不同</text>
+  <path class="line" d="M1640 590 H1748"/><text class="step" x="1694" y="574" text-anchor="middle">8. 明确职责边界</text>
+
+  <text class="section" x="70" y="736">3. 库存同步任务以订单结果为准，定时回刷真实剩余库存</text>
+  <rect class="node" x="150" y="780" width="420" height="180"/>
+  <text class="node-title" x="360" y="842" text-anchor="middle">seckillStockCheckJobHandler</text>
+  <text class="node-text" x="360" y="878" text-anchor="middle">每天凌晨校准秒杀库存</text>
+  <text class="node-text" x="360" y="904" text-anchor="middle">只处理已开始且未结束的秒杀商品</text>
+  <rect class="store" x="680" y="780" width="420" height="180"/>
+  <text class="node-title" x="890" y="842" text-anchor="middle">RemoteOrderService.countProductSold</text>
+  <text class="node-text" x="890" y="878" text-anchor="middle">以订单表统计已完成订单数量</text>
+  <text class="node-text" x="890" y="904" text-anchor="middle">拿到 soldMap(productId -&gt; soldCount)</text>
+  <rect class="store" x="1210" y="780" width="420" height="180"/>
+  <text class="node-title" x="1420" y="842" text-anchor="middle">真实库存校准</text>
+  <text class="node-text" x="1420" y="878" text-anchor="middle">真实库存 = 初始库存 - 已完成订单数</text>
+  <text class="node-text" x="1420" y="904" text-anchor="middle">同步回 MySQL，修正长期偏差</text>
+  <rect class="store" x="1740" y="780" width="360" height="180"/>
+  <text class="node-title" x="1920" y="842" text-anchor="middle">最终一致性</text>
+  <text class="node-text" x="1920" y="878" text-anchor="middle">Redis 负责高并发抢购</text>
+  <text class="node-text" x="1920" y="904" text-anchor="middle">订单表负责最终库存事实</text>
+  <path class="line" d="M570 870 H668"/><text class="step" x="619" y="854" text-anchor="middle">9. 拉订单销量</text>
+  <path class="line" d="M1100 870 H1198"/><text class="step" x="1149" y="854" text-anchor="middle">10. 计算真实库存</text>
+  <path class="dash" d="M1630 870 H1728"/><text class="step" x="1679" y="854" text-anchor="middle">11. 校准最终结果</text>
+
+  <text class="section" x="70" y="1030">4. 这张详细图补充的重点</text>
+  <rect class="note" x="70" y="1068" width="660" height="220"/>
+  <text class="note-title" x="102" y="1112">补充 A：秒杀生命周期不是一个任务能讲完</text>
+  <text class="note-text" x="102" y="1144">- 预热、临期提醒、结束回收、库存校准分别解决不同问题。</text>
+  <text class="note-text" x="102" y="1172">- 合在一条线里容易让人误以为都是“库存处理”，其实营销触达和状态回收完全不同。</text>
+  <text class="note-text" x="102" y="1200">- 所以详细图把 4 个任务拆成 3 段来讲。</text>
+  <rect class="note" x="800" y="1068" width="660" height="220"/>
+  <text class="note-title" x="832" y="1112">补充 B：为什么还需要库存校准任务</text>
+  <text class="note-text" x="832" y="1144">- Redis 秒杀库存只保证高并发扣减效率，不代表长期运行后完全不会漂移。</text>
+  <text class="note-text" x="832" y="1172">- 用订单表做事实来源，定时回刷 MySQL，能把极端情况下的误差收敛回来。</text>
+  <text class="note-text" x="832" y="1200">- 这是“性能优先”之后补上的最终一致性保险丝。</text>
+  <rect class="note" x="1530" y="1068" width="660" height="220"/>
+  <text class="note-title" x="1562" y="1112">代码锚点</text>
+  <text class="note-text" x="1562" y="1144">- seckillPreHeatJobHandler：2 小时窗口预热库存和详情。</text>
+  <text class="note-text" x="1562" y="1172">- seckillSoonEndJobHandler：临期提醒走 MQ，不改状态。</text>
+  <text class="note-text" x="1562" y="1200">- seckillRecoveryJobHandler：活动结束后改 EXPIRED 并清缓存。</text>
+  <text class="note-text" x="1562" y="1228">- seckillStockCheckJobHandler：按订单结果校准真实库存。</text>
+</svg>

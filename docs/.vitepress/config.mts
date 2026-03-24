@@ -9,6 +9,7 @@ export default defineConfig({
   title: "SmartLive 智评生活",
   description: "企业级微服务全栈项目架构剖析与全链路面经",
   base: '/smartLive-Cloud/',
+  scrollOffset: 96,
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
@@ -44,9 +45,9 @@ export default defineConfig({
         ]
       },
       {
-        text: '👨‍💻 学习与复盘总结',
+        text: '👨‍💻 项目驱动学习复盘',
         items: [
-          { text: '学习复盘与定投总结表', link: '/core-links/SmartLive_Java_Internship_Review_Plan_Updated' }
+          { text: '项目驱动学习复盘指南', link: '/core-links/SmartLive_Java_Internship_Review_Plan_Updated' }
         ]
       }
     ],

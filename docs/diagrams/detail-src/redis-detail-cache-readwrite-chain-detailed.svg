@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2280" height="1460" viewBox="0 0 2280 1460" role="img" aria-labelledby="title desc">
+  <title id="title">详情页缓存读写链路（详细版）</title>
+  <desc id="desc">展示 CacheClient.queryWithLogicalExpireAndPassThrough 的读路径，以及写库后删缓存、空值占位、逻辑过期和互斥锁重建机制。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbfcff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#255792"/></marker>
+    <style>
+      .title{font:700 36px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#17365e}.subtitle{font:500 18px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#4f6d8f}.section{font:700 24px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1d4b81}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#153454}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#36516d}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#25496f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#23425f}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506983}.node{fill:#fff;stroke:#a8c2e2;stroke-width:2;rx:24}.store{fill:#f3fbf5;stroke:#a7d6b7;stroke-width:2;rx:24}.decision{fill:#f8f3ff;stroke:#c7a6ea;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d7e3f4;stroke-width:1.5;rx:20}.line{stroke:#255792;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d92c0;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}.warn{stroke:#c15a5a;stroke-width:4;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="2280" height="1460" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2224" height="1404" rx="30" fill="#fff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">详情页缓存读写链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：CacheClient.queryWithLogicalExpireAndPassThrough + BlogServiceImpl.queryBlogById，以及各业务更新后的删缓存模式</text>
+
+  <text class="section" x="70" y="182">1. 读路径先查缓存；命中未过期直接返回，命中空值直接拦截</text>
+  <rect class="node" x="70" y="220" width="280" height="160"/>
+  <text class="node-title" x="210" y="278" text-anchor="middle">详情页请求</text>
+  <text class="node-text" x="210" y="314" text-anchor="middle">博客 / 店铺 / 商品详情</text>
+  <text class="node-text" x="210" y="340" text-anchor="middle">如 queryBlogById(id)</text>
+  <rect class="node" x="420" y="220" width="480" height="160"/>
+  <text class="node-title" x="660" y="278" text-anchor="middle">CacheClient.queryWithLogicalExpireAndPassThrough</text>
+  <text class="node-text" x="660" y="314" text-anchor="middle">keyPrefix + id 读缓存</text>
+  <text class="node-text" x="660" y="340" text-anchor="middle">解析 RedisData / expireTime / data</text>
+  <rect class="store" x="970" y="220" width="340" height="160"/>
+  <text class="node-title" x="1140" y="278" text-anchor="middle">Redis 详情缓存</text>
+  <text class="node-text" x="1140" y="314" text-anchor="middle">value = RedisData 或 ""</text>
+  <text class="node-text" x="1140" y="340" text-anchor="middle">物理 TTL 较长，逻辑 TTL 独立</text>
+  <rect class="decision" x="1380" y="220" width="360" height="160"/>
+  <text class="node-title" x="1560" y="278" text-anchor="middle">缓存状态判断</text>
+  <text class="node-text" x="1560" y="314" text-anchor="middle">未命中 / 空值 / 命中未过期 / 命中过期</text>
+  <text class="node-text" x="1560" y="340" text-anchor="middle">四种路径分开处理</text>
+  <rect class="store" x="1810" y="220" width="360" height="160"/>
+  <text class="node-title" x="1990" y="278" text-anchor="middle">前端详情页</text>
+  <text class="node-text" x="1990" y="314" text-anchor="middle">命中未过期：直接返回最新详情</text>
+  <text class="node-text" x="1990" y="340" text-anchor="middle">命中空值：直接 not found</text>
+  <path class="line" d="M350 300 H408"/><text class="step" x="379" y="284" text-anchor="middle">1. 发起详情读</text>
+  <path class="line" d="M900 300 H958"/><text class="step" x="929" y="284" text-anchor="middle">2. 查 Redis</text>
+  <path class="line" d="M1310 300 H1368"/><text class="step" x="1339" y="284" text-anchor="middle">3. 判断状态</text>
+  <path class="dash" d="M1740 300 H1798"/><text class="step" x="1769" y="284" text-anchor="middle">4. 快速返回</text>
+
+  <text class="section" x="70" y="450">2. miss 或逻辑过期时，DB 回源与后台重建的策略不同</text>
+  <rect class="decision" x="140" y="500" width="360" height="180"/>
+  <text class="node-title" x="320" y="562" text-anchor="middle">完全 miss</text>
+  <text class="node-text" x="320" y="598" text-anchor="middle">同步查 DB</text>
+  <text class="node-text" x="320" y="624" text-anchor="middle">查不到则写 "" 防穿透</text>
+  <rect class="decision" x="610" y="500" width="360" height="180"/>
+  <text class="node-title" x="790" y="562" text-anchor="middle">命中过期</text>
+  <text class="node-text" x="790" y="598" text-anchor="middle">先返回旧数据</text>
+  <text class="node-text" x="790" y="624" text-anchor="middle">再尝试拿锁异步重建</text>
+  <rect class="store" x="1080" y="500" width="420" height="180"/>
+  <text class="node-title" x="1290" y="562" text-anchor="middle">DB fallback</text>
+  <text class="node-text" x="1290" y="598" text-anchor="middle">按 published / pass 等状态回源查询</text>
+  <text class="node-text" x="1290" y="624" text-anchor="middle">成功则 setWithLogicalExpire 回写缓存</text>
+  <rect class="store" x="1610" y="500" width="420" height="180"/>
+  <text class="node-title" x="1820" y="562" text-anchor="middle">Redis 锁与后台线程池</text>
+  <text class="node-text" x="1820" y="598" text-anchor="middle">lockPrefix + id</text>
+  <text class="node-text" x="1820" y="624" text-anchor="middle">CACHE_REBUILD_EXECUTOR 异步重建</text>
+  <path class="warn" d="M1560 380 V460 H320 V488"/><text class="step" x="940" y="444" text-anchor="middle">5. miss 走同步回源</text>
+  <path class="dash" d="M1560 380 V440 H790 V488"/><text class="step" x="1175" y="424" text-anchor="middle">6. 过期先返回旧值，再异步重建</text>
+  <path class="line" d="M970 590 H1068"/><text class="step" x="1019" y="574" text-anchor="middle">7. 回源 DB</text>
+  <path class="dash" d="M1500 590 H1598"/><text class="step" x="1549" y="574" text-anchor="middle">8. 拿锁重建</text>
+
+  <text class="section" x="70" y="726">3. 写路径遵循“先写库，再删缓存”，避免脏数据长驻</text>
+  <rect class="node" x="170" y="770" width="420" height="180"/>
+  <text class="node-title" x="380" y="832" text-anchor="middle">更新详情数据</text>
+  <text class="node-text" x="380" y="868" text-anchor="middle">修改博客、店铺、商品状态或内容</text>
+  <text class="node-text" x="380" y="894" text-anchor="middle">先保证 DB 成功提交</text>
+  <rect class="store" x="700" y="770" width="420" height="180"/>
+  <text class="node-title" x="910" y="832" text-anchor="middle">数据库</text>
+  <text class="node-text" x="910" y="868" text-anchor="middle">最新数据成为事实来源</text>
+  <text class="node-text" x="910" y="894" text-anchor="middle">commit 成功后再删缓存</text>
+  <rect class="store" x="1230" y="770" width="420" height="180"/>
+  <text class="node-title" x="1440" y="832" text-anchor="middle">删除详情缓存</text>
+  <text class="node-text" x="1440" y="868" text-anchor="middle">deleteObject(detailKey)</text>
+  <text class="node-text" x="1440" y="894" text-anchor="middle">必要时连列表缓存一起删</text>
+  <rect class="store" x="1760" y="770" width="360" height="180"/>
+  <text class="node-title" x="1940" y="832" text-anchor="middle">下一次读请求</text>
+  <text class="node-text" x="1940" y="868" text-anchor="middle">重新回源并写入新缓存</text>
+  <text class="node-text" x="1940" y="894" text-anchor="middle">避免脏数据长期停留</text>
+  <path class="line" d="M590 860 H688"/><text class="step" x="639" y="844" text-anchor="middle">9. 先写库</text>
+  <path class="line" d="M1120 860 H1218"/><text class="step" x="1169" y="844" text-anchor="middle">10. 再删缓存</text>
+  <path class="dash" d="M1650 860 H1748"/><text class="step" x="1699" y="844" text-anchor="middle">11. 下次再重建</text>
+
+  <text class="section" x="70" y="1012">4. 这张详细图补充的工程边界</text>
+  <rect class="note" x="70" y="1050" width="660" height="220"/>
+  <text class="note-title" x="102" y="1094">补充 A：为什么逻辑过期时还要返回旧数据</text>
+  <text class="note-text" x="102" y="1126">- 详情页高频读时，如果所有过期请求都同步回源，瞬间会把 DB 打爆。</text>
+  <text class="note-text" x="102" y="1154">- 先返回旧值，再在后台拿锁重建，能把峰值读流量平滑掉。</text>
+  <text class="note-text" x="102" y="1182">- 这是详情缓存和普通 TTL 缓存最大的差异。</text>
+  <rect class="note" x="800" y="1050" width="660" height="220"/>
+  <text class="note-title" x="832" y="1094">补充 B：为什么写路径仍然坚持删缓存</text>
+  <text class="note-text" x="832" y="1126">- 逻辑过期解决的是读峰值，不代表写路径可以直接改缓存。</text>
+  <text class="note-text" x="832" y="1154">- 先写库再删缓存，能把事实来源固定在 DB，减少并发写带来的脏缓存风险。</text>
+  <text class="note-text" x="832" y="1182">- 所以读策略和写策略是两套组合拳，不是单一技巧。</text>
+  <rect class="note" x="1530" y="1050" width="660" height="220"/>
+  <text class="note-title" x="1562" y="1094">代码锚点</text>
+  <text class="note-text" x="1562" y="1126">- CacheClient.queryWithLogicalExpireAndPassThrough：四种状态分流。</text>
+  <text class="note-text" x="1562" y="1154">- CacheClient.tryLock / setWithLogicalExpire：互斥锁和后台重建。</text>
+  <text class="note-text" x="1562" y="1182">- BlogServiceImpl.queryBlogById：详情读链的典型调用点。</text>
+</svg>

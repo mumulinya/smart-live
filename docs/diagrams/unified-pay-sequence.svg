@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
-  <title id='title'>统一支付：支付受理、回调与钱包更新</title>
-  <desc id='desc'>展示统一支付受理、支付策略路由、PaymentRecord 落库，以及微信、支付宝、余额支付回调后的业务分发与钱包状态更新。</desc>
+  <title id='title'>统一支付：支付受理、回调与账务分发</title>
+  <desc id='desc'>展示统一支付受理、支付策略路由、PaymentRecord 落库，以及微信、支付宝、余额支付回调后的业务分发与账务处理。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
     <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
@@ -8,7 +8,7 @@
   </defs>
   <rect width="1800" height="1040" fill="url(#bg)"/>
   <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
-  <text class='title' x='74' y='96'>统一支付：支付受理、回调与钱包更新</text>
+  <text class='title' x='74' y='96'>统一支付：支付受理、回调与账务分发</text>
   <text class='subtitle' x='74' y='132'>对应代码：PayController.unifiedOrder + PayServiceImpl.unifiedOrder / processCallback + remoteOrderService.paySuccess</text>
   <text class='section' x='74' y='188'>1. 统一下单与支付指令生成</text>
   <rect class='node' x='70' y='220' width='250' height='140'/>

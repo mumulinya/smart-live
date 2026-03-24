@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1660" viewBox="0 0 2360 1660" role="img" aria-labelledby="title desc">
-  <title id="title">统一支付：支付受理、回调与钱包更新（详细版）</title>
+  <title id="title">统一支付：支付受理、回调与账务分发（详细版）</title>
   <desc id="desc">展示统一支付下单、PaymentRecord 落库、延迟关闭、第三方回调/主动查单、充值与订单支付两条业务分发，以及余额支付的特殊路径。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -31,7 +31,7 @@
   <rect width="2360" height="1660" fill="url(#bg)"/>
   <rect x="28" y="28" width="2304" height="1604" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
 
-  <text class="title" x="70" y="92">统一支付：支付受理、回调与钱包更新（详细版）</text>
+  <text class="title" x="70" y="92">统一支付：支付受理、回调与账务分发（详细版）</text>
   <text class="subtitle" x="70" y="128">对应代码：PayController + PayServiceImpl.unifiedOrder / queryPayStatus / processCallback + PaymentListener.handlePayTimeout + BalancePayService.pay</text>
 
   <text class="section" x="70" y="182">1. 统一下单：同一套入口承接充值与订单支付，并复用待支付流水</text>

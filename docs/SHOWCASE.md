@@ -1,8 +1,10 @@
 ﻿# SmartLive 视觉导览
 
-这份文档只做一件事：让第一次看到 SmartLive 的人，先在几分钟内看懂“这个项目长什么样、覆盖了哪些业务、有哪些关键链路图”。
+这份文档只做一件事：让第一次看到 SmartLive 的人，在几分钟内看清项目全景、核心页面和关键链路。
 
 **文档导航：** [README 首页](../README.md) · [页面导览](PAGE_GALLERY.md) · [开源接入](OPEN_SOURCE.md)
+
+**第一次建议先看：** [项目全景](#showcase-overview) -> [用户进入、发现与找店](#showcase-discovery) -> [决策、交易与增长](#showcase-trade) -> [核心链路图集](#showcase-chains)
 
 **按目标看图：**
 
@@ -48,21 +50,21 @@
 
 热门页集中展示内容流与分区切换。
 
-### 热门店铺榜
+### 本地必吃榜（店铺热榜）
 
 <p align="center">
   <img src="./screenshots/app-top-shops.png" alt="app-top-shops" width="300">
 </p>
 
-独立店铺热榜页展示热门商户。
+独立店铺热榜页展示本地必吃商户。
 
-### 热门商品榜
+### 抢手好券榜
 
 <p align="center">
   <img src="./screenshots/app-top-products.png" alt="app-top-products" width="300">
 </p>
 
-独立商品热榜页展示热门商品。
+独立好券热榜页展示热门优惠商品。
 
 ### 搜索结果
 
@@ -304,10 +306,10 @@ AI 推荐卡片承接商品与团购推荐结果。
 |:---|:---|:---|:---|
 | 秒杀抢购全链路 | Redis Lua 防超卖、RabbitMQ 异步落单、延迟队列兜底 | [查看 SVG](./diagrams/seckill-flow.svg) | [查看详细 SVG](./diagrams/detail-src/seckill-flow-detailed.svg) |
 | 普通下单：订单创建与状态流转 | 下单创建、异步落单、支付生效后的状态流转 | [查看 SVG](./diagrams/normal-order-sequence.svg) | [查看详细 SVG](./diagrams/detail-src/normal-order-sequence-detailed.svg) |
-| 统一支付：支付受理、回调与钱包更新 | 支付受理、回调分发、支付记录与钱包状态更新 | [查看 SVG](./diagrams/unified-pay-sequence.svg) | [查看详细 SVG](./diagrams/detail-src/unified-pay-sequence-detailed.svg) |
+| 统一支付：支付受理、回调与账务分发 | 支付受理、回调分发、PaymentRecord 与充值入账 / 订单记账 | [查看 SVG](./diagrams/unified-pay-sequence.svg) | [查看详细 SVG](./diagrams/detail-src/unified-pay-sequence-detailed.svg) |
 | 订单超时取消与库存回滚 | 下单后发送延迟消息、超时未支付自动取消、库存与资格回滚 | [查看 SVG](./diagrams/order-timeout-cancel-stock-rollback-chain.svg) | [查看详细 SVG](./diagrams/detail-src/order-timeout-cancel-stock-rollback-chain-detailed.svg) |
 | 主动取消 / 退款与钱包补偿 | 用户主动取消或退款后的库存回滚、退款 MQ 与钱包流水 | [查看 SVG](./diagrams/order-refund-wallet-compensation-chain.svg) | [查看详细 SVG](./diagrams/detail-src/order-refund-wallet-compensation-chain-detailed.svg) |
-| 订单核销、店铺销量与积分奖励 | verifyShopId 校验、核销后销量增长、消费积分异步发放 | [查看 SVG](./diagrams/order-verification-points-reward-chain.svg) | SVG only |
+| 订单核销、店铺销量与积分奖励 | verifyShopId 校验、核销后销量增长、消费积分异步发放 | [查看 SVG](./diagrams/order-verification-points-reward-chain.svg) | [查看详细 SVG](./diagrams/detail-src/order-verification-points-reward-chain-detailed.svg) |
 
 ### 积分与用户激励
 
@@ -321,14 +323,14 @@ AI 推荐卡片承接商品与团购推荐结果。
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | 登录鉴权与网关透传 | 短信/密码登录、Redis 登录态、Gateway 请求头透传 | [查看 SVG](./diagrams/auth-login-gateway-chain.svg) | [查看详细 SVG](./diagrams/detail-src/auth-login-gateway-chain-detailed.svg) |
-| 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](./diagrams/file-upload-avatar-update-chain.svg) | SVG only |
+| 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](./diagrams/file-upload-avatar-update-chain.svg) | [查看详细 SVG](./diagrams/detail-src/file-upload-avatar-update-chain-detailed.svg) |
 
 ### <a id="chains-search"></a>内容审核与搜索
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | 发布审核与搜索 / 向量同步 | 提交待审、审核责任链、回调源服务、ES/Milvus/热榜更新 | [查看 SVG](./diagrams/publish-audit-search-sync-chain.svg) | [查看详细 SVG](./diagrams/detail-src/publish-audit-search-sync-chain-detailed.svg) |
-| 审核中心责任链与业务回写 | 审核任务落库、敏感词 / AI / 人工审核、驳回通知 | [查看 SVG](./diagrams/audit-center-responsibility-chain.svg) | SVG only |
+| 审核中心责任链与业务回写 | 审核任务落库、敏感词 / AI / 人工审核、驳回通知 | [查看 SVG](./diagrams/audit-center-responsibility-chain.svg) | [查看详细 SVG](./diagrams/detail-src/audit-center-responsibility-chain-detailed.svg) |
 | 搜索读链路与热词沉淀 | ES 检索、LBS 排序、搜索历史与热搜榜 | [查看 SVG](./diagrams/search-read-lbs-ranking-chain.svg) | [查看详细 SVG](./diagrams/detail-src/search-read-lbs-ranking-chain-detailed.svg) |
 
 ### <a id="chains-social"></a>社交与消息
@@ -337,31 +339,31 @@ AI 推荐卡片承接商品与团购推荐结果。
 |:---|:---|:---|:---|
 | 关注 Feed 推送与滚动读取 | 粉丝信箱写入、Pipeline 批量 ZSet、ScrollResult 读取聚合 | [查看 SVG](./diagrams/follow-feed-scroll-read-chain.svg) | [查看详细 SVG](./diagrams/detail-src/follow-feed-scroll-read-chain-detailed.svg) |
 | IM 私聊可靠投递 | 长连接、消息持久化、ACK / 重试 | [查看 SVG](./diagrams/im-private-message-reliable-delivery-sequence.svg) | [查看详细 SVG](./diagrams/detail-src/im-private-message-reliable-delivery-sequence-detailed.svg) |
-| 系统通知入库与 IM 推送 | 多业务通知汇聚、通知落库、在线实时推送 | [查看 SVG](./diagrams/system-notice-im-push-chain.svg) | SVG only |
+| 系统通知入库与 IM 推送 | 多业务通知汇聚、通知落库、在线实时推送 | [查看 SVG](./diagrams/system-notice-im-push-chain.svg) | [查看详细 SVG](./diagrams/detail-src/system-notice-im-push-chain-detailed.svg) |
 
 ### <a id="chains-rank"></a>排行、热度与推荐
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 首页热门榜单聚合读链路 | 并发拉取热门店铺榜、热门代金券榜、热门团购榜、热门博客榜，再按首页分区聚合返回 | [查看 SVG](./diagrams/home-aggregation-recommend-recall-chain.svg) | SVG only |
-| 首页热门榜单算分与热榜维护链路 | 上架、销量、互动变化如何推进四榜 calcQueue，经过增量洗牌与凌晨全量重建后持续写回 Redis 热榜 | [查看 SVG](./diagrams/home-hot-rank-score-maintenance-chain.svg) | SVG only |
+| 首页热门面板与热门博客读取链路 | 首页顶部热门面板按 activeHotTab 读取店铺榜 / 好券榜 / 团购榜，热门博客列表独立读取 | [查看 SVG](./diagrams/home-aggregation-recommend-recall-chain.svg) | [查看详细 SVG](./diagrams/detail-src/home-aggregation-recommend-recall-chain-detailed.svg) |
+| 首页热门面板算分与热榜维护链路 | 店铺榜、好券榜、团购榜和热门博客内容流如何进入 calcQueue，经过增量洗牌与凌晨全量重建后持续写回 Redis 热榜 | [查看 SVG](./diagrams/home-hot-rank-score-maintenance-chain.svg) | [查看详细 SVG](./diagrams/detail-src/home-hot-rank-score-maintenance-chain-detailed.svg) |
 | 互动数据回刷与双轨同步（业务视角） | Redis 热数据变化如何驱动回刷、检索同步与热度重算 | [查看 SVG](./diagrams/interaction-dual-track-sync-sequence.svg) | [查看详细 SVG](./diagrams/detail-src/interaction-dual-track-sync-sequence-detailed.svg) |
-| 热榜增量维护与全量重建（业务视角） | calcQueue、Top N merge、榜单更新与凌晨全量兜底 | [查看 SVG](./diagrams/hot-rank-wash-rebuild-chain.svg) | SVG only |
+| 热榜增量维护与全量重建（业务视角） | calcQueue、Top N merge、榜单更新与凌晨全量兜底 | [查看 SVG](./diagrams/hot-rank-wash-rebuild-chain.svg) | [查看详细 SVG](./diagrams/detail-src/hot-rank-wash-rebuild-chain-detailed.svg) |
 
 ### <a id="chains-ai"></a>AI 与经营
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | AI 对话链路 | SSE 流式响应、意图路由、卡片事件 | [查看 SVG](./diagrams/ai-chat-sse-intent-routing-sequence.svg) | [查看详细 SVG](./diagrams/detail-src/ai-chat-sse-intent-routing-sequence-detailed.svg) |
-| 店铺经营分析与 AI 经营建议 | 订单分析、评价分析、经营建议与差评关键词抽取合在同一组看 | [分析聚合](./diagrams/shop-analysis-aggregation-chain.svg) / [AI 建议](./diagrams/shop-suggest-ai-keywords-chain.svg) | SVG only |
+| 店铺经营分析与 AI 经营建议 | 订单分析、评价分析、经营建议与差评关键词抽取合在同一组看 | [分析聚合](./diagrams/shop-analysis-aggregation-chain.svg) / [AI 建议](./diagrams/shop-suggest-ai-keywords-chain.svg) | [分析详细](./diagrams/detail-src/shop-analysis-aggregation-chain-detailed.svg) / [AI 建议详细](./diagrams/detail-src/shop-suggest-ai-keywords-chain-detailed.svg) |
 
 ### <a id="chains-cache"></a>缓存与性能专题
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| Redis 缓存分层设计 | 列表、详情、计数、状态、热榜 / Feed 五层缓存拆分 | [查看 SVG](./diagrams/redis-layered-cache-architecture.svg) | SVG only |
-| Feed / 列表 ZSet 缓存链路 | ZSet 排序视图、滚动分页、批量详情回填 | [查看 SVG](./diagrams/redis-feed-zset-cache-chain.svg) | SVG only |
-| 详情页缓存读写链路 | 逻辑过期、空值缓存、互斥锁重建、写后删缓存 | [查看 SVG](./diagrams/redis-detail-cache-readwrite-chain.svg) | SVG only |
+| Redis 缓存分层设计 | 列表、详情、计数、状态、热榜 / Feed 五层缓存拆分 | [查看 SVG](./diagrams/redis-layered-cache-architecture.svg) | [查看详细 SVG](./diagrams/detail-src/redis-layered-cache-architecture-detailed.svg) |
+| Feed / 列表 ZSet 缓存链路 | ZSet 排序视图、滚动分页、批量详情回填 | [查看 SVG](./diagrams/redis-feed-zset-cache-chain.svg) | [查看详细 SVG](./diagrams/detail-src/redis-feed-zset-cache-chain-detailed.svg) |
+| 详情页缓存读写链路 | 逻辑过期、空值缓存、互斥锁重建、写后删缓存 | [查看 SVG](./diagrams/redis-detail-cache-readwrite-chain.svg) | [查看详细 SVG](./diagrams/detail-src/redis-detail-cache-readwrite-chain-detailed.svg) |
 
 ### <a id="chains-schedule"></a>调度与定时任务
 
@@ -377,9 +379,9 @@ AI 推荐卡片承接商品与团购推荐结果。
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 秒杀预热与库存校准链路 | 预热库存和详情缓存，后续再按订单销量校准 MySQL 与缓存 | [查看 SVG](./diagrams/seckill-preheat-stock-calibration-chain.svg) | SVG only |
-| 热榜增量维护与全量重建链路（调度视角） | HotRankJobHandler / FullRebuildJobHandler 如何分发增量维护与全量重建 | [查看 SVG](./diagrams/hot-rank-wash-rebuild-chain.svg) | SVG only |
-| 互动数据回刷与双轨同步链路（调度视角） | InteractionSyncXxlJob / SyncDataServiceImpl 如何回刷 MySQL 并联动热榜 | [查看 SVG](./diagrams/interaction-dual-track-sync-sequence.svg) | SVG only |
+| 秒杀预热与库存校准链路 | 预热库存和详情缓存，后续再按订单销量校准 MySQL 与缓存 | [查看 SVG](./diagrams/seckill-preheat-stock-calibration-chain.svg) | [查看详细 SVG](./diagrams/detail-src/seckill-preheat-stock-calibration-chain-detailed.svg) |
+| 热榜增量维护与全量重建链路（调度视角） | HotRankJobHandler / FullRebuildJobHandler 如何分发增量维护与全量重建 | [查看 SVG](./diagrams/hot-rank-wash-rebuild-chain.svg) | [查看详细 SVG](./diagrams/detail-src/hot-rank-wash-rebuild-chain-detailed.svg) |
+| 互动数据回刷与双轨同步链路（调度视角） | InteractionSyncXxlJob / SyncDataServiceImpl 如何回刷 MySQL 并联动热榜 | [查看 SVG](./diagrams/interaction-dual-track-sync-sequence.svg) | [查看详细 SVG](./diagrams/detail-src/interaction-dual-track-sync-sequence-detailed.svg) |
 | 订单生命周期兜底处理链路 | 临期提醒、过期处理、库存销量回滚与退款补偿兜底 | [查看 SVG](./diagrams/order-lifecycle-fallback-chain.svg) | [查看详细 SVG](./diagrams/detail-src/order-lifecycle-fallback-chain-detailed.svg) |
 
 ### 历史详细图补充

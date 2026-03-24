@@ -1,10 +1,10 @@
-<div align="center">
+﻿<div align="center">
 
 # 🏙️ SmartLive 智评生活
 
-**基于 Spring Cloud Alibaba，覆盖交易、社交、热榜与 AI/RAG 的本地生活微服务平台**
+**基于 Spring Cloud Alibaba 的本地生活微服务平台，覆盖发现、交易、社交、热榜与 AI/RAG**
 
-聚焦用户发现、决策下单、履约评价、商家经营与内容治理，展示一套完整业务闭环如何工程化落地
+围绕“用户发现 -> 决策下单 -> 履约评价 -> 社交互动 -> 商家经营 -> 平台治理”构建完整业务闭环，重点展示复杂业务如何被微服务与中间件工程化落地
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.0-blue.svg)](https://spring.io/projects/spring-cloud)
@@ -12,11 +12,11 @@
 [![JDK](https://img.shields.io/badge/JDK-17+-red.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Star](https://gitee.com/mumulinya/smart-live/badge/star.svg?theme=dark)](https://gitee.com/mumulinya/smart-live/stargazers)
-[![Personal Project](https://img.shields.io/badge/个人独立项目-从零设计开发-ff69b4.svg)]()
+![Personal Project](https://img.shields.io/badge/个人独立项目-从零设计开发-ff69b4.svg)
 
-### 📚 **[项目在线文档网站 (含核心架构与面经)](https://mumulinya.github.io/smartLive-Cloud/)**
+### 📚 **[项目在线文档网站（完整排版版）](https://mumulinya.github.io/smartLive-Cloud/)**
 
-[视觉导览](docs/SHOWCASE.md) · [页面导览](docs/PAGE_GALLERY.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
+**文档导航：** [在线文档](https://mumulinya.github.io/smartLive-Cloud/) · [视觉导览](docs/SHOWCASE.md) · [页面导览](docs/PAGE_GALLERY.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
 
 ---
 
@@ -56,17 +56,17 @@
 
 ### 🎯 项目定位
 
-**SmartLive（智评生活）** 是一个面向**本地生活服务场景**的微服务平台，围绕“**用户发现 -> 决策下单 -> 履约评价 -> 社交互动 -> 商家经营**”构建完整业务闭环。  
-它不是单一功能演示，而是把**交易、搜索、社交、审核、IM、支付、积分、热榜、AI/RAG** 等能力放进同一套可运行系统里。
+**SmartLive（智评生活）** 是一个面向**本地生活服务场景**的微服务平台，覆盖用户发现、交易履约、内容互动、商家经营与平台治理。  
+它不是单一业务 Demo，而是把**交易、搜索、社交、审核、IM、支付、积分、热榜、AI/RAG** 等能力放进同一套可运行、可追踪、可继续扩展的系统里。
 
 ### 🧩 这个仓库覆盖什么
 
-- **后端微服务主仓库**：覆盖用户、店铺、商品、订单、钱包、互动、博客、搜索、审核、AI、IM 等 **18+** 业务模块。
-- **B/C 双端业务闭环**：既有用户侧的找店、下单、评价、博客、聊天与 AI 问答，也有商家侧的商品管理、经营分析、差评回复与内容治理。
+- **后端微服务主仓库**：包含 `16` 个核心业务模块，并连同 `auth / gateway / monitor` 组成 `19` 个可运行服务应用。
+- **B/C 双端业务闭环**：既覆盖用户侧的找店、下单、评价、博客、聊天与 AI 问答，也覆盖商家侧的商品管理、经营分析、差评回复与内容治理。
 - **多中间件协同**：Redis、RabbitMQ、Elasticsearch、Milvus、MinIO、XXL-JOB、Nacos、Gateway、Sentinel、Seata 等共同支撑核心链路。
-- **仓库边界清晰**：当前仓库主要是后端与基础设施编排，前端管理端和用户端仓库入口见后文“项目仓库”。
+- **仓库边界清晰**：当前仓库聚焦后端与基础设施编排，前端管理端和用户端仓库入口见后文“项目仓库”。
 
-### 🔍 开源阅读价值
+### 🔍 为什么值得开源阅读
 
 | 维度 | 内容 |
 |------|------|
@@ -79,24 +79,25 @@
 
 | 维度 | 数值 | 说明 |
 |------|------|------|
-| 核心业务模块 | **18+** | 用户、店铺、商品、订单、博客、互动、搜索、AI、IM 等 |
+| 核心业务模块 | **16 个** | 用户、店铺、商品、订单、博客、互动、搜索、AI、IM 等核心业务模块 |
+| 可运行服务应用 | **19 个** | 16 个业务模块 + `auth` + `gateway` + `monitor` |
 | 核心能力域 | **6 大类** | 发现推荐、交易履约、社交互动、内容治理、经营分析、基础设施 |
 | 端侧覆盖 | **2 端** | B 端商家管理 + C 端消费者体验 |
 | 核心业务代码 | **30,000+ 行** | 以服务端业务逻辑为主 |
-| 单元测试代码 | **5,000+ 行** | 覆盖主要交易、互动与基础能力 |
+| 文档与图示资产 | **完整导览** | 展示版/详细版链路图、页面截图、在线文档与开源接入指南 |
 | Git 提交记录 | **200+** | 可回溯完整开发过程 |
 
 ### ✨ 为什么值得继续往下看
 
-- 不是只做“登录 + CRUD”的展示型项目，而是把多业务域和多中间件真正串成闭环。
+- 不是只做“登录 + CRUD”的展示型项目，而是真正把多业务域和多中间件串成闭环。
 - 同时覆盖 **ToC 用户体验、ToB 商家经营、平台审核治理** 三条线，项目视角更完整。
-- 文档里已经补齐了**业务链路、缓存设计、调度体系、截图导览**，阅读成本比传统大仓库低很多。
+- 文档里已经补齐 **业务链路、缓存设计、调度体系、页面导览**，第一次阅读也能快速建立全局认知。
 
 ### 👨‍💻 个人贡献亮点（本项目核心设计与实现）
 
 **代码规模与质量：**
-- 🔸 核心业务代码：**30,000+ 行**（包含完整的 18 个微服务模块）
-- 🔸 单元测试代码：**5,000+ 行**（核心业务覆盖率 70%+）
+- 🔸 核心业务代码：**30,000+ 行**（覆盖 16 个业务模块与完整服务应用骨架）
+- 🔸 文档与图示资产：**完整在线文档 + 业务链路图 + 真实页面截图**（便于讲解、复盘与源码阅读）
 - 🔸 项目周期：**8+ 个月**（从零开始独立完成全栈设计与开发）
 - 🔸 Git 提交记录：**200+** 条（完整的开发足迹可追溯）
 
@@ -107,7 +108,7 @@
    - 应用于项目**全量**列表/详情/计数场景（评论、博客、商品、店铺、评价等）
    - 相比原 MySQL 方案：列表查询从 500-2000ms → 25ms、详情查询从 50ms → 5ms、计数查询从 50ms → 1ms
 
-2. **⚡ 微服务分布式架构设计**（18+ 个高内聚模块）
+2. **⚡ 微服务分布式架构设计**（16 个业务模块 + 19 个服务应用）
    - 独立设计完整的模块拆分策略和跨服务通信方案
    - 实现 Feign 远程调用、RabbitMQ 异步解耦、Seata 分布式事务全闭环
    - 确保系统可用性 99.9%、消息可靠性 99.99%
@@ -154,19 +155,19 @@
 - **AIGC 内容治理**：既能面向用户端输出博客和评价，也能面向商家端生成经营文案；同时通过 `isAIGenerated` 标记实现内容来源治理。
 
 #### ⚡ 极致性能与交易引擎 (High Performance & Transaction)
-- **高性能动态 Feed 流**：采用 **“推拉结合”** 模型与 **Redis ZSet 滚动分页（Scroll Result）** 机制。完美解决传统分页在社交场景下的“数据偏移”问题，支持百万级粉丝的毫秒级写扩散。
-- **极致秒杀与延迟队列**：利用 **Redis Lua 原子脚本** 实现“库存预扣 + 一人一单”强一致性校验。结合 **RabbitMQ 死信/延迟队列** 实现 15 分钟未支付订单自动取消与库存精准回滚。
-- **深度模式解耦设计**：全项目极度推崇面向对象设计。互动模块采用 **策略与工厂模式** 高度抽象点赞、收藏等 7 大业务域；钱包中心则封装 **PaymentStrategy** 实现微信/支付宝等多支付渠道的安全路由与优雅解耦。
+- **高性能动态 Feed 流**：采用 **“推拉结合”** 模型与 **Redis ZSet 滚动分页（Scroll Result）** 机制，规避传统分页在社交场景下的数据偏移问题，更适合高频写入的关注流与热榜读取。
+- **秒杀与延迟补偿链路**：利用 **Redis Lua 原子脚本** 实现“库存预扣 + 一人一单”校验。结合 **RabbitMQ 死信/延迟队列** 实现未支付订单自动取消与库存精准回滚。
+- **深度模式解耦设计**：项目中大量采用面向对象设计。互动模块采用 **策略与工厂模式** 抽象点赞、收藏等 7 大业务域；钱包中心则封装 **PaymentStrategy** 实现微信/支付宝等多支付渠道的安全路由与解耦。
 
 #### 🛡️ 企业级边界防御与微服务基座 (Security & Infrastructure)
 - **Gateway 全局安全屏障**：在 Spring Cloud Gateway 层手写 `AuthFilter`（无状态鉴权）、`XssFilter`（防跨站脚本）与 `BlackListUrlFilter`（非法拦截），在流量最前线构筑严密的安全防线。
 - **严苛的资源隔离与同步**：采用自定义受控的 `ThreadPoolExecutor` 实现核心链路的线程舱壁隔离；在极端高并发及定时调度场景中，引入 **Redisson 看门狗机制** 构建高可用分布式锁。
 - **分布式 IM 与 6 维审核链**：基于 **Netty** 实现 WebSocket 长连接集群与分布式 Session；采用 **责任链工厂模式** 搭配 DFA 敏感词引擎构建覆盖 6 大业务线的异步审核流水线。
-- **跨库数据异步一致性**：组合应用 **RabbitMQ** 消息可靠投递以及 **XXL-JOB** 定时对账批量落库任务，如同“塔防”般保障 MySQL、Elasticsearch、Redis 与 Milvus 四端数据的最终形态一致。
+- **跨库数据异步一致性**：组合应用 **RabbitMQ** 消息可靠投递以及 **XXL-JOB** 定时对账批量落库任务，保障 MySQL、Elasticsearch、Redis 与 Milvus 多端数据逐步收敛到一致状态。
 
 ## <a id="5分钟读懂项目"></a>🧭 5 分钟读懂项目
 
-第一次看这个仓库，建议先按下面这条路径阅读，不要一上来就尝试把全部模块和中间件一次性跑齐。
+第一次进入这个仓库，建议先按下面这条路径阅读，不要一上来就尝试把全部模块和中间件一次性跑齐。
 
 <div align="center">
   <img src="docs/diagrams/open-source-reading-path.svg" alt="SmartLive 开源文档阅读路径" width="100%">
@@ -185,7 +186,7 @@
 
 ## <a id="效果预览"></a>🎨 效果预览
 
-README 这里先保留最主要的 App 端核心页面，用更接近手机竖屏的方式展示；想继续按 App / 管理端 Web 看完整页面和源码位置，可以直接跳到 [docs/PAGE_GALLERY.md](docs/PAGE_GALLERY.md)。
+README 这里只保留最主要的 App 端核心页面，用更接近手机竖屏的方式快速建立第一印象；想继续按 App / 管理端 Web 看完整页面和源码位置，可以直接跳到 [docs/PAGE_GALLERY.md](docs/PAGE_GALLERY.md)。
 
 ### 1. 登录与身份进入
 
@@ -199,11 +200,11 @@ README 这里先保留最主要的 App 端核心页面，用更接近手机竖�
 ### 2. 首页入口与热榜榜单
 
 <p align="center">
-  <a href="docs/PAGE_GALLERY.md#app-home-hot"><img src="docs/screenshots/homepage.png" alt="home-hot" width="300"></a>
+  <a href="docs/PAGE_GALLERY.md#app-discovery"><img src="docs/screenshots/homepage.png" alt="home-hot" width="300"></a>
 </p>
 
 首页承接分类入口、热门内容流和榜单跳转，是用户发现内容和店铺的主入口。  
-[查看首页入口、热门内容与热榜榜单](docs/PAGE_GALLERY.md#app-home-hot)
+[查看首页入口、热门内容与热榜榜单](docs/PAGE_GALLERY.md#app-discovery)
 
 ### 3. 搜索与地图找店
 
@@ -245,7 +246,9 @@ AI 页不只负责对话，还能返回推荐卡片、生成内容，并直接�
 
 - 想看用户端 App 的详细页面导览：看 [docs/PAGE_GALLERY.md - 用户端 App](docs/PAGE_GALLERY.md#app-pages)
 - 想看管理端 Web 的详细页面导览：看 [docs/PAGE_GALLERY.md - 管理端 Web](docs/PAGE_GALLERY.md#admin-pages)
-- 想看我的发布、草稿箱、我的收藏页、我的关注页、个人中心这些用户资产页：看 [docs/PAGE_GALLERY.md - 内容创作、社交关系与个人中心](docs/PAGE_GALLERY.md#app-content-creation)
+- 想看我的发布、草稿箱：看 [docs/PAGE_GALLERY.md - 内容创作与评价互动](docs/PAGE_GALLERY.md#app-content-creation)
+- 想看我的关注、粉丝明细、聊天与系统通知：看 [docs/PAGE_GALLERY.md - 社交关系与消息](docs/PAGE_GALLERY.md#app-social-message)
+- 想看我的收藏页、个人中心和安全设置：看 [docs/PAGE_GALLERY.md - 个人中心、收藏与安全设置](docs/PAGE_GALLERY.md#app-profile-assets)
 - 想看 XXL-JOB 调度后台、任务列表和执行器管理：看 [docs/PAGE_GALLERY.md - XXL-JOB 调度后台](docs/PAGE_GALLERY.md#admin-scheduler)
 - 想按业务链路看截图、架构图和核心时序图：看 [docs/SHOWCASE.md](docs/SHOWCASE.md)
 
@@ -337,7 +340,7 @@ chmod +x deploy.sh
 ./deploy.sh HEAD~1              # 只编译并上传修改的模块
 
 # 典型场景：修改了 smartLive-blog 和 smartLive-interaction 模块
-# 不需要：编译全部 17 个微服务模块（耗时 30 分钟）
+# 不需要：把全部 19 个服务应用都重新编译一遍（耗时 30 分钟）
 # 只需要：编译 smartLive-blog + smartLive-interaction（耗时 1-2 分钟）
 #        上传 2 个 jar（耗时 10 秒）
 #        重启 2 个服务（耗时 2 分钟）
@@ -383,9 +386,10 @@ bin/clean.bat              # 清理构建产物
 
 ## <a id="项目文档"></a>📚 项目文档
 
-- 📘 [在线文档](http://doc.smartLive.vip)
-- 📄 [接口文档](http://doc.smartLive.vip) — 基于 SpringDoc OpenAPI 自动生成
+- 📘 [在线文档网站](https://mumulinya.github.io/smartLive-Cloud/) — 面向阅读和分享的完整排版版本
+- 📘 [README 首页](README.md) — 项目定位、系统架构、核心亮点与快速开始
 - 🖼️ [视觉导览](docs/SHOWCASE.md) — 按用户链路整理页面截图、系统总览图与核心时序图
+- 📱 [页面导览](docs/PAGE_GALLERY.md) — 按真实使用路径展开 App 与管理端 Web 页面
 - 📌 [开源使用说明](docs/OPEN_SOURCE.md) — 依赖矩阵、端口表、配置来源与启动建议
 - 🚀 [部署说明](docs/DEPLOYMENT_GUIDE.md) — Docker Compose、镜像重建、JAR 校验与部署排错
 - 🤝 [贡献指南](CONTRIBUTING.md)
@@ -462,12 +466,12 @@ bin/clean.bat              # 清理构建产物
 | 热榜排行    | 5 种业务类型（Blog/Shop/Product/Review/Comment）热度排行，增量重算 + 全量重建 |
 | 数据同步    | **双轨并发同步**：4 个数据同步任务（点赞、收藏、评论、评价）通过 CompletableFuture 并发执行不阻塞互相；RENAME 原子快照 + 异步落库；XXL-JOB 定时任务 |
 
-#### 🏠 首页聚合 (smartLive-index) [9208]
+#### 🏠 首页统计与聚合 (smartLive-index) [9208]
 | 功能   | 说明           |
 |:-----|:-------------|
-| 热门推荐 | 热门内容聚合展示     |
-| 资源聚合 | 热门店铺、博客、用户推荐 |
-| 数据聚合 | 统一首页数据服务     |
+| 统计看板 | 后台首页统计数据聚合 |
+| 近期资源 | 最新店铺与近期资源列表 |
+| 图表接口 | 店铺/订单/券统计图表与首页数据接口骨架 |
 
 #### 📁 文件服务 (smartLive-file) [9209]
 | 功能   | 说明          |
@@ -581,7 +585,7 @@ bin/clean.bat              # 清理构建产物
 | 调度总览 | 通过 XXL-JOB 后台统一查看任务、执行器、调度状态与运行日志 |
 | 订单兜底 | 定时扫描超时订单、临期订单，承接过期作废、提醒通知与退款补偿 |
 | 秒杀生命周期 | 承接秒杀预热、库存校准、临期提醒、到期回收等全生命周期任务 |
-| 热榜维护 | 增量洗牌 + 凌晨全量重建，保证首页四榜持续刷新且避免长期霸榜 |
+| 热榜维护 | 增量洗牌 + 凌晨全量重建，保证首页热门面板与热门博客持续刷新且避免长期霸榜 |
 | 互动回刷 | 点赞、收藏、评论、评价等脏数据定时回刷，配合 ES / 热榜双轨同步 |
 | 销量批处理 | 商品销量、店铺销量定时汇总回写，避免高频写库直接打到主链路 |
 | 执行器拆分 | 按 order / product / interaction 等模块拆分执行器，降低任务串扰并便于运维排障 |
@@ -700,7 +704,7 @@ smart-live-Cloud
 │   ├── smartLive-user                             // 用户中心 [9201]
 │   └── smartLive-wallet                           // 钱包支付 [9216]
 ├── smartLive-visual               // 图形化管理
-│   └── smartLive-monitor                          // 监控中心 [9100]
+│   └── smartLive-monitor                          // 监控中心目录（artifact: smartLive-visual-monitor）[9100]
 ├── smartLive-sentinel             // Sentinel 控制台 [8718]
 ├── smartLive-seata-server         // Seata Server [7091]
 ├── arthas                         // Arthas 诊断工具与脚本
@@ -728,7 +732,7 @@ smart-live-Cloud
 **我的选择：Spring Cloud Alibaba**
 - ✅ **学习成本低**：社区资源丰富、文档完善，适合个人快速落地
 - ✅ **国产支持好**：Nacos、Seata、Sentinel 都是国产优秀方案，生态活跃
-- ✅ **适配场景**：18 个模块的规模用 SCAlibaba 够用，K8s 是重武器
+- ✅ **适配场景**：当前 19 个服务应用 / 16 个业务模块的规模，用 SCAlibaba 够用，K8s 是更重的武器
 - ❌ **K8s 不选原因**：学习曲线陡、运维成本高、单人难以驾驭
 
 ### Redis vs Memcached
@@ -781,10 +785,10 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 |:---|:---|:---|:---|
 | 秒杀抢购全链路 | Redis Lua 防超卖、RabbitMQ 异步落单、延迟队列兜底 | [查看 SVG](docs/diagrams/seckill-flow.svg) | [查看详细 SVG](docs/diagrams/detail-src/seckill-flow-detailed.svg) |
 | 普通下单：订单创建与状态流转 | 下单创建、异步落单、支付生效后的状态流转 | [查看 SVG](docs/diagrams/normal-order-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/normal-order-sequence-detailed.svg) |
-| 统一支付：支付受理、回调与钱包更新 | 支付受理、回调分发、支付记录与钱包状态更新 | [查看 SVG](docs/diagrams/unified-pay-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/unified-pay-sequence-detailed.svg) |
+| 统一支付：支付受理、回调与账务分发 | 支付受理、回调分发、PaymentRecord 与充值入账 / 订单记账 | [查看 SVG](docs/diagrams/unified-pay-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/unified-pay-sequence-detailed.svg) |
 | 订单超时取消与库存回滚 | 下单后发送延迟消息、超时未支付自动取消、库存与资格回滚 | [查看 SVG](docs/diagrams/order-timeout-cancel-stock-rollback-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/order-timeout-cancel-stock-rollback-chain-detailed.svg) |
 | 主动取消 / 退款与钱包补偿 | 用户主动取消或退款后的库存回滚、退款 MQ 与钱包流水 | [查看 SVG](docs/diagrams/order-refund-wallet-compensation-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/order-refund-wallet-compensation-chain-detailed.svg) |
-| 订单核销、店铺销量与积分奖励 | verifyShopId 校验、核销后销量增长、消费积分异步发放 | [查看 SVG](docs/diagrams/order-verification-points-reward-chain.svg) | SVG only |
+| 订单核销、店铺销量与积分奖励 | verifyShopId 校验、核销后销量增长、消费积分异步发放 | [查看 SVG](docs/diagrams/order-verification-points-reward-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/order-verification-points-reward-chain-detailed.svg) |
 
 ### 积分与用户激励
 
@@ -802,7 +806,7 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | 登录鉴权与网关透传 | 短信/密码登录、Redis 登录态、Gateway 请求头透传 | [查看 SVG](docs/diagrams/auth-login-gateway-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/auth-login-gateway-chain-detailed.svg) |
-| 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](docs/diagrams/file-upload-avatar-update-chain.svg) | SVG only |
+| 头像上传与文件替换 | 文件类型校验、MinIO 上传、旧文件删除、登录缓存刷新 | [查看 SVG](docs/diagrams/file-upload-avatar-update-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/file-upload-avatar-update-chain-detailed.svg) |
 
 ### 内容审核与搜索
 
@@ -811,7 +815,7 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | 发布审核与搜索 / 向量同步 | 提交待审、审核责任链、回调源服务、ES/Milvus/热榜更新 | [查看 SVG](docs/diagrams/publish-audit-search-sync-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/publish-audit-search-sync-chain-detailed.svg) |
-| 审核中心责任链与业务回写 | 审核任务落库、敏感词 / AI / 人工审核、驳回通知 | [查看 SVG](docs/diagrams/audit-center-responsibility-chain.svg) | SVG only |
+| 审核中心责任链与业务回写 | 审核任务落库、敏感词 / AI / 人工审核、驳回通知 | [查看 SVG](docs/diagrams/audit-center-responsibility-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/audit-center-responsibility-chain-detailed.svg) |
 | 搜索读链路与热词沉淀 | ES 检索、LBS 排序、搜索历史与热搜榜 | [查看 SVG](docs/diagrams/search-read-lbs-ranking-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/search-read-lbs-ranking-chain-detailed.svg) |
 
 ### 社交与消息
@@ -822,7 +826,7 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 |:---|:---|:---|:---|
 | 关注 Feed 推送与滚动读取 | 粉丝信箱写入、Pipeline 批量 ZSet、ScrollResult 读取聚合 | [查看 SVG](docs/diagrams/follow-feed-scroll-read-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/follow-feed-scroll-read-chain-detailed.svg) |
 | IM 私聊可靠投递 | 长连接、消息持久化、ACK / 重试 | [查看 SVG](docs/diagrams/im-private-message-reliable-delivery-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/im-private-message-reliable-delivery-sequence-detailed.svg) |
-| 系统通知入库与 IM 推送 | 多业务通知汇聚、通知落库、在线实时推送 | [查看 SVG](docs/diagrams/system-notice-im-push-chain.svg) | SVG only |
+| 系统通知入库与 IM 推送 | 多业务通知汇聚、通知落库、在线实时推送 | [查看 SVG](docs/diagrams/system-notice-im-push-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/system-notice-im-push-chain-detailed.svg) |
 
 ### 排行、热度与推荐
 
@@ -830,10 +834,10 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 首页热门榜单聚合读链路 | 并发拉取热门店铺榜、热门代金券榜、热门团购榜、热门博客榜，再按首页分区聚合返回 | [查看 SVG](docs/diagrams/home-aggregation-recommend-recall-chain.svg) | SVG only |
-| 首页热门榜单算分与热榜维护链路 | 上架、销量、互动变化如何推进四榜 calcQueue，经过增量洗牌与凌晨全量重建后持续写回 Redis 热榜 | [查看 SVG](docs/diagrams/home-hot-rank-score-maintenance-chain.svg) | SVG only |
+| 首页热门面板与热门博客读取链路 | 首页顶部热门面板按 activeHotTab 读取店铺榜 / 好券榜 / 团购榜，热门博客列表独立读取 | [查看 SVG](docs/diagrams/home-aggregation-recommend-recall-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/home-aggregation-recommend-recall-chain-detailed.svg) |
+| 首页热门面板算分与热榜维护链路 | 店铺榜、好券榜、团购榜和热门博客内容流如何进入 calcQueue，经过增量洗牌与凌晨全量重建后持续写回 Redis 热榜 | [查看 SVG](docs/diagrams/home-hot-rank-score-maintenance-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/home-hot-rank-score-maintenance-chain-detailed.svg) |
 | 互动数据回刷与双轨同步（业务视角） | Redis 热数据变化如何驱动回刷、检索同步与热度重算 | [查看 SVG](docs/diagrams/interaction-dual-track-sync-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/interaction-dual-track-sync-sequence-detailed.svg) |
-| 热榜增量维护与全量重建（业务视角） | calcQueue、Top N merge、榜单更新与凌晨全量兜底 | [查看 SVG](docs/diagrams/hot-rank-wash-rebuild-chain.svg) | SVG only |
+| 热榜增量维护与全量重建（业务视角） | calcQueue、Top N merge、榜单更新与凌晨全量兜底 | [查看 SVG](docs/diagrams/hot-rank-wash-rebuild-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/hot-rank-wash-rebuild-chain-detailed.svg) |
 
 ### AI 与经营
 
@@ -842,7 +846,7 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
 | AI 对话链路 | SSE 流式响应、意图路由、卡片事件 | [查看 SVG](docs/diagrams/ai-chat-sse-intent-routing-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/ai-chat-sse-intent-routing-sequence-detailed.svg) |
-| 店铺经营分析与 AI 经营建议 | 订单分析、评价分析、经营建议与差评关键词抽取合在同一组看 | [分析聚合](docs/diagrams/shop-analysis-aggregation-chain.svg) / [AI 建议](docs/diagrams/shop-suggest-ai-keywords-chain.svg) | SVG only |
+| 店铺经营分析与 AI 经营建议 | 订单分析、评价分析、经营建议与差评关键词抽取合在同一组看 | [分析聚合](docs/diagrams/shop-analysis-aggregation-chain.svg) / [AI 建议](docs/diagrams/shop-suggest-ai-keywords-chain.svg) | [分析详细](docs/diagrams/detail-src/shop-analysis-aggregation-chain-detailed.svg) / [AI 建议详细](docs/diagrams/detail-src/shop-suggest-ai-keywords-chain-detailed.svg) |
 
 ### 缓存与性能专题
 
@@ -850,9 +854,9 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| Redis 缓存分层设计 | 列表、详情、计数、状态、热榜 / Feed 五层缓存拆分 | [查看 SVG](docs/diagrams/redis-layered-cache-architecture.svg) | SVG only |
-| Feed / 列表 ZSet 缓存链路 | ZSet 排序视图、滚动分页、批量详情回填 | [查看 SVG](docs/diagrams/redis-feed-zset-cache-chain.svg) | SVG only |
-| 详情页缓存读写链路 | 逻辑过期、空值缓存、互斥锁重建、写后删缓存 | [查看 SVG](docs/diagrams/redis-detail-cache-readwrite-chain.svg) | SVG only |
+| Redis 缓存分层设计 | 列表、详情、计数、状态、热榜 / Feed 五层缓存拆分 | [查看 SVG](docs/diagrams/redis-layered-cache-architecture.svg) | [查看详细 SVG](docs/diagrams/detail-src/redis-layered-cache-architecture-detailed.svg) |
+| Feed / 列表 ZSet 缓存链路 | ZSet 排序视图、滚动分页、批量详情回填 | [查看 SVG](docs/diagrams/redis-feed-zset-cache-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/redis-feed-zset-cache-chain-detailed.svg) |
+| 详情页缓存读写链路 | 逻辑过期、空值缓存、互斥锁重建、写后删缓存 | [查看 SVG](docs/diagrams/redis-detail-cache-readwrite-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/redis-detail-cache-readwrite-chain-detailed.svg) |
 
 ### 调度与定时任务
 
@@ -877,9 +881,9 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 
 | 链路 | 重点看什么 | 展示版 SVG | 详细版入口 |
 |:---|:---|:---|:---|
-| 秒杀预热与库存校准链路 | 预热库存和详情缓存，后续再按订单销量校准 MySQL 与缓存 | [查看 SVG](docs/diagrams/seckill-preheat-stock-calibration-chain.svg) | SVG only |
-| 热榜增量维护与全量重建链路（调度视角） | HotRankJobHandler / FullRebuildJobHandler 如何分发增量维护与全量重建 | [查看 SVG](docs/diagrams/hot-rank-wash-rebuild-chain.svg) | SVG only |
-| 互动数据回刷与双轨同步链路（调度视角） | InteractionSyncXxlJob / SyncDataServiceImpl 如何回刷 MySQL 并联动热榜 | [查看 SVG](docs/diagrams/interaction-dual-track-sync-sequence.svg) | SVG only |
+| 秒杀预热与库存校准链路 | 预热库存和详情缓存，后续再按订单销量校准 MySQL 与缓存 | [查看 SVG](docs/diagrams/seckill-preheat-stock-calibration-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/seckill-preheat-stock-calibration-chain-detailed.svg) |
+| 热榜增量维护与全量重建链路（调度视角） | HotRankJobHandler / FullRebuildJobHandler 如何分发增量维护与全量重建 | [查看 SVG](docs/diagrams/hot-rank-wash-rebuild-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/hot-rank-wash-rebuild-chain-detailed.svg) |
+| 互动数据回刷与双轨同步链路（调度视角） | InteractionSyncXxlJob / SyncDataServiceImpl 如何回刷 MySQL 并联动热榜 | [查看 SVG](docs/diagrams/interaction-dual-track-sync-sequence.svg) | [查看详细 SVG](docs/diagrams/detail-src/interaction-dual-track-sync-sequence-detailed.svg) |
 | 订单生命周期兜底处理链路 | 临期提醒、过期处理、库存销量回滚与退款补偿兜底 | [查看 SVG](docs/diagrams/order-lifecycle-fallback-chain.svg) | [查看详细 SVG](docs/diagrams/detail-src/order-lifecycle-fallback-chain-detailed.svg) |
 
 ### 历史详细图补充
@@ -895,7 +899,7 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 
 ## <a id="核心链路与面经"></a>🔥 核心链路与面经
 
-本项目不仅提供企业级源码，更配备了 **9 大核心业务全链路深度剖析**（含高并发、可靠性、AI 架构等设计难点及大厂面试级别 Q&A），助你彻底吃透底层逻辑，碾压面试官！
+本项目不仅提供完整源码，也配套了 **9 组核心业务全链路解析**（覆盖高并发、可靠性、AI 架构等主题），适合做项目讲解、源码阅读和面试展开。
 
 ### 📚 核心链路深度解析
 
@@ -989,7 +993,7 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 * **解决方案**：引入了 **"Redis Lua 原子校验预扣 + RabbitMQ 延迟队列闭环"** 方案。
   1. 使用 Lua 脚本将“一人一单校验”与“预扣减库存”封装为原子操作并在 Redis 中执行，将 99% 的无效或者恶意流量直接阻拦在缓存层。
   2. Lua 扣减成功后立即通过 MQ 发送异步消息，后端工作服务异步消费消息完成真实订单的落库，实现极致削峰。
-  3. 针对超时不支付情况，投递含订单 ID 的 TTL 延迟死信消息（例如 15 分钟）。消费者收到后核实实际支付状态，若未支付则自动调用内部逆向接口：关单、回滚 MySQL 真实库存、并通过重新执行对应 Lua 脚本补偿 Redis 的库存容量表，形成完美的库存状态闭环。
+3. 针对超时不支付情况，投递含订单 ID 的 TTL 延迟死信消息（例如 15 分钟）。消费者收到后核实实际支付状态，若未支付则自动调用内部逆向接口：关单、回滚 MySQL 真实库存、并通过重新执行对应 Lua 脚本补偿 Redis 的库存容量表，形成库存状态闭环。
 
 #### 4. 订单取消、退款、超时任务同时存在时的状态边界问题
 * **挑战**：同一笔订单可能同时面临用户主动取消、用户主动退款、延迟队列超时取消、定时任务过期兜底等多条路径。如果没有严格的状态边界，就容易出现重复回滚库存、重复发送退款消息、钱包重复入账这类严重问题。
@@ -1007,8 +1011,8 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
   2. 交互层面：前端获取数据不仅携带 `pageSize`，还必须带上当前页最后一条记录的时间戳 `maxScore` 和偏移值 `offset`。
   3. 数据召回层面：后端利用 Redis 的 `ZREVRANGEBYSCORE key maxScore 0 LIMIT offset pageSize` 命令，以用户屏幕底部的最后一条记录的准确时间戳作为绝对锚点进行查阅。彻底解决了动态高频写入场景下分页查询的内容错位痛点。
 
-#### 6. 首页热门榜单的冷启动与长期霸榜问题
-* **挑战**：首页同时展示热门店铺榜、热门代金券榜、热门团购榜、热门博客榜。如果只按单一字段排序，新内容几乎没有曝光机会；如果完全依赖实时互动，又会出现老内容长期霸榜、榜单缺乏流动性的问题。
+#### 6. 首页热门面板的冷启动与长期霸榜问题
+* **挑战**：首页热门面板同时承接本地必吃榜、抢手好券榜、本地团购榜，热门博客内容流又是另一条独立读链。如果只按单一字段排序，新内容几乎没有曝光机会；如果完全依赖实时互动，又会出现老内容长期霸榜、榜单缺乏流动性的问题。
 * **解决方案**：引入 **"增量算分 + Top N 合并 + 凌晨全量重建"** 的双层热榜维护方案。
   1. 各业务线的上架、销量、点赞、评论、评分等变化先进入各自的 `calcQueue`，由 XXL-JOB 周期性触发增量计算。
   2. 计算时先通过 `RENAME` 将当轮待处理数据切到 `TEMP` 快照，再把新候选集与历史榜单 `Top N` 合并，避免老榜被瞬间洗空，也避免新内容完全没有机会进入候选池。
@@ -1027,14 +1031,14 @@ README 首页不再直接内嵌全文时序图，避免 GitHub / Gitee 压缩后
 ## <a id="项目沉淀"></a>🧠 我通过这个项目学到的东西
 
 ### 🏗️ 架构设计维度
-- **从 0 到 1 的微服务架构设计**：如何科学地拆分 18+ 个高内聚、低耦合的模块，避免大泥球架构
+- **从 0 到 1 的微服务架构设计**：如何科学地拆分 16 个业务模块，并让 19 个服务应用保持高内聚、低耦合，避免大泥球架构
 - **缓存架构的三个境界**：从单层缓存 → 分层缓存 → 多维索引缓存的逐步演进
 - **异步解耦的完整闭环**：RabbitMQ + 死信队列 + 定时对账，保证最终一致性的工程实践
 - **分布式一致性的妥协**：为什么大多数互联网场景用"最终一致性"而不是强一致性，成本和收益的权衡
 
 ### 💻 代码设计维度
 - **YAGNI 原则的正确实践**：何时该抽象（AbstractInteractionStrategy 10+ 子类复用）、何时不该抽象（删除 AbstractLikeStrategy 避免过度设计）
-- **策略 + 工厂模式的完美结合**：6 大业务策略工厂化，实现开闭原则的真正含义
+- **策略 + 工厂模式的组合应用**：6 大业务策略工厂化，便于把公共流程沉到抽象层、把业务差异留在具体策略里
 - **模板方法模式的复用价值**：5 步 ES 同步流程复用于 10+ 子类，减少代码重复 90%，修改一处全局生效
 - **设计模式不是银弹**：有时候直接实现接口比复杂的继承链更优雅
 

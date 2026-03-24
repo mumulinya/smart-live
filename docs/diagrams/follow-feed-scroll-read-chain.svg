@@ -36,7 +36,7 @@
   <text class="section" x="74" y="188">1. 写入路径：发布事件推到粉丝信箱</text>
 
   <rect class="node" x="70" y="220" width="250" height="140"/>
-  <text class="node-title" x="195" y="270" text-anchor="middle">商品 / 店铺发布</text>
+  <text class="node-title" x="195" y="270" text-anchor="middle">博客 / 商品 / 店铺事件</text>
   <text class="node-text" x="195" y="304" text-anchor="middle">构建 FeedEventMessage</text>
 
   <rect class="mq" x="400" y="220" width="250" height="140"/>

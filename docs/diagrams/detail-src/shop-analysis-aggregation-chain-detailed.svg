@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2280" height="1440" viewBox="0 0 2280 1440" role="img" aria-labelledby="title desc">
+  <title id="title">店铺经营分析聚合链路（详细版）</title>
+  <desc id="desc">展示商家查看经营分析时，订单、评价、经营建议三路并发查询与分析记录复用的流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbfcff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#255792"/></marker>
+    <style>
+      .title{font:700 36px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#17365e}.subtitle{font:500 18px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#4f6d8f}.section{font:700 24px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1d4b81}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#153454}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#36516d}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#25496f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#23425f}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506983}.node{fill:#fff;stroke:#a8c2e2;stroke-width:2;rx:24}.store{fill:#f3fbf5;stroke:#a7d6b7;stroke-width:2;rx:24}.decision{fill:#f8f3ff;stroke:#c7a6ea;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d7e3f4;stroke-width:1.5;rx:20}.line{stroke:#255792;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d92c0;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="2280" height="1440" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2224" height="1384" rx="30" fill="#fff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">店铺经营分析聚合链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：ShopAnalysisServiceImpl.getShopAnalysis + RemoteOrderService.getShopOrderAnalysis / getShopOrderSuggest + RemoteReviewService.getShopReviewAnalysis</text>
+
+  <text class="section" x="70" y="182">1. 商家查看经营分析时，先看当天同时间范围是否已有分析记录</text>
+  <rect class="node" x="80" y="220" width="300" height="160"/>
+  <text class="node-title" x="230" y="278" text-anchor="middle">商家后台</text>
+  <text class="node-text" x="230" y="314" text-anchor="middle">查看周 / 月 / 季经营分析</text>
+  <text class="node-text" x="230" y="340" text-anchor="middle">shopId + timeRange</text>
+  <rect class="node" x="460" y="220" width="420" height="160"/>
+  <text class="node-title" x="670" y="278" text-anchor="middle">ShopAnalysisServiceImpl.getShopAnalysis</text>
+  <text class="node-text" x="670" y="314" text-anchor="middle">normalize timeRange</text>
+  <text class="node-text" x="670" y="340" text-anchor="middle">findTodayRecord(shopId, timeRange)</text>
+  <rect class="decision" x="960" y="220" width="380" height="160"/>
+  <text class="node-title" x="1150" y="278" text-anchor="middle">今日记录是否已存在</text>
+  <text class="node-text" x="1150" y="314" text-anchor="middle">存在：直接复用</text>
+  <text class="node-text" x="1150" y="340" text-anchor="middle">不存在：进入并发聚合</text>
+  <rect class="store" x="1420" y="220" width="360" height="160"/>
+  <text class="node-title" x="1600" y="278" text-anchor="middle">ShopAnalysisRecord</text>
+  <text class="node-text" x="1600" y="314" text-anchor="middle">当天同时间范围的分析快照</text>
+  <text class="node-text" x="1600" y="340" text-anchor="middle">可直接转 ShopAnalysisVO</text>
+  <path class="line" d="M380 300 H448"/><text class="step" x="414" y="284" text-anchor="middle">1. 发起查询</text>
+  <path class="line" d="M880 300 H948"/><text class="step" x="914" y="284" text-anchor="middle">2. 查当天记录</text>
+  <path class="dash" d="M1340 300 H1408"/><text class="step" x="1374" y="284" text-anchor="middle">3. 命中直接复用</text>
+
+  <text class="section" x="70" y="446">2. 无现成记录时，订单分析、评价分析、经营建议三路并发跑完再合并</text>
+  <rect class="node" x="140" y="490" width="420" height="180"/>
+  <text class="node-title" x="350" y="552" text-anchor="middle">订单分析 Future</text>
+  <text class="node-text" x="350" y="588" text-anchor="middle">remoteOrderService.getShopOrderAnalysis</text>
+  <text class="node-text" x="350" y="614" text-anchor="middle">总订单、总收入、复购等</text>
+  <rect class="node" x="670" y="490" width="420" height="180"/>
+  <text class="node-title" x="880" y="552" text-anchor="middle">评价分析 Future</text>
+  <text class="node-text" x="880" y="588" text-anchor="middle">remoteReviewService.getShopReviewAnalysis</text>
+  <text class="node-text" x="880" y="614" text-anchor="middle">均分、差评数等</text>
+  <rect class="node" x="1200" y="490" width="420" height="180"/>
+  <text class="node-title" x="1410" y="552" text-anchor="middle">经营建议 Future</text>
+  <text class="node-text" x="1410" y="588" text-anchor="middle">remoteOrderService.getShopOrderSuggest</text>
+  <text class="node-text" x="1410" y="614" text-anchor="middle">热销/滞销商品等</text>
+  <rect class="decision" x="1730" y="490" width="360" height="180"/>
+  <text class="node-title" x="1910" y="552" text-anchor="middle">CompletableFuture.allOf</text>
+  <text class="node-text" x="1910" y="588" text-anchor="middle">三路都完成后 join</text>
+  <text class="node-text" x="1910" y="614" text-anchor="middle">任何一路失败都回默认值</text>
+  <path class="dash" d="M1150 380 V440 H350 V478"/><text class="step" x="750" y="426" text-anchor="middle">4. 未命中时并发拉三路数据</text>
+  <path class="dash" d="M1150 380 V420 H880 V478"/><text class="step" x="1015" y="406" text-anchor="middle">5. 评价分析并发跑</text>
+  <path class="dash" d="M1150 380 V400 H1410 V478"/><text class="step" x="1280" y="386" text-anchor="middle">6. 经营建议并发跑</text>
+  <path class="line" d="M1620 580 H1718"/><text class="step" x="1669" y="564" text-anchor="middle">7. 全部完成后汇总</text>
+
+  <text class="section" x="70" y="712">3. 汇总结果先判空，再保存成快照记录，后续同日请求直接复用</text>
+  <rect class="decision" x="180" y="760" width="420" height="180"/>
+  <text class="node-title" x="390" y="822" text-anchor="middle">isEmptyAnalysisResult</text>
+  <text class="node-text" x="390" y="858" text-anchor="middle">订单 / 评价 / 建议全空则不落库</text>
+  <text class="node-text" x="390" y="884" text-anchor="middle">直接返回空分析结果</text>
+  <rect class="store" x="710" y="760" width="420" height="180"/>
+  <text class="node-title" x="920" y="822" text-anchor="middle">buildShopAnalysisRecord</text>
+  <text class="node-text" x="920" y="858" text-anchor="middle">把 hotProducts / slowProducts 序列化进记录</text>
+  <text class="node-text" x="920" y="884" text-anchor="middle">保存总订单、收入、均分、差评数</text>
+  <rect class="store" x="1240" y="760" width="420" height="180"/>
+  <text class="node-title" x="1450" y="822" text-anchor="middle">ShopAnalysisRecord 表</text>
+  <text class="node-text" x="1450" y="858" text-anchor="middle">当天同时间范围只存一份快照</text>
+  <text class="node-text" x="1450" y="884" text-anchor="middle">后续复用，避免重复聚合</text>
+  <rect class="store" x="1770" y="760" width="320" height="180"/>
+  <text class="node-title" x="1930" y="822" text-anchor="middle">ShopAnalysisVO</text>
+  <text class="node-text" x="1930" y="858" text-anchor="middle">直接返回给经营分析页</text>
+  <text class="node-text" x="1930" y="884" text-anchor="middle">供图表和卡片展示</text>
+  <path class="line" d="M600 850 H698"/><text class="step" x="649" y="834" text-anchor="middle">8. 判空</text>
+  <path class="line" d="M1130 850 H1228"/><text class="step" x="1179" y="834" text-anchor="middle">9. 生成分析记录</text>
+  <path class="line" d="M1660 850 H1758"/><text class="step" x="1709" y="834" text-anchor="middle">10. 返回前端</text>
+
+  <text class="section" x="70" y="1006">4. 这张详细图补充的核心点</text>
+  <rect class="note" x="70" y="1044" width="660" height="220"/>
+  <text class="note-title" x="102" y="1088">补充 A：为什么先查当天记录再并发聚合</text>
+  <text class="note-text" x="102" y="1120">- 经营分析是重聚合场景，订单、评价、建议三路都要远程查，重复算很浪费。</text>
+  <text class="note-text" x="102" y="1148">- 当天同时间范围复用一份快照，既能满足展示，又能把聚合成本压住。</text>
+  <text class="note-text" x="102" y="1176">- 这是这条链最值钱的工程化设计点之一。</text>
+  <rect class="note" x="800" y="1044" width="660" height="220"/>
+  <text class="note-title" x="832" y="1088">补充 B：为什么 supplyAsync 都带默认值</text>
+  <text class="note-text" x="832" y="1120">- 单一路失败不应该让整个经营分析页崩掉，所以每路 Future 都自带默认 DTO。</text>
+  <text class="note-text" x="832" y="1148">- 最后再通过 isEmptyAnalysisResult 判断是否值得落库。</text>
+  <text class="note-text" x="832" y="1176">- 这样页面可用性和数据完整性之间能更稳地折中。</text>
+  <rect class="note" x="1530" y="1044" width="660" height="220"/>
+  <text class="note-title" x="1562" y="1088">代码锚点</text>
+  <text class="note-text" x="1562" y="1120">- getShopAnalysis：先找当天记录，再并发拉三路数据。</text>
+  <text class="note-text" x="1562" y="1148">- supplyAsync：远程失败时退回默认值。</text>
+  <text class="note-text" x="1562" y="1176">- buildShopAnalysisRecord / toShopAnalysisVO：快照落库与结果回显。</text>
+</svg>

@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2280" height="1440" viewBox="0 0 2280 1440" role="img" aria-labelledby="title desc">
+  <title id="title">店铺经营建议与 AI 差评关键词链路（详细版）</title>
+  <desc id="desc">展示经营建议页如何并发获取差评数据、复购率、订单建议，并把差评内容送给 AI 提关键词。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbfcff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#255792"/></marker>
+    <style>
+      .title{font:700 36px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#17365e}.subtitle{font:500 18px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#4f6d8f}.section{font:700 24px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1d4b81}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#153454}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#36516d}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#25496f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#23425f}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506983}.node{fill:#fff;stroke:#a8c2e2;stroke-width:2;rx:24}.store{fill:#f3fbf5;stroke:#a7d6b7;stroke-width:2;rx:24}.decision{fill:#f8f3ff;stroke:#c7a6ea;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d7e3f4;stroke-width:1.5;rx:20}.line{stroke:#255792;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d92c0;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="2280" height="1440" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2224" height="1384" rx="30" fill="#fff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">店铺经营建议与 AI 差评关键词链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：ShopSuggestServiceImpl.buildShopSuggest + RemoteReviewService.getShopReviewSuggest + RemoteOrderService.getShopRepurchaseRate / getShopOrderSuggest + RemoteAiMerchantService.extractKeywords</text>
+
+  <text class="section" x="70" y="182">1. 经营建议页会并发拉 4 路数据，而不是等一条一条串行返回</text>
+  <rect class="node" x="90" y="220" width="320" height="160"/>
+  <text class="node-title" x="250" y="278" text-anchor="middle">商家后台</text>
+  <text class="node-text" x="250" y="314" text-anchor="middle">查看经营建议页</text>
+  <text class="node-text" x="250" y="340" text-anchor="middle">只传 shopId</text>
+  <rect class="node" x="500" y="220" width="420" height="160"/>
+  <text class="node-title" x="710" y="278" text-anchor="middle">ShopSuggestServiceImpl.buildShopSuggest</text>
+  <text class="node-text" x="710" y="314" text-anchor="middle">固定按 month 维度分析</text>
+  <text class="node-text" x="710" y="340" text-anchor="middle">所有远程调用都走 supplyAsync</text>
+  <rect class="node" x="1010" y="220" width="300" height="160"/>
+  <text class="node-title" x="1160" y="278" text-anchor="middle">reviewSuggestFuture</text>
+  <text class="node-text" x="1160" y="314" text-anchor="middle">待处理评价数 / 差评数</text>
+  <text class="node-text" x="1160" y="340" text-anchor="middle">以及 badReviewList</text>
+  <rect class="node" x="1400" y="220" width="300" height="160"/>
+  <text class="node-title" x="1550" y="278" text-anchor="middle">repurchaseRateFuture</text>
+  <text class="node-text" x="1550" y="314" text-anchor="middle">复购率</text>
+  <text class="node-text" x="1550" y="340" text-anchor="middle">返回后做百分比规范化</text>
+  <rect class="node" x="1790" y="220" width="380" height="160"/>
+  <text class="node-title" x="1980" y="278" text-anchor="middle">orderSuggestFuture</text>
+  <text class="node-text" x="1980" y="314" text-anchor="middle">热销 / 滞销商品</text>
+  <text class="node-text" x="1980" y="340" text-anchor="middle">后续转成 ProductSalesVO 列表</text>
+  <path class="line" d="M410 300 H488"/><text class="step" x="449" y="284" text-anchor="middle">1. 发起建议查询</text>
+  <path class="dash" d="M920 300 H998"/><text class="step" x="959" y="284" text-anchor="middle">2. 并发拉差评建议</text>
+  <path class="dash" d="M920 300 H1388"/><text class="step" x="1154" y="326" text-anchor="middle">3. 并发拉复购率</text>
+  <path class="dash" d="M920 300 H1778"/><text class="step" x="1349" y="366" text-anchor="middle">4. 并发拉订单建议</text>
+
+  <text class="section" x="70" y="446">2. 差评关键词不是本地分词，而是从 badReviewList 中提内容后交给 AI 提炼</text>
+  <rect class="decision" x="150" y="490" width="420" height="180"/>
+  <text class="node-title" x="360" y="552" text-anchor="middle">extractKeywords 前置清洗</text>
+  <text class="node-text" x="360" y="588" text-anchor="middle">过滤 null / blank 内容</text>
+  <text class="node-text" x="360" y="614" text-anchor="middle">最多取 20 条差评内容</text>
+  <rect class="node" x="690" y="490" width="420" height="180"/>
+  <text class="node-title" x="900" y="552" text-anchor="middle">RemoteAiMerchantService.extractKeywords</text>
+  <text class="node-text" x="900" y="588" text-anchor="middle">把差评文本送给 AI 提关键词</text>
+  <text class="node-text" x="900" y="614" text-anchor="middle">异常时直接回空列表，不打断主链路</text>
+  <rect class="decision" x="1230" y="490" width="420" height="180"/>
+  <text class="node-title" x="1440" y="552" text-anchor="middle">关键词去重与截断</text>
+  <text class="node-text" x="1440" y="588" text-anchor="middle">LinkedHashSet 保持顺序去重</text>
+  <text class="node-text" x="1440" y="614" text-anchor="middle">最多保留 5 个关键词</text>
+  <rect class="store" x="1770" y="490" width="360" height="180"/>
+  <text class="node-title" x="1950" y="552" text-anchor="middle">badReviewKeywords</text>
+  <text class="node-text" x="1950" y="588" text-anchor="middle">如服务慢 / 味道一般 / 卫生</text>
+  <text class="node-text" x="1950" y="614" text-anchor="middle">供后台运营建议页展示</text>
+  <path class="dash" d="M1160 380 V440 H360 V478"/><text class="step" x="760" y="424" text-anchor="middle">5. 差评 Future 完成后异步提关键词</text>
+  <path class="line" d="M570 580 H678"/><text class="step" x="624" y="564" text-anchor="middle">6. 交给 AI 提炼</text>
+  <path class="line" d="M1110 580 H1218"/><text class="step" x="1164" y="564" text-anchor="middle">7. 去重截断</text>
+  <path class="line" d="M1650 580 H1758"/><text class="step" x="1704" y="564" text-anchor="middle">8. 输出关键词</text>
+
+  <text class="section" x="70" y="708">3. 所有 Future 完成后，再统一拼装 ShopSuggestVO 返回前端</text>
+  <rect class="node" x="200" y="750" width="420" height="180"/>
+  <text class="node-title" x="410" y="812" text-anchor="middle">CompletableFuture.allOf</text>
+  <text class="node-text" x="410" y="848" text-anchor="middle">等待 review / repurchase / order / keywords 四路完成</text>
+  <text class="node-text" x="410" y="874" text-anchor="middle">失败的 Future 已经提前兜底为默认值</text>
+  <rect class="store" x="740" y="750" width="420" height="180"/>
+  <text class="node-title" x="950" y="812" text-anchor="middle">ShopSuggestVO</text>
+  <text class="node-text" x="950" y="848" text-anchor="middle">pendingReviewCount / badReviewCount / repurchaseRate</text>
+  <text class="node-text" x="950" y="874" text-anchor="middle">slowProducts / badReviewKeywords</text>
+  <rect class="store" x="1280" y="750" width="420" height="180"/>
+  <text class="node-title" x="1490" y="812" text-anchor="middle">normalizeShopSuggest</text>
+  <text class="node-text" x="1490" y="848" text-anchor="middle">null 字段统一置零或空集合</text>
+  <text class="node-text" x="1490" y="874" text-anchor="middle">保证页面可直接渲染</text>
+  <rect class="store" x="1820" y="750" width="320" height="180"/>
+  <text class="node-title" x="1980" y="812" text-anchor="middle">经营建议页</text>
+  <text class="node-text" x="1980" y="848" text-anchor="middle">待处理评价</text>
+  <text class="node-text" x="1980" y="874" text-anchor="middle">差评关键词 / 滞销商品</text>
+  <path class="line" d="M620 840 H728"/><text class="step" x="674" y="824" text-anchor="middle">9. 统一等待完成</text>
+  <path class="line" d="M1160 840 H1268"/><text class="step" x="1214" y="824" text-anchor="middle">10. 规范化结果</text>
+  <path class="line" d="M1700 840 H1808"/><text class="step" x="1754" y="824" text-anchor="middle">11. 返回页面</text>
+
+  <text class="section" x="70" y="996">4. 这张详细图补充的关键点</text>
+  <rect class="note" x="70" y="1034" width="660" height="220"/>
+  <text class="note-title" x="102" y="1078">补充 A：经营建议不是一条 AI 链，而是“数据聚合 + AI 点缀”</text>
+  <text class="note-text" x="102" y="1110">- 复购率、待处理评价数、滞销商品这些都来自订单和评价模块，不是 AI 生成出来的。</text>
+  <text class="note-text" x="102" y="1138">- AI 真正负责的是把 badReviewList 提炼成可读的关键词。</text>
+  <text class="note-text" x="102" y="1166">- 这样画出来，读者会更容易理解这块的价值边界。</text>
+  <rect class="note" x="800" y="1034" width="660" height="220"/>
+  <text class="note-title" x="832" y="1078">补充 B：为什么 AI 失败时仍然返回建议页</text>
+  <text class="note-text" x="832" y="1110">- extractKeywords 外层已经 try/catch，AI 异常时直接回空列表。</text>
+  <text class="note-text" x="832" y="1138">- 这样商家至少还能看到复购率、差评数和滞销商品，不会整个页面不可用。</text>
+  <text class="note-text" x="832" y="1166">- 这也是“AI 增强”而不是“AI 阻塞业务”的好处。</text>
+  <rect class="note" x="1530" y="1034" width="660" height="220"/>
+  <text class="note-title" x="1562" y="1078">代码锚点</text>
+  <text class="note-text" x="1562" y="1110">- buildShopSuggest：4 路 Future 并发执行。</text>
+  <text class="note-text" x="1562" y="1138">- extractKeywords：最多取 20 条差评，最多保留 5 个关键词。</text>
+  <text class="note-text" x="1562" y="1166">- normalizeShopSuggest：缺省值兜底，保证前端稳定渲染。</text>
+</svg>

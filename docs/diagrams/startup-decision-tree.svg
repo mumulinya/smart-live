@@ -1,74 +1,80 @@
-<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="980" viewBox="0 0 1800 980" role="img" aria-labelledby="title desc">
+  <title id="title">第一次接入 SmartLive 应该怎么启动</title>
+  <desc id="desc">展示第一次接入 SmartLive 时，如何在最小可运行链路、完整业务链路和部署路径之间做启动决策。</desc>
   <defs>
-    <linearGradient id="bg2" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F8FAFC"/>
-      <stop offset="1" stop-color="#ECFEFF"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
     </linearGradient>
-    <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.12"/>
-    </filter>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
     <style>
-      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #0F172A; }
-      .subtitle { font: 400 17px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #475569; }
-      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #0F172A; }
-      .node-body { font: 400 15px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #334155; }
-      .node-tag { font: 700 14px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #1E293B; }
-      .footer { font: 600 16px 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; fill: #0F766E; }
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 700 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .blue { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .green { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .orange { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .purple { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
     </style>
   </defs>
 
-  <rect width="1200" height="700" rx="32" fill="url(#bg2)"/>
-  <rect x="36" y="32" width="1128" height="636" rx="28" fill="#FFFFFF" fill-opacity="0.78" stroke="#D7F9F4"/>
+  <rect width="1800" height="980" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="912" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
 
-  <text x="600" y="86" text-anchor="middle" class="title">第一次接入 SmartLive 应该怎么启动</text>
-  <text x="600" y="118" text-anchor="middle" class="subtitle">先明确目标，再决定跑最小链路、完整链路，还是直接进入部署说明。</text>
+  <text class="title" x="74" y="96">第一次接入 SmartLive 应该怎么启动</text>
+  <text class="subtitle" x="74" y="132">先明确这次要验证什么，再决定走最小可运行链路、完整业务链路，还是直接进入部署路径。</text>
 
-  <g filter="url(#shadow2)">
-    <rect x="420" y="152" width="360" height="90" rx="22" fill="#E0F2FE" stroke="#7DD3FC"/>
-  </g>
-  <text x="600" y="197" text-anchor="middle" class="node-title">你的目标是什么？</text>
-  <text x="600" y="224" text-anchor="middle" class="node-body">别一次性把全部模块和中间件都拉起来，先确认这次接入想验证什么。</text>
+  <rect class="blue" x="600" y="190" width="600" height="120"/>
+  <text class="node-title" x="900" y="246" text-anchor="middle">你的目标是什么？</text>
+  <text class="node-text" x="900" y="282" text-anchor="middle">别一上来就把全部模块和中间件都拉起来，先确认这次接入最想验证哪条链路。</text>
 
-  <path d="M600 242V300" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M600 300H234" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M600 300H600" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M600 300H966" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M234 300V332" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M600 300V332" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
-  <path d="M966 300V332" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <path class="line" d="M900 310 V360"/>
+  <path class="line" d="M900 360 H300"/>
+  <path class="line" d="M900 360 H900"/>
+  <path class="line" d="M900 360 H1500"/>
 
-  <g filter="url(#shadow2)">
-    <rect x="72" y="332" width="324" height="248" rx="24" fill="#FEF3C7" stroke="#FBBF24"/>
-    <rect x="438" y="332" width="324" height="248" rx="24" fill="#DCFCE7" stroke="#4ADE80"/>
-    <rect x="804" y="332" width="324" height="248" rx="24" fill="#F3E8FF" stroke="#C084FC"/>
-  </g>
+  <rect class="orange" x="90" y="390" width="420" height="260"/>
+  <text class="step" x="122" y="430">PATH A</text>
+  <text class="node-title" x="122" y="472">先把服务跑起来</text>
+  <text class="node-text" x="122" y="512">最小可运行链路</text>
+  <text class="node-text" x="122" y="540">MySQL / Redis / Nacos / RabbitMQ</text>
+  <text class="node-text" x="122" y="568">auth / gateway / system / user / shop / search</text>
+  <text class="node-text" x="122" y="596">适合先验证登录、店铺、搜索和后台管理</text>
 
-  <text x="102" y="372" class="node-tag">PATH A</text>
-  <text x="102" y="408" class="node-title">先把服务跑起来</text>
-  <text x="102" y="446" class="node-body">最小可运行链路</text>
-  <text x="102" y="476" class="node-body">MySQL / Redis / Nacos / RabbitMQ</text>
-  <text x="102" y="506" class="node-body">auth / gateway / system / user</text>
-  <text x="102" y="536" class="node-body">shop / search</text>
-  <text x="102" y="566" class="node-body">适合先验证登录、店铺、搜索、后台管理</text>
+  <rect class="green" x="690" y="390" width="420" height="260"/>
+  <text class="step" x="722" y="430">PATH B</text>
+  <text class="node-title" x="722" y="472">体验完整业务能力</text>
+  <text class="node-text" x="722" y="512">完整功能链路</text>
+  <text class="node-text" x="722" y="540">补齐 ES / Milvus / MinIO / XXL-JOB / Sentinel</text>
+  <text class="node-text" x="722" y="568">product / order / interaction / chat / im / ai / wallet / points</text>
+  <text class="node-text" x="722" y="596">适合验证 RAG、审核、积分、支付和消息链路</text>
 
-  <text x="468" y="372" class="node-tag">PATH B</text>
-  <text x="468" y="408" class="node-title">体验完整业务能力</text>
-  <text x="468" y="446" class="node-body">完整功能链路</text>
-  <text x="468" y="476" class="node-body">补齐 ES / Milvus / MinIO / XXL-JOB / Sentinel</text>
-  <text x="468" y="506" class="node-body">product / order / interaction / chat / im</text>
-  <text x="468" y="536" class="node-body">ai / wallet / points / blog / audit / file</text>
-  <text x="468" y="566" class="node-body">适合验证 RAG、审核、积分、支付和消息链路</text>
+  <rect class="purple" x="1290" y="390" width="420" height="260"/>
+  <text class="step" x="1322" y="430">PATH C</text>
+  <text class="node-title" x="1322" y="472">准备部署或演示</text>
+  <text class="node-text" x="1322" y="512">直接看 DEPLOYMENT_GUIDE</text>
+  <text class="node-text" x="1322" y="540">关注 JAR 构建、镜像重建、Nacos 和 Docker</text>
+  <text class="node-text" x="1322" y="568">部署前先把敏感配置迁出仓库</text>
+  <text class="node-text" x="1322" y="596">适合做服务器演示、联调和生产前校验</text>
 
-  <text x="834" y="372" class="node-tag">PATH C</text>
-  <text x="834" y="408" class="node-title">准备部署或演示</text>
-  <text x="834" y="446" class="node-body">直接看 DEPLOYMENT_GUIDE</text>
-  <text x="834" y="476" class="node-body">关注 JAR 构建、镜像重建、Nacos、Docker</text>
-  <text x="834" y="506" class="node-body">不要只执行 up，更新单服务要重建镜像</text>
-  <text x="834" y="536" class="node-body">部署前先把敏感配置迁出仓库</text>
-  <text x="834" y="566" class="node-body">适合做服务器演示、联调和生产前校验</text>
+  <rect class="note" x="120" y="720" width="1560" height="110"/>
+  <text class="note-title" x="152" y="764">建议顺序</text>
+  <text class="note-text" x="152" y="798">先走 PATH A，确认最小链路稳定；再按需要扩展到 PATH B 或 PATH C。这样最省时间，也最容易快速建立对项目的掌控感。</text>
 
-  <g filter="url(#shadow2)">
-    <rect x="132" y="610" width="936" height="48" rx="18" fill="#ECFEFF" stroke="#99F6E4"/>
-  </g>
-  <text x="600" y="641" text-anchor="middle" class="footer">建议顺序：先走 PATH A，确认最小链路稳定，再按需扩展到 PATH B 或 PATH C。</text>
+  <rect class="note" x="120" y="850" width="500" height="70"/>
+  <text class="note-text" x="152" y="894">PATH A 适合第一次接入；PATH B 适合体验完整业务；PATH C 适合部署和演示准备。</text>
+
+  <rect class="note" x="650" y="850" width="500" height="70"/>
+  <text class="note-text" x="682" y="894">这张图现在也和主链路图统一成了同一套标题区、卡片边框和底部说明卡片样式。</text>
+
+  <rect class="note" x="1180" y="850" width="500" height="70"/>
+  <text class="note-text" x="1212" y="894">点开 OPEN_SOURCE.md 时，这张决策图会更自然地承接 README 里的“5 分钟读懂项目”。</text>
 </svg>

@@ -1,10 +1,10 @@
-# SmartLive 开源接入说明
+﻿# SmartLive 开源接入说明
 
-👉 **完整的图文精美排版文档，请访问：[SmartLive 在线文档网站](https://mumulinya.github.io/smartLive-Cloud/)**
+👉 **完整的图文排版版本，请访问：[SmartLive 在线文档网站](https://mumulinya.github.io/smartLive-Cloud/)**
 
 **文档导航：** [README 首页](../README.md) · [视觉导览](SHOWCASE.md) · [页面导览](PAGE_GALLERY.md)
 
-这份文档回答三个问题：
+这份文档聚焦三件事：
 
 1. 第一次接入这个仓库，应该先看什么。
 2. 想把服务跑起来，最小链路需要哪些中间件和模块。
@@ -129,6 +129,8 @@
 | smartLive-points | 9215 |
 | smartLive-wallet | 9216 |
 | smartLive-monitor | 9100 |
+
+> 说明：监控中心的目录名是 `smartLive-monitor`，对应 Maven `artifactId` 是 `smartLive-visual-monitor`。
 | smartLive-sentinel | 8718 |
 
 ## 9. 第一天建议验证什么

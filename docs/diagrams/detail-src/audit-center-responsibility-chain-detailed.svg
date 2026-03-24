@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2280" height="1480" viewBox="0 0 2280 1480" role="img" aria-labelledby="title desc">
+  <title id="title">审核中心责任链与业务回写链路（详细版）</title>
+  <desc id="desc">展示审核任务创建、敏感词与 AI 审核责任链、人工审核挂起、结果回写和驳回通知的内部机制。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .reject { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="2280" height="1480" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2224" height="1424" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">审核中心责任链与业务回写链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：AuditListener.handleAudit + AuditServiceImpl.createAuditTask / handleAudit / applyAuditDecision + SensitiveWordAuditHandler + AiAuditHandler + AuditStrategy.handleAuditResult</text>
+
+  <text class="section" x="70" y="182">1. 审核中心先创建 AuditTask，再跑责任链，而不是直接给业务结果</text>
+  <rect class="mq" x="70" y="220" width="320" height="170"/>
+  <text class="node-title" x="230" y="282" text-anchor="middle">AuditMessage</text>
+  <text class="node-text" x="230" y="318" text-anchor="middle">bizId / bizType / submitterId</text>
+  <text class="node-text" x="230" y="344" text-anchor="middle">auditContent / createTime</text>
+  <rect class="node" x="470" y="220" width="380" height="170"/>
+  <text class="node-title" x="660" y="282" text-anchor="middle">AuditListener.handleAudit</text>
+  <text class="node-text" x="660" y="318" text-anchor="middle">消费审核消息</text>
+  <text class="node-text" x="660" y="344" text-anchor="middle">交给 AuditServiceImpl.handleAudit</text>
+  <rect class="store" x="930" y="220" width="380" height="170"/>
+  <text class="node-title" x="1120" y="282" text-anchor="middle">createAuditTask</text>
+  <text class="node-text" x="1120" y="318" text-anchor="middle">生成审核任务记录</text>
+  <text class="node-text" x="1120" y="344" text-anchor="middle">初始状态 WAITING</text>
+  <rect class="decision" x="1390" y="220" width="360" height="170"/>
+  <text class="node-title" x="1570" y="282" text-anchor="middle">SensitiveWordAuditHandler</text>
+  <text class="node-text" x="1570" y="318" text-anchor="middle">命中敏感词可直接驳回</text>
+  <text class="node-text" x="1570" y="344" text-anchor="middle">未命中则继续往下传</text>
+  <rect class="decision" x="1830" y="220" width="360" height="170"/>
+  <text class="node-title" x="2010" y="282" text-anchor="middle">AiAuditHandler</text>
+  <text class="node-text" x="2010" y="318" text-anchor="middle">AI 审核可直接 PASS / REJECT</text>
+  <text class="node-text" x="2010" y="344" text-anchor="middle">不确定则挂 WAIT_MANUAL</text>
+  <path class="line" d="M390 305 H458"/><text class="step" x="424" y="289" text-anchor="middle">1. 消费审核消息</text>
+  <path class="line" d="M850 305 H918"/><text class="step" x="884" y="289" text-anchor="middle">2. 创建任务</text>
+  <path class="line" d="M1310 305 H1378"/><text class="step" x="1344" y="289" text-anchor="middle">3. 敏感词处理</text>
+  <path class="line" d="M1750 305 H1818"/><text class="step" x="1784" y="289" text-anchor="middle">4. AI 审核</text>
+
+  <text class="section" x="70" y="464">2. 责任链输出 PASS / REJECT / WAIT_MANUAL 后，再统一进入 applyAuditDecision</text>
+  <rect class="decision" x="130" y="510" width="400" height="180"/>
+  <text class="node-title" x="330" y="572" text-anchor="middle">WAIT_MANUAL</text>
+  <text class="node-text" x="330" y="608" text-anchor="middle">AuditTask 保持 WAITING</text>
+  <text class="node-text" x="330" y="634" text-anchor="middle">人工审核页后续接管</text>
+  <text class="node-text" x="330" y="660" text-anchor="middle">不会继续同步索引</text>
+  <rect class="store" x="650" y="510" width="400" height="180"/>
+  <text class="node-title" x="850" y="572" text-anchor="middle">PASS</text>
+  <text class="node-text" x="850" y="608" text-anchor="middle">auditAction(PASS)</text>
+  <text class="node-text" x="850" y="634" text-anchor="middle">审核任务记通过状态</text>
+  <text class="node-text" x="850" y="660" text-anchor="middle">进入业务回写</text>
+  <rect class="danger" x="1170" y="510" width="400" height="180"/>
+  <text class="node-title" x="1370" y="572" text-anchor="middle">REJECT</text>
+  <text class="node-text" x="1370" y="608" text-anchor="middle">AUTO_REJECT / REJECT</text>
+  <text class="node-text" x="1370" y="634" text-anchor="middle">记录 rejectReason</text>
+  <text class="node-text" x="1370" y="660" text-anchor="middle">同时准备系统通知</text>
+  <rect class="node" x="1690" y="510" width="420" height="180"/>
+  <text class="node-title" x="1900" y="572" text-anchor="middle">applyAuditDecision</text>
+  <text class="node-text" x="1900" y="608" text-anchor="middle">统一收敛责任链结果</text>
+  <text class="node-text" x="1900" y="634" text-anchor="middle">调用策略更新业务状态</text>
+  <text class="node-text" x="1900" y="660" text-anchor="middle">必要时发驳回通知</text>
+  <path class="dash" d="M2010 390 V470 H330 V498"/><text class="step" x="1170" y="454" text-anchor="middle">5. 不确定则转人工</text>
+  <path class="pass" d="M2010 390 V450 H850 V498"/><text class="step" x="1430" y="436" text-anchor="middle">6. PASS 走统一决策</text>
+  <path class="reject" d="M2010 390 V430 H1370 V498"/><text class="step" x="1690" y="418" text-anchor="middle">7. REJECT 也走统一决策</text>
+  <path class="line" d="M1570 600 H1678"/><text class="step" x="1624" y="584" text-anchor="middle">8. 统一收敛结果</text>
+
+  <text class="section" x="70" y="770">3. 审核结果回写业务服务；REJECT 额外生成系统通知</text>
+  <rect class="node" x="120" y="810" width="420" height="180"/>
+  <text class="node-title" x="330" y="872" text-anchor="middle">AuditStrategy.handleAuditResult</text>
+  <text class="node-text" x="330" y="908" text-anchor="middle">按 bizType 路由商品 / 店铺策略</text>
+  <text class="node-text" x="330" y="934" text-anchor="middle">PASS/REJECT 都由策略处理</text>
+  <rect class="store" x="660" y="810" width="420" height="180"/>
+  <text class="node-title" x="870" y="872" text-anchor="middle">源业务表回写</text>
+  <text class="node-text" x="870" y="908" text-anchor="middle">audit_status / status / reject_reason</text>
+  <text class="node-text" x="870" y="934" text-anchor="middle">并清理详情 / 列表缓存</text>
+  <rect class="mq" x="1200" y="810" width="420" height="180"/>
+  <text class="node-title" x="1410" y="872" text-anchor="middle">createRejectSystemNotice</text>
+  <text class="node-text" x="1410" y="908" text-anchor="middle">仅 REJECT 才发 SYSTEM_NOTICE_EXCHANGE</text>
+  <text class="node-text" x="1410" y="934" text-anchor="middle">把 rejectReason 透传给用户端</text>
+  <rect class="store" x="1740" y="810" width="380" height="180"/>
+  <text class="node-title" x="1930" y="872" text-anchor="middle">最终可见状态</text>
+  <text class="node-text" x="1930" y="908" text-anchor="middle">通过：进入上架 / 搜索同步链</text>
+  <text class="node-text" x="1930" y="934" text-anchor="middle">驳回：用户收到拒绝原因</text>
+  <path class="line" d="M540 900 H648"/><text class="step" x="594" y="884" text-anchor="middle">9. 路由具体策略</text>
+  <path class="line" d="M1080 900 H1188"/><text class="step" x="1134" y="884" text-anchor="middle">10. 业务状态落库</text>
+  <path class="reject" d="M1570 900 H1728"/><text class="step" x="1649" y="884" text-anchor="middle">11. 驳回才发通知</text>
+
+  <text class="section" x="70" y="1068">4. 这张详细图强调的是“审核中心内部机制”，和发布同步图不重复</text>
+  <rect class="note" x="70" y="1106" width="660" height="210"/>
+  <text class="note-title" x="102" y="1150">补充 A：为什么要先 createAuditTask</text>
+  <text class="note-text" x="102" y="1182">- 审核中心不是一次性函数调用，而是可追踪、可人工接管的任务流。</text>
+  <text class="note-text" x="102" y="1210">- 先建 AuditTask 后执行责任链，才能支持 WAIT_MANUAL 和审核历史查询。</text>
+  <text class="note-text" x="102" y="1238">- 这也是它和简单“审核接口”最大的结构差异。</text>
+  <rect class="note" x="800" y="1106" width="660" height="210"/>
+  <text class="note-title" x="832" y="1150">补充 B：PASS / REJECT / WAIT_MANUAL 的边界</text>
+  <text class="note-text" x="832" y="1182">- WAIT_MANUAL 不会误触发索引同步或状态回写，它只是把任务挂起等待人工。</text>
+  <text class="note-text" x="832" y="1210">- PASS 和 REJECT 才会进入 applyAuditDecision，再统一回写业务侧。</text>
+  <text class="note-text" x="832" y="1238">- 所以详细图里专门把“责任链输出”和“业务回写”拆成两层。</text>
+  <rect class="note" x="1530" y="1106" width="660" height="210"/>
+  <text class="note-title" x="1562" y="1150">代码锚点</text>
+  <text class="note-text" x="1562" y="1182">- handleAudit：消费 MQ 后创建任务，再执行审核责任链。</text>
+  <text class="note-text" x="1562" y="1210">- SensitiveWordAuditHandler / AiAuditHandler：给出 PASS / REJECT / WAIT_MANUAL。</text>
+  <text class="note-text" x="1562" y="1238">- applyAuditDecision / handleAuditResult：把最终结果回写到商品或店铺服务。</text>
+  <text class="note-text" x="1562" y="1266">- createRejectSystemNotice：把 rejectReason 送到系统通知链路。</text>
+</svg>

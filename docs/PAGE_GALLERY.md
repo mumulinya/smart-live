@@ -1,8 +1,10 @@
 ﻿# SmartLive 页面导览
 
-这份文档专门承接 [README.md](../README.md) 里的“效果预览”，按真实使用路径把用户端 App 和管理端 Web 的页面一次看顺。
+这份文档承接 [README.md](../README.md) 里的“效果预览”，按真实使用路径把用户端 App 和管理端 Web 的页面一次看顺。
 
 **文档导航：** [README 首页](../README.md) · [视觉导览](SHOWCASE.md) · [开源接入](OPEN_SOURCE.md)
+
+**第一次建议先看：** [登录与进入](#app-login-entry) -> [发现入口与热榜](#app-discovery) -> [店铺决策与商品详情](#app-shop-product) -> [支付、订单、钱包与积分](#app-trade-assets) -> [AI 智能助手与 AIGC](#app-ai-capability)
 
 - README 只保留最主要的页面入口，方便第一次进仓库的人快速扫一遍。
 - 这里继续展开完整页面，按“进入 -> 发现 -> 决策 -> 交易 -> 内容 -> 社交 -> AI -> 个人资产”的顺序往下看。
@@ -41,10 +43,10 @@
 | <img src="./screenshots/homepage.png" alt="首页入口" width="230"> | <img src="./screenshots/hot-ranking.png" alt="热门内容流" width="230"> |
 | 分类入口、优惠专区和秒杀入口 | 热门页与内容分区切换 |
 
-| 热门店铺榜 | 热门商品榜 |
+| 本地必吃榜（店铺热榜） | 抢手好券榜 |
 |:---:|:---:|
-| <img src="./screenshots/app-top-shops.png" alt="热门店铺榜" width="230"> | <img src="./screenshots/app-top-products.png" alt="热门商品榜" width="230"> |
-| 独立店铺热榜页 | 独立商品热榜页 |
+| <img src="./screenshots/app-top-shops.png" alt="本地必吃榜（店铺热榜）" width="230"> | <img src="./screenshots/app-top-products.png" alt="抢手好券榜" width="230"> |
+| 独立店铺热榜页 | 独立好券热榜页 |
 
 | 店铺分类列表 |
 |:---:|
