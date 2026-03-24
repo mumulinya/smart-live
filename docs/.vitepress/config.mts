@@ -24,13 +24,10 @@ export default defineConfig({
       {
         text: '💡 项目概览与导览',
         items: [
+          { text: '开源启动与接入', link: '/OPEN_SOURCE' },
           { text: '系统架构与项目规模', link: '/site-pages/SYSTEM_ARCHITECTURE' },
-          { text: '项目级能力亮点', link: '/site-pages/CORE_HIGHLIGHTS' },
-          { text: '功能特性与技术栈', link: '/site-pages/FEATURES_STACK' },
-          { text: '性能压测与工程表现', link: '/site-pages/PERFORMANCE' },
           { text: '页面效果图导览', link: '/PAGE_GALLERY' },
-          { text: '业务链路视觉走查', link: '/SHOWCASE' },
-          { text: '开源启动与接入', link: '/OPEN_SOURCE' }
+          { text: '业务链路视觉走查', link: '/SHOWCASE' }
         ]
       },
       {
@@ -45,7 +42,7 @@ export default defineConfig({
       },
       {
         text: '🔥 核心链路与实现',
-        collapsed: false,
+        collapsed: true,
         items: [
           { text: '核心链路总览', link: '/core-links/' },
           { text: '订单支付与退款补偿链路', link: '/core-links/2. 下单_统一支付_退款补偿链路' },
@@ -61,9 +58,9 @@ export default defineConfig({
       },
       {
         text: '👨‍💻 项目复盘与学习',
+        collapsed: true,
         items: [
           { text: '项目沉淀与学习复盘', link: '/site-pages/LEARNINGS' },
-          { text: '未来规划 Roadmap', link: '/site-pages/ROADMAP' },
           { text: '项目驱动学习复盘指南', link: '/core-links/SmartLive_Java_Internship_Review_Plan_Updated' }
         ]
       }

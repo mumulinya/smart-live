@@ -12,16 +12,6 @@ const coreLinksDiagramsSourceDir = path.join(root, 'docs', 'core-links', 'diagra
 const coreLinksDiagramsPublicDir = path.join(docsPublicDir, 'core-links', 'diagrams')
 const sitePagesDir = path.join(root, 'docs', 'site-pages')
 const systemArchitecturePath = path.join(sitePagesDir, 'SYSTEM_ARCHITECTURE.md')
-const featuresStackPath = path.join(sitePagesDir, 'FEATURES_STACK.md')
-const performancePath = path.join(sitePagesDir, 'PERFORMANCE.md')
-const learningsPath = path.join(sitePagesDir, 'LEARNINGS.md')
-const roadmapPath = path.join(sitePagesDir, 'ROADMAP.md')
-const techSelectionPath = path.join(sitePagesDir, 'TECH_SELECTION.md')
-const pitfallsPath = path.join(sitePagesDir, 'PITFALLS.md')
-const faqPath = path.join(sitePagesDir, 'FAQ.md')
-const contributionsPath = path.join(sitePagesDir, 'CONTRIBUTIONS.md')
-const coreHighlightsPath = path.join(sitePagesDir, 'CORE_HIGHLIGHTS.md')
-const projectOverviewPath = path.join(root, 'docs', 'PROJECT_OVERVIEW.md')
 
 const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'))
 
@@ -127,21 +117,6 @@ function extractReadmeSection(text, startAnchorId, endAnchorId) {
   return lines.slice(startIndex + 1, sliceEnd).join('\n').trim()
 }
 
-function normalizeReadmeContentForDocs(content) {
-  return content
-    .replace(/<!--[\s\S]*?-->\n?/g, '')
-    .replace(/\[项目仓库\]\(#项目仓库\)/g, 'README 的“项目仓库”')
-    .replace(/\]\(docs\/OPEN_SOURCE\.md([^)]+)?\)/g, (_match, hash = '') => `](/OPEN_SOURCE${hash || ''})`)
-    .replace(/\]\(docs\/PAGE_GALLERY\.md([^)]+)?\)/g, (_match, hash = '') => `](/PAGE_GALLERY${hash || ''})`)
-    .replace(/\]\(docs\/SHOWCASE\.md([^)]+)?\)/g, (_match, hash = '') => `](/SHOWCASE${hash || ''})`)
-    .replace(/\]\(docs\/PROJECT_OVERVIEW\.md([^)]+)?\)/g, (_match, hash = '') => `](/PROJECT_OVERVIEW${hash || ''})`)
-    .replace(/\]\(docs\/core-links\/([^)]+?)\.md\)/g, (_match, name) => `](/core-links/${name})`)
-    .replace(/\]\(README\.md\)/g, '](https://github.com/mumulinya/smartLive-Cloud/blob/main/README.md)')
-    .replace(/src="docs\/screenshots\//g, 'src="../screenshots/')
-    .replace(/src="docs\/diagrams\//g, 'src="../diagrams/')
-    .replace(/\]\(docs\/diagrams\/([^)]+)\)/g, (_match, target) => `](../diagrams/${target})`)
-}
-
 function renderReadmeDrivenPage(title, note, body) {
   return `# ${title}
 
@@ -172,103 +147,6 @@ ${faqBody}
 `
 }
 
-function renderSystemArchitecturePage(cards, architectureBody, projectStructureBody) {
-  return `# 🏗️ 系统架构与项目规模
-
-> 本页根据 \`README.md\` 中“系统架构”和“项目结构”章节自动同步。
-
-## 📊 项目规模与关键数据
-
-<div class="smartlive-stats-grid">
-<!-- AUTO_SYNC:SYSTEM_ARCH_STATS_CARDS:START -->
-${renderDocsHomeCards(cards)}
-<!-- AUTO_SYNC:SYSTEM_ARCH_STATS_CARDS:END -->
-</div>
-
-## 🔢 统计口径说明
-
-${extractSyncBlock(readmeText, 'README_STATS_SCOPE')}
-
-## 🗺️ 系统架构
-
-${architectureBody}
-
-## 📁 项目结构
-
-${projectStructureBody}
-`
-}
-
-function renderProjectOverviewPage(body) {
-  const normalizedBody = body
-    .replace(/^### /gm, '## ')
-    .replace(/^#### /gm, '### ')
-
-  return `# 🎤 项目全貌与答辩说明
-
-> 本页根据 \`README.md\` 中“项目简介”章节自动同步，适合用作项目介绍、答辩说明与面试展开的统一入口。
-
-如果你准备围绕项目做一次完整讲解，建议优先按这个顺序展开：
-
-1. 项目定位与规模
-2. 为什么值得继续看
-3. 个人贡献亮点
-4. 核心亮点与设计判断
-
-${normalizedBody}
-`
-}
-
-function extractHeadingBlock(text, startPattern, endPatterns = []) {
-  const lines = text.split('\n')
-  const startIndex = lines.findIndex((line) => startPattern.test(line))
-  if (startIndex === -1) {
-    throw new Error(`Heading block not found: ${startPattern}`)
-  }
-
-  let endIndex = lines.length
-  for (let i = startIndex + 1; i < lines.length; i += 1) {
-    if (endPatterns.some((pattern) => pattern.test(lines[i]))) {
-      endIndex = i
-      break
-    }
-  }
-
-  return lines.slice(startIndex + 1, endIndex).join('\n').trim()
-}
-
-function renderContributionPage(body) {
-  return `# 👨‍💻 我的核心设计与实现
-
-> 本页根据 \`README.md\` 中“个人贡献亮点”章节自动同步，适合直接拿来做项目贡献讲解与简历展开。
-
-建议讲法：
-
-1. 先讲规模与交付密度
-2. 再讲 2-3 条最强技术突破点
-3. 最后补一条最能体现工程判断的设计取舍
-
-${body}
-`
-}
-
-function renderCoreHighlightsPage(body) {
-  const normalizedBody = body.replace(/^#### /gm, '## ')
-
-  return `# 🎯 项目级能力亮点
-
-> 本页根据 \`README.md\` 中“核心亮点”章节自动同步，适合从项目视角快速讲清系统卖点与整体工程价值。
-
-建议使用方式：
-
-- 先用这页讲“项目厉害在哪”
-- 再回到“个人贡献亮点”讲“我具体做了什么”
-- 最后再挑 1-2 条核心链路展开到源码级实现
-
-${normalizedBody}
-`
-}
-
 function extractSyncBlock(text, marker) {
   const start = `<!-- AUTO_SYNC:${marker}:START -->`
   const end = `<!-- AUTO_SYNC:${marker}:END -->`
@@ -278,14 +156,6 @@ function extractSyncBlock(text, marker) {
     throw new Error(`Sync block not found: ${marker}`)
   }
   return match[1].trim()
-}
-
-function getReadmeBlockOrSection(text, marker, startAnchorId, endAnchorId) {
-  try {
-    return extractSyncBlock(text, marker)
-  } catch {
-    return extractReadmeSection(text, startAnchorId, endAnchorId)
-  }
 }
 
 const readme = readTextWithBom(readmePath)
@@ -317,16 +187,14 @@ if (docsIndexText.includes('<!-- AUTO_SYNC:DOCS_HOME_QUICK_FACTS:START -->')) {
   )
 }
 writeTextWithBom(docsIndexPath, docsIndexText, docsIndex.hasBom)
-
-const architectureBody = normalizeReadmeContentForDocs(extractReadmeSection(readmeText, '系统架构', '项目结构'))
-const projectStructureBody = normalizeReadmeContentForDocs(extractReadmeSection(readmeText, '项目结构', '技术选型理由'))
-
-// Site detail pages are maintained independently. Only shared scale data and
-// architecture overview continue to be synced from README / shared stats.
-writeGeneratedMarkdown(
-  systemArchitecturePath,
-  renderSystemArchitecturePage(data.docsHomeCards, architectureBody, projectStructureBody)
+const systemArchitecture = readTextWithBom(systemArchitecturePath)
+let systemArchitectureText = systemArchitecture.text
+systemArchitectureText = replaceBlock(
+  systemArchitectureText,
+  'SYSTEM_ARCH_STATS_CARDS',
+  renderDocsHomeCards(data.docsHomeCards)
 )
+writeTextWithBom(systemArchitecturePath, systemArchitectureText, systemArchitecture.hasBom)
 
 syncStaticDirectory(diagramsSourceDir, diagramsPublicDir)
 syncStaticDirectory(coreLinksDiagramsSourceDir, coreLinksDiagramsPublicDir)

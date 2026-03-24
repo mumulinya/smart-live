@@ -26,6 +26,22 @@
 - [管理端 Web：AI 经营与系统后台](#admin-system)
 - [XXL-JOB 调度后台](#admin-scheduler)
 
+## 🧭 页面能力映射表
+
+这张表不是替代截图，而是把“页面入口、后端模块和对应链路”串起来，方便从页面快速跳到源码和链路文档。
+
+| 能力 / 页面 | 主要前端页 | 对应后端模块 | 关键链路 | 延伸阅读 |
+|:---|:---|:---|:---|:---|
+| 首页发现与热门面板 | 首页入口、热门内容流、本地必吃榜、抢手好券榜 | `shop / product / blog / index / interaction` | 首页热门面板读取链路、热榜维护链路 | [业务链路视觉走查](SHOWCASE.md) |
+| 搜索与地图找店 | 搜索入口页、搜索结果页、地图找店 | `search / shop / product / interaction` | LBS 搜索与热词链路 | [核心链路总览](core-links/index.md) |
+| 店铺决策与商品详情 | 店铺详情页、商品详情页、秒杀专区 | `shop / product / order / interaction` | 订单支付退款链路、秒杀抢购链路 | [核心链路总览](core-links/index.md) |
+| 支付、订单、钱包与积分 | 收银台、支付结果、订单详情、钱包、积分中心 | `order / wallet / points / product` | 订单支付退款链路、订单超时取消链路 | [业务链路视觉走查](SHOWCASE.md) |
+| 内容创作与评价 | 发布页、博客详情、评论区、我的评价、草稿箱 | `blog / interaction / audit / ai` | 审核责任链与搜索双写、Feed 推送链路 | [业务链路视觉走查](SHOWCASE.md) |
+| 社交关系与消息 | 关注页、粉丝明细、会话列表、即时通讯、系统消息 | `interaction / chat / im / user` | Feed 推送与互动同步、系统通知与 IM 推送 | [核心链路总览](core-links/index.md) |
+| AI 智能助手与 AIGC | AI 会话、推荐卡片、下单卡片、博客生成、评价生成 | `ai / search / shop / product / blog / interaction` | AI 路由策略与 RAG 生成链路 | [核心链路总览](core-links/index.md) |
+| 管理端经营与治理 | 仪表盘、店铺商品管理、审核、日志、角色权限 | `system / shop / product / audit / user / monitor` | 审核责任链、调度与治理链路 | [开源接入说明](OPEN_SOURCE.md) |
+| XXL-JOB 调度后台 | 调度总览、任务管理、执行器管理 | `common-xxl / product / order / interaction` | 热榜重建、订单兜底、秒杀预热链路 | [业务链路视觉走查](SHOWCASE.md) |
+
 ## <a id="app-pages"></a>1. 用户端 App 全链路展示
 
 ### <a id="app-login-entry"></a>1.1 登录与进入

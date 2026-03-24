@@ -32,7 +32,24 @@ hero:
   <a href="./site-pages/TECH_SELECTION.html" class="smartlive-home-nav-pill">技术选型</a>
 </div>
 
-## 📊 项目规模与关键数据
+<details class="smartlive-section-nav-wrap" open>
+  <summary class="smartlive-section-nav-summary">
+    <span class="smartlive-section-nav-title">首页导航</span>
+    <span class="smartlive-section-nav-toggle">收起</span>
+  </summary>
+  <div class="smartlive-section-nav">
+    <a href="#home-stats" class="smartlive-section-nav-pill">项目规模</a>
+    <a href="#home-architecture" class="smartlive-section-nav-pill">系统架构</a>
+    <a href="#home-highlights" class="smartlive-section-nav-pill">项目亮点</a>
+    <a href="#home-interview" class="smartlive-section-nav-pill">面试入口</a>
+    <a href="#home-read-path" class="smartlive-section-nav-pill">阅读路径</a>
+    <a href="#home-start-path" class="smartlive-section-nav-pill">体验路径</a>
+    <a href="#home-pitch-path" class="smartlive-section-nav-pill">讲解路径</a>
+    <a href="#home-quickstart" class="smartlive-section-nav-pill">极速启动</a>
+  </div>
+</details>
+
+## <a id="home-stats"></a>📊 项目规模与关键数据
 
 <div class="smartlive-stats-grid">
 <!-- AUTO_SYNC:DOCS_HOME_STATS_CARDS:START -->
@@ -81,7 +98,7 @@ hero:
 
 这套项目不是单个功能样例，而是一整套从用户发现、下单支付、履约评价到社交互动、热榜维护、AI/RAG 增强的完整业务系统。更多统计口径和服务边界可以继续看 [系统架构与项目规模](/site-pages/SYSTEM_ARCHITECTURE)。
 
-## 🏗️ 系统全景架构
+## <a id="home-architecture"></a>🏗️ 系统全景架构
 
 **SmartLive 智评生活** 把本地生活场景中的交易、内容、社交和 AI 能力放进同一套微服务体系里，强调真实业务闭环和工程化落地。
 
@@ -89,7 +106,7 @@ hero:
   <img src="./screenshots/architecture.png" alt="System Architecture" width="90%"/>
 </div>
 
-## ✨ 项目能力亮点
+## <a id="home-highlights"></a>✨ 项目能力亮点
 
 <div class="smartlive-feature-grid">
   <div class="smartlive-feature-card">
@@ -110,7 +127,7 @@ hero:
   </div>
 </div>
 
-## 🎯 面试与项目拆解入口
+## <a id="home-interview"></a>🎯 面试与项目拆解入口
 
 <div class="smartlive-link-grid">
   <a href="./site-pages/TECH_SELECTION.html" class="smartlive-link-card">
@@ -135,7 +152,7 @@ hero:
   </a>
 </div>
 
-## 🧭 第一次看项目怎么读
+## <a id="home-read-path"></a>🧭 第一次看项目怎么读
 
 如果你是第一次进入 SmartLive，建议不要一上来就试图把所有模块、页面和中间件一次性看完。更顺的阅读方式是：
 
@@ -144,7 +161,7 @@ hero:
 3. 接着看 [业务链路视觉走查](/SHOWCASE)，把截图和缓存、调度、审核、交易等核心链路对上。
 4. 最后进入 [核心链路总览](/core-links/)，按主题选择最适合自己的阅读顺序，再深入看源码级实现细节。
 
-## 🚀 最小体验路径
+## <a id="home-start-path"></a>🚀 最小体验路径
 
 如果你想先快速感受项目，而不是立刻把全部依赖跑齐，推荐先按下面这条路径体验：
 
@@ -171,7 +188,7 @@ hero:
   </div>
 </div>
 
-## 🗣️ 面试讲解路径
+## <a id="home-pitch-path"></a>🗣️ 面试讲解路径
 
 <div align="center">
   <img src="./diagrams/interview-pitch-path.svg" alt="SmartLive 面试讲解路径" width="100%">
@@ -185,7 +202,7 @@ hero:
    [秒杀抢购全链路](/core-links/秒杀抢购全链路详解) / [订单、支付与退款补偿](/core-links/2.%20下单_统一支付_退款补偿链路) / [Redis 分层缓存链路详解](/core-links/Redis分层缓存链路详解)。
 4. 最后再回到 [技术选型理由](/site-pages/TECH_SELECTION) 和 [难点踩坑与解决方案](/site-pages/PITFALLS)，把“为什么这么做、做的时候踩过什么坑”讲出来。
 
-## 🚀 极速启动与本地体验
+## <a id="home-quickstart"></a>🚀 极速启动与本地体验
 
 想立刻在本地跑起来？只需简单几步克隆代码并一键拉起后端核心依赖：
 

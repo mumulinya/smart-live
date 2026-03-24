@@ -1,6 +1,6 @@
 ﻿# 🏗️ 系统架构与项目规模
 
-> 本页根据 `README.md` 中“系统架构”和“项目结构”章节自动同步。
+> 本页作为网站详细版页面维护；项目规模卡片继续和共享数据源同步。
 
 ## 📊 项目规模与关键数据
 
@@ -81,6 +81,34 @@
 - 先看 `用户端 App / 管理端 Web -> Gateway -> Auth` 的统一入口。
 - 再看四个业务服务簇：基础服务、交易履约、内容社交、搜索智能治理。
 - 最后看底部基础设施：`MySQL / Redis / RabbitMQ / Elasticsearch / Milvus / MinIO / Nacos / XXL-JOB`，理解它们分别承接什么职责。
+
+## 🧩 服务职责矩阵
+
+这张表和上面的依赖图配合看会更清楚：依赖图负责先看“谁和谁相连”，职责矩阵负责再看“每个服务到底干什么”。
+
+| 服务 / 模块 | 核心职责 | 关键依赖 | 典型协作方 |
+|------|----------|----------|------------|
+| `smartLive-gateway` | 统一入口、鉴权透传、路由转发、边界过滤 | Nacos、Sentinel | auth、system、user、shop |
+| `smartLive-auth` | 登录鉴权、令牌签发、会话校验 | MySQL、Redis | gateway、user、system |
+| `smartLive-system` | 后台菜单权限、参数配置、公告与基础管理 | MySQL、Redis | auth、gateway、monitor |
+| `smartLive-user` | 用户资料、主页能力、审核消息与 ES 同步投递 | MySQL、Redis、RabbitMQ | auth、shop、search、audit |
+| `smartLive-shop` | 店铺资料、店铺详情、经营分析与热榜读取 | MySQL、Redis、RabbitMQ | user、search、ai、order |
+| `smartLive-product` | 商品、团购、好券、秒杀与库存管理 | MySQL、Redis、RabbitMQ、XXL-JOB | order、shop、points |
+| `smartLive-order` | 下单、支付状态流转、超时取消、退款补偿 | MySQL、Redis、RabbitMQ、XXL-JOB | product、wallet、points |
+| `smartLive-wallet` | 充值、支付记录、退款入账与钱包流水 | MySQL、RabbitMQ | order、points |
+| `smartLive-points` | 积分、签到、抽奖与积分流水 | MySQL、Redis、RabbitMQ | order、product、wallet |
+| `smartLive-blog` | 博客发布、详情读取、内容投递与 Feed 事件 | MySQL、Redis、RabbitMQ | interaction、search、ai |
+| `smartLive-interaction` | 点赞、收藏、评论、关注、Feed、热榜与互动回刷 | MySQL、Redis、RabbitMQ、XXL-JOB | blog、shop、product、chat |
+| `smartLive-chat` | 会话聚合、系统通知、离线消息落库 | MySQL、Redis、RabbitMQ | im、interaction、order |
+| `smartLive-im` | Netty 长连接、在线推送、即时消息投递 | Redis、RabbitMQ、Netty | chat、interaction |
+| `smartLive-search` | ES 检索、LBS 查询、热词与搜索副本 | Elasticsearch、Redis、RabbitMQ | shop、product、blog、ai |
+| `smartLive-audit` | 审核责任链、人工审核、状态回写 | MySQL、Redis、RabbitMQ | user、shop、product、blog |
+| `smartLive-ai` | Spring AI 编排、RAG 检索、向量同步与 AIGC | Milvus、Elasticsearch、RabbitMQ | search、shop、product、blog |
+| `smartLive-file` | 文件上传、头像替换、对象存储接入 | MinIO、Redis | user、shop、blog |
+| `smartLive-index` | 首页聚合、统计读取与热门面板承接 | MySQL、Redis | shop、product、blog、interaction |
+| `smartLive-monitor` | 服务监控与运维入口 | Nacos、监控采集组件 | system、gateway、全部服务 |
+
+> 阅读建议：如果你第一次读这个仓库，可以先挑 `gateway / auth / user / shop / search` 这五个服务看，再回来看交易、社交和 AI 模块会顺很多。
 
 ## 📁 项目结构
 
