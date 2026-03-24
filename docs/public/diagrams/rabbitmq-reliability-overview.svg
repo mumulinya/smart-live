@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+  <rect width="1600" height="980" fill="#f7f9fc"/>
+  <rect x="24" y="24" width="1552" height="932" rx="28" fill="#ffffff" stroke="#d8e2f0" stroke-width="2"/>
+  <text x="800" y="78" text-anchor="middle" font-size="34" font-weight="700" fill="#16335b">RabbitMQ 消息可靠性项目现状总览</text>
+  <text x="800" y="116" text-anchor="middle" font-size="18" fill="#4c6485">以 SmartLive 当前代码为准：Confirm、manual ACK、Redis 幂等、死信兜底、延迟插件</text>
+
+  <rect x="80" y="180" width="300" height="160" rx="22" fill="#eef6ff" stroke="#8db7ff" stroke-width="2"/>
+  <text x="230" y="225" text-anchor="middle" font-size="28" font-weight="700" fill="#16335b">发送端</text>
+  <text x="230" y="262" text-anchor="middle" font-size="18" fill="#35527a">MqMessageSendUtils</text>
+  <text x="230" y="292" text-anchor="middle" font-size="18" fill="#35527a">messageId / delay / Confirm future</text>
+  <text x="230" y="322" text-anchor="middle" font-size="18" fill="#35527a">失败本地重发 3 次</text>
+
+  <rect x="470" y="180" width="300" height="160" rx="22" fill="#fff6ea" stroke="#ffb66b" stroke-width="2"/>
+  <text x="620" y="225" text-anchor="middle" font-size="28" font-weight="700" fill="#16335b">Broker</text>
+  <text x="620" y="262" text-anchor="middle" font-size="18" fill="#35527a">direct / topic / x-delayed-message</text>
+  <text x="620" y="292" text-anchor="middle" font-size="18" fill="#35527a">队列绑定 DLX</text>
+  <text x="620" y="322" text-anchor="middle" font-size="18" fill="#35527a">Return 处理无法路由</text>
+
+  <rect x="860" y="180" width="300" height="160" rx="22" fill="#eefcf1" stroke="#7fd39a" stroke-width="2"/>
+  <text x="1010" y="225" text-anchor="middle" font-size="28" font-weight="700" fill="#16335b">消费端</text>
+  <text x="1010" y="262" text-anchor="middle" font-size="18" fill="#35527a">manual ACK / NACK</text>
+  <text x="1010" y="292" text-anchor="middle" font-size="18" fill="#35527a">Redis tryConsumeOnce 幂等</text>
+  <text x="1010" y="322" text-anchor="middle" font-size="18" fill="#35527a">异常删幂等 key 后触发重试</text>
+
+  <rect x="1250" y="180" width="270" height="160" rx="22" fill="#f5efff" stroke="#b79dff" stroke-width="2"/>
+  <text x="1385" y="225" text-anchor="middle" font-size="28" font-weight="700" fill="#16335b">死信兜底</text>
+  <text x="1385" y="262" text-anchor="middle" font-size="18" fill="#35527a">DLX / DLQ 已配置</text>
+  <text x="1385" y="292" text-anchor="middle" font-size="18" fill="#35527a">死信消费者入口已落地</text>
+  <text x="1385" y="322" text-anchor="middle" font-size="18" fill="#35527a">补偿 / 告警仍可继续补强</text>
+
+  <path d="M380 260 L470 260" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="470,260 452,250 452,270" fill="#3e6bb3"/>
+  <path d="M770 260 L860 260" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="860,260 842,250 842,270" fill="#3e6bb3"/>
+  <path d="M1160 260 L1250 260" stroke="#3e6bb3" stroke-width="4" fill="none"/>
+  <polygon points="1250,260 1232,250 1232,270" fill="#3e6bb3"/>
+
+  <rect x="110" y="430" width="1380" height="180" rx="26" fill="#f9fbff" stroke="#d7e3f3" stroke-width="2"/>
+  <text x="800" y="478" text-anchor="middle" font-size="28" font-weight="700" fill="#16335b">项目里真实发生的消息生命周期</text>
+
+  <rect x="150" y="515" width="160" height="56" rx="16" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="230" y="550" text-anchor="middle" font-size="18" fill="#16335b">1. 发送消息</text>
+
+  <rect x="340" y="515" width="160" height="56" rx="16" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="420" y="550" text-anchor="middle" font-size="18" fill="#16335b">2. Confirm ACK/NACK</text>
+
+  <rect x="530" y="515" width="160" height="56" rx="16" fill="#fff6ea" stroke="#ffb66b"/>
+  <text x="610" y="550" text-anchor="middle" font-size="18" fill="#16335b">3. Broker 路由</text>
+
+  <rect x="720" y="515" width="160" height="56" rx="16" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="800" y="550" text-anchor="middle" font-size="18" fill="#16335b">4. Redis 幂等校验</text>
+
+  <rect x="910" y="515" width="160" height="56" rx="16" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="990" y="550" text-anchor="middle" font-size="18" fill="#16335b">5. 业务执行 + ACK</text>
+
+  <rect x="1100" y="515" width="160" height="56" rx="16" fill="#fef1ef" stroke="#ff9a8a"/>
+  <text x="1180" y="550" text-anchor="middle" font-size="18" fill="#16335b">6. 本地重试</text>
+
+  <rect x="1290" y="515" width="160" height="56" rx="16" fill="#f5efff" stroke="#b79dff"/>
+  <text x="1370" y="550" text-anchor="middle" font-size="18" fill="#16335b">7. 死信兜底</text>
+
+  <path d="M310 543 L340 543 M500 543 L530 543 M690 543 L720 543 M880 543 L910 543 M1070 543 L1100 543 M1260 543 L1290 543" stroke="#3e6bb3" stroke-width="3" fill="none"/>
+  <polygon points="340,543 328,536 328,550" fill="#3e6bb3"/>
+  <polygon points="530,543 518,536 518,550" fill="#3e6bb3"/>
+  <polygon points="720,543 708,536 708,550" fill="#3e6bb3"/>
+  <polygon points="910,543 898,536 898,550" fill="#3e6bb3"/>
+  <polygon points="1100,543 1088,536 1088,550" fill="#3e6bb3"/>
+  <polygon points="1290,543 1278,536 1278,550" fill="#3e6bb3"/>
+
+  <rect x="80" y="690" width="450" height="180" rx="24" fill="#f9fbff" stroke="#d7e3f3"/>
+  <text x="305" y="735" text-anchor="middle" font-size="26" font-weight="700" fill="#16335b">已经明确落地的能力</text>
+  <text x="120" y="780" font-size="18" fill="#35527a">- Confirm + Return</text>
+  <text x="120" y="812" font-size="18" fill="#35527a">- messageId + Redis 幂等</text>
+  <text x="120" y="844" font-size="18" fill="#35527a">- manual ACK / NACK + 本地重试</text>
+
+  <rect x="575" y="690" width="450" height="180" rx="24" fill="#fffaf2" stroke="#f0d3a8"/>
+  <text x="800" y="735" text-anchor="middle" font-size="26" font-weight="700" fill="#16335b">文档里不要写大的地方</text>
+  <text x="615" y="780" font-size="18" fill="#35527a">- 通用 mq_message_log 已落地</text>
+  <text x="615" y="812" font-size="18" fill="#35527a">- 通用 mqMessageRetryJob 已上线</text>
+  <text x="615" y="844" font-size="18" fill="#35527a">- 死信补偿平台已经统一完成</text>
+
+  <rect x="1070" y="690" width="450" height="180" rx="24" fill="#f7f4ff" stroke="#d6c7ff"/>
+  <text x="1295" y="735" text-anchor="middle" font-size="26" font-weight="700" fill="#16335b">当前更准确的表述</text>
+  <text x="1110" y="780" font-size="18" fill="#35527a">- 死信配置已完成，方法内容仍可继续补强</text>
+  <text x="1110" y="812" font-size="18" fill="#35527a">- 延迟链路已使用 x-delayed-message</text>
+  <text x="1110" y="844" font-size="18" fill="#35527a">- 统一消息治理平台属于后续演进方向</text>
+</svg>

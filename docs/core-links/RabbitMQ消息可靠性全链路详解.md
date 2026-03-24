@@ -7,7 +7,7 @@
 
 ## 一、消息可靠性全链路总览
 
-![RabbitMQ 全链路总览](../diagrams/rabbitmq-reliability-overview.svg)
+![RabbitMQ 全链路总览](./diagrams/rabbitmq-reliability-overview.svg)
 
 ---
 
@@ -532,7 +532,7 @@ public MessageRecoverer messageRecoverer(RabbitTemplate rabbitTemplate) {
 
 ## 七、死信队列（DLX）
 
-![死信队列与延迟消息](../diagrams/rabbitmq-dlx-delay-overview.svg)
+![死信队列与延迟消息](./diagrams/rabbitmq-dlx-delay-overview.svg)
 
 ### 什么是死信？
 

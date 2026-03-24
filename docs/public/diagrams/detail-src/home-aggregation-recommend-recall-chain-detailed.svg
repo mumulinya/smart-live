@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2300" height="1460" viewBox="0 0 2300 1460" role="img" aria-labelledby="title desc">
+  <title id="title">首页热门面板与热门博客读取链路（详细版）</title>
+  <desc id="desc">展示首页顶部热门面板如何按 activeHotTab 读取店铺榜、抢手好券榜、本地团购榜，以及热门博客列表如何独立读取并通过 Redis 热榜、回源查询和补缓存完成返回。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title{font:700 36px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#17365e}.subtitle{font:500 18px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#4f6d8f}.section{font:700 24px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1d4b81}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#153454}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#36516d}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#25496f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#23425f}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506983}.node{fill:#ffffff;stroke:#a8c2e2;stroke-width:2;rx:24}.store{fill:#f3fbf5;stroke:#a7d6b7;stroke-width:2;rx:24}.decision{fill:#f8f3ff;stroke:#c7a6ea;stroke-width:2;rx:24}.note{fill:#ffffff;stroke:#d7e3f4;stroke-width:1.5;rx:20}.line{stroke:#255792;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d92c0;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="2300" height="1460" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2244" height="1404" rx="30" fill="#fff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">首页热门面板与热门博客读取链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：ShopController.getHotShopRank + ProductController.getHotProductRank + BlogController.queryHotBlog + ShopServiceImpl/ProductServiceImpl/BlogServiceImpl 热榜读取逻辑</text>
+
+  <text class="section" x="70" y="182">1. 首页不是现场算榜，而是顶部热门面板按 tab 切换，热门博客列表独立读取</text>
+  <rect class="node" x="70" y="220" width="280" height="160"/>
+  <text class="node-title" x="210" y="278" text-anchor="middle">用户端首页</text>
+  <text class="node-text" x="210" y="314" text-anchor="middle">打开首页 / 下拉刷新</text>
+  <text class="node-text" x="210" y="340" text-anchor="middle">需要热门面板和热门博客内容流</text>
+  <rect class="node" x="420" y="220" width="360" height="160"/>
+  <text class="node-title" x="600" y="278" text-anchor="middle">首页热门面板</text>
+  <text class="node-text" x="600" y="314" text-anchor="middle">activeHotTab = shop / voucher / groupBuy</text>
+  <text class="node-text" x="600" y="340" text-anchor="middle">热门博客在 hot tab 独立请求</text>
+  <rect class="node" x="860" y="220" width="300" height="160"/>
+  <text class="node-title" x="1010" y="278" text-anchor="middle">热门店铺榜</text>
+  <text class="node-text" x="1010" y="314" text-anchor="middle">ShopController.getHotShopRank</text>
+  <text class="node-text" x="1010" y="340" text-anchor="middle">店铺榜 / 距离排序可叠加</text>
+  <rect class="node" x="1240" y="220" width="300" height="160"/>
+  <text class="node-title" x="1390" y="278" text-anchor="middle">抢手好券榜</text>
+  <text class="node-text" x="1390" y="314" text-anchor="middle">ProductController.getHotProductRank</text>
+  <text class="node-text" x="1390" y="340" text-anchor="middle">category = 1 读取好券榜</text>
+  <rect class="node" x="1620" y="220" width="300" height="160"/>
+  <text class="node-title" x="1770" y="278" text-anchor="middle">本地团购榜</text>
+  <text class="node-text" x="1770" y="314" text-anchor="middle">category = 2 读取团购榜</text>
+  <text class="node-text" x="1770" y="340" text-anchor="middle">和好券榜共用 Product 服务入口</text>
+  <rect class="node" x="2000" y="220" width="220" height="160"/>
+  <text class="node-title" x="2110" y="278" text-anchor="middle">热门博客列表</text>
+  <text class="node-text" x="2110" y="314" text-anchor="middle">BlogController.queryHotBlog</text>
+  <text class="node-text" x="2110" y="340" text-anchor="middle">内容流入口</text>
+  <path class="line" d="M350 300 H408"/><text class="step" x="379" y="284" text-anchor="middle">1. 首页进入</text>
+  <path class="line" d="M780 300 H848"/><text class="step" x="814" y="284" text-anchor="middle">2. 按 tab 读取</text>
+  <path class="dash" d="M780 300 H1228"/><text class="step" x="1004" y="326" text-anchor="middle">3. 热门博客单独请求</text>
+
+  <text class="section" x="70" y="450">2. 各服务优先命中 Redis 热榜 ZSet，miss 时再回源 DB 并异步补榜</text>
+  <rect class="store" x="120" y="500" width="420" height="180"/>
+  <text class="node-title" x="330" y="562" text-anchor="middle">Redis 热榜 ZSet</text>
+  <text class="node-text" x="330" y="598" text-anchor="middle">SHOP_HOT_RANK_KEY</text>
+  <text class="node-text" x="330" y="624" text-anchor="middle">PRODUCT_HOT_RANK_KEY</text>
+  <text class="node-text" x="330" y="650" text-anchor="middle">BLOG_HOT_RANK_KEY</text>
+  <rect class="decision" x="650" y="500" width="360" height="180"/>
+  <text class="node-title" x="830" y="562" text-anchor="middle">ZSetIdManager.pageIds</text>
+  <text class="node-text" x="830" y="598" text-anchor="middle">按 score 倒序分页取 ID</text>
+  <text class="node-text" x="830" y="624" text-anchor="middle">返回 total + 当前页 id 列表</text>
+  <rect class="node" x="1120" y="500" width="420" height="180"/>
+  <text class="node-title" x="1330" y="562" text-anchor="middle">批量查详情</text>
+  <text class="node-text" x="1330" y="598" text-anchor="middle">shop/product/blog 各自批量查详情</text>
+  <text class="node-text" x="1330" y="624" text-anchor="middle">补充店铺名、评分、封面等展示字段</text>
+  <rect class="decision" x="1650" y="500" width="380" height="180"/>
+  <text class="node-title" x="1840" y="562" text-anchor="middle">首次 miss / 冷启动</text>
+  <text class="node-text" x="1840" y="598" text-anchor="middle">第一页回源 DB 按点赞/时间查</text>
+  <text class="node-text" x="1840" y="624" text-anchor="middle">异步写入 ZSet + calcQueue</text>
+  <rect class="store" x="2100" y="500" width="120" height="180"/>
+  <text class="node-title" x="2160" y="562" text-anchor="middle">首页卡片</text>
+  <text class="node-text" x="2160" y="598" text-anchor="middle">店铺</text>
+  <text class="node-text" x="2160" y="624" text-anchor="middle">商品</text>
+  <text class="node-text" x="2160" y="650" text-anchor="middle">博客</text>
+  <path class="line" d="M540 590 H638"/><text class="step" x="589" y="574" text-anchor="middle">4. 读榜单 ID</text>
+  <path class="line" d="M1010 590 H1108"/><text class="step" x="1059" y="574" text-anchor="middle">5. 查详情</text>
+  <path class="dash" d="M1540 590 H1638"/><text class="step" x="1589" y="574" text-anchor="middle">6. 冷启动补榜</text>
+  <path class="line" d="M2030 590 H2088"/><text class="step" x="2059" y="574" text-anchor="middle">7. 组装卡片</text>
+
+  <text class="section" x="70" y="728">3. 页面只读取当前热门面板和热门博客，不在请求现场重算热度</text>
+  <rect class="node" x="180" y="770" width="420" height="190"/>
+  <text class="node-title" x="390" y="832" text-anchor="middle">店铺榜返回</text>
+  <text class="node-text" x="390" y="868" text-anchor="middle">热门店铺榜</text>
+  <text class="node-text" x="390" y="894" text-anchor="middle">可叠加坐标做附近展示</text>
+  <rect class="node" x="700" y="770" width="420" height="190"/>
+  <text class="node-title" x="910" y="832" text-anchor="middle">热门面板返回</text>
+  <text class="node-text" x="910" y="868" text-anchor="middle">抢手好券榜 / 本地团购榜</text>
+  <text class="node-text" x="910" y="894" text-anchor="middle">顶部面板一次只展示当前 tab</text>
+  <rect class="node" x="1220" y="770" width="420" height="190"/>
+  <text class="node-title" x="1430" y="832" text-anchor="middle">博客热榜返回</text>
+  <text class="node-text" x="1430" y="868" text-anchor="middle">热门内容流</text>
+  <text class="node-text" x="1430" y="894" text-anchor="middle">用户继续进入详情或互动</text>
+  <rect class="store" x="1740" y="770" width="420" height="190"/>
+  <text class="node-title" x="1950" y="832" text-anchor="middle">首页最终展示</text>
+  <text class="node-text" x="1950" y="868" text-anchor="middle">热门面板切换 + 热门博客内容流</text>
+  <text class="node-text" x="1950" y="894" text-anchor="middle">页面只负责展示，不现场算分</text>
+  <path class="dash" d="M2160 680 V740 H390 V758"/><text class="step" x="1275" y="724" text-anchor="middle">8. 当前面板结果与热门博客分别回到首页</text>
+
+  <text class="section" x="70" y="1036">4. 这张详细图补充了展示版没有展开的两件事</text>
+  <rect class="note" x="70" y="1074" width="660" height="210"/>
+  <text class="note-title" x="102" y="1118">补充 A：首页不是四榜并发，而是热门面板切换</text>
+  <text class="note-text" x="102" y="1150">- 首页顶部只维护一个热门面板，当前 tab 在店铺、好券、团购之间切换。</text>
+  <text class="note-text" x="102" y="1178">- 热门博客则在内容流里独立读取，不和顶部热门面板混成一个聚合接口。</text>
+  <text class="note-text" x="102" y="1206">- 这样更贴近 home/Index.vue 里的实际页面逻辑。</text>
+  <rect class="note" x="800" y="1074" width="660" height="210"/>
+  <text class="note-title" x="832" y="1118">补充 B：首页不做热度计算，只消费已有榜单</text>
+  <text class="note-text" x="832" y="1150">- ZSetIdManager.pageIds 只负责分页取 ID，不负责热度分重算。</text>
+  <text class="note-text" x="832" y="1178">- 冷启动时只会回源一页数据并补缓存，真正的热榜维护在另一张调度图里。</text>
+  <text class="note-text" x="832" y="1206">- 这也是首页请求能稳定保持轻量读链路的原因。</text>
+  <rect class="note" x="1530" y="1074" width="660" height="210"/>
+  <text class="note-title" x="1562" y="1118">代码锚点</text>
+  <text class="note-text" x="1562" y="1150">- ShopController.getHotShopRank / ProductController.getHotProductRank / BlogController.queryHotBlog。</text>
+  <text class="note-text" x="1562" y="1178">- ZSetIdManager.pageIds：按 score 倒序分页取 ID。</text>
+  <text class="note-text" x="1562" y="1206">- BlogServiceImpl.queryHotBlog：热榜 miss 时回源 DB 并异步写 ZSet 与 calcQueue。</text>
+</svg>

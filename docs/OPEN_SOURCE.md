@@ -2,7 +2,7 @@
 
 👉 **完整的图文排版版本，请访问：[SmartLive 在线文档网站](https://mumulinya.github.io/smartLive-Cloud/)**
 
-**文档导航：** [README 首页](../README.md) · [视觉导览](SHOWCASE.md) · [页面导览](PAGE_GALLERY.md)
+**文档导航：** [网站首页](/) · [视觉导览](SHOWCASE.md) · [页面导览](PAGE_GALLERY.md)
 
 这份文档聚焦三件事：
 
@@ -22,15 +22,15 @@
 
 | 文档 | 作用 | 适合谁 |
 |:---|:---|:---|
-| [../README.md](../README.md) | 了解项目定位、架构全景、业务截图、核心链路与技术亮点 | 第一次认识项目的人 |
+| [网站首页](/) | 了解项目定位、架构全景、业务截图、核心链路与技术亮点 | 第一次认识项目的人 |
 | [SHOWCASE.md](SHOWCASE.md) | 按用户链路查看截图、架构图和关键时序图 | 想快速看“项目长什么样”的人 |
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | 看 Docker、JAR、镜像重建、Nacos 配置和排错方式 | 准备部署或做演示的人 |
-| [../CONTRIBUTING.md](../CONTRIBUTING.md) | 了解贡献方式、分支约定、提交格式和自查清单 | 准备提 PR 的人 |
-| [../SECURITY.md](../SECURITY.md) | 明确敏感配置、密钥注入、账号信息的边界 | 所有会修改配置的人 |
+| [GitHub · CONTRIBUTING.md](https://github.com/mumulinya/smartLive-Cloud/blob/main/CONTRIBUTING.md) | 了解贡献方式、分支约定、提交格式和自查清单 | 准备提 PR 的人 |
+| [GitHub · SECURITY.md](https://github.com/mumulinya/smartLive-Cloud/blob/main/SECURITY.md) | 明确敏感配置、密钥注入、账号信息的边界 | 所有会修改配置的人 |
 
 ## 2. 按目标阅读更高效
 
-- **第一次认识项目**：先看 [../README.md](../README.md)，再看 `smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop -> smartLive-search`
+- **第一次认识项目**：先看 [网站首页](/)，再看 `smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop -> smartLive-search`
 - **想看交易闭环**：优先读 `smartLive-product -> smartLive-order -> smartLive-wallet -> smartLive-points`，再结合 README 里的交易链路图
 - **想看社交与推荐**：优先读 `smartLive-blog -> smartLive-interaction -> smartLive-index -> smartLive-search`，再结合 `SHOWCASE.md` 的 Feed / 热榜图
 - **想看 AI 与治理链路**：优先读 `smartLive-ai -> smartLive-audit -> smartLive-chat -> smartLive-im`，再补向量检索、审核责任链和通知推送链路
@@ -99,6 +99,16 @@
 | 定时任务 | XXL-JOB、Nacos | 依赖 `xxl-job-common.yml` |
 | 流量治理 | Sentinel、Nacos | 可按需启用 |
 
+### 6.1 按能力体验的最小依赖矩阵
+
+| 想体验的能力 | 推荐启动模块 | 最少中间件 | 说明 |
+|:---|:---|:---|:---|
+| 登录与个人中心 | `smartLive-auth`、`smartLive-gateway`、`smartLive-system`、`smartLive-user` | MySQL、Redis、Nacos | 先验证登录、用户信息、后台基础菜单是否可用 |
+| 商家后台与店铺基础能力 | 在上一条基础上加 `smartLive-shop` | MySQL、Redis、Nacos | 可体验店铺列表、详情和后台店铺管理 |
+| 搜索与附近找店 | 在上一条基础上加 `smartLive-search` | MySQL、Redis、Nacos、Elasticsearch | 热词、搜索和 LBS 找店依赖 ES |
+| 下单、支付与积分 | `smartLive-product`、`smartLive-order`、`smartLive-wallet`、`smartLive-points` | MySQL、Redis、Nacos、RabbitMQ | 订单、支付、积分变动和补偿链路都依赖 MQ |
+| AI 对话与 RAG | `smartLive-ai`、`smartLive-search`、`smartLive-shop`、`smartLive-product`、`smartLive-blog`、`smartLive-interaction` | MySQL、Redis、Nacos、RabbitMQ、Elasticsearch、Milvus、MinIO | 还需要模型 API Key、向量库和对象存储配置完整可用 |
+
 ## 7. 配置来源
 
 - 本地端口、基础应用名、部分默认连接参数位于各模块的 `bootstrap.yml`。
@@ -129,9 +139,9 @@
 | smartLive-points | 9215 |
 | smartLive-wallet | 9216 |
 | smartLive-monitor | 9100 |
-
-> 说明：监控中心的目录名是 `smartLive-monitor`，对应 Maven `artifactId` 是 `smartLive-visual-monitor`。
 | smartLive-sentinel | 8718 |
+
+> 说明：监控中心的目录名是 `smartLive-monitor`，对应 Maven `artifactId` 是 `smartLive-visual-monitor`；`smartLive-sentinel` 主要作为流量治理控制台出现在部署环境中。
 
 ## 9. 第一天建议验证什么
 

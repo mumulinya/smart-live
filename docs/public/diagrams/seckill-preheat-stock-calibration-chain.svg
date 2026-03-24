@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">秒杀预热与库存校准链路</title>
+  <desc id="desc">展示 XXL-JOB 如何在秒杀开始前把库存和详情预热到 Redis，并在后续通过库存校准任务用订单销量回刷 MySQL 与缓存，保证秒杀链路稳定运行。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1052" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">秒杀预热与库存校准链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：ProductSeckillJobHandler.seckillPreHeatJobHandler / seckillStockCheckJobHandler + RemoteOrderService.countProductSold</text>
+
+  <text class="section" x="74" y="188">1. 秒杀开始前先做 Redis 预热，挡住高峰流量</text>
+
+  <rect class="mq" x="80" y="220" width="300" height="150"/>
+  <text class="node-title" x="230" y="276" text-anchor="middle">XXL-JOB</text>
+  <text class="node-text" x="230" y="312" text-anchor="middle">seckillPreHeatJobHandler</text>
+  <text class="node-text" x="230" y="338" text-anchor="middle">每分钟扫描未来 2 小时活动</text>
+
+  <rect class="node" x="470" y="220" width="320" height="150"/>
+  <text class="node-title" x="630" y="276" text-anchor="middle">smartLive-product</text>
+  <text class="node-text" x="630" y="312" text-anchor="middle">查询 ON_SHELF + SECKILL 商品</text>
+  <text class="node-text" x="630" y="338" text-anchor="middle">beginTime 落在预热窗口内</text>
+
+  <rect class="store" x="880" y="220" width="320" height="150"/>
+  <text class="node-title" x="1040" y="276" text-anchor="middle">Redis 秒杀库存</text>
+  <text class="node-text" x="1040" y="312" text-anchor="middle">SECKILL_STOCK_KEY + productId</text>
+  <text class="node-text" x="1040" y="338" text-anchor="middle">库存提前写入，避免打 DB</text>
+
+  <rect class="store" x="1290" y="220" width="350" height="150"/>
+  <text class="node-title" x="1465" y="276" text-anchor="middle">Redis 商品详情缓存</text>
+  <text class="node-text" x="1465" y="312" text-anchor="middle">CACHE_PRODUCT_KEY + productId</text>
+  <text class="node-text" x="1465" y="338" text-anchor="middle">详情页高峰直接命中缓存</text>
+
+  <path class="line" d="M380 295 H458"/>
+  <text class="step" x="419" y="280" text-anchor="middle">1. 触发预热任务</text>
+
+  <path class="line" d="M790 295 H868"/>
+  <text class="step" x="829" y="280" text-anchor="middle">2. 写入库存 key</text>
+
+  <path class="line" d="M1200 295 H1278"/>
+  <text class="step" x="1239" y="280" text-anchor="middle">3. 预热详情缓存</text>
+
+  <text class="section" x="74" y="468">2. 秒杀进行中先吃 Redis 库存，后续再做库存校准</text>
+
+  <rect class="node" x="120" y="510" width="300" height="150"/>
+  <text class="node-title" x="270" y="566" text-anchor="middle">用户抢购请求</text>
+  <text class="node-text" x="270" y="602" text-anchor="middle">Lua 脚本原子校验库存</text>
+  <text class="node-text" x="270" y="628" text-anchor="middle">避免超卖与一人多单</text>
+
+  <rect class="store" x="510" y="510" width="320" height="150"/>
+  <text class="node-title" x="670" y="566" text-anchor="middle">Redis 实时库存</text>
+  <text class="node-text" x="670" y="602" text-anchor="middle">秒杀中持续扣减</text>
+  <text class="node-text" x="670" y="628" text-anchor="middle">支撑热点读写吞吐</text>
+
+  <rect class="mq" x="920" y="510" width="320" height="150"/>
+  <text class="node-title" x="1080" y="566" text-anchor="middle">XXL-JOB</text>
+  <text class="node-text" x="1080" y="602" text-anchor="middle">seckillStockCheckJobHandler</text>
+  <text class="node-text" x="1080" y="628" text-anchor="middle">每天凌晨按订单销量校准库存</text>
+
+  <rect class="node" x="1330" y="510" width="340" height="150"/>
+  <text class="node-title" x="1500" y="566" text-anchor="middle">RemoteOrderService.countProductSold</text>
+  <text class="node-text" x="1500" y="602" text-anchor="middle">RPC 拉取已完成订单销量</text>
+  <text class="node-text" x="1500" y="628" text-anchor="middle">作为真实库存计算基线</text>
+
+  <path class="line" d="M420 585 H498"/>
+  <text class="step" x="459" y="570" text-anchor="middle">4. 热路径先扣 Redis</text>
+
+  <path class="dash" d="M830 585 H908"/>
+  <text class="step" x="869" y="570" text-anchor="middle">5. 定时校准库存</text>
+
+  <path class="line" d="M1240 585 H1318"/>
+  <text class="step" x="1279" y="570" text-anchor="middle">6. 拉取已售数量</text>
+
+  <text class="section" x="74" y="748">3. 真实库存写回 MySQL，并刷新缓存</text>
+
+  <rect class="store" x="250" y="790" width="360" height="150"/>
+  <text class="node-title" x="430" y="846" text-anchor="middle">realStock 计算</text>
+  <text class="node-text" x="430" y="882" text-anchor="middle">realStock = stock - soldCount</text>
+  <text class="node-text" x="430" y="908" text-anchor="middle">最小值钳到 0，避免负库存</text>
+
+  <rect class="node" x="720" y="790" width="360" height="150"/>
+  <text class="node-title" x="900" y="846" text-anchor="middle">MySQL 商品表</text>
+  <text class="node-text" x="900" y="882" text-anchor="middle">update stock + sold</text>
+  <text class="node-text" x="900" y="908" text-anchor="middle">只在有差异时落库</text>
+
+  <rect class="store" x="1190" y="790" width="360" height="150"/>
+  <text class="node-title" x="1370" y="846" text-anchor="middle">缓存删除并重建</text>
+  <text class="node-text" x="1370" y="882" text-anchor="middle">delete CACHE_PRODUCT_KEY</text>
+  <text class="node-text" x="1370" y="908" text-anchor="middle">再写回最新库存 / 详情基线</text>
+
+  <path class="line" d="M1500 660 V730 H430 V778"/>
+  <text class="step" x="965" y="718" text-anchor="middle">7. 根据销量重算真实库存</text>
+
+  <path class="line" d="M610 865 H708"/>
+  <text class="step" x="659" y="850" text-anchor="middle">8. 修正数据库</text>
+
+  <path class="line" d="M1080 865 H1178"/>
+  <text class="step" x="1129" y="850" text-anchor="middle">9. 刷新缓存</text>
+
+  <rect class="note" x="70" y="960" width="500" height="120"/>
+  <text class="note-title" x="102" y="1002">这张图讲的重点</text>
+  <text class="note-text" x="102" y="1032">- 秒杀真正扛流量的是 Redis 预热，不是临时查库。</text>
+  <text class="note-text" x="102" y="1060">- 库存校准任务负责用订单事实修正 Redis / MySQL 偏差。</text>
+
+  <rect class="note" x="650" y="960" width="500" height="120"/>
+  <text class="note-title" x="682" y="1002">同组的另外两个任务</text>
+  <text class="note-text" x="682" y="1032">- seckillSoonEndJobHandler 负责临期营销提醒。</text>
+  <text class="note-text" x="682" y="1060">- seckillRecoveryJobHandler 负责结束回收、下架与缓存清理。</text>
+
+  <rect class="note" x="1230" y="960" width="500" height="120"/>
+  <text class="note-title" x="1262" y="1002">适合怎么展示</text>
+  <text class="note-text" x="1262" y="1032">- 这张图适合解释“为什么秒杀高峰不直接打数据库”。</text>
+  <text class="note-text" x="1262" y="1060">- 和秒杀抢购全链路一起看，生命周期就完整了。</text>
+</svg>

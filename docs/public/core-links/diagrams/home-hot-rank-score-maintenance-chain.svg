@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1140" viewBox="0 0 1800 1140" role="img" aria-labelledby="title desc">
+  <title id="title">首页热门面板算分与热榜维护链路</title>
+  <desc id="desc">展示热门店铺榜、抢手好券榜、本地团购榜和热门博客内容流如何通过 calcQueue、XXL-JOB 增量洗牌与凌晨全量重建持续维护。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1140" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1072" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">首页热门面板算分与热榜维护链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：HotRankJobHandler + FullRebuildJobHandler + HotRankServiceImpl + Shop / Product / BlogHotRankStrategyImpl</text>
+
+  <text class="section" x="74" y="188">1. 上架、销量和互动变化先进入 calcQueue，而不是在首页请求里现场算榜</text>
+
+  <rect class="store" x="90" y="220" width="500" height="180"/>
+  <text class="node-title" x="340" y="278" text-anchor="middle">店铺榜候选</text>
+  <text class="node-text" x="340" y="314" text-anchor="middle">审核通过、销量同步、收藏和评价变化</text>
+  <text class="node-text" x="340" y="340" text-anchor="middle">统一推进 SHOP_CALC_QUEUE_KEY</text>
+  <text class="node-text" x="340" y="366" text-anchor="middle">后续交给店铺热榜策略增量洗牌</text>
+
+  <rect class="store" x="650" y="220" width="500" height="180"/>
+  <text class="node-title" x="900" y="278" text-anchor="middle">商品双榜候选</text>
+  <text class="node-text" x="900" y="314" text-anchor="middle">商品上架、销量增长、收藏变化都会推进 calcQueue</text>
+  <text class="node-text" x="900" y="340" text-anchor="middle">按 category 继续分成热门团购 / 抢手好券两类榜单</text>
+  <text class="node-text" x="900" y="366" text-anchor="middle">同一条商品变更最终服务多个首页板块</text>
+
+  <rect class="store" x="1210" y="220" width="500" height="180"/>
+  <text class="node-title" x="1460" y="278" text-anchor="middle">博客榜候选</text>
+  <text class="node-text" x="1460" y="314" text-anchor="middle">点赞、评论、收藏同步后推进 BLOG_CALC_QUEUE_KEY</text>
+  <text class="node-text" x="1460" y="340" text-anchor="middle">首次冷启动时也会把热门博客批量补入热榜候选</text>
+  <text class="node-text" x="1460" y="366" text-anchor="middle">后续持续由增量互动触发洗牌</text>
+
+  <text class="section" x="74" y="470">2. XXL-JOB 增量洗牌：rename 临时队列，合并老榜 Top N，再按策略重算</text>
+
+  <rect class="node" x="90" y="510" width="320" height="180"/>
+  <text class="node-title" x="250" y="568" text-anchor="middle">calcQueue</text>
+  <text class="node-text" x="250" y="604" text-anchor="middle">SHOP / PRODUCT / BLOG</text>
+  <text class="node-text" x="250" y="630" text-anchor="middle">有变化的资源 ID 先写这里</text>
+  <text class="node-text" x="250" y="656" text-anchor="middle">避免热度重算打到首页读链路</text>
+
+  <rect class="node" x="500" y="510" width="320" height="180"/>
+  <text class="node-title" x="660" y="568" text-anchor="middle">HotRankJobHandler</text>
+  <text class="node-text" x="660" y="604" text-anchor="middle">shop / product / blog</text>
+  <text class="node-text" x="660" y="630" text-anchor="middle">按业务类型定时触发增量任务</text>
+  <text class="node-text" x="660" y="656" text-anchor="middle">任务里再异步交给策略执行</text>
+
+  <rect class="node" x="910" y="510" width="320" height="180"/>
+  <text class="node-title" x="1070" y="568" text-anchor="middle">HotRankServiceImpl</text>
+  <text class="node-text" x="1070" y="604" text-anchor="middle">按 bizType 找到具体策略</text>
+  <text class="node-text" x="1070" y="630" text-anchor="middle">统一调用 calculateAndRefreshRank</text>
+  <text class="node-text" x="1070" y="656" text-anchor="middle">把调度入口和算分实现拆开</text>
+
+  <rect class="decision" x="1320" y="510" width="420" height="180"/>
+  <text class="node-title" x="1530" y="568" text-anchor="middle">增量洗牌动作</text>
+  <text class="node-text" x="1530" y="604" text-anchor="middle">rename(calcQueue, TEMP) 原子切批</text>
+  <text class="node-text" x="1530" y="630" text-anchor="middle">candidateIds = 活跃 ID + 当前榜单 Top 50</text>
+  <text class="node-text" x="1530" y="656" text-anchor="middle">批量拉资源后重算分值并写回 ZSet</text>
+
+  <path class="line" d="M410 600 H488"/>
+  <text class="step" x="449" y="584" text-anchor="middle">1. 定时取批</text>
+  <path class="line" d="M820 600 H898"/>
+  <text class="step" x="859" y="584" text-anchor="middle">2. 路由策略</text>
+  <path class="line" d="M1230 600 H1308"/>
+  <text class="step" x="1269" y="584" text-anchor="middle">3. 增量洗牌</text>
+
+  <text class="section" x="74" y="762">3. 凌晨全量重建兜底，首页热门面板和热门博客只读最终榜单结果</text>
+
+  <rect class="node" x="120" y="800" width="420" height="180"/>
+  <text class="node-title" x="330" y="858" text-anchor="middle">FullRebuildJobHandler</text>
+  <text class="node-text" x="330" y="894" text-anchor="middle">凌晨分批拉全量 ID 并重建热榜</text>
+  <text class="node-text" x="330" y="920" text-anchor="middle">修正长期漂移、遗漏对象和脏数据</text>
+  <text class="node-text" x="330" y="946" text-anchor="middle">保证热榜长期稳定可信</text>
+
+  <rect class="decision" x="690" y="800" width="420" height="180"/>
+  <text class="node-title" x="900" y="858" text-anchor="middle">独立榜单结果</text>
+  <text class="node-text" x="900" y="894" text-anchor="middle">热门店铺榜</text>
+  <text class="node-text" x="900" y="920" text-anchor="middle">热门店铺榜 / 抢手好券榜 / 本地团购榜</text>
+  <text class="node-text" x="900" y="946" text-anchor="middle">热门博客榜</text>
+
+  <rect class="store" x="1260" y="800" width="450" height="180"/>
+  <text class="node-title" x="1485" y="858" text-anchor="middle">首页只负责读取和聚合</text>
+  <text class="node-text" x="1485" y="894" text-anchor="middle">首页热门面板按 tab 读取当前榜单，热门博客独立读取</text>
+  <text class="node-text" x="1485" y="920" text-anchor="middle">不在请求现场重算分值</text>
+  <text class="node-text" x="1485" y="946" text-anchor="middle">保证首页读链轻量稳定</text>
+
+  <path class="dash" d="M1530 690 V760 H330 V788"/>
+  <text class="step" x="930" y="744" text-anchor="middle">4. 凌晨全量重建做最终兜底</text>
+  <path class="dash" d="M1530 690 V740 H900 V788"/>
+  <text class="step" x="1215" y="724" text-anchor="middle">5. 独立榜单持续更新</text>
+  <path class="dash" d="M1530 690 V720 H1485 V788"/>
+  <text class="step" x="1506" y="706" text-anchor="middle">6. 首页仅读榜单</text>
+
+  <rect class="note" x="70" y="1010" width="500" height="100"/>
+  <text class="note-title" x="102" y="1052">这张图现在更统一的点</text>
+  <text class="note-text" x="102" y="1082">- 把“候选进入 calcQueue -> XXL 增量洗牌 -> 凌晨重建 -> 首页读取”压成三段，和其他展示图同节奏。</text>
+
+  <rect class="note" x="650" y="1010" width="500" height="100"/>
+  <text class="note-title" x="682" y="1052">适合怎么讲</text>
+  <text class="note-text" x="682" y="1082">- 首页不是一个推荐池，而是热门面板与热门博客背后各自维护独立热榜。</text>
+
+  <rect class="note" x="1230" y="1010" width="500" height="100"/>
+  <text class="note-title" x="1262" y="1052">和详细版的关系</text>
+  <text class="note-text" x="1262" y="1082">- 展示版只讲主链路；想看 rename TEMP、Top N merge 和策略公式，再点详细版。</text>
+</svg>

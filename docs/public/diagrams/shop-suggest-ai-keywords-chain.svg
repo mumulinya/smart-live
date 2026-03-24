@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">店铺经营建议与 AI 差评关键词链路</title>
+  <desc id="desc">展示商家拉取经营建议时，系统聚合差评、复购率、订单建议，并调用 AI 提炼差评关键词后返回建议视图的主链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1052" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">店铺经营建议与 AI 差评关键词链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：ShopSuggestServiceImpl.buildShopSuggest / extractKeywords + remoteAiMerchantService.extractKeywords</text>
+
+  <text class="section" x="74" y="188">1. 商家请求经营建议时，先聚合多份经营信号</text>
+
+  <rect class="node" x="70" y="220" width="290" height="150"/>
+  <text class="node-title" x="215" y="274" text-anchor="middle">商家端经营建议页</text>
+  <text class="node-text" x="215" y="308" text-anchor="middle">请求 ShopSuggestService</text>
+  <text class="node-text" x="215" y="334" text-anchor="middle">希望知道店铺该怎么优化</text>
+
+  <rect class="node" x="450" y="220" width="310" height="150"/>
+  <text class="node-title" x="605" y="274" text-anchor="middle">ShopSuggestService</text>
+  <text class="node-text" x="605" y="308" text-anchor="middle">buildShopSuggest 组装建议视图</text>
+  <text class="node-text" x="605" y="334" text-anchor="middle">聚合多维经营指标</text>
+
+  <rect class="store" x="850" y="220" width="280" height="150"/>
+  <text class="node-title" x="990" y="274" text-anchor="middle">差评摘要</text>
+  <text class="node-text" x="990" y="308" text-anchor="middle">reviewService 提供低分评价</text>
+  <text class="node-text" x="990" y="334" text-anchor="middle">后续用于问题提炼</text>
+
+  <rect class="store" x="1220" y="220" width="260" height="150"/>
+  <text class="node-title" x="1350" y="274" text-anchor="middle">复购率 / 订单建议</text>
+  <text class="node-text" x="1350" y="308" text-anchor="middle">远程订单服务提供</text>
+  <text class="node-text" x="1350" y="334" text-anchor="middle">经营表现基础指标</text>
+
+  <path class="line" d="M360 295 H438"/>
+  <text class="step" x="399" y="280" text-anchor="middle">1. 拉取经营建议</text>
+
+  <path class="line" d="M760 295 H838"/>
+  <text class="step" x="799" y="280" text-anchor="middle">2. 获取差评语料</text>
+
+  <path class="line" d="M760 345 H1208"/>
+  <text class="step" x="984" y="392" text-anchor="middle">3. 同时拉复购率与订单建议</text>
+
+  <text class="section" x="74" y="470">2. 差评文本交给 AI 提炼关键词，再回填建议视图</text>
+
+  <rect class="decision" x="180" y="520" width="320" height="170"/>
+  <text class="node-title" x="340" y="576" text-anchor="middle">差评内容预处理</text>
+  <text class="node-text" x="340" y="612" text-anchor="middle">裁剪、去空、去重</text>
+  <text class="node-text" x="340" y="638" text-anchor="middle">只保留有代表性的差评文本</text>
+
+  <rect class="node" x="600" y="520" width="320" height="170"/>
+  <text class="node-title" x="760" y="576" text-anchor="middle">AI Merchant Service</text>
+  <text class="node-text" x="760" y="612" text-anchor="middle">extractKeywords(contents)</text>
+  <text class="node-text" x="760" y="638" text-anchor="middle">提炼影响体验的高频问题</text>
+
+  <rect class="store" x="1020" y="520" width="320" height="170"/>
+  <text class="node-title" x="1180" y="576" text-anchor="middle">关键词清洗</text>
+  <text class="node-text" x="1180" y="612" text-anchor="middle">trim / dedupe / limit 5</text>
+  <text class="node-text" x="1180" y="638" text-anchor="middle">过滤无意义或重复词</text>
+
+  <rect class="store" x="1440" y="520" width="280" height="170"/>
+  <text class="node-title" x="1580" y="576" text-anchor="middle">ShopSuggestVO</text>
+  <text class="node-text" x="1580" y="612" text-anchor="middle">差评关键词 + 经营建议</text>
+  <text class="node-text" x="1580" y="638" text-anchor="middle">一起返回商家端</text>
+
+  <path class="line" d="M990 370 V450 H340 V508"/>
+  <text class="step" x="700" y="434" text-anchor="middle">4. 差评语料进入 AI 提炼前先做清洗</text>
+
+  <path class="line" d="M500 605 H588"/>
+  <text class="step" x="544" y="590" text-anchor="middle">5. 调 AI 提炼问题关键词</text>
+
+  <path class="line" d="M920 605 H1008"/>
+  <text class="step" x="964" y="590" text-anchor="middle">6. 过滤并保留 Top 关键词</text>
+
+  <path class="line" d="M1340 605 H1428"/>
+  <text class="step" x="1384" y="590" text-anchor="middle">7. 合成建议视图</text>
+
+  <text class="section" x="74" y="800">3. 返回的不是 AI 原文，而是结构化经营建议</text>
+
+  <rect class="note" x="100" y="840" width="480" height="180"/>
+  <text class="note-title" x="132" y="884">这张图的核心价值</text>
+  <text class="note-text" x="132" y="918">- 不是单纯接个大模型，而是把 AI 放进“商家经营建议”这个具体业务场景里。</text>
+  <text class="note-text" x="132" y="946">- 差评文本先聚合，再提炼关键词，最终产出的是结构化经营信号。</text>
+  <text class="note-text" x="132" y="974">- 这条链路很适合放在商家 AI 能力亮点里。</text>
+
+  <rect class="note" x="660" y="840" width="480" height="180"/>
+  <text class="note-title" x="692" y="884">代码里对应的细节</text>
+  <text class="note-text" x="692" y="918">- buildShopSuggest 会同时拿 reviewSuggest、repurchaseRate 和 orderSuggest。</text>
+  <text class="note-text" x="692" y="946">- extractKeywords 会对 AI 返回做 trim、去重，并限制最多 5 个关键词。</text>
+  <text class="note-text" x="692" y="974">- 这能防止模型输出太发散，结果更适合直接给商家看。</text>
+
+  <rect class="note" x="1220" y="840" width="510" height="180"/>
+  <text class="note-title" x="1252" y="884">适合怎么展示</text>
+  <text class="note-text" x="1252" y="918">- 可和“店铺经营分析聚合”连着看，一张偏聚合，一张偏 AI 辅助洞察。</text>
+  <text class="note-text" x="1252" y="946">- 面试里可以重点讲“AI 输出被结构化约束，而不是直接裸返回”。</text>
+  <text class="note-text" x="1252" y="974">- 这会比泛泛说“接入大模型”更有说服力。</text>
+</svg>

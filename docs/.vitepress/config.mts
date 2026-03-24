@@ -13,39 +13,52 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
-      { text: '🎯 快速入门', link: '/OPEN_SOURCE' },
-      { text: '👁️ 视觉导览', link: '/SHOWCASE' },
-      { text: '🔥 核心链路', link: '/core-links/秒杀抢购全链路详解' },
-      { text: '源码仓库', link: 'https://github.com/mumulinya/smartLive-Cloud' }
+      { text: '开源接入', link: '/OPEN_SOURCE' },
+      { text: '页面导览', link: '/PAGE_GALLERY' },
+      { text: '视觉导览', link: '/SHOWCASE' },
+      { text: '核心链路', link: '/core-links/' },
+      { text: 'FAQ', link: '/site-pages/FAQ' }
     ],
 
     sidebar: [
       {
-        text: '💡 项目概览',
+        text: '💡 项目概览与导览',
         items: [
-          { text: '开源启动与接入', link: '/OPEN_SOURCE' },
-          { text: '项目全貌与答辩说明', link: '/PROJECT_OVERVIEW' },
+          { text: '系统架构与项目规模', link: '/site-pages/SYSTEM_ARCHITECTURE' },
+          { text: '项目级能力亮点', link: '/site-pages/CORE_HIGHLIGHTS' },
           { text: '页面效果图导览', link: '/PAGE_GALLERY' },
-          { text: '业务链路视觉走查', link: '/SHOWCASE' }
+          { text: '业务链路视觉走查', link: '/SHOWCASE' },
+          { text: '开源启动与接入', link: '/OPEN_SOURCE' }
         ]
       },
       {
-        text: '🔥 核心链路深度解析',
+        text: '🎤 面试拆解与答辩',
+        items: [
+          { text: '项目全貌与答辩说明', link: '/PROJECT_OVERVIEW' },
+          { text: '我的核心设计与实现', link: '/site-pages/CONTRIBUTIONS' },
+          { text: '技术选型理由', link: '/site-pages/TECH_SELECTION' },
+          { text: '难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
+          { text: '常见问题 FAQ', link: '/site-pages/FAQ' }
+        ]
+      },
+      {
+        text: '🔥 核心链路与实现',
         collapsed: false,
         items: [
+          { text: '核心链路总览', link: '/core-links/' },
+          { text: '订单支付与退款补偿链路', link: '/core-links/2. 下单_统一支付_退款补偿链路' },
           { text: '秒杀抢购全链路', link: '/core-links/秒杀抢购全链路详解' },
-          { text: 'Redis 分层缓存架构', link: '/core-links/Redis分层缓存链路详解' },
-          { text: '订单、支付与退款补偿', link: '/core-links/2. 下单_统一支付_退款补偿链路' },
-          { text: 'RabbitMQ 消息可靠机制', link: '/core-links/RabbitMQ消息可靠性全链路详解' },
-          { text: 'Feed 推送与互动同步', link: '/core-links/4. Feed 推送与滚动读取 + 互动双轨同步链路' },
-          { text: '多维审核链与搜索双写', link: '/core-links/5. 审核中心责任链 + 发布审核与搜索 向量同步链路' },
-          { text: 'LBS 搜索与热词排行', link: '/core-links/6. 搜索读链路 + 热词沉淀链路' },
-          { text: '大盘热榜洗牌与重建', link: '/core-links/7. 热榜增量洗牌与全量重建链路' },
-          { text: 'AI路由策略与 RAG生成', link: '/core-links/8. AI Agent策略路由与RAG多维增强生成链路' }
+          { text: 'Redis 分层缓存链路', link: '/core-links/Redis分层缓存链路详解' },
+          { text: 'RabbitMQ 消息可靠链路', link: '/core-links/RabbitMQ消息可靠性全链路详解' },
+          { text: 'Feed 推送与互动同步链路', link: '/core-links/4. Feed 推送与滚动读取 + 互动双轨同步链路' },
+          { text: '审核责任链与搜索双写', link: '/core-links/5. 审核中心责任链 + 发布审核与搜索 向量同步链路' },
+          { text: 'LBS 搜索与热词链路', link: '/core-links/6. 搜索读链路 + 热词沉淀链路' },
+          { text: '热榜洗牌与全量重建链路', link: '/core-links/7. 热榜增量洗牌与全量重建链路' },
+          { text: 'AI 路由策略与 RAG 生成', link: '/core-links/8. AI Agent策略路由与RAG多维增强生成链路' }
         ]
       },
       {
-        text: '👨‍💻 项目驱动学习复盘',
+        text: '👨‍💻 项目复盘与学习',
         items: [
           { text: '项目驱动学习复盘指南', link: '/core-links/SmartLive_Java_Internship_Review_Plan_Updated' }
         ]
@@ -57,7 +70,7 @@ export default defineConfig({
     ],
 
     outline: {
-      level: [2, 3],
+      level: [2, 4],
       label: '本页大纲'
     },
 

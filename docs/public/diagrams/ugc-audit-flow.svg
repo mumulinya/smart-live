@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>UGC 异步审核与结果回写链路</title>
+  <desc id='desc'>展示博客、店铺、商品、评论、评价等内容提交后进入统一审核中心，再由责任链与策略工厂回写业务状态的流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>UGC 异步审核与结果回写链路</text>
+  <text class='subtitle' x='74' y='132'>对应代码：BlogServiceImpl.sendAuditMessage + AuditListener.handleAuditCreate + AuditServiceImpl.handleAudit / auditAction</text>
+  <text class='section' x='74' y='188'>1. 提交内容并创建审核任务</text>
+  <rect class='node' x='70' y='220' width='270' height='140'/>
+  <text class='node-title' x='205' y='270' text-anchor='middle'>用户 / 商家提交</text>
+  <text class='node-text' x='205' y='304' text-anchor='middle'>博客 / 店铺 / 商品</text>
+  <text class='node-text' x='205' y='328' text-anchor='middle'>评论 / 评价 / 用户资料</text>
+  <rect class='node' x='410' y='220' width='280' height='140'/>
+  <text class='node-title' x='550' y='270' text-anchor='middle'>源业务服务</text>
+  <text class='node-text' x='550' y='304' text-anchor='middle'>sendAuditMessage</text>
+  <text class='node-text' x='550' y='328' text-anchor='middle'>先写待审状态</text>
+  <rect class='gateway' x='760' y='220' width='250' height='140'/>
+  <text class='node-title' x='885' y='270' text-anchor='middle'>Audit MQ</text>
+  <text class='node-text' x='885' y='304' text-anchor='middle'>AUDIT_DIRECT_EXCHANGE</text>
+  <text class='node-text' x='885' y='328' text-anchor='middle'>异步解耦</text>
+  <rect class='node' x='1080' y='220' width='270' height='140'/>
+  <text class='node-title' x='1215' y='270' text-anchor='middle'>AuditListener</text>
+  <text class='node-text' x='1215' y='304' text-anchor='middle'>messageId 幂等</text>
+  <text class='node-text' x='1215' y='328' text-anchor='middle'>handleAuditCreate</text>
+  <rect class='store' x='1420' y='220' width='310' height='140'/>
+  <text class='node-title' x='1575' y='270' text-anchor='middle'>AuditTask</text>
+  <text class='node-text' x='1575' y='304' text-anchor='middle'>落 audit_task</text>
+  <text class='node-text' x='1575' y='328' text-anchor='middle'>全链路可追踪</text>
+  <path class='line' d='M340 290 H398'/>
+  <text class='step' x='369' y='194' text-anchor='middle'>1. 发布内容</text>
+  <text class='step' x='369' y='214' text-anchor='middle'>进入待审状态</text>
+  <path class='line' d='M690 290 H748'/>
+  <text class='step' x='719' y='194' text-anchor='middle'>2. 投递审核消息</text>
+  <text class='step' x='719' y='214' text-anchor='middle'>不阻塞主流程</text>
+  <path class='line' d='M1010 290 H1068'/>
+  <text class='step' x='1039' y='194' text-anchor='middle'>3. 幂等消费</text>
+  <text class='step' x='1039' y='214' text-anchor='middle'>防止重复审核</text>
+  <path class='line' d='M1350 290 H1408'/>
+  <text class='step' x='1379' y='194' text-anchor='middle'>4. 创建任务</text>
+  <text class='step' x='1379' y='214' text-anchor='middle'>保留审核上下文</text>
+  <text class='section' x='74' y='468'>2. 责任链审核与结果回写</text>
+  <rect class='node' x='90' y='500' width='330' height='140'/>
+  <text class='node-title' x='255' y='550' text-anchor='middle'>AuditProcessChain</text>
+  <text class='node-text' x='255' y='584' text-anchor='middle'>规则 / DFA</text>
+  <text class='node-text' x='255' y='608' text-anchor='middle'>AI 审核</text>
+  <rect class='gateway' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>AuditStrategyFactory</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>按 bizType 路由</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>Shop / Blog / Product...</text>
+  <rect class='store' x='900' y='500' width='320' height='140'/>
+  <text class='node-title' x='1060' y='550' text-anchor='middle'>源业务回写</text>
+  <text class='node-text' x='1060' y='584' text-anchor='middle'>auditStatus / rejectReason</text>
+  <text class='node-text' x='1060' y='608' text-anchor='middle'>更新缓存和索引</text>
+  <rect class='node' x='1300' y='500' width='360' height='140'/>
+  <text class='node-title' x='1480' y='550' text-anchor='middle'>系统通知</text>
+  <text class='node-text' x='1480' y='584' text-anchor='middle'>驳回原因入站内信</text>
+  <text class='node-text' x='1480' y='608' text-anchor='middle'>人工继续处理</text>
+  <path class='line' d='M420 570 H488'/>
+  <text class='step' x='454' y='474' text-anchor='middle'>5. 自动判定</text>
+  <text class='step' x='454' y='494' text-anchor='middle'>PASS / REJECT / WAIT</text>
+  <path class='line' d='M820 570 H888'/>
+  <text class='step' x='854' y='474' text-anchor='middle'>6. 回调目标服务</text>
+  <text class='step' x='854' y='494' text-anchor='middle'>更新业务状态</text>
+  <path class='line' d='M1220 570 H1288'/>
+  <text class='step' x='1254' y='474' text-anchor='middle'>7. 驳回时通知</text>
+  <text class='step' x='1254' y='494' text-anchor='middle'>用户或商家</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- 审核中心不是单个接口，而是一条可追踪的异步流水线。</text>
+  <text class='note-text' x='102' y='836'>- 不同业务共用同一个审核入口，但回写策略彼此隔离。</text>
+  <text class='note-text' x='102' y='866'>- 自动审核失败或异常时，会转人工而不是直接丢弃。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- AuditServiceImpl 先建任务，再跑责任链，保证任何结果都有审计记录。</text>
+  <text class='note-text' x='682' y='836'>- AuditStrategyFactory 把 6 类以上业务的回写逻辑拆开了。</text>
+  <text class='note-text' x='682' y='866'>- 驳回通知通过 Chat 模块异步发送，避免 audit 直接依赖前端连接。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图适合放在“审核系统”或“企业级治理”部分。</text>
+  <text class='note-text' x='1262' y='836'>- 和发布页、评论区截图搭配看，业务感会更强。</text>
+  <text class='note-text' x='1262' y='866'>- 如果首页只放一张审核图，优先放这一张更通用。</text>
+</svg>

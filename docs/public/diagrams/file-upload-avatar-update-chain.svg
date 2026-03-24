@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1000" viewBox="0 0 1800 1000" role="img" aria-labelledby="title desc">
+  <title id="title">头像上传与文件替换链路</title>
+  <desc id="desc">展示用户头像上传经过 system 模块、file 模块、MinIO 存储并刷新登录缓存的流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f2f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .cache { fill: #fff5eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1000" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="932" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">头像上传与文件替换链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：SysProfileController.avatar + MinioSysFileServiceImpl.uploadFile / deleteFile</text>
+
+  <text class="section" x="74" y="188">上传与替换主链路</text>
+
+  <rect class="node" x="70" y="220" width="240" height="140"/>
+  <text class="node-title" x="190" y="270" text-anchor="middle">用户 / 后台</text>
+  <text class="node-text" x="190" y="304" text-anchor="middle">上传 avatarfile</text>
+
+  <rect class="node" x="390" y="220" width="330" height="140"/>
+  <text class="node-title" x="555" y="270" text-anchor="middle">smartLive-system</text>
+  <text class="node-text" x="555" y="304" text-anchor="middle">SysProfileController</text>
+  <text class="node-text" x="555" y="328" text-anchor="middle">校验扩展名与头像参数</text>
+
+  <rect class="node" x="800" y="220" width="270" height="140"/>
+  <text class="node-title" x="935" y="270" text-anchor="middle">smartLive-file</text>
+  <text class="node-text" x="935" y="304" text-anchor="middle">remoteFileService.upload</text>
+
+  <rect class="store" x="1150" y="220" width="240" height="140"/>
+  <text class="node-title" x="1270" y="270" text-anchor="middle">MinIO</text>
+  <text class="node-text" x="1270" y="304" text-anchor="middle">putObject</text>
+  <text class="node-text" x="1270" y="328" text-anchor="middle">removeObject</text>
+
+  <rect class="cache" x="1470" y="220" width="260" height="140"/>
+  <text class="node-title" x="1600" y="270" text-anchor="middle">用户信息与登录缓存</text>
+  <text class="node-text" x="1600" y="304" text-anchor="middle">更新头像 URL</text>
+  <text class="node-text" x="1600" y="328" text-anchor="middle">刷新 tokenService</text>
+
+  <path class="line" d="M310 290 H378"/>
+  <text class="step" x="344" y="194" text-anchor="middle">1. 调用</text>
+  <text class="step" x="344" y="214" text-anchor="middle">/profile/avatar</text>
+
+  <path class="line" d="M720 290 H788"/>
+  <text class="step" x="754" y="194" text-anchor="middle">2. 远程调用</text>
+  <text class="step" x="754" y="214" text-anchor="middle">文件服务</text>
+
+  <path class="line" d="M1070 290 H1138"/>
+  <text class="step" x="1104" y="194" text-anchor="middle">3. 上传</text>
+  <text class="step" x="1104" y="214" text-anchor="middle">文件流</text>
+
+  <path class="line" d="M1390 290 H1458"/>
+  <text class="step" x="1424" y="194" text-anchor="middle">4. URL 回写</text>
+  <text class="step" x="1424" y="214" text-anchor="middle">用户头像</text>
+
+  <path class="dash" d="M555 360 V430 H1270 V372"/>
+  <text class="step" x="912" y="414" text-anchor="middle">5. 如果存在旧头像，则 delete(oldAvatarUrl)</text>
+
+  <path class="dash" d="M1600 360 V438"/>
+  <text class="step" x="1600" y="462" text-anchor="middle">6. tokenService.setLoginUser 刷新缓存头像</text>
+
+  <rect class="note" x="70" y="680" width="500" height="220"/>
+  <text class="note-title" x="102" y="726">文件服务到底做了什么</text>
+  <text class="note-text" x="102" y="766">- MinioSysFileServiceImpl 会先生成文件名，再调用 putObject 上传对象。</text>
+  <text class="note-text" x="102" y="796">- 返回值由 minioUrl / bucket / fileName 拼接，可被前端直接访问。</text>
+  <text class="note-text" x="102" y="826">- 删除旧头像时，会从 URL 中截出对象名，再调用 removeObject。</text>
+
+  <rect class="note" x="650" y="680" width="500" height="220"/>
+  <text class="note-title" x="682" y="726">这张图解决什么阅读问题</text>
+  <text class="note-text" x="682" y="766">- 上传不是直接落本地，而是经过独立 file 微服务再落对象存储。</text>
+  <text class="note-text" x="682" y="796">- 头像替换不只是改数据库，还会删旧文件并刷新登录态缓存。</text>
+  <text class="note-text" x="682" y="826">- 对排查头像不刷新、文件残留问题很有帮助。</text>
+
+  <rect class="note" x="1230" y="680" width="500" height="220"/>
+  <text class="note-title" x="1262" y="726">适合配合哪些截图一起看</text>
+  <text class="note-text" x="1262" y="766">- 个人中心、登录页、后台用户头像修改这几类截图最适合一起展示。</text>
+  <text class="note-text" x="1262" y="796">- 如果后续补部署文档，这张图也能顺带说明为什么必须把 MinIO 配好。</text>
+  <text class="note-text" x="1262" y="826">- 这是典型的“业务服务 + 文件服务 + 对象存储”协作样例。</text>
+</svg>

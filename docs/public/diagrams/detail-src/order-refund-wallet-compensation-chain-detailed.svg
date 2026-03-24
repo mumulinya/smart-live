@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1460" viewBox="0 0 2200 1460" role="img" aria-labelledby="title desc">
+  <title id="title">主动取消 / 退款与钱包补偿链路（详细版）</title>
+  <desc id="desc">展示主动 cancel 与 refund 请求如何依据 oldStatus 分流库存回滚、销量回滚、退款消息及钱包入账流水。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .money { stroke: #2d8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .warn { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2200" height="1460" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2144" height="1404" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">主动取消 / 退款与钱包补偿链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：OrderServiceImpl.cancel / refund / sendRefundMessage + WalletRefundListener.handleOrderRefund + WalletServiceImpl.refundOrder</text>
+
+  <text class="section" x="70" y="182">1. 主动 cancel 与 refund 先在订单模块完成状态流转</text>
+
+  <rect class="node" x="70" y="220" width="280" height="160"/>
+  <text class="node-title" x="210" y="278" text-anchor="middle">用户端 / 管理端</text>
+  <text class="node-text" x="210" y="314" text-anchor="middle">主动取消订单</text>
+  <text class="node-text" x="210" y="340" text-anchor="middle">或发起 refund</text>
+
+  <rect class="node" x="430" y="220" width="320" height="160"/>
+  <text class="node-title" x="590" y="278" text-anchor="middle">OrderController</text>
+  <text class="node-text" x="590" y="314" text-anchor="middle">/cancel 或 /refund</text>
+  <text class="node-text" x="590" y="340" text-anchor="middle">把 id 交给订单服务</text>
+
+  <rect class="node" x="830" y="220" width="380" height="160"/>
+  <text class="node-title" x="1020" y="278" text-anchor="middle">OrderServiceImpl.cancel / refund</text>
+  <text class="node-text" x="1020" y="314" text-anchor="middle">先查询订单并读取 oldStatus</text>
+  <text class="node-text" x="1020" y="340" text-anchor="middle">cancel=改 CANCELLED；refund=改 REFUNDED 并写 refundTime</text>
+
+  <rect class="decision" x="1290" y="220" width="320" height="160"/>
+  <text class="node-title" x="1450" y="278" text-anchor="middle">oldStatus 分流判断</text>
+  <text class="node-text" x="1450" y="314" text-anchor="middle">UNPAID：只回滚库存</text>
+  <text class="node-text" x="1450" y="340" text-anchor="middle">PAID / VERIFIED：库存 + 销量 + 资金</text>
+
+  <rect class="note" x="1690" y="220" width="420" height="160"/>
+  <text class="note-title" x="1722" y="278">这张图刻意不包含什么</text>
+  <text class="note-text" x="1722" y="312">- 不再混入 ORDER_DELAY_EXCHANGE。</text>
+  <text class="note-text" x="1722" y="338">- 不再混入 orderExpireJobHandler。</text>
+  <text class="note-text" x="1722" y="364">- 只讲“主动取消 / 主动退款”的补偿动作。</text>
+
+  <path class="line" d="M350 300 H418"/>
+  <text class="step" x="384" y="284" text-anchor="middle">1. 主动发起请求</text>
+  <path class="line" d="M750 300 H818"/>
+  <text class="step" x="784" y="284" text-anchor="middle">2. 进入订单服务</text>
+  <path class="line" d="M1210 300 H1278"/>
+  <text class="step" x="1244" y="284" text-anchor="middle">3. 读取 oldStatus</text>
+
+  <text class="section" x="70" y="450">2. UNPAID、PAID、VERIFIED 三种场景走不同补偿深度</text>
+
+  <rect class="store" x="70" y="500" width="560" height="190"/>
+  <text class="node-title" x="350" y="560" text-anchor="middle">场景 A：oldStatus = UNPAID</text>
+  <text class="node-text" x="350" y="596" text-anchor="middle">cancel 后直接走 remoteProductService.recoverStock</text>
+  <text class="node-text" x="350" y="622" text-anchor="middle">activityType==1 且商品仍在上架时恢复库存</text>
+  <text class="node-text" x="350" y="648" text-anchor="middle">不会 decrementSales，也不会 sendRefundMessage</text>
+
+  <rect class="store" x="700" y="500" width="560" height="190"/>
+  <text class="node-title" x="980" y="560" text-anchor="middle">场景 B：oldStatus = PAID</text>
+  <text class="node-text" x="980" y="596" text-anchor="middle">cancel / refund 后恢复库存</text>
+  <text class="node-text" x="980" y="622" text-anchor="middle">decrementSales(order, false) 回滚商品销量</text>
+  <text class="node-text" x="980" y="648" text-anchor="middle">sendRefundMessage(order) 进入钱包退款链</text>
+
+  <rect class="store" x="1330" y="500" width="560" height="190"/>
+  <text class="node-title" x="1610" y="560" text-anchor="middle">场景 C：oldStatus = VERIFIED</text>
+  <text class="node-text" x="1610" y="596" text-anchor="middle">refund 会写 refundTime，再恢复库存</text>
+  <text class="node-text" x="1610" y="622" text-anchor="middle">decrementSales(order, true) 带 wasVerified 标记回滚销量</text>
+  <text class="node-text" x="1610" y="648" text-anchor="middle">同样通过退款 MQ 恢复钱包余额</text>
+
+  <path class="dash" d="M1450 380 V455 H350 V488"/>
+  <text class="step" x="900" y="438" text-anchor="middle">4. UNPAID 只做库存补偿</text>
+  <path class="dash" d="M1450 380 V435 H980 V488"/>
+  <text class="step" x="1215" y="424" text-anchor="middle">5. PAID 做库存 + 销量 + 退款消息</text>
+  <path class="dash" d="M1450 380 V455 H1610 V488"/>
+  <text class="step" x="1610" y="438" text-anchor="middle">6. VERIFIED 额外带 wasVerified</text>
+
+  <text class="section" x="70" y="772">3. 资金补偿统一走退款 MQ 与钱包流水</text>
+
+  <rect class="mq" x="240" y="820" width="340" height="180"/>
+  <text class="node-title" x="410" y="880" text-anchor="middle">sendRefundMessage</text>
+  <text class="node-text" x="410" y="916" text-anchor="middle">构造 OrderRefundMessage</text>
+  <text class="node-text" x="410" y="942" text-anchor="middle">orderId / userId / amount / payType</text>
+  <text class="node-text" x="410" y="968" text-anchor="middle">发往 ORDER_REFUND_EXCHANGE</text>
+
+  <rect class="node" x="680" y="820" width="360" height="180"/>
+  <text class="node-title" x="860" y="880" text-anchor="middle">WalletRefundListener.handleOrderRefund</text>
+  <text class="node-text" x="860" y="916" text-anchor="middle">消费退款消息并做 MQ 幂等</text>
+  <text class="node-text" x="860" y="942" text-anchor="middle">重复消息直接 ACK</text>
+  <text class="node-text" x="860" y="968" text-anchor="middle">首次消费才进入钱包补偿</text>
+
+  <rect class="store" x="1140" y="820" width="340" height="180"/>
+  <text class="node-title" x="1310" y="880" text-anchor="middle">WalletServiceImpl.refundOrder</text>
+  <text class="node-text" x="1310" y="916" text-anchor="middle">wallet.addBalance(userId, refundAmount)</text>
+  <text class="node-text" x="1310" y="942" text-anchor="middle">钱包余额回补给用户</text>
+  <text class="node-text" x="1310" y="968" text-anchor="middle">payType 保留给动账记录使用</text>
+
+  <rect class="store" x="1580" y="820" width="340" height="180"/>
+  <text class="node-title" x="1750" y="880" text-anchor="middle">WalletTransaction</text>
+  <text class="node-text" x="1750" y="916" text-anchor="middle">插入 refund 类型流水</text>
+  <text class="node-text" x="1750" y="942" text-anchor="middle">保存 orderId / amount / afterBalance</text>
+  <text class="node-text" x="1750" y="968" text-anchor="middle">形成审计与对账依据</text>
+
+  <path class="money" d="M980 690 V760 H410 V808"/>
+  <text class="step" x="695" y="744" text-anchor="middle">7. 已支付或已核销场景才发送退款消息</text>
+  <path class="money" d="M580 910 H668"/>
+  <text class="step" x="624" y="894" text-anchor="middle">8. 钱包消费者入场</text>
+  <path class="money" d="M1040 910 H1128"/>
+  <text class="step" x="1084" y="894" text-anchor="middle">9. 余额回补</text>
+  <path class="money" d="M1480 910 H1568"/>
+  <text class="step" x="1524" y="894" text-anchor="middle">10. 写退款流水</text>
+
+  <text class="section" x="70" y="1098">4. 这张详细图比展示版多补了哪些判断</text>
+
+  <rect class="note" x="70" y="1136" width="660" height="210"/>
+  <text class="note-title" x="102" y="1180">补充 A：cancel 和 refund 的差异</text>
+  <text class="note-text" x="102" y="1212">- cancel 直接把状态改成 CANCELLED。</text>
+  <text class="note-text" x="102" y="1240">- refund 先写 refundTime，再改成 REFUNDED。</text>
+  <text class="note-text" x="102" y="1268">- 两者都会依据 oldStatus 判断是否需要销量回滚和钱包退款。</text>
+  <text class="note-text" x="102" y="1296">- VERIFIED 退款会额外带 wasVerified 标记，确保销量回滚口径正确。</text>
+
+  <rect class="note" x="770" y="1136" width="660" height="210"/>
+  <text class="note-title" x="802" y="1180">补充 B：为什么 UNPAID 不做资金补偿</text>
+  <text class="note-text" x="802" y="1212">- cancel / refund 内部都显式判断 oldStatus &gt;= PAID 才 sendRefundMessage。</text>
+  <text class="note-text" x="802" y="1240">- 所以主动取消未支付订单，本质上只是“释放资源”，不是“退款”。</text>
+  <text class="note-text" x="802" y="1268">- 这也是它和上一张“超时未支付取消”可以共用 cancel 但不共用退款链的原因。</text>
+
+  <rect class="note" x="1470" y="1136" width="660" height="210"/>
+  <text class="note-title" x="1502" y="1180">代码锚点</text>
+  <text class="note-text" x="1502" y="1212">- cancel：oldStatus &gt;= PAID 时 decrementSales(false) + sendRefundMessage。</text>
+  <text class="note-text" x="1502" y="1240">- refund：oldStatus == VERIFIED 时 decrementSales(true)。</text>
+  <text class="note-text" x="1502" y="1268">- sendRefundMessage 只发一条统一退款消息，钱包模块完成余额恢复与流水落库。</text>
+  <text class="note-text" x="1502" y="1296">- activityType==1 且商品上架时，cancel / refund 都会先 recoverStock。</text>
+</svg>

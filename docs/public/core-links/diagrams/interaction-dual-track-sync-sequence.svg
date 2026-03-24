@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>互动数据回刷与双轨同步链路</title>
+  <desc id='desc'>展示点赞、收藏、评论、关注等互动先落 Redis 热路径，再由 InteractionSyncXxlJob 异步回刷 MySQL，并联动 ES 与热榜重算的双轨流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>互动数据回刷与双轨同步链路</text>
+  <text class='subtitle' x='74' y='132'>对应代码：InteractionSyncXxlJob + SyncDataServiceImpl + AbstractInteractionStrategy + EsSyncListener.handleUserResourceInsert</text>
+  <text class='section' x='74' y='188'>1. 互动写路径先走 Redis 热路径</text>
+  <rect class='node' x='70' y='220' width='270' height='140'/>
+  <text class='node-title' x='205' y='270' text-anchor='middle'>点赞 / 收藏 / 评论 / 关注</text>
+  <text class='node-text' x='205' y='304' text-anchor='middle'>高频用户动作</text>
+  <text class='node-text' x='205' y='328' text-anchor='middle'>写入量远高于读库</text>
+  <rect class='node' x='410' y='220' width='280' height='140'/>
+  <text class='node-title' x='550' y='270' text-anchor='middle'>StrategyFactory</text>
+  <text class='node-text' x='550' y='304' text-anchor='middle'>Like / Star / Comment...</text>
+  <text class='node-text' x='550' y='328' text-anchor='middle'>按业务类型路由</text>
+  <rect class='gateway' x='760' y='220' width='280' height='140'/>
+  <text class='node-title' x='900' y='270' text-anchor='middle'>AbstractInteractionStrategy</text>
+  <text class='node-text' x='900' y='304' text-anchor='middle'>统一 5 步流程</text>
+  <text class='node-text' x='900' y='328' text-anchor='middle'>复用同步模板</text>
+  <rect class='store' x='1110' y='220' width='280' height='140'/>
+  <text class='node-title' x='1250' y='270' text-anchor='middle'>Redis 计数 / 脏标记</text>
+  <text class='node-text' x='1250' y='304' text-anchor='middle'>countKey + dirtyKey</text>
+  <text class='node-text' x='1250' y='328' text-anchor='middle'>先保证热路径吞吐</text>
+  <rect class='gateway' x='1460' y='220' width='250' height='140'/>
+  <text class='node-title' x='1585' y='270' text-anchor='middle'>MQ 同步消息</text>
+  <text class='node-text' x='1585' y='304' text-anchor='middle'>user_resource / ES</text>
+  <text class='node-text' x='1585' y='328' text-anchor='middle'>并驱动热榜</text>
+  <path class='line' d='M340 290 H398'/>
+  <text class='step' x='369' y='194' text-anchor='middle'>1. 进入策略路由</text>
+  <text class='step' x='369' y='214' text-anchor='middle'>不同业务共用骨架</text>
+  <path class='line' d='M690 290 H748'/>
+  <text class='step' x='719' y='194' text-anchor='middle'>2. 模板方法</text>
+  <text class='step' x='719' y='214' text-anchor='middle'>减少重复代码</text>
+  <path class='line' d='M1040 290 H1098'/>
+  <text class='step' x='1069' y='194' text-anchor='middle'>3. 先写热数据</text>
+  <text class='step' x='1069' y='214' text-anchor='middle'>把响应留在毫秒级</text>
+  <path class='line' d='M1390 290 H1448'/>
+  <text class='step' x='1419' y='194' text-anchor='middle'>4. 投递异步消息</text>
+  <text class='step' x='1419' y='214' text-anchor='middle'>把慢操作后置</text>
+  <text class='section' x='74' y='468'>2. 异步回刷与热榜重算</text>
+  <rect class='node' x='90' y='500' width='320' height='140'/>
+  <text class='node-title' x='250' y='550' text-anchor='middle'>EsSyncListener</text>
+  <text class='node-text' x='250' y='584' text-anchor='middle'>更新 user_resource</text>
+  <text class='node-text' x='250' y='608' text-anchor='middle'>和主索引快照</text>
+  <rect class='store' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>MySQL 对账任务</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>按 dirty set 批量落库</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>补齐最终一致性</text>
+  <rect class='gateway' x='910' y='500' width='320' height='140'/>
+  <text class='node-title' x='1070' y='550' text-anchor='middle'>HotRankStrategy</text>
+  <text class='node-text' x='1070' y='584' text-anchor='middle'>时间衰减 + 权重</text>
+  <text class='node-text' x='1070' y='608' text-anchor='middle'>重新计算热度积分</text>
+  <rect class='node' x='1320' y='500' width='340' height='140'/>
+  <text class='node-title' x='1490' y='550' text-anchor='middle'>Redis ZSet 榜单</text>
+  <text class='node-text' x='1490' y='584' text-anchor='middle'>热榜 / Feed / 搜索</text>
+  <text class='node-text' x='1490' y='608' text-anchor='middle'>读取最新排序</text>
+  <path class='line' d='M410 570 H488'/>
+  <text class='step' x='449' y='474' text-anchor='middle'>5. 异步同步</text>
+  <text class='step' x='449' y='494' text-anchor='middle'>让搜索侧尽快可见</text>
+  <path class='line' d='M820 570 H898'/>
+  <text class='step' x='859' y='474' text-anchor='middle'>6. 批量落库</text>
+  <text class='step' x='859' y='494' text-anchor='middle'>持久化冷数据</text>
+  <path class='line' d='M1230 570 H1308'/>
+  <text class='step' x='1269' y='474' text-anchor='middle'>7. 热度重算</text>
+  <text class='step' x='1269' y='494' text-anchor='middle'>更新榜单顺序</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- 双轨的意思是：热路径先保吞吐，冷路径再补持久化和检索同步。</text>
+  <text class='note-text' x='102' y='836'>- 互动模块不是单纯记计数，而是直接影响热榜和用户资源检索。</text>
+  <text class='note-text' x='102' y='866'>- 这种结构很适合高频社交行为。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- AbstractInteractionStrategy 把同步 ES 的共性流程抽成了模板方法。</text>
+  <text class='note-text' x='682' y='836'>- 不同业务通过 StrategyFactory 路由，避免 if/else 爆炸。</text>
+  <text class='note-text' x='682' y='866'>- HotRankStrategy 会把互动行为转成热度分，驱动后续洗牌。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图适合解释你“热榜 + 搜索 + 社交”是怎么串起来的。</text>
+  <text class='note-text' x='1262' y='836'>- 如果首页只保留一个互动图，就选这张。</text>
+  <text class='note-text' x='1262' y='866'>- 面试时可以重点展开 Redis 热路径和最终一致性。</text>
+</svg>

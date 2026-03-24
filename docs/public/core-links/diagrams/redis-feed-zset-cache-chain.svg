@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1160" viewBox="0 0 1800 1160" role="img" aria-labelledby="title desc">
+  <title id="title">Feed / 列表 ZSet 缓存链路</title>
+  <desc id="desc">展示项目如何把发布和互动事件写入 Redis ZSet，并在读取 Feed 或列表页时用 ZSet 先拿有序数据，再批量聚合详情返回。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1160" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1092" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">Feed / 列表 ZSet 缓存链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：FollowServiceImpl.pushToFollowers + feedServiceImpl.queryFeedList + CommentServiceImpl.listComment / addComment + ZSetIdManager.pageIds</text>
+
+  <text class="section" x="74" y="188">1. 写入侧先把“顺序”和“ID / 事件”写进 ZSet，而不是直接写整页 JSON</text>
+
+  <rect class="node" x="70" y="220" width="310" height="160"/>
+  <text class="node-title" x="225" y="278" text-anchor="middle">发布 / 互动事件</text>
+  <text class="node-text" x="225" y="314" text-anchor="middle">博客发布、商品动态、评论新增</text>
+  <text class="node-text" x="225" y="340" text-anchor="middle">都会触发列表或 Feed 视图更新</text>
+
+  <rect class="node" x="470" y="220" width="320" height="160"/>
+  <text class="node-title" x="630" y="278" text-anchor="middle">业务服务层</text>
+  <text class="node-text" x="630" y="314" text-anchor="middle">FollowService / CommentService</text>
+  <text class="node-text" x="630" y="340" text-anchor="middle">决定要写哪个 ZSet Key</text>
+
+  <rect class="store" x="880" y="220" width="360" height="160"/>
+  <text class="node-title" x="1060" y="278" text-anchor="middle">Redis ZSet 视图</text>
+  <text class="node-text" x="1060" y="314" text-anchor="middle">feed:user:* / feed:all:*</text>
+  <text class="node-text" x="1060" y="340" text-anchor="middle">comment:new_rank:* / comment:hot_rank:*</text>
+
+  <rect class="mq" x="1330" y="220" width="380" height="160"/>
+  <text class="node-title" x="1520" y="278" text-anchor="middle">辅助集合</text>
+  <text class="node-text" x="1520" y="314" text-anchor="middle">queue:calc:* / *_calc_ids / *_sync_ids</text>
+  <text class="node-text" x="1520" y="340" text-anchor="middle">用于异步洗牌、回刷和脏数据修正</text>
+
+  <path class="line" d="M380 300 H458"/>
+  <text class="step" x="419" y="286" text-anchor="middle">1. 新内容进入服务层</text>
+
+  <path class="line" d="M790 300 H868"/>
+  <text class="step" x="829" y="286" text-anchor="middle">2. 写 ZSet 视图</text>
+
+  <path class="dash" d="M1240 300 H1318"/>
+  <text class="step" x="1279" y="286" text-anchor="middle">3. 同时打 calc / sync 标记</text>
+
+  <text class="section" x="74" y="470">2. 读取侧先读有序 ID / 事件，再按业务类型批量聚合详情</text>
+
+  <rect class="node" x="90" y="520" width="310" height="180"/>
+  <text class="node-title" x="245" y="580" text-anchor="middle">Feed / 列表接口</text>
+  <text class="node-text" x="245" y="616" text-anchor="middle">FeedController 或 listComment</text>
+  <text class="node-text" x="245" y="642" text-anchor="middle">请求带 lastId / offset / page</text>
+
+  <rect class="store" x="500" y="520" width="360" height="180"/>
+  <text class="node-title" x="680" y="580" text-anchor="middle">Redis 取有序结果</text>
+  <text class="node-text" x="680" y="616" text-anchor="middle">Feed：ZREVRANGEBYSCORE + offset</text>
+  <text class="node-text" x="680" y="642" text-anchor="middle">列表：pageIds / ZREVRANGE</text>
+
+  <rect class="decision" x="960" y="520" width="360" height="180"/>
+  <text class="node-title" x="1140" y="580" text-anchor="middle">解析值并分组</text>
+  <text class="node-text" x="1140" y="616" text-anchor="middle">Feed 把 action:type:id 解析出来</text>
+  <text class="node-text" x="1140" y="642" text-anchor="middle">列表把 commentId / reviewId 批量分组</text>
+
+  <rect class="store" x="1420" y="520" width="300" height="180"/>
+  <text class="node-title" x="1570" y="580" text-anchor="middle">批量详情回填</text>
+  <text class="node-text" x="1570" y="616" text-anchor="middle">getResourceList / getCommentListByIds</text>
+  <text class="node-text" x="1570" y="642" text-anchor="middle">只按 ID 批量查一次</text>
+
+  <path class="line" d="M400 610 H488"/>
+  <text class="step" x="444" y="596" text-anchor="middle">4. 先拿有序 ID</text>
+
+  <path class="line" d="M860 610 H948"/>
+  <text class="step" x="904" y="596" text-anchor="middle">5. 解析 value / ID</text>
+
+  <path class="line" d="M1320 610 H1408"/>
+  <text class="step" x="1364" y="596" text-anchor="middle">6. 批量回填详情</text>
+
+  <rect class="node" x="520" y="780" width="760" height="170"/>
+  <text class="node-title" x="900" y="840" text-anchor="middle">返回 ScrollResult / VO 列表</text>
+  <text class="node-text" x="900" y="876" text-anchor="middle">结果里带 list、minTime、offset 或分页后的详情集合</text>
+  <text class="node-text" x="900" y="902" text-anchor="middle">用户下一次翻页继续以时间戳锚点读取，不会出现传统 offset 偏移</text>
+
+  <path class="line" d="M1570 700 V760 H900 V768"/>
+  <text class="step" x="1240" y="744" text-anchor="middle">7. 按时间顺序组装结果并返回</text>
+
+  <rect class="note" x="70" y="1000" width="500" height="120"/>
+  <text class="note-title" x="102" y="1042">为什么 ZSet 适合这里</text>
+  <text class="note-text" x="102" y="1074">- 它天然适合按时间或热度排序，而且能在滚动分页时保住“顺序”这个核心能力。</text>
+  <text class="note-text" x="102" y="1102">- 这正是 Feed 流和评论 / 评价列表最需要的能力。</text>
+
+  <rect class="note" x="650" y="1000" width="500" height="120"/>
+  <text class="note-title" x="682" y="1042">为什么不缓存整页 JSON</text>
+  <text class="note-text" x="682" y="1074">- 整页 JSON 很难局部修正，热度重算、插入新内容和多种排序方式都会让它很快失效。</text>
+  <text class="note-text" x="682" y="1102">- 存 ID / 事件，再去批量回填详情，扩展性更强。</text>
+
+  <rect class="note" x="1230" y="1000" width="500" height="120"/>
+  <text class="note-title" x="1262" y="1042">它和旧的 Feed 图有什么区别</text>
+  <text class="note-text" x="1262" y="1074">- 旧图更偏业务链路；这张图只强调 Redis ZSet 如何承接列表排序、滚动分页和事件分发。</text>
+  <text class="note-text" x="1262" y="1102">- 更适合放在缓存设计和性能优化章节里。</text>
+</svg>

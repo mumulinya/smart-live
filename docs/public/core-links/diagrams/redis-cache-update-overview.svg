@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="860" viewBox="0 0 1600 860">
+  <rect width="1600" height="860" fill="#f7f9fc"/>
+  <rect x="24" y="24" width="1552" height="812" rx="28" fill="#ffffff" stroke="#d8e2f0" stroke-width="2"/>
+  <text x="800" y="78" text-anchor="middle" font-size="34" font-weight="700" fill="#16335b">Redis 缓存更新全景图</text>
+  <text x="800" y="116" text-anchor="middle" font-size="18" fill="#4c6485">把数据变更来源、更新动作和受影响的缓存层放在一张图里看清楚</text>
+
+  <rect x="80" y="180" width="260" height="72" rx="18" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="210" y="225" text-anchor="middle" font-size="22" font-weight="700" fill="#16335b">用户编辑详情</text>
+  <rect x="410" y="180" width="360" height="72" rx="18" fill="#fff6ea" stroke="#ffb66b"/>
+  <text x="590" y="225" text-anchor="middle" font-size="20" fill="#16335b">先更新 MySQL，再删除 Redis 详情缓存</text>
+  <rect x="840" y="180" width="680" height="72" rx="18" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="1180" y="225" text-anchor="middle" font-size="20" fill="#16335b">详情层失效；下次读请求按空值缓存 / 逻辑过期 / 互斥锁策略重建</text>
+
+  <rect x="80" y="300" width="260" height="72" rx="18" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="210" y="345" text-anchor="middle" font-size="22" font-weight="700" fill="#16335b">用户点赞 / 收藏</text>
+  <rect x="410" y="300" width="360" height="72" rx="18" fill="#fff6ea" stroke="#ffb66b"/>
+  <text x="590" y="345" text-anchor="middle" font-size="20" fill="#16335b">直接写 Redis 计数与状态，再异步回刷 MySQL</text>
+  <rect x="840" y="300" width="680" height="72" rx="18" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="1180" y="345" text-anchor="middle" font-size="20" fill="#16335b">计数层 INCR / DECR；状态层 SADD / SREM；数据库最终一致</text>
+
+  <rect x="80" y="420" width="260" height="72" rx="18" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="210" y="465" text-anchor="middle" font-size="22" font-weight="700" fill="#16335b">发布新内容</text>
+  <rect x="410" y="420" width="360" height="72" rx="18" fill="#fff6ea" stroke="#ffb66b"/>
+  <text x="590" y="465" text-anchor="middle" font-size="20" fill="#16335b">写 MySQL 后推送 Feed / 热榜 / 搜索同步事件</text>
+  <rect x="840" y="420" width="680" height="72" rx="18" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="1180" y="465" text-anchor="middle" font-size="20" fill="#16335b">列表层 ZADD；热榜 / 搜索 / 向量库异步更新；详情层继续按需懒加载</text>
+
+  <rect x="80" y="540" width="260" height="72" rx="18" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="210" y="585" text-anchor="middle" font-size="22" font-weight="700" fill="#16335b">内容下架 / 审核驳回</text>
+  <rect x="410" y="540" width="360" height="72" rx="18" fill="#fff6ea" stroke="#ffb66b"/>
+  <text x="590" y="585" text-anchor="middle" font-size="20" fill="#16335b">更新业务状态并删除多层缓存</text>
+  <rect x="840" y="540" width="680" height="72" rx="18" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="1180" y="585" text-anchor="middle" font-size="20" fill="#16335b">详情层、列表层、计数层一起失效，避免旧数据继续对外暴露</text>
+
+  <rect x="80" y="660" width="260" height="72" rx="18" fill="#eef6ff" stroke="#8db7ff"/>
+  <text x="210" y="705" text-anchor="middle" font-size="22" font-weight="700" fill="#16335b">热榜 / Feed 重建</text>
+  <rect x="410" y="660" width="360" height="72" rx="18" fill="#fff6ea" stroke="#ffb66b"/>
+  <text x="590" y="705" text-anchor="middle" font-size="20" fill="#16335b">XXL-JOB 定时洗牌、批量回刷、原子替换榜单</text>
+  <rect x="840" y="660" width="680" height="72" rx="18" fill="#eefcf1" stroke="#7fd39a"/>
+  <text x="1180" y="705" text-anchor="middle" font-size="20" fill="#16335b">列表层 / 排行层整体替换；读请求始终看到完整榜单，不暴露真空期</text>
+
+  <path d="M340 216 L410 216" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="410,216 392,206 392,226" fill="#3e6bb3"/>
+  <path d="M770 216 L840 216" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="840,216 822,206 822,226" fill="#3e6bb3"/>
+  <path d="M340 336 L410 336" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="410,336 392,326 392,346" fill="#3e6bb3"/>
+  <path d="M770 336 L840 336" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="840,336 822,326 822,346" fill="#3e6bb3"/>
+  <path d="M340 456 L410 456" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="410,456 392,446 392,466" fill="#3e6bb3"/>
+  <path d="M770 456 L840 456" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="840,456 822,446 822,466" fill="#3e6bb3"/>
+  <path d="M340 576 L410 576" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="410,576 392,566 392,586" fill="#3e6bb3"/>
+  <path d="M770 576 L840 576" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="840,576 822,566 822,586" fill="#3e6bb3"/>
+  <path d="M340 696 L410 696" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="410,696 392,686 392,706" fill="#3e6bb3"/>
+  <path d="M770 696 L840 696" stroke="#3e6bb3" stroke-width="4" fill="none"/><polygon points="840,696 822,686 822,706" fill="#3e6bb3"/>
+</svg>

@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id="title">登录鉴权与网关透传链路</title>
+  <desc id="desc">展示 SmartLive 的短信或密码登录、Redis 登录态缓存、Gateway 鉴权和请求头透传流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #16335b; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #486586; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1f4b82; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #12314f; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35506f; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24476f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #21415d; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506882; }
+      .node { fill: #ffffff; stroke: #9cb9de; stroke-width: 2; rx: 24; }
+      .store { fill: #f1fbf6; stroke: #9fd0b3; stroke-width: 2; rx: 24; }
+      .gateway { fill: #fff6ec; stroke: #f0b37a; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d5e2f3; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #335c9e; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">登录鉴权与网关透传链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：UserLoginService.login / loginByPassword + AuthFilter.filter</text>
+
+  <text class="section" x="74" y="188">1. 登录建立会话</text>
+
+  <rect class="node" x="70" y="220" width="250" height="140"/>
+  <text class="node-title" x="195" y="270" text-anchor="middle">客户端</text>
+  <text class="node-text" x="195" y="304" text-anchor="middle">短信验证码登录</text>
+  <text class="node-text" x="195" y="328" text-anchor="middle">或密码登录</text>
+
+  <rect class="node" x="390" y="220" width="300" height="140"/>
+  <text class="node-title" x="540" y="270" text-anchor="middle">smartLive-auth</text>
+  <text class="node-text" x="540" y="304" text-anchor="middle">校验手机号、验证码</text>
+  <text class="node-text" x="540" y="328" text-anchor="middle">或密码</text>
+
+  <rect class="store" x="760" y="220" width="280" height="140"/>
+  <text class="node-title" x="900" y="270" text-anchor="middle">Redis</text>
+  <text class="node-text" x="900" y="304" text-anchor="middle">login:code:*</text>
+  <text class="node-text" x="900" y="328" text-anchor="middle">login:token:*</text>
+
+  <rect class="node" x="1110" y="220" width="270" height="140"/>
+  <text class="node-title" x="1245" y="270" text-anchor="middle">smartLive-user</text>
+  <text class="node-text" x="1245" y="304" text-anchor="middle">查用户信息</text>
+  <text class="node-text" x="1245" y="328" text-anchor="middle">不存在则创建</text>
+
+  <rect class="node" x="1450" y="220" width="280" height="140"/>
+  <text class="node-title" x="1590" y="270" text-anchor="middle">登录结果</text>
+  <text class="node-text" x="1590" y="304" text-anchor="middle">生成 UUID token</text>
+  <text class="node-text" x="1590" y="328" text-anchor="middle">返回给前端</text>
+
+  <path class="line" d="M320 290 H378"/>
+  <text class="step" x="349" y="194" text-anchor="middle">1. 调用</text>
+  <text class="step" x="349" y="214" text-anchor="middle">/appLogin 或密码登录</text>
+
+  <path class="line" d="M690 290 H748"/>
+  <text class="step" x="719" y="194" text-anchor="middle">2. 读验证码</text>
+  <text class="step" x="719" y="214" text-anchor="middle">并写登录态</text>
+
+  <path class="line" d="M1040 290 H1098"/>
+  <text class="step" x="1069" y="194" text-anchor="middle">3. 查用户</text>
+  <text class="step" x="1069" y="214" text-anchor="middle">或自动注册</text>
+
+  <path class="dash" d="M1380 290 H1438"/>
+  <text class="step" x="1409" y="194" text-anchor="middle">4. 返回</text>
+  <text class="step" x="1409" y="214" text-anchor="middle">token</text>
+
+  <text class="section" x="74" y="452">2. Gateway 鉴权与用户上下文透传</text>
+
+  <rect class="node" x="120" y="490" width="290" height="140"/>
+  <text class="node-title" x="265" y="540" text-anchor="middle">客户端携 token 请求</text>
+  <text class="node-text" x="265" y="574" text-anchor="middle">authorization: Bearer ...</text>
+
+  <rect class="gateway" x="500" y="490" width="320" height="140"/>
+  <text class="node-title" x="660" y="540" text-anchor="middle">Gateway AuthFilter</text>
+  <text class="node-text" x="660" y="574" text-anchor="middle">区分 admin / app 路径</text>
+  <text class="node-text" x="660" y="598" text-anchor="middle">决定鉴权方式</text>
+
+  <rect class="store" x="910" y="490" width="300" height="140"/>
+  <text class="node-title" x="1060" y="540" text-anchor="middle">Redis 登录态</text>
+  <text class="node-text" x="1060" y="574" text-anchor="middle">getCacheMap</text>
+  <text class="node-text" x="1060" y="598" text-anchor="middle">并刷新 TTL</text>
+
+  <rect class="node" x="1300" y="490" width="420" height="140"/>
+  <text class="node-title" x="1510" y="540" text-anchor="middle">下游微服务</text>
+  <text class="node-text" x="1510" y="574" text-anchor="middle">收到 userId / nickName / icon / token</text>
+  <text class="node-text" x="1510" y="598" text-anchor="middle">等透传请求头</text>
+
+  <path class="line" d="M410 560 H488"/>
+  <text class="step" x="449" y="476" text-anchor="middle">5. token</text>
+  <text class="step" x="449" y="496" text-anchor="middle">进入网关</text>
+
+  <path class="line" d="M820 560 H898"/>
+  <text class="step" x="859" y="476" text-anchor="middle">6. 读取</text>
+  <text class="step" x="859" y="496" text-anchor="middle">Redis 用户 Hash</text>
+
+  <path class="line" d="M1210 560 H1288"/>
+  <text class="step" x="1249" y="476" text-anchor="middle">7. 注入用户头</text>
+  <text class="step" x="1249" y="496" text-anchor="middle">并放行</text>
+
+  <rect class="note" x="70" y="720" width="500" height="220"/>
+  <text class="note-title" x="102" y="766">你在代码里能看到什么</text>
+  <text class="note-text" x="102" y="806">- UserLoginService 会把 UserDTO 转成 Redis Hash，并设置 LOGIN_USER_TTL。</text>
+  <text class="note-text" x="102" y="836">- AuthFilter 会对 app 端从 Redis 取用户信息，并刷新 token 过期时间。</text>
+  <text class="note-text" x="102" y="866">- 管理端走 JWT + Redis key，移动端走 Redis token Hash。</text>
+
+  <rect class="note" x="650" y="720" width="500" height="220"/>
+  <text class="note-title" x="682" y="766">为什么这条链路值得放文档里</text>
+  <text class="note-text" x="682" y="806">- 第一次接手的人能马上看懂 token 存哪里、什么时候刷新、谁负责透传。</text>
+  <text class="note-text" x="682" y="836">- 也能解释为什么 app 端和 admin 端鉴权逻辑不完全相同。</text>
+  <text class="note-text" x="682" y="866">- 这是跑通项目最早会遇到的一条核心链路。</text>
+
+  <rect class="note" x="1230" y="720" width="500" height="220"/>
+  <text class="note-title" x="1262" y="766">关键键名</text>
+  <text class="note-text" x="1262" y="806">- 验证码：RedisConstants.LOGIN_CODE_KEY + phone</text>
+  <text class="note-text" x="1262" y="836">- 登录态：RedisConstants.LOGIN_USER_KEY + token</text>
+  <text class="note-text" x="1262" y="866">- 网关放行后会补充 userId、昵称、头像和 token 请求头。</text>
+</svg>

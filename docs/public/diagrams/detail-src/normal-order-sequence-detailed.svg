@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1680" viewBox="0 0 2360 1680" role="img" aria-labelledby="title desc">
+  <title id="title">普通下单：订单创建与状态流转（详细版）</title>
+  <desc id="desc">展示普通商品下单从生成订单占位、异步建单、库存扣减、延迟超时取消，到支付成功回调生效的完整流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .warn { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1680" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1624" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">普通下单：订单创建与状态流转（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：NormalPurchaseStrategy + OrderListener.handleBuyOrder / handlePayOrder / handleCancelOrder + OrderServiceImpl.createOrder / cancel / paySuccess + PayServiceImpl.processCallback</text>
+
+  <text class="section" x="70" y="182">1. 下单先生成 orderId 占位，再通过 MQ 异步建单</text>
+
+  <rect class="node" x="70" y="220" width="250" height="170"/>
+  <text class="node-title" x="195" y="284" text-anchor="middle">用户端 App</text>
+  <text class="node-text" x="195" y="320" text-anchor="middle">点击普通商品购买</text>
+  <text class="node-text" x="195" y="346" text-anchor="middle">提交商品、数量、门店</text>
+
+  <rect class="node" x="390" y="220" width="330" height="170"/>
+  <text class="node-title" x="555" y="284" text-anchor="middle">NormalPurchaseStrategy</text>
+  <text class="node-text" x="555" y="320" text-anchor="middle">RedisIdWorker 生成 orderId</text>
+  <text class="node-text" x="555" y="346" text-anchor="middle">写 order:status:{id}=CREATING</text>
+
+  <rect class="mq" x="790" y="220" width="300" height="170"/>
+  <text class="node-title" x="940" y="284" text-anchor="middle">ORDER_DIRECT_EXCHANGE</text>
+  <text class="node-text" x="940" y="320" text-anchor="middle">ORDER_BUY_ROUTING_KEY</text>
+  <text class="node-text" x="940" y="346" text-anchor="middle">异步发送 OrderDTO</text>
+
+  <rect class="node" x="1160" y="220" width="340" height="170"/>
+  <text class="node-title" x="1330" y="284" text-anchor="middle">OrderListener.handleBuyOrder</text>
+  <text class="node-text" x="1330" y="320" text-anchor="middle">messageId 幂等</text>
+  <text class="node-text" x="1330" y="346" text-anchor="middle">DB 已存在则 ACK 跳过</text>
+
+  <rect class="store" x="1570" y="220" width="320" height="170"/>
+  <text class="node-title" x="1730" y="284" text-anchor="middle">订单表</text>
+  <text class="node-text" x="1730" y="320" text-anchor="middle">save(order)</text>
+  <text class="node-text" x="1730" y="346" text-anchor="middle">状态初始为 UNPAID</text>
+
+  <rect class="mq" x="1960" y="220" width="290" height="170"/>
+  <text class="node-title" x="2105" y="284" text-anchor="middle">后续两条 MQ</text>
+  <text class="node-text" x="2105" y="320" text-anchor="middle">PRODUCT_STOCK_EXCHANGE</text>
+  <text class="node-text" x="2105" y="346" text-anchor="middle">ORDER_DELAY_EXCHANGE</text>
+
+  <path class="line" d="M320 305 H378"/>
+  <text class="step" x="349" y="288" text-anchor="middle">1. 发起普通下单</text>
+  <path class="line" d="M720 305 H778"/>
+  <text class="step" x="749" y="288" text-anchor="middle">2. 生成订单占位</text>
+  <path class="line" d="M1090 305 H1148"/>
+  <text class="step" x="1119" y="288" text-anchor="middle">3. 发送建单消息</text>
+  <path class="line" d="M1500 305 H1558"/>
+  <text class="step" x="1529" y="288" text-anchor="middle">4. 幂等建单</text>
+  <path class="line" d="M1890 305 H1948"/>
+  <text class="step" x="1919" y="288" text-anchor="middle">5. 扣库存 + 延迟检测</text>
+
+  <text class="section" x="70" y="470">2. 库存链与取消链分开运行：扣库失败会单独回滚订单</text>
+
+  <rect class="mq" x="90" y="510" width="330" height="180"/>
+  <text class="node-title" x="255" y="574" text-anchor="middle">ProductListener.batchDeductStock</text>
+  <text class="node-text" x="255" y="610" text-anchor="middle">批量消费扣库存消息</text>
+  <text class="node-text" x="255" y="636" text-anchor="middle">按商品聚合 count</text>
+
+  <rect class="store" x="500" y="510" width="340" height="180"/>
+  <text class="node-title" x="670" y="574" text-anchor="middle">MySQL CAS 扣库存</text>
+  <text class="node-text" x="670" y="610" text-anchor="middle">WHERE id=? AND stock&gt;=count</text>
+  <text class="node-text" x="670" y="636" text-anchor="middle">成功则正式扣减库存</text>
+
+  <rect class="danger" x="920" y="510" width="340" height="180"/>
+  <text class="node-title" x="1090" y="574" text-anchor="middle">库存不足失败分支</text>
+  <text class="node-text" x="1090" y="610" text-anchor="middle">发送 ORDER_CANCEL_QUEUE</text>
+  <text class="node-text" x="1090" y="636" text-anchor="middle">要求订单中心强制 cancel</text>
+
+  <rect class="node" x="1340" y="510" width="350" height="180"/>
+  <text class="node-title" x="1515" y="574" text-anchor="middle">OrderListener.handleCancelOrder</text>
+  <text class="node-text" x="1515" y="610" text-anchor="middle">messageId 幂等</text>
+  <text class="node-text" x="1515" y="636" text-anchor="middle">非 CANCELLED 才调用 cancel</text>
+
+  <rect class="decision" x="1770" y="510" width="480" height="180"/>
+  <text class="node-title" x="2010" y="574" text-anchor="middle">OrderService.cancel</text>
+  <text class="node-text" x="2010" y="610" text-anchor="middle">oldStatus = UNPAID：只改状态，不发退款 MQ</text>
+  <text class="node-text" x="2010" y="636" text-anchor="middle">oldStatus &gt;= PAID：额外触发退款补偿与销量回滚</text>
+
+  <path class="dash" d="M1730 390 V470 H255 V498"/>
+  <text class="step" x="990" y="454" text-anchor="middle">6. 建单后异步扣库存</text>
+  <path class="line" d="M420 600 H488"/>
+  <text class="step" x="454" y="584" text-anchor="middle">7. CAS 扣减</text>
+  <path class="warn" d="M840 600 H908"/>
+  <text class="step" x="874" y="584" text-anchor="middle">8. 扣库失败</text>
+  <path class="warn" d="M1260 600 H1328"/>
+  <text class="step" x="1294" y="584" text-anchor="middle">9. 发取消消息</text>
+  <path class="warn" d="M1690 600 H1758"/>
+  <text class="step" x="1724" y="584" text-anchor="middle">10. 回滚订单状态</text>
+
+  <text class="section" x="70" y="776">3. 支付链与超时链并行：成功回调生效，未支付由延迟消息兜底取消</text>
+
+  <rect class="node" x="70" y="820" width="340" height="190"/>
+  <text class="node-title" x="240" y="886" text-anchor="middle">PayController / PayServiceImpl</text>
+  <text class="node-text" x="240" y="922" text-anchor="middle">unifiedOrder 创建 PaymentRecord</text>
+  <text class="node-text" x="240" y="948" text-anchor="middle">processCallback 处理支付成功</text>
+
+  <rect class="store" x="490" y="820" width="340" height="190"/>
+  <text class="node-title" x="660" y="886" text-anchor="middle">PaymentRecord</text>
+  <text class="node-text" x="660" y="922" text-anchor="middle">paySn / status=PENDING</text>
+  <text class="node-text" x="660" y="948" text-anchor="middle">同时发 PAY_DELAY_EXCHANGE</text>
+
+  <rect class="node" x="910" y="820" width="340" height="190"/>
+  <text class="node-title" x="1080" y="886" text-anchor="middle">支付成功分支</text>
+  <text class="node-text" x="1080" y="922" text-anchor="middle">recordOrderPayment</text>
+  <text class="node-text" x="1080" y="948" text-anchor="middle">remoteOrderService.paySuccess</text>
+
+  <rect class="decision" x="1330" y="820" width="340" height="190"/>
+  <text class="node-title" x="1500" y="886" text-anchor="middle">OrderService.paySuccess</text>
+  <text class="node-text" x="1500" y="922" text-anchor="middle">status=PAID / payType</text>
+  <text class="node-text" x="1500" y="948" text-anchor="middle">updateExpireTimeAfterPayment + incrementSales</text>
+
+  <rect class="mq" x="1750" y="820" width="500" height="190"/>
+  <text class="node-title" x="2000" y="886" text-anchor="middle">ORDER_DELAY_QUEUE / handlePayOrder</text>
+  <text class="node-text" x="2000" y="922" text-anchor="middle">到时查询订单：null 或 PAID 直接结束</text>
+  <text class="node-text" x="2000" y="948" text-anchor="middle">仍为 UNPAID 才执行 cancel 并回滚库存</text>
+
+  <path class="line" d="M410 915 H478"/>
+  <text class="step" x="444" y="898" text-anchor="middle">11. 建支付流水</text>
+  <path class="line" d="M830 915 H898"/>
+  <text class="step" x="864" y="898" text-anchor="middle">12. 回调成功</text>
+  <path class="line" d="M1250 915 H1318"/>
+  <text class="step" x="1284" y="898" text-anchor="middle">13. 订单改为 PAID</text>
+  <path class="dash" d="M830 980 H1738"/>
+  <text class="step" x="1284" y="998" text-anchor="middle">14. 未支付场景则等延迟消息兜底取消</text>
+
+  <text class="section" x="70" y="1096">4. 这张图补充了“普通下单”真正依赖的 3 个工程边界</text>
+
+  <rect class="note" x="70" y="1138" width="700" height="230"/>
+  <text class="note-title" x="102" y="1182">边界 A：占位状态是为了解决 MQ 延迟，不是正式订单状态</text>
+  <text class="note-text" x="102" y="1218">- NormalPurchaseStrategy 先在 Redis 写 order:status:{id}=CREATING。</text>
+  <text class="note-text" x="102" y="1246">- handleBuyOrder 建单成功后会删除占位，前端再查就能命中真实订单。</text>
+  <text class="note-text" x="102" y="1274">- 所以这条链不是“同步建单”，只是对用户体验做了中间态兜底。</text>
+
+  <rect class="note" x="830" y="1138" width="700" height="230"/>
+  <text class="note-title" x="862" y="1182">边界 B：库存失败与超时未支付，是两条完全不同的取消来源</text>
+  <text class="note-text" x="862" y="1218">- 扣库失败来自 ProductListener 的 ORDER_CANCEL_QUEUE。</text>
+  <text class="note-text" x="862" y="1246">- 未支付超时来自 ORDER_DELAY_EXCHANGE 的 handlePayOrder。</text>
+  <text class="note-text" x="862" y="1274">- 两条链都会走 cancel，但触发原因不同，文档里拆开更容易讲清楚。</text>
+
+  <rect class="note" x="1590" y="1138" width="660" height="230"/>
+  <text class="note-title" x="1622" y="1182">代码锚点</text>
+  <text class="note-text" x="1622" y="1218">- NormalPurchaseStrategy.purchase：生成 orderId、写占位、投递 ORDER_BUY。</text>
+  <text class="note-text" x="1622" y="1246">- OrderListener.handleBuyOrder：幂等建单、删占位、发 ORDER_DELAY。</text>
+  <text class="note-text" x="1622" y="1274">- ProductListener.batchDeductStock：CAS 扣库存，失败则发 ORDER_CANCEL。</text>
+  <text class="note-text" x="1622" y="1302">- OrderService.paySuccess：支付后更新有效期和销量。</text>
+</svg>

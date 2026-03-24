@@ -1,8 +1,8 @@
 ﻿# SmartLive 页面导览
 
-这份文档承接 [README.md](../README.md) 里的“效果预览”，按真实使用路径把用户端 App 和管理端 Web 的页面一次看顺。
+这份文档承接 [网站首页](/) 里的“效果预览”，按真实使用路径把用户端 App 和管理端 Web 的页面一次看顺。
 
-**文档导航：** [README 首页](../README.md) · [视觉导览](SHOWCASE.md) · [开源接入](OPEN_SOURCE.md)
+**文档导航：** [网站首页](/) · [视觉导览](SHOWCASE.md) · [开源接入](OPEN_SOURCE.md)
 
 **第一次建议先看：** [登录与进入](#app-login-entry) -> [发现入口与热榜](#app-discovery) -> [店铺决策与商品详情](#app-shop-product) -> [支付、订单、钱包与积分](#app-trade-assets) -> [AI 智能助手与 AIGC](#app-ai-capability)
 

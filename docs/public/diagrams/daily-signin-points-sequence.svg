@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>每日签到与积分发放链路</title>
+  <desc id='desc'>展示签到时获取钱包、判断是否重复签到、计算连续天数与双倍奖励，并写入签到记录与积分流水的过程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>每日签到与积分发放链路</text>
+  <text class='subtitle' x='74' y='132'>对应代码：PointsController.signIn + PointsServiceImpl.signIn</text>
+  <text class='section' x='74' y='188'>1. 发起签到并判断连续天数</text>
+  <rect class='node' x='70' y='220' width='250' height='140'/>
+  <text class='node-title' x='195' y='270' text-anchor='middle'>用户点击签到</text>
+  <text class='node-text' x='195' y='304' text-anchor='middle'>进入积分中心</text>
+  <text class='node-text' x='195' y='328' text-anchor='middle'>发起 signIn</text>
+  <rect class='node' x='390' y='220' width='250' height='140'/>
+  <text class='node-title' x='515' y='270' text-anchor='middle'>PointsController</text>
+  <text class='node-text' x='515' y='304' text-anchor='middle'>获取当前 userId</text>
+  <text class='node-text' x='515' y='328' text-anchor='middle'>调用 service</text>
+  <rect class='node' x='710' y='220' width='310' height='140'/>
+  <text class='node-title' x='865' y='270' text-anchor='middle'>PointsServiceImpl.signIn</text>
+  <text class='node-text' x='865' y='304' text-anchor='middle'>封装事务</text>
+  <text class='node-text' x='865' y='328' text-anchor='middle'>协调签到流程</text>
+  <rect class='store' x='1090' y='220' width='290' height='140'/>
+  <text class='node-title' x='1235' y='270' text-anchor='middle'>UserPointsWallet</text>
+  <text class='node-text' x='1235' y='304' text-anchor='middle'>余额 / 连签天数</text>
+  <text class='node-text' x='1235' y='328' text-anchor='middle'>lastSignDate</text>
+  <rect class='gateway' x='1450' y='220' width='260' height='140'/>
+  <text class='node-title' x='1580' y='270' text-anchor='middle'>签到判定</text>
+  <text class='node-text' x='1580' y='304' text-anchor='middle'>是否今天已签</text>
+  <text class='node-text' x='1580' y='328' text-anchor='middle'>是否第 7 天翻倍</text>
+  <path class='line' d='M320 290 H378'/>
+  <text class='step' x='349' y='194' text-anchor='middle'>1. 发起签到</text>
+  <text class='step' x='349' y='214' text-anchor='middle'>进入 Controller</text>
+  <path class='line' d='M640 290 H698'/>
+  <text class='step' x='669' y='194' text-anchor='middle'>2. 事务处理</text>
+  <text class='step' x='669' y='214' text-anchor='middle'>准备更新钱包</text>
+  <path class='line' d='M1020 290 H1078'/>
+  <text class='step' x='1049' y='194' text-anchor='middle'>3. 读取钱包</text>
+  <text class='step' x='1049' y='214' text-anchor='middle'>判断是否重复签到</text>
+  <path class='line' d='M1380 290 H1438'/>
+  <text class='step' x='1409' y='194' text-anchor='middle'>4. 奖励规则</text>
+  <text class='step' x='1409' y='214' text-anchor='middle'>连续 7 天翻倍</text>
+  <text class='section' x='74' y='468'>2. 发放奖励并记录流水</text>
+  <rect class='node' x='110' y='500' width='300' height='140'/>
+  <text class='node-title' x='260' y='550' text-anchor='middle'>DailySignIn</text>
+  <text class='node-text' x='260' y='584' text-anchor='middle'>插入签到记录</text>
+  <text class='node-text' x='260' y='608' text-anchor='middle'>保存当天结果</text>
+  <rect class='store' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>更新钱包余额</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>balance + totalEarned</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>刷新连续签到天数</text>
+  <rect class='node' x='910' y='500' width='300' height='140'/>
+  <text class='node-title' x='1060' y='550' text-anchor='middle'>PointsRecord</text>
+  <text class='node-text' x='1060' y='584' text-anchor='middle'>写签到奖励流水</text>
+  <text class='node-text' x='1060' y='608' text-anchor='middle'>便于后续查询</text>
+  <rect class='gateway' x='1300' y='500' width='340' height='140'/>
+  <text class='node-title' x='1470' y='550' text-anchor='middle'>返回签到结果</text>
+  <text class='node-text' x='1470' y='584' text-anchor='middle'>points</text>
+  <text class='node-text' x='1470' y='608' text-anchor='middle'>consecutiveDays</text>
+  <path class='line' d='M410 570 H488'/>
+  <text class='step' x='449' y='474' text-anchor='middle'>5. 落签到记录</text>
+  <text class='step' x='449' y='494' text-anchor='middle'>保留每天一条</text>
+  <path class='line' d='M820 570 H898'/>
+  <text class='step' x='859' y='474' text-anchor='middle'>6. 更新钱包</text>
+  <text class='step' x='859' y='494' text-anchor='middle'>增加积分余额</text>
+  <path class='line' d='M1210 570 H1288'/>
+  <text class='step' x='1249' y='474' text-anchor='middle'>7. 返回结果</text>
+  <text class='step' x='1249' y='494' text-anchor='middle'>前端直接展示奖励</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- 签到不是只写一张记录表，而是同时维护钱包与流水。</text>
+  <text class='note-text' x='102' y='836'>- 连续签到逻辑是从 wallet.lastSignDate 和 consecutiveDays 推导出来的。</text>
+  <text class='note-text' x='102' y='866'>- 奖励规则简单但清晰，适合作为增长玩法起点。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- signIn 在同一个事务里完成记录、钱包更新和流水写入。</text>
+  <text class='note-text' x='682' y='836'>- 第 7 天翻倍的逻辑直接体现在 points 计算分支里。</text>
+  <text class='note-text' x='682' y='866'>- 通过 wallet 侧字段就能快速判断今天是否已签到。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图和积分中心截图放在一起最好理解。</text>
+  <text class='note-text' x='1262' y='836'>- 如果首页篇幅有限，可以只保留这条增长链路。</text>
+  <text class='note-text' x='1262' y='866'>- 展示时别再堆太多细节图，这张已经够说明问题了。</text>
+</svg>

@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1640" viewBox="0 0 2360 1640" role="img" aria-labelledby="title desc">
+  <title id="title">互动数据回刷与双轨同步（详细版）</title>
+  <desc id="desc">展示点赞、评论、收藏、评价、关注、粉丝在 Redis 中先实时更新，再由 XXL-JOB 批量落库，并把受影响对象推进热榜算分队列的双轨流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1640" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1584" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">互动数据回刷与双轨同步（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：FollowServiceImpl / Like|Comment|Star|Review Strategy + SyncDataServiceImpl + InteractionSyncXxlJob + HotRankJobHandler</text>
+
+  <text class="section" x="70" y="182">1. 写链路：用户动作先改 Redis 状态，不同步阻塞数据库</text>
+
+  <rect class="node" x="70" y="220" width="260" height="170"/>
+  <text class="node-title" x="200" y="282" text-anchor="middle">用户端 App</text>
+  <text class="node-text" x="200" y="318" text-anchor="middle">点赞 / 评论 / 收藏 / 评价</text>
+  <text class="node-text" x="200" y="344" text-anchor="middle">关注 / 取关 用户、店铺、商品</text>
+
+  <rect class="store" x="400" y="220" width="360" height="170"/>
+  <text class="node-title" x="580" y="282" text-anchor="middle">互动策略层</text>
+  <text class="node-text" x="580" y="318" text-anchor="middle">实时更新 Redis 计数器 / ZSet</text>
+  <text class="node-text" x="580" y="344" text-anchor="middle">保证用户端读操作毫秒级可见</text>
+
+  <rect class="store" x="830" y="220" width="450" height="170"/>
+  <text class="node-title" x="1055" y="282" text-anchor="middle">Redis 互动状态</text>
+  <text class="node-text" x="1055" y="318" text-anchor="middle">likeCount / commentCount / starCount / reviewCount</text>
+  <text class="node-text" x="1055" y="344" text-anchor="middle">follow ZSet / fans ZSet / 独立 followCount / fansCount</text>
+
+  <rect class="mq" x="1350" y="220" width="430" height="170"/>
+  <text class="node-title" x="1565" y="282" text-anchor="middle">脏集合与算分种子</text>
+  <text class="node-text" x="1565" y="318" text-anchor="middle">*_DIRTY Set 标记“哪些主体需要落库”</text>
+  <text class="node-text" x="1565" y="344" text-anchor="middle">评论 / 评价 / 实体热度后续还会进入 calcQueue</text>
+
+  <rect class="node" x="1850" y="220" width="430" height="170"/>
+  <text class="node-title" x="2065" y="282" text-anchor="middle">用户即时读取结果</text>
+  <text class="node-text" x="2065" y="318" text-anchor="middle">是否已点赞 / 是否关注 / 粉丝数</text>
+  <text class="node-text" x="2065" y="344" text-anchor="middle">不等 MySQL 落库就能看到最新状态</text>
+
+  <path class="line" d="M330 305 H388"/>
+  <text class="step" x="359" y="289" text-anchor="middle">1. 发起互动</text>
+  <path class="line" d="M760 305 H818"/>
+  <text class="step" x="789" y="289" text-anchor="middle">2. 写缓存</text>
+  <path class="line" d="M1280 305 H1338"/>
+  <text class="step" x="1309" y="289" text-anchor="middle">3. 标记 dirty</text>
+  <path class="dash" d="M1280 340 H1838"/>
+  <text class="step" x="1559" y="364" text-anchor="middle">4. 前台先读 Redis 即时生效</text>
+
+  <text class="section" x="70" y="464">2. 同步轨：XXL-JOB 读取脏集合，用 snapshot 机制批量刷库</text>
+
+  <rect class="node" x="70" y="500" width="340" height="180"/>
+  <text class="node-title" x="240" y="562" text-anchor="middle">InteractionSyncXxlJob</text>
+  <text class="node-text" x="240" y="598" text-anchor="middle">all / like / comment / star</text>
+  <text class="node-text" x="240" y="624" text-anchor="middle">review / follow / fans 6 组任务</text>
+  <text class="node-text" x="240" y="650" text-anchor="middle">异步扔给 executorService</text>
+
+  <rect class="node" x="480" y="500" width="420" height="180"/>
+  <text class="node-title" x="690" y="562" text-anchor="middle">SyncDataServiceImpl.sync*Data</text>
+  <text class="node-text" x="690" y="598" text-anchor="middle">遍历枚举类型选择对应 Strategy</text>
+  <text class="node-text" x="690" y="624" text-anchor="middle">点赞 / 评论 / 收藏 / 评价 / 关注 / 粉丝分开处理</text>
+  <text class="node-text" x="690" y="650" text-anchor="middle">避免所有互动共用一套落库逻辑</text>
+
+  <rect class="store" x="970" y="500" width="480" height="180"/>
+  <text class="node-title" x="1210" y="562" text-anchor="middle">redisService.syncDataWithSnapshot</text>
+  <text class="node-text" x="1210" y="598" text-anchor="middle">dirtyKey -&gt; dirtyKey:TEMP 原子切换快照</text>
+  <text class="node-text" x="1210" y="624" text-anchor="middle">本轮只同步快照内变化，防止写入与同步互相覆盖</text>
+  <text class="node-text" x="1210" y="650" text-anchor="middle">新脏数据继续留在原集合等待下一轮</text>
+
+  <rect class="store" x="1520" y="500" width="360" height="180"/>
+  <text class="node-title" x="1700" y="562" text-anchor="middle">各 Strategy.trans*ToDB</text>
+  <text class="node-text" x="1700" y="598" text-anchor="middle">按业务类型批量更新 MySQL</text>
+  <text class="node-text" x="1700" y="624" text-anchor="middle">用户、店铺、商品、博客等计数字段</text>
+  <text class="node-text" x="1700" y="650" text-anchor="middle">关注 / 粉丝走独立计数器</text>
+
+  <rect class="decision" x="1950" y="500" width="330" height="180"/>
+  <text class="node-title" x="2115" y="562" text-anchor="middle">本轮同步结果</text>
+  <text class="node-text" x="2115" y="598" text-anchor="middle">DB 统计字段批量追平 Redis</text>
+  <text class="node-text" x="2115" y="624" text-anchor="middle">未处理的新写入留待下一轮</text>
+  <text class="node-text" x="2115" y="650" text-anchor="middle">不影响前台即时读体验</text>
+
+  <path class="line" d="M410 590 H468"/>
+  <text class="step" x="439" y="574" text-anchor="middle">5. 定时触发</text>
+  <path class="line" d="M900 590 H958"/>
+  <text class="step" x="929" y="574" text-anchor="middle">6. 进入同步服务</text>
+  <path class="line" d="M1450 590 H1508"/>
+  <text class="step" x="1479" y="574" text-anchor="middle">7. 快照同步</text>
+  <path class="line" d="M1880 590 H1938"/>
+  <text class="step" x="1909" y="574" text-anchor="middle">8. 批量落库</text>
+
+  <text class="section" x="70" y="758">3. 算分轨：受影响对象进入 calcQueue，再由热榜任务洗牌 ZSet</text>
+
+  <rect class="mq" x="150" y="798" width="420" height="190"/>
+  <text class="node-title" x="360" y="860" text-anchor="middle">enqueueCalcAfter*Sync</text>
+  <text class="node-text" x="360" y="896" text-anchor="middle">点赞 / 评论 / 收藏落库后</text>
+  <text class="node-text" x="360" y="922" text-anchor="middle">把博客、评论、评价、商品、店铺 ID</text>
+  <text class="node-text" x="360" y="948" text-anchor="middle">按业务类型推入对应 calcQueue</text>
+
+  <rect class="node" x="660" y="798" width="360" height="190"/>
+  <text class="node-title" x="840" y="860" text-anchor="middle">HotRankJobHandler</text>
+  <text class="node-text" x="840" y="896" text-anchor="middle">blog / shop / product</text>
+  <text class="node-text" x="840" y="922" text-anchor="middle">review / comment 5 组任务</text>
+  <text class="node-text" x="840" y="948" text-anchor="middle">定时消费各自 calcQueue</text>
+
+  <rect class="node" x="1110" y="798" width="430" height="190"/>
+  <text class="node-title" x="1325" y="860" text-anchor="middle">HotRankService + Strategy</text>
+  <text class="node-text" x="1325" y="896" text-anchor="middle">按业务类型重算热度分</text>
+  <text class="node-text" x="1325" y="922" text-anchor="middle">结合点赞、评论、收藏、时间衰减</text>
+  <text class="node-text" x="1325" y="948" text-anchor="middle">评论 / 评价还会区分 sourceType</text>
+
+  <rect class="store" x="1630" y="798" width="350" height="190"/>
+  <text class="node-title" x="1805" y="860" text-anchor="middle">Redis 热榜 ZSet</text>
+  <text class="node-text" x="1805" y="896" text-anchor="middle">shop / voucher / deal / blog</text>
+  <text class="node-text" x="1805" y="922" text-anchor="middle">review / comment 等排行榜</text>
+  <text class="node-text" x="1805" y="948" text-anchor="middle">高分对象重新洗牌上榜</text>
+
+  <rect class="decision" x="2070" y="798" width="210" height="190"/>
+  <text class="node-title" x="2175" y="860" text-anchor="middle">最终效果</text>
+  <text class="node-text" x="2175" y="896" text-anchor="middle">读链路快</text>
+  <text class="node-text" x="2175" y="922" text-anchor="middle">DB 最终一致</text>
+  <text class="node-text" x="2175" y="948" text-anchor="middle">热榜持续更新</text>
+
+  <path class="pass" d="M1880 680 V744 H360 V786"/>
+  <text class="step" x="1120" y="730" text-anchor="middle">9. 同步完成后，把受影响对象推进 calcQueue</text>
+  <path class="line" d="M570 890 H648"/>
+  <text class="step" x="609" y="874" text-anchor="middle">10. 定时洗牌</text>
+  <path class="line" d="M1020 890 H1098"/>
+  <text class="step" x="1059" y="874" text-anchor="middle">11. 重算热度分</text>
+  <path class="line" d="M1540 890 H1618"/>
+  <text class="step" x="1579" y="874" text-anchor="middle">12. 更新排行榜</text>
+  <path class="dash" d="M1980 890 H2058"/>
+  <text class="step" x="2019" y="874" text-anchor="middle">13. 用户侧读取</text>
+
+  <text class="section" x="70" y="1072">4. 双轨制的核心边界</text>
+
+  <rect class="note" x="70" y="1110" width="700" height="170"/>
+  <text class="note-title" x="102" y="1152">同步轨负责“最终一致性”</text>
+  <text class="note-text" x="102" y="1182">- 用户操作先改 Redis，XXL-JOB 再把 like / comment / star / review / follow / fans 批量追平到 MySQL。</text>
+  <text class="note-text" x="102" y="1210">- snapshot 让“本轮刷库”和“新写入继续进入 dirty 集合”不打架。</text>
+  <text class="note-text" x="102" y="1238">- 所以前台快，后台账也不会长期漂移。</text>
+
+  <rect class="note" x="830" y="1110" width="700" height="170"/>
+  <text class="note-title" x="862" y="1152">算分轨负责“热度演化”</text>
+  <text class="note-text" x="862" y="1182">- 并不是每次点赞就现场重排榜单，而是先把受影响对象丢进 calcQueue。</text>
+  <text class="note-text" x="862" y="1210">- HotRankJobHandler 再批量消费，统一洗牌 ZSet，避免高频互动把排行榜打爆。</text>
+  <text class="note-text" x="862" y="1238">- 这也是“互动同步”和“热榜维护”要分成两组任务的原因。</text>
+
+  <rect class="note" x="1590" y="1110" width="700" height="170"/>
+  <text class="note-title" x="1622" y="1152">代码锚点</text>
+  <text class="note-text" x="1622" y="1182">- FollowServiceImpl：维护关注/粉丝 ZSet 与独立计数器，并标记 dirty 集合。</text>
+  <text class="note-text" x="1622" y="1210">- SyncDataServiceImpl：syncDataWithSnapshot + enqueueCalcAfter*Sync。</text>
+  <text class="note-text" x="1622" y="1238">- InteractionSyncXxlJob / HotRankJobHandler：前者追平 DB，后者洗牌排行榜。</text>
+</svg>

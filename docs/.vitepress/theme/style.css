@@ -12,3 +12,426 @@
   --vp-c-brand-3: #91d5ff;
   --vp-c-brand-soft: rgba(64, 169, 255, 0.16);
 }
+
+.VPNavBar {
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.86);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.dark .VPNavBar {
+  background: rgba(15, 23, 42, 0.82);
+  border-bottom-color: rgba(148, 163, 184, 0.1);
+}
+
+.VPNavBarTitle .title {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.VPNavBarMenuLink {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.VPNavBarMenuLink.active {
+  color: var(--vp-c-brand-1);
+}
+
+.VPSearch .DocSearch-Button {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.dark .VPSearch .DocSearch-Button {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(30, 41, 59, 0.88);
+}
+
+.VPHome .VPHero .container {
+  align-items: center;
+}
+
+.VPHome .VPHero .main {
+  max-width: 760px;
+}
+
+.VPHome .VPHero .name {
+  line-height: 1.04;
+}
+
+.VPHome .VPHero .text {
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+
+.VPHome .VPHero .tagline {
+  max-width: 760px;
+  font-size: 20px;
+  line-height: 1.7;
+  color: #475569;
+}
+
+.dark .VPHome .VPHero .tagline {
+  color: #cbd5e1;
+}
+
+.smartlive-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 20px 0 28px;
+}
+
+.smartlive-stat-card {
+  padding: 22px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+}
+
+.dark .smartlive-stat-card {
+  border-color: rgba(148, 163, 184, 0.16);
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 40%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.82));
+  box-shadow: 0 18px 38px rgba(2, 6, 23, 0.36);
+}
+
+.smartlive-stat-value {
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.dark .smartlive-stat-value {
+  color: #f8fafc;
+}
+
+.smartlive-stat-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d4ed8;
+  margin-bottom: 8px;
+}
+
+.dark .smartlive-stat-label {
+  color: #7dd3fc;
+}
+
+.smartlive-stat-desc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #475569;
+}
+
+.dark .smartlive-stat-desc {
+  color: #cbd5e1;
+}
+
+.smartlive-home-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px 0 28px;
+}
+
+.smartlive-tech-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 6px 0 16px;
+}
+
+.smartlive-tech-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 48%),
+    rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  color: #1e3a8a;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.dark .smartlive-tech-chip {
+  border-color: rgba(125, 211, 252, 0.16);
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 48%),
+    rgba(15, 23, 42, 0.9);
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.34);
+  color: #dbeafe;
+}
+
+.smartlive-home-nav-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: rgba(239, 246, 255, 0.92);
+  color: #1d4ed8;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.smartlive-home-nav-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.12);
+  background: rgba(219, 234, 254, 0.96);
+}
+
+.dark .smartlive-home-nav-pill {
+  border-color: rgba(125, 211, 252, 0.18);
+  background: rgba(15, 23, 42, 0.88);
+  color: #7dd3fc;
+}
+
+.dark .smartlive-home-nav-pill:hover {
+  background: rgba(30, 41, 59, 0.96);
+  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.36);
+}
+
+.smartlive-facts-grid,
+.smartlive-feature-grid,
+.smartlive-link-grid,
+.smartlive-path-grid,
+.smartlive-highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 18px 0 28px;
+}
+
+.smartlive-fact-card,
+.smartlive-feature-card,
+.smartlive-link-card,
+.smartlive-path-card,
+.smartlive-highlight-card {
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.92));
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+}
+
+.dark .smartlive-fact-card,
+.dark .smartlive-feature-card,
+.dark .smartlive-link-card,
+.dark .smartlive-path-card,
+.dark .smartlive-highlight-card {
+  border-color: rgba(148, 163, 184, 0.16);
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 40%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.84));
+  box-shadow: 0 18px 38px rgba(2, 6, 23, 0.36);
+}
+
+.smartlive-fact-card {
+  padding: 18px 20px;
+}
+
+.smartlive-fact-metric {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.dark .smartlive-fact-metric {
+  color: #94a3b8;
+}
+
+.smartlive-fact-value {
+  font-size: 18px;
+  line-height: 1.6;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dark .smartlive-fact-value {
+  color: #f8fafc;
+}
+
+.smartlive-link-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 22px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.smartlive-link-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 42px rgba(15, 23, 42, 0.12);
+  text-decoration: none;
+}
+
+.dark .smartlive-link-card:hover {
+  box-shadow: 0 24px 44px rgba(2, 6, 23, 0.42);
+}
+
+.smartlive-link-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.dark .smartlive-link-tag {
+  background: rgba(125, 211, 252, 0.12);
+  color: #7dd3fc;
+}
+
+.smartlive-feature-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 22px 20px;
+}
+
+.smartlive-link-card strong,
+.smartlive-feature-card strong,
+.smartlive-path-card strong,
+.smartlive-highlight-card strong {
+  font-size: 18px;
+  line-height: 1.45;
+  color: #0f172a;
+}
+
+.dark .smartlive-feature-card strong,
+.dark .smartlive-link-card strong,
+.dark .smartlive-path-card strong,
+.dark .smartlive-highlight-card strong {
+  color: #f8fafc;
+}
+
+.smartlive-feature-card span,
+.smartlive-link-card span:not(.smartlive-link-tag),
+.smartlive-path-card span,
+.smartlive-highlight-card span {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #475569;
+}
+
+.dark .smartlive-feature-card span,
+.dark .smartlive-link-card span:not(.smartlive-link-tag),
+.dark .smartlive-path-card span,
+.dark .smartlive-highlight-card span {
+  color: #cbd5e1;
+}
+
+.smartlive-path-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 22px 20px;
+}
+
+.smartlive-path-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.2);
+}
+
+.smartlive-highlight-card {
+  padding: 20px 22px;
+}
+
+.smartlive-figure-frame {
+  margin: 18px 0 28px;
+  padding: 20px 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.dark .smartlive-figure-frame {
+  border-color: rgba(148, 163, 184, 0.16);
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 40%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.84));
+  box-shadow: 0 20px 42px rgba(2, 6, 23, 0.38);
+}
+
+@media (max-width: 768px) {
+  .VPHome .VPHero .container {
+    gap: 16px;
+  }
+
+  .VPHome .VPHero .tagline {
+    font-size: 18px;
+    line-height: 1.65;
+  }
+
+  .smartlive-home-nav {
+    justify-content: flex-start;
+  }
+
+  .smartlive-tech-strip {
+    justify-content: flex-start;
+  }
+
+  .smartlive-stats-grid,
+  .smartlive-facts-grid,
+  .smartlive-feature-grid,
+  .smartlive-link-grid,
+  .smartlive-path-grid,
+  .smartlive-highlight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .smartlive-stat-card,
+  .smartlive-fact-card,
+  .smartlive-feature-card,
+  .smartlive-link-card,
+  .smartlive-path-card,
+  .smartlive-highlight-card {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .smartlive-figure-frame {
+    padding: 14px 12px;
+    border-radius: 18px;
+  }
+}

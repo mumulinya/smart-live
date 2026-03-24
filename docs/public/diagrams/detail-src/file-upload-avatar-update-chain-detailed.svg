@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1420" viewBox="0 0 2200 1420" role="img" aria-labelledby="title desc">
+  <title id="title">头像上传与文件替换链路（详细版）</title>
+  <desc id="desc">展示头像文件校验、文件服务上传、MinIO 落盘、用户头像替换、旧文件删除和登录态缓存刷新的完整流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .warn { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="2200" height="1420" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2144" height="1364" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">头像上传与文件替换链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：SysProfileController.avatar + RemoteFileService.upload/delete + MinioSysFileServiceImpl.uploadFile/deleteFile + TokenService.setLoginUser</text>
+
+  <text class="section" x="70" y="182">1. 用户上传头像时，系统先做图片格式校验，再把文件交给文件服务</text>
+  <rect class="node" x="70" y="220" width="260" height="160"/>
+  <text class="node-title" x="200" y="278" text-anchor="middle">用户端 App / Web</text>
+  <text class="node-text" x="200" y="314" text-anchor="middle">选择新头像文件</text>
+  <text class="node-text" x="200" y="340" text-anchor="middle">POST /user/profile/avatar</text>
+  <rect class="node" x="400" y="220" width="360" height="160"/>
+  <text class="node-title" x="580" y="278" text-anchor="middle">SysProfileController.avatar</text>
+  <text class="node-text" x="580" y="314" text-anchor="middle">读取 LoginUser</text>
+  <text class="node-text" x="580" y="340" text-anchor="middle">扩展名白名单校验</text>
+  <rect class="decision" x="830" y="220" width="320" height="160"/>
+  <text class="node-title" x="990" y="278" text-anchor="middle">文件类型判断</text>
+  <text class="node-text" x="990" y="314" text-anchor="middle">只允许 IMAGE_EXTENSION</text>
+  <text class="node-text" x="990" y="340" text-anchor="middle">非图片直接返回 error</text>
+  <rect class="node" x="1220" y="220" width="340" height="160"/>
+  <text class="node-title" x="1390" y="278" text-anchor="middle">RemoteFileService.upload</text>
+  <text class="node-text" x="1390" y="314" text-anchor="middle">跨模块调用文件服务</text>
+  <text class="node-text" x="1390" y="340" text-anchor="middle">返回 SysFile.url</text>
+  <rect class="store" x="1630" y="220" width="480" height="160"/>
+  <text class="node-title" x="1870" y="278" text-anchor="middle">MinioSysFileServiceImpl.uploadFile</text>
+  <text class="node-text" x="1870" y="314" text-anchor="middle">extractFilename + putObject</text>
+  <text class="node-text" x="1870" y="340" text-anchor="middle">拼出 bucket/url 后返回新头像地址</text>
+  <path class="line" d="M330 300 H388"/><text class="step" x="359" y="284" text-anchor="middle">1. 提交文件</text>
+  <path class="line" d="M760 300 H818"/><text class="step" x="789" y="284" text-anchor="middle">2. 校验格式</text>
+  <path class="line" d="M1150 300 H1208"/><text class="step" x="1179" y="284" text-anchor="middle">3. 调文件服务</text>
+  <path class="line" d="M1560 300 H1618"/><text class="step" x="1589" y="284" text-anchor="middle">4. 上传 MinIO</text>
+
+  <text class="section" x="70" y="452">2. 上传成功后先更新用户头像，再尝试删除旧头像文件，最后刷新登录态缓存</text>
+  <rect class="store" x="180" y="500" width="380" height="180"/>
+  <text class="node-title" x="370" y="562" text-anchor="middle">SysUser.avatar</text>
+  <text class="node-text" x="370" y="598" text-anchor="middle">userService.updateUserAvatar</text>
+  <text class="node-text" x="370" y="624" text-anchor="middle">数据库切换为新 url</text>
+  <text class="node-text" x="370" y="650" text-anchor="middle">旧头像 url 仍从 loginUser 里拿</text>
+  <rect class="decision" x="650" y="500" width="360" height="180"/>
+  <text class="node-title" x="830" y="562" text-anchor="middle">旧头像是否存在</text>
+  <text class="node-text" x="830" y="598" text-anchor="middle">为空：跳过删除</text>
+  <text class="node-text" x="830" y="624" text-anchor="middle">非空：调用 remoteFileService.delete</text>
+  <text class="node-text" x="830" y="650" text-anchor="middle">只删旧文件，不回滚新头像</text>
+  <rect class="store" x="1100" y="500" width="430" height="180"/>
+  <text class="node-title" x="1315" y="562" text-anchor="middle">MinIO 删除旧文件</text>
+  <text class="node-text" x="1315" y="598" text-anchor="middle">deleteFile(fileUrl)</text>
+  <text class="node-text" x="1315" y="624" text-anchor="middle">解析 bucket/objectName 后 removeObject</text>
+  <text class="node-text" x="1315" y="650" text-anchor="middle">回收旧头像存储占用</text>
+  <rect class="node" x="1620" y="500" width="440" height="180"/>
+  <text class="node-title" x="1840" y="562" text-anchor="middle">TokenService.setLoginUser</text>
+  <text class="node-text" x="1840" y="598" text-anchor="middle">loginUser.sysUser.avatar = 新 url</text>
+  <text class="node-text" x="1840" y="624" text-anchor="middle">刷新 Redis / Token 中的登录态</text>
+  <text class="node-text" x="1840" y="650" text-anchor="middle">响应体返回 imgUrl 给前端回显</text>
+  <path class="dash" d="M1870 380 V460 H370 V488"/><text class="step" x="1120" y="444" text-anchor="middle">5. 头像地址先写回用户表</text>
+  <path class="line" d="M560 590 H638"/><text class="step" x="599" y="574" text-anchor="middle">6. 判断旧头像</text>
+  <path class="line" d="M1010 590 H1088"/><text class="step" x="1049" y="574" text-anchor="middle">7. 删除旧文件</text>
+  <path class="line" d="M1530 590 H1608"/><text class="step" x="1569" y="574" text-anchor="middle">8. 刷新登录态</text>
+
+  <text class="section" x="70" y="758">3. 失败边界被拆成三层：类型校验失败、文件服务失败、头像更新失败</text>
+  <rect class="decision" x="160" y="800" width="420" height="190"/>
+  <text class="node-title" x="370" y="862" text-anchor="middle">格式校验失败</text>
+  <text class="node-text" x="370" y="898" text-anchor="middle">extension 不在白名单</text>
+  <text class="node-text" x="370" y="924" text-anchor="middle">直接返回“文件格式不正确”</text>
+  <text class="node-text" x="370" y="950" text-anchor="middle">不会进入文件服务</text>
+  <rect class="decision" x="700" y="800" width="420" height="190"/>
+  <text class="node-title" x="910" y="862" text-anchor="middle">文件服务失败</text>
+  <text class="node-text" x="910" y="898" text-anchor="middle">fileResult 为空或 getData 为空</text>
+  <text class="node-text" x="910" y="924" text-anchor="middle">返回“文件服务异常”</text>
+  <text class="node-text" x="910" y="950" text-anchor="middle">不会误写头像 url</text>
+  <rect class="decision" x="1240" y="800" width="420" height="190"/>
+  <text class="node-title" x="1450" y="862" text-anchor="middle">头像更新失败</text>
+  <text class="node-text" x="1450" y="898" text-anchor="middle">updateUserAvatar 返回 false</text>
+  <text class="node-text" x="1450" y="924" text-anchor="middle">不会删除旧头像</text>
+  <text class="node-text" x="1450" y="950" text-anchor="middle">避免新旧头像都丢失</text>
+  <rect class="store" x="1780" y="800" width="280" height="190"/>
+  <text class="node-title" x="1920" y="862" text-anchor="middle">最终结果</text>
+  <text class="node-text" x="1920" y="898" text-anchor="middle">前端立即显示新头像</text>
+  <text class="node-text" x="1920" y="924" text-anchor="middle">旧文件被清理</text>
+  <text class="node-text" x="1920" y="950" text-anchor="middle">登录态保持一致</text>
+  <path class="warn" d="M990 380 V760 H370 V788"/><text class="step" x="680" y="744" text-anchor="middle">9. 非图片格式直接失败</text>
+  <path class="warn" d="M1390 380 V740 H910 V788"/><text class="step" x="1150" y="726" text-anchor="middle">10. 文件服务异常直接返回</text>
+  <path class="warn" d="M370 680 V760 H1450 V788"/><text class="step" x="910" y="774" text-anchor="middle">11. DB 不更新就不删旧头像</text>
+  <path class="dash" d="M2060 890 H1768"/><text class="step" x="1914" y="874" text-anchor="middle">12. 成功态统一回前端</text>
+
+  <text class="section" x="70" y="1066">4. 这张详细图补充了 SVG 里没展开的文件替换细节</text>
+  <rect class="note" x="70" y="1104" width="660" height="190"/>
+  <text class="note-title" x="102" y="1148">补充 A：为什么先更新头像，再删旧文件</text>
+  <text class="note-text" x="102" y="1180">- avatar() 只有在 updateUserAvatar 成功后，才会尝试删除 oldAvatarUrl。</text>
+  <text class="note-text" x="102" y="1208">- 这样即便删除旧文件失败，用户新头像也已经可用，不会出现头像全部丢失。</text>
+  <text class="note-text" x="102" y="1236">- 这是典型的“先保证主路径成功，再做资源回收”的顺序。</text>
+  <rect class="note" x="800" y="1104" width="660" height="190"/>
+  <text class="note-title" x="832" y="1148">补充 B：登录态缓存为什么要刷新</text>
+  <text class="note-text" x="832" y="1180">- 如果只改数据库，不刷新 token/loginUser，当前登录态里还是旧头像。</text>
+  <text class="note-text" x="832" y="1208">- setLoginUser 后，当前页面和后续请求都能立即看到新头像。</text>
+  <text class="note-text" x="832" y="1236">- 所以这条链不是“上传文件”结束，而是“登录态可见”才结束。</text>
+  <rect class="note" x="1530" y="1104" width="600" height="190"/>
+  <text class="note-title" x="1562" y="1148">代码锚点</text>
+  <text class="note-text" x="1562" y="1180">- SysProfileController.avatar：扩展名校验、上传、删旧图、刷新 token。</text>
+  <text class="note-text" x="1562" y="1208">- MinioSysFileServiceImpl.uploadFile：putObject 后拼 url 返回。</text>
+  <text class="note-text" x="1562" y="1236">- MinioSysFileServiceImpl.deleteFile：按 url 解析 objectName 后删除。</text>
+</svg>

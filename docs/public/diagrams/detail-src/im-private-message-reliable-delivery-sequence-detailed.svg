@@ -1,0 +1,238 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1660" viewBox="0 0 2360 1660" role="img" aria-labelledby="title desc">
+  <title id="title">IM 私聊可靠投递（详细版）</title>
+  <desc id="desc">展示 Netty WebSocket 收到私聊消息后，如何先远程入库、同步会话，再通过 RabbitMQ 和 IM 推送队列把消息送达到双方终端，并补齐已读和死信兜底。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .reject { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1660" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1604" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">IM 私聊可靠投递（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：NettyChatHandler.handleChatMessage + InnerChatController.saveMessage / syncSession + ChatListener.consumeAllSessionMessages + SessionChatConsumer.processChatMessage + ImPushConsumer.handlePushMessage</text>
+
+  <text class="section" x="70" y="182">1. WebSocket 收到 CHAT_MESSAGE 后，先远程入库，再同步双方会话窗口</text>
+
+  <rect class="node" x="70" y="220" width="260" height="170"/>
+  <text class="node-title" x="200" y="280" text-anchor="middle">发送方 App</text>
+  <text class="node-text" x="200" y="316" text-anchor="middle">WebSocket 发送 CHAT_MESSAGE</text>
+  <text class="node-text" x="200" y="342" text-anchor="middle">携带 toUserId / sessionId / content / tempId</text>
+
+  <rect class="node" x="390" y="220" width="380" height="170"/>
+  <text class="node-title" x="580" y="280" text-anchor="middle">NettyChatHandler.handleChatMessage</text>
+  <text class="node-text" x="580" y="316" text-anchor="middle">校验连接已认证</text>
+  <text class="node-text" x="580" y="342" text-anchor="middle">组装 ChatMessageDTO，默认 status=2(已送达/未读)</text>
+
+  <rect class="node" x="830" y="220" width="320" height="170"/>
+  <text class="node-title" x="990" y="280" text-anchor="middle">RemoteChatService</text>
+  <text class="node-text" x="990" y="316" text-anchor="middle">saveMessage()</text>
+  <text class="node-text" x="990" y="342" text-anchor="middle">syncSession() x2</text>
+
+  <rect class="store" x="1210" y="220" width="300" height="170"/>
+  <text class="node-title" x="1360" y="280" text-anchor="middle">ChatMessages</text>
+  <text class="node-text" x="1360" y="316" text-anchor="middle">持久化聊天记录</text>
+  <text class="node-text" x="1360" y="342" text-anchor="middle">返回 messageId</text>
+
+  <rect class="store" x="1570" y="220" width="320" height="170"/>
+  <text class="node-title" x="1730" y="280" text-anchor="middle">UserSessions</text>
+  <text class="node-text" x="1730" y="316" text-anchor="middle">给发送方和接收方各同步一条会话窗口</text>
+  <text class="node-text" x="1730" y="342" text-anchor="middle">用于最近会话列表展示</text>
+
+  <rect class="node" x="1950" y="220" width="290" height="170"/>
+  <text class="node-title" x="2095" y="280" text-anchor="middle">发送方即时 Ack</text>
+  <text class="node-text" x="2095" y="316" text-anchor="middle">MESSAGE_SENT</text>
+  <text class="node-text" x="2095" y="342" text-anchor="middle">tempId -> messageId</text>
+
+  <path class="line" d="M330 305 H378"/>
+  <text class="step" x="354" y="289" text-anchor="middle">1. 发消息</text>
+  <path class="line" d="M770 305 H818"/>
+  <text class="step" x="794" y="289" text-anchor="middle">2. Feign</text>
+  <path class="line" d="M1150 305 H1198"/>
+  <text class="step" x="1174" y="289" text-anchor="middle">3. 入库</text>
+  <path class="line" d="M1510 305 H1558"/>
+  <text class="step" x="1534" y="289" text-anchor="middle">4. 双向同步会话</text>
+  <path class="line" d="M1890 305 H1938"/>
+  <text class="step" x="1914" y="289" text-anchor="middle">5. 解除发送态</text>
+
+  <text class="section" x="70" y="464">2. 消息入库成功后，再发 ChatMessageEvent 到 MQ，让聊天模块统一推进投递状态</text>
+
+  <rect class="mq" x="110" y="500" width="330" height="190"/>
+  <text class="node-title" x="275" y="564" text-anchor="middle">ChatMessageEvent</text>
+  <text class="node-text" x="275" y="600" text-anchor="middle">fromUserId / toUserId / sessionId</text>
+  <text class="node-text" x="275" y="626" text-anchor="middle">content / tempId / messageId / createTime</text>
+  <text class="node-text" x="275" y="652" text-anchor="middle">routingKey = chat.message.{sessionId}</text>
+
+  <rect class="mq" x="500" y="500" width="330" height="190"/>
+  <text class="node-title" x="665" y="564" text-anchor="middle">CHAT_DIRECT_EXCHANGE</text>
+  <text class="node-text" x="665" y="600" text-anchor="middle">NettyChatHandler 发送 MQ</text>
+  <text class="node-text" x="665" y="626" text-anchor="middle">sendMqMessage(..., retry=3)</text>
+  <text class="node-text" x="665" y="652" text-anchor="middle">先保证持久化，再做异步推送</text>
+
+  <rect class="node" x="890" y="500" width="360" height="190"/>
+  <text class="node-title" x="1070" y="564" text-anchor="middle">ChatListener.consumeAllSessionMessages</text>
+  <text class="node-text" x="1070" y="600" text-anchor="middle">messageId 为空直接 Nack 到死信</text>
+  <text class="node-text" x="1070" y="626" text-anchor="middle">Redis 幂等锁：chat:messageId:{id}</text>
+  <text class="node-text" x="1070" y="652" text-anchor="middle">通过后交给 SessionChatConsumer</text>
+
+  <rect class="node" x="1310" y="500" width="360" height="190"/>
+  <text class="node-title" x="1490" y="564" text-anchor="middle">SessionChatConsumer</text>
+  <text class="node-text" x="1490" y="600" text-anchor="middle">查 Redis IM_SESSION / IM_ONLINE</text>
+  <text class="node-text" x="1490" y="626" text-anchor="middle">判定接收方在聊天窗内则 status=1</text>
+  <text class="node-text" x="1490" y="652" text-anchor="middle">否则 status=2，仅表示已送达</text>
+
+  <rect class="store" x="1730" y="500" width="250" height="190"/>
+  <text class="node-title" x="1855" y="564" text-anchor="middle">ChatMessages</text>
+  <text class="node-text" x="1855" y="600" text-anchor="middle">updateById(message)</text>
+  <text class="node-text" x="1855" y="626" text-anchor="middle">更新 status=1 / 2</text>
+  <text class="node-text" x="1855" y="652" text-anchor="middle">持久化已读/送达状态</text>
+
+  <rect class="mq" x="2040" y="500" width="220" height="190"/>
+  <text class="node-title" x="2150" y="564" text-anchor="middle">已读回执</text>
+  <text class="node-text" x="2150" y="600" text-anchor="middle">如果 status=1</text>
+  <text class="node-text" x="2150" y="626" text-anchor="middle">再通知发送方</text>
+  <text class="node-text" x="2150" y="652" text-anchor="middle">MESSAGE_STATUS_UPDATE</text>
+
+  <path class="line" d="M440 595 H488"/>
+  <text class="step" x="464" y="579" text-anchor="middle">6. 发事件</text>
+  <path class="line" d="M830 595 H878"/>
+  <text class="step" x="854" y="579" text-anchor="middle">7. 消费并幂等</text>
+  <path class="line" d="M1250 595 H1298"/>
+  <text class="step" x="1274" y="579" text-anchor="middle">8. 判已读/送达</text>
+  <path class="line" d="M1670 595 H1718"/>
+  <text class="step" x="1694" y="579" text-anchor="middle">9. 更新消息状态</text>
+  <path class="dash" d="M1980 595 H2028"/>
+  <text class="step" x="2004" y="579" text-anchor="middle">10. 已读回执</text>
+
+  <text class="section" x="70" y="774">3. 最终推送不是直接写 Netty，而是先发 im.push.queue，再由 IM 节点检查本地连接并单播</text>
+
+  <rect class="mq" x="120" y="810" width="340" height="190"/>
+  <text class="node-title" x="290" y="874" text-anchor="middle">sendPushToIm()</text>
+  <text class="node-text" x="290" y="910" text-anchor="middle">包装 type + data + timestamp</text>
+  <text class="node-text" x="290" y="936" text-anchor="middle">外层 MQ：userId + json</text>
+  <text class="node-text" x="290" y="962" text-anchor="middle">routingKey = im.push.user</text>
+
+  <rect class="mq" x="540" y="810" width="300" height="190"/>
+  <text class="node-title" x="690" y="874" text-anchor="middle">im.push.queue</text>
+  <text class="node-text" x="690" y="910" text-anchor="middle">x-dead-letter-exchange 已配置</text>
+  <text class="node-text" x="690" y="936" text-anchor="middle">推送异常可继续重试 / 转死信</text>
+  <text class="node-text" x="690" y="962" text-anchor="middle">统一承接私聊、系统通知等推送</text>
+
+  <rect class="node" x="920" y="810" width="360" height="190"/>
+  <text class="node-title" x="1100" y="874" text-anchor="middle">ImPushConsumer.handlePushMessage</text>
+  <text class="node-text" x="1100" y="910" text-anchor="middle">messageId 缺失则 basicNack(false,false)</text>
+  <text class="node-text" x="1100" y="936" text-anchor="middle">Redis 幂等锁：im:messageId:{id}</text>
+  <text class="node-text" x="1100" y="962" text-anchor="middle">只在本节点用户在线时 pushMessageToUser</text>
+
+  <rect class="store" x="1360" y="810" width="340" height="190"/>
+  <text class="node-title" x="1530" y="874" text-anchor="middle">Redis 在线态</text>
+  <text class="node-text" x="1530" y="910" text-anchor="middle">im:online:{userId}</text>
+  <text class="node-text" x="1530" y="936" text-anchor="middle">im:session:{userId}</text>
+  <text class="node-text" x="1530" y="962" text-anchor="middle">用于判断在线与是否当前会话</text>
+
+  <rect class="node" x="1780" y="810" width="220" height="190"/>
+  <text class="node-title" x="1890" y="874" text-anchor="middle">发送方设备</text>
+  <text class="node-text" x="1890" y="910" text-anchor="middle">NEW_MESSAGE</text>
+  <text class="node-text" x="1890" y="936" text-anchor="middle">或 MESSAGE_STATUS_UPDATE</text>
+  <text class="node-text" x="1890" y="962" text-anchor="middle">立即刷新气泡状态</text>
+
+  <rect class="node" x="2060" y="810" width="220" height="190"/>
+  <text class="node-title" x="2170" y="874" text-anchor="middle">接收方设备</text>
+  <text class="node-text" x="2170" y="910" text-anchor="middle">NEW_MESSAGE</text>
+  <text class="node-text" x="2170" y="936" text-anchor="middle">当前会话内即读</text>
+  <text class="node-text" x="2170" y="962" text-anchor="middle">离线则稍后历史拉取</text>
+
+  <path class="line" d="M460 905 H528"/>
+  <text class="step" x="494" y="889" text-anchor="middle">11. 发推送指令</text>
+  <path class="line" d="M840 905 H908"/>
+  <text class="step" x="874" y="889" text-anchor="middle">12. IM 消费</text>
+  <path class="dash" d="M1280 905 H1348"/>
+  <text class="step" x="1314" y="889" text-anchor="middle">13. 查在线态</text>
+  <path class="line" d="M1700 880 H1768"/>
+  <text class="step" x="1734" y="864" text-anchor="middle">14. 推送给发送方</text>
+  <path class="line" d="M1700 940 H2048"/>
+  <text class="step" x="1874" y="924" text-anchor="middle">15. 推送给接收方</text>
+
+  <text class="section" x="70" y="1084">4. 可靠性来自“先入库 + 幂等消费 + 手动 ACK/NACK + 死信兜底”，而不是只依赖 WebSocket 在线推送</text>
+
+  <rect class="danger" x="120" y="1120" width="360" height="210"/>
+  <text class="node-title" x="300" y="1184" text-anchor="middle">消息缺 messageId</text>
+  <text class="node-text" x="300" y="1220" text-anchor="middle">ChatListener / ImPushConsumer</text>
+  <text class="node-text" x="300" y="1246" text-anchor="middle">都会拒绝消费并 basicNack(false,false)</text>
+  <text class="node-text" x="300" y="1272" text-anchor="middle">避免无幂等保护的脏消息进入业务</text>
+
+  <rect class="danger" x="560" y="1120" width="380" height="210"/>
+  <text class="node-title" x="750" y="1184" text-anchor="middle">业务异常时清幂等锁再重试</text>
+  <text class="node-text" x="750" y="1220" text-anchor="middle">ChatListener / ImPushConsumer catch 异常</text>
+  <text class="node-text" x="750" y="1246" text-anchor="middle">deleteObject(idempotentKey)</text>
+  <text class="node-text" x="750" y="1272" text-anchor="middle">抛 RuntimeException 触发监听器重试</text>
+
+  <rect class="mq" x="1020" y="1120" width="320" height="210"/>
+  <text class="node-title" x="1180" y="1184" text-anchor="middle">死信队列</text>
+  <text class="node-text" x="1180" y="1220" text-anchor="middle">chat / im push 队列都挂了 DLX</text>
+  <text class="node-text" x="1180" y="1246" text-anchor="middle">最终由 dead letter listener 统一接住</text>
+  <text class="node-text" x="1180" y="1272" text-anchor="middle">便于排查无法自愈的消息</text>
+
+  <rect class="store" x="1420" y="1120" width="400" height="210"/>
+  <text class="node-title" x="1620" y="1184" text-anchor="middle">历史消息与补拉</text>
+  <text class="node-text" x="1620" y="1220" text-anchor="middle">即使接收方离线，消息也已在 ChatMessages 持久化</text>
+  <text class="node-text" x="1620" y="1246" text-anchor="middle">后续打开会话页，会从 /message/list 拉到历史记录</text>
+  <text class="node-text" x="1620" y="1272" text-anchor="middle">并批量把 status=2 的消息标记为已读</text>
+
+  <rect class="node" x="1900" y="1120" width="360" height="210"/>
+  <text class="node-title" x="2080" y="1184" text-anchor="middle">最终可见效果</text>
+  <text class="node-text" x="2080" y="1220" text-anchor="middle">发送方先收到 MESSAGE_SENT，再看到状态变化</text>
+  <text class="node-text" x="2080" y="1246" text-anchor="middle">接收方在线时实时到达；离线时下次进会话补齐</text>
+  <text class="node-text" x="2080" y="1272" text-anchor="middle">系统通知也复用同一条 im.push 链路</text>
+
+  <path class="reject" d="M480 1215 H548"/>
+  <text class="step" x="514" y="1199" text-anchor="middle">16. 无 messageId 直接拒绝</text>
+  <path class="reject" d="M940 1215 H1008"/>
+  <text class="step" x="974" y="1199" text-anchor="middle">17. 异常重试 / 死信</text>
+  <path class="dash" d="M1340 1215 H1408"/>
+  <text class="step" x="1374" y="1199" text-anchor="middle">18. 离线补拉</text>
+  <path class="dash" d="M1820 1215 H1888"/>
+  <text class="step" x="1854" y="1199" text-anchor="middle">19. 用户最终感知</text>
+
+  <text class="section" x="70" y="1424">5. 这张详细图比展示版多补了哪些内部机制</text>
+
+  <rect class="note" x="70" y="1460" width="700" height="134"/>
+  <text class="note-title" x="102" y="1502">补充 A：可靠性锚点不是“在线就推”，而是“先入库，再异步投递”</text>
+  <text class="note-text" x="102" y="1532">- Netty 先远程保存 ChatMessages，拿到 messageId 之后才发 ChatMessageEvent。</text>
+  <text class="note-text" x="102" y="1560">- 就算接收方离线，历史页也能从数据库把消息补出来，不会因为 WebSocket 瞬时断开而丢消息。</text>
+
+  <rect class="note" x="830" y="1460" width="700" height="134"/>
+  <text class="note-title" x="862" y="1502">补充 B：已读、送达、系统通知复用同一条推送基座</text>
+  <text class="note-text" x="862" y="1532">- SessionChatConsumer 负责判定 status=1 还是 2，并通知发送方 MESSAGE_STATUS_UPDATE。</text>
+  <text class="note-text" x="862" y="1560">- SystemNoticeServiceImpl 也会把 SYSTEM_MESSAGE 包成同样的 im.push.user 指令，走 ImPushConsumer 推送。</text>
+
+  <rect class="note" x="1590" y="1460" width="700" height="134"/>
+  <text class="note-title" x="1622" y="1502">代码锚点</text>
+  <text class="note-text" x="1622" y="1532">- NettyChatHandler：处理 AUTH / CHAT_MESSAGE / UPDATE_ACTIVE_SESSION，并把 tempId 映射回真实 messageId。</text>
+  <text class="note-text" x="1622" y="1560">- ChatListener / ImPushConsumer：都带 messageId 幂等锁、手动 ACK/NACK 和死信配置。</text>
+</svg>

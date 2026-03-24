@@ -1,0 +1,121 @@
+{
+  "readmeProjectScaleRows": [
+    {
+      "metric": "核心业务模块",
+      "value": "**16 个**",
+      "description": "用户、店铺、商品、订单、博客、互动、搜索、AI、IM 等核心业务模块"
+    },
+    {
+      "metric": "可运行服务应用",
+      "value": "**19 个**",
+      "description": "16 个业务模块 + `auth` + `gateway` + `monitor`"
+    },
+    {
+      "metric": "核心能力域",
+      "value": "**6 大类**",
+      "description": "发现推荐、交易履约、社交互动、内容治理、经营分析、基础设施"
+    },
+    {
+      "metric": "端侧覆盖",
+      "value": "**2 端**",
+      "description": "B 端商家管理 + C 端消费者体验"
+    },
+    {
+      "metric": "核心业务代码",
+      "value": "**30,000+ 行**",
+      "description": "以服务端业务逻辑为主"
+    },
+    {
+      "metric": "文档与图示资产",
+      "value": "**完整导览**",
+      "description": "展示版/详细版链路图、页面截图、在线文档与开源接入指南"
+    },
+    {
+      "metric": "Git 提交记录",
+      "value": "**200+**",
+      "description": "可回溯完整开发过程"
+    }
+  ],
+  "readmeContributionBullets": [
+    "🔸 核心业务代码：**30,000+ 行**（覆盖 16 个业务模块与完整服务应用骨架）",
+    "🔸 文档与图示资产：**完整在线文档 + 业务链路图 + 真实页面截图**（便于讲解、复盘与源码阅读）",
+    "🔸 项目周期：**8+ 个月**（从零开始独立完成全栈设计与开发）",
+    "🔸 Git 提交记录：**200+** 条（完整的开发足迹可追溯）"
+  ],
+  "docsHomeCards": [
+    {
+      "value": "16 个",
+      "label": "业务模块",
+      "description": "覆盖交易、社交、搜索、AI、审核、钱包、IM 等核心能力"
+    },
+    {
+      "value": "19 个",
+      "label": "服务应用",
+      "description": "16 个业务模块 + auth / gateway / monitor"
+    },
+    {
+      "value": "7万+",
+      "label": "Java 代码",
+      "description": "核心业务口径 3万+，当前仓库 Java 总量约 72,000+ 行"
+    },
+    {
+      "value": "200+",
+      "label": "Git 提交",
+      "description": "完整保留从 0 到 1 的迭代与重构轨迹"
+    },
+    {
+      "value": "8+ 个月",
+      "label": "独立开发",
+      "description": "覆盖需求、建模、实现、压测、文档与上线展示"
+    },
+    {
+      "value": "3200+",
+      "label": "秒杀 QPS",
+      "description": "Lua 预扣库存 + MQ 异步落单 + 延迟补偿兜底"
+    },
+    {
+      "value": "20-40 倍",
+      "label": "Redis 提升",
+      "description": "列表、详情、计数等高频读链路经过分层缓存优化"
+    },
+    {
+      "value": "28 个",
+      "label": "XXL-JOB 任务",
+      "description": "统一承接订单兜底、秒杀预热、热榜重建与互动回刷"
+    }
+  ],
+  "docsHomeQuickFacts": [
+    {
+      "metric": "核心业务模块",
+      "value": "**16** 个业务模块"
+    },
+    {
+      "metric": "可运行服务应用",
+      "value": "**19** 个"
+    },
+    {
+      "metric": "核心 Java 代码",
+      "value": "**7万+** 行"
+    },
+    {
+      "metric": "展示版业务链路图",
+      "value": "**32** 张"
+    },
+    {
+      "metric": "详细版业务链路图",
+      "value": "**32** 张"
+    },
+    {
+      "metric": "真实页面截图",
+      "value": "**85** 张"
+    },
+    {
+      "metric": "XXL-JOB 调度任务",
+      "value": "**28** 个"
+    },
+    {
+      "metric": "端侧覆盖",
+      "value": "用户端 App + 管理端 Web"
+    }
+  ]
+}

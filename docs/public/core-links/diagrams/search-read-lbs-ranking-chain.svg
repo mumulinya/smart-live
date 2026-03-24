@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">搜索读链路与热词沉淀链路</title>
+  <desc id="desc">展示用户搜索请求经过 SearchController、SearchService、ES 与排序策略后返回结果，并同步沉淀搜索历史与热搜词的主链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1052" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">搜索读链路与热词沉淀链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：SearchController.searchShops / recordSearch + SearchServiceImpl.searchShops / insertSearchHistory + HotShopSortStrategy</text>
+
+  <text class="section" x="74" y="188">1. 用户发起搜索请求并进入检索服务</text>
+
+  <rect class="node" x="70" y="220" width="290" height="150"/>
+  <text class="node-title" x="215" y="274" text-anchor="middle">用户端搜索页</text>
+  <text class="node-text" x="215" y="308" text-anchor="middle">输入关键词、经纬度、筛选条件</text>
+  <text class="node-text" x="215" y="334" text-anchor="middle">调用 /search/shops 等接口</text>
+
+  <rect class="node" x="450" y="220" width="300" height="150"/>
+  <text class="node-title" x="600" y="274" text-anchor="middle">SearchController</text>
+  <text class="node-text" x="600" y="308" text-anchor="middle">解析 indexName、keyword、geo</text>
+  <text class="node-text" x="600" y="334" text-anchor="middle">转给 SearchServiceImpl</text>
+
+  <rect class="node" x="840" y="220" width="320" height="150"/>
+  <text class="node-title" x="1000" y="274" text-anchor="middle">SearchServiceImpl</text>
+  <text class="node-text" x="1000" y="308" text-anchor="middle">构建查询条件、分页与过滤项</text>
+  <text class="node-text" x="1000" y="334" text-anchor="middle">按业务类型选择排序策略</text>
+
+  <rect class="decision" x="1250" y="220" width="320" height="150"/>
+  <text class="node-title" x="1410" y="274" text-anchor="middle">排序策略</text>
+  <text class="node-text" x="1410" y="308" text-anchor="middle">HotShopSortStrategy</text>
+  <text class="node-text" x="1410" y="334" text-anchor="middle">function_score + geo_decay</text>
+
+  <path class="line" d="M360 295 H438"/>
+  <text class="step" x="399" y="280" text-anchor="middle">1. 搜索请求进入网关后转发</text>
+
+  <path class="line" d="M750 295 H828"/>
+  <text class="step" x="789" y="280" text-anchor="middle">2. 组装检索参数</text>
+
+  <path class="line" d="M1160 295 H1238"/>
+  <text class="step" x="1199" y="280" text-anchor="middle">3. 应用 LBS / 热度排序</text>
+
+  <text class="section" x="74" y="470">2. ES 返回结果后，控制层同时沉淀搜索行为</text>
+
+  <rect class="store" x="210" y="520" width="320" height="160"/>
+  <text class="node-title" x="370" y="576" text-anchor="middle">Elasticsearch</text>
+  <text class="node-text" x="370" y="612" text-anchor="middle">返回 shop / blog / review 文档</text>
+  <text class="node-text" x="370" y="638" text-anchor="middle">含距离、评分、命中高亮等字段</text>
+
+  <rect class="node" x="620" y="520" width="320" height="160"/>
+  <text class="node-title" x="780" y="576" text-anchor="middle">ResponseConverter</text>
+  <text class="node-text" x="780" y="612" text-anchor="middle">转换为前端 VO / ScrollResult</text>
+  <text class="node-text" x="780" y="638" text-anchor="middle">统一响应格式</text>
+
+  <rect class="store" x="1030" y="520" width="320" height="160"/>
+  <text class="node-title" x="1190" y="576" text-anchor="middle">搜索历史 Redis</text>
+  <text class="node-text" x="1190" y="612" text-anchor="middle">按用户维度写入 history</text>
+  <text class="node-text" x="1190" y="638" text-anchor="middle">支持最近搜索回显与删除</text>
+
+  <rect class="store" x="1440" y="520" width="280" height="160"/>
+  <text class="node-title" x="1580" y="576" text-anchor="middle">热搜榜 Redis</text>
+  <text class="node-text" x="1580" y="612" text-anchor="middle">recordSearch 增加关键词热度</text>
+  <text class="node-text" x="1580" y="638" text-anchor="middle">用于 /search/hot 展示</text>
+
+  <path class="line" d="M1410 370 V450 H370 V508"/>
+  <text class="step" x="900" y="434" text-anchor="middle">4. 带排序规则去 ES 检索</text>
+
+  <path class="line" d="M530 600 H608"/>
+  <text class="step" x="569" y="586" text-anchor="middle">5. 转换并返回结果</text>
+
+  <path class="dash" d="M780 680 V730 H1190 V692"/>
+  <text class="step" x="980" y="724" text-anchor="middle">6. 记录用户搜索历史</text>
+
+  <path class="dash" d="M780 680 V760 H1580 V692"/>
+  <text class="step" x="1180" y="754" text-anchor="middle">7. 增加关键词热度</text>
+
+  <rect class="note" x="70" y="820" width="500" height="190"/>
+  <text class="note-title" x="102" y="864">这条链路的亮点</text>
+  <text class="note-text" x="102" y="898">- 搜索不是只查 ES，还把 LBS 排序、用户搜索历史和热词沉淀放进了一条读链路。</text>
+  <text class="note-text" x="102" y="926">- 热门店铺排序通过 function_score 叠加地理衰减，离用户近且更热的店更容易排前。</text>
+  <text class="note-text" x="102" y="954">- 历史与热搜都在 Redis，读写都比较轻。</text>
+
+  <rect class="note" x="650" y="820" width="500" height="190"/>
+  <text class="note-title" x="682" y="864">代码里能对应到的实现</text>
+  <text class="note-text" x="682" y="898">- SearchServiceImpl.searchShops 会组装 bool 查询，再交给排序策略生成 function_score。</text>
+  <text class="note-text" x="682" y="926">- SearchController.recordSearch / searchHistory / hotKeywords 对应热词与历史接口。</text>
+  <text class="note-text" x="682" y="954">- HotShopSortStrategy 里直接做了 geo_decay 和 score factor。</text>
+
+  <rect class="note" x="1230" y="820" width="500" height="190"/>
+  <text class="note-title" x="1262" y="864">文档展示建议</text>
+  <text class="note-text" x="1262" y="898">- 这张图适合和“搜索与向量库同步”配对，一张讲写链路，一张讲读链路。</text>
+  <text class="note-text" x="1262" y="926">- 如果要讲用户体验，可以重点说热搜、历史、LBS 三件事怎么配合。</text>
+  <text class="note-text" x="1262" y="954">- 这条链路也很适合放到 AI / 推荐相关能力旁边。</text>
+</svg>

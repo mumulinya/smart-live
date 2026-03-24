@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">店铺经营分析聚合链路</title>
+  <desc id="desc">展示商家查看经营分析时，店铺服务并发聚合订单分析、评价分析和经营建议，并优先返回当日缓存记录的主链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1052" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">店铺经营分析聚合链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：ShopAnalysisServiceImpl.getShopAnalysis / findTodayRecord + remoteOrderService.getShopOrderAnalysis + remoteReviewService.getShopReviewAnalysis</text>
+
+  <text class="section" x="74" y="188">1. 商家查看分析面板时，优先命中当天分析记录</text>
+
+  <rect class="node" x="70" y="220" width="300" height="150"/>
+  <text class="node-title" x="220" y="274" text-anchor="middle">商家端分析面板</text>
+  <text class="node-text" x="220" y="308" text-anchor="middle">进入店铺经营分析页</text>
+  <text class="node-text" x="220" y="334" text-anchor="middle">请求 getShopAnalysis</text>
+
+  <rect class="node" x="470" y="220" width="320" height="150"/>
+  <text class="node-title" x="630" y="274" text-anchor="middle">ShopAnalysisService</text>
+  <text class="node-text" x="630" y="308" text-anchor="middle">根据 shopId 查询今日记录</text>
+  <text class="node-text" x="630" y="334" text-anchor="middle">有记录则直接返回</text>
+
+  <rect class="store" x="890" y="220" width="320" height="150"/>
+  <text class="node-title" x="1050" y="274" text-anchor="middle">ShopAnalysisRecord</text>
+  <text class="node-text" x="1050" y="308" text-anchor="middle">当天分析快照</text>
+  <text class="node-text" x="1050" y="334" text-anchor="middle">避免重复聚合远程服务</text>
+
+  <rect class="decision" x="1310" y="220" width="280" height="150"/>
+  <text class="node-title" x="1450" y="274" text-anchor="middle">是否命中今日记录</text>
+  <text class="node-text" x="1450" y="308" text-anchor="middle">命中：直接返回</text>
+  <text class="node-text" x="1450" y="334" text-anchor="middle">未命中：进入并发聚合</text>
+
+  <path class="line" d="M370 295 H458"/>
+  <text class="step" x="414" y="280" text-anchor="middle">1. 发起经营分析请求</text>
+
+  <path class="line" d="M790 295 H878"/>
+  <text class="step" x="834" y="280" text-anchor="middle">2. 查当天快照</text>
+
+  <path class="line" d="M1210 295 H1298"/>
+  <text class="step" x="1254" y="280" text-anchor="middle">3. 判断是否复用</text>
+
+  <text class="section" x="74" y="470">2. 未命中时，通过 CompletableFuture 并发拉多份分析数据</text>
+
+  <rect class="store" x="120" y="520" width="320" height="170"/>
+  <text class="node-title" x="280" y="576" text-anchor="middle">订单分析</text>
+  <text class="node-text" x="280" y="612" text-anchor="middle">remoteOrderService.getShopOrderAnalysis</text>
+  <text class="node-text" x="280" y="638" text-anchor="middle">成交额、订单量、转化指标</text>
+
+  <rect class="store" x="500" y="520" width="320" height="170"/>
+  <text class="node-title" x="660" y="576" text-anchor="middle">评价分析</text>
+  <text class="node-text" x="660" y="612" text-anchor="middle">remoteReviewService.getShopReviewAnalysis</text>
+  <text class="node-text" x="660" y="638" text-anchor="middle">评分分布、差评占比等</text>
+
+  <rect class="store" x="880" y="520" width="320" height="170"/>
+  <text class="node-title" x="1040" y="576" text-anchor="middle">经营建议</text>
+  <text class="node-text" x="1040" y="612" text-anchor="middle">remoteOrderService.getShopOrderSuggest</text>
+  <text class="node-text" x="1040" y="638" text-anchor="middle">根据订单表现给建议</text>
+
+  <rect class="node" x="1260" y="520" width="360" height="170"/>
+  <text class="node-title" x="1440" y="576" text-anchor="middle">聚合组装</text>
+  <text class="node-text" x="1440" y="612" text-anchor="middle">CompletableFuture.allOf 等待完成</text>
+  <text class="node-text" x="1440" y="638" text-anchor="middle">组合成 ShopAnalysisVO</text>
+
+  <path class="dash" d="M1450 370 V450 H280 V508"/>
+  <text class="step" x="900" y="434" text-anchor="middle">4. 未命中快照时并发拉远程分析</text>
+
+  <path class="dash" d="M1450 370 V450 H660 V508"/>
+  <text class="step" x="1160" y="462" text-anchor="middle">5. 同步拉评价分析</text>
+
+  <path class="dash" d="M1450 370 V450 H1040 V508"/>
+  <text class="step" x="1310" y="490" text-anchor="middle">6. 同步拉经营建议</text>
+
+  <path class="line" d="M440 605 H488"/>
+  <path class="line" d="M820 605 H868"/>
+  <path class="line" d="M1200 605 H1248"/>
+  <text class="step" x="850" y="724" text-anchor="middle">7. 汇总为一份经营分析视图</text>
+
+  <text class="section" x="74" y="790">3. 聚合结果可落当天记录，供下一次直接命中</text>
+
+  <rect class="store" x="420" y="840" width="340" height="150"/>
+  <text class="node-title" x="590" y="894" text-anchor="middle">当日分析快照落库</text>
+  <text class="node-text" x="590" y="928" text-anchor="middle">保存当前时间窗口分析结果</text>
+  <text class="node-text" x="590" y="954" text-anchor="middle">减少重复远程计算</text>
+
+  <rect class="node" x="900" y="840" width="360" height="150"/>
+  <text class="node-title" x="1080" y="894" text-anchor="middle">商家端返回分析页</text>
+  <text class="node-text" x="1080" y="928" text-anchor="middle">展示订单表现、评价洞察、经营建议</text>
+  <text class="node-text" x="1080" y="954" text-anchor="middle">供商家决策参考</text>
+
+  <path class="line" d="M1440 690 V760 H590 V828"/>
+  <text class="step" x="980" y="744" text-anchor="middle">8. 结果可写回当天快照</text>
+
+  <path class="line" d="M760 915 H888"/>
+  <text class="step" x="824" y="900" text-anchor="middle">9. 返回前端展示</text>
+
+  <rect class="note" x="1320" y="810" width="410" height="210"/>
+  <text class="note-title" x="1352" y="854">这张图的价值</text>
+  <text class="note-text" x="1352" y="888">- 它体现的是“经营视角”的聚合服务，</text>
+  <text class="note-text" x="1352" y="914">不是单个 CRUD 接口。</text>
+  <text class="note-text" x="1352" y="940">- 先查快照，再并发远程拉数，</text>
+  <text class="note-text" x="1352" y="966">说明你在兼顾性能和页面体验。</text>
+</svg>

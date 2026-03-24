@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2280" height="1440" viewBox="0 0 2280 1440" role="img" aria-labelledby="title desc">
+  <title id="title">热榜增量维护与全量重建链路（详细版）</title>
+  <desc id="desc">从调度视角展示热榜增量任务、全量重建任务、策略执行、临时队列和最终榜单落点。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title{font:700 36px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#17365e}.subtitle{font:500 18px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#4f6d8f}.section{font:700 24px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1d4b81}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#153454}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#36516d}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#25496f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#23425f}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506983}.node{fill:#ffffff;stroke:#a8c2e2;stroke-width:2;rx:24}.store{fill:#f3fbf5;stroke:#a7d6b7;stroke-width:2;rx:24}.decision{fill:#f8f3ff;stroke:#c7a6ea;stroke-width:2;rx:24}.note{fill:#ffffff;stroke:#d7e3f4;stroke-width:1.5;rx:20}.line{stroke:#255792;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d92c0;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="2280" height="1440" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2224" height="1384" rx="30" fill="#fff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">热榜增量维护与全量重建链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：HotRankJobHandler + FullRebuildJobHandler + HotRankServiceImpl + 各业务 HotRankStrategy</text>
+
+  <text class="section" x="70" y="182">1. 增量维护：每种业务类型都有独立 XXL-JOB，统一走 calcHotRankDataByBizType</text>
+  <rect class="node" x="100" y="220" width="360" height="170"/>
+  <text class="node-title" x="280" y="282" text-anchor="middle">HotRankJobHandler</text>
+  <text class="node-text" x="280" y="318" text-anchor="middle">blog / shop / product / review / comment</text>
+  <text class="node-text" x="280" y="344" text-anchor="middle">5 个增量热榜任务</text>
+  <rect class="node" x="560" y="220" width="340" height="170"/>
+  <text class="node-title" x="730" y="282" text-anchor="middle">ExecutorService</text>
+  <text class="node-text" x="730" y="318" text-anchor="middle">异步执行热榜任务</text>
+  <text class="node-text" x="730" y="344" text-anchor="middle">避免阻塞 XXL 线程</text>
+  <rect class="node" x="1000" y="220" width="360" height="170"/>
+  <text class="node-title" x="1180" y="282" text-anchor="middle">HotRankServiceImpl</text>
+  <text class="node-text" x="1180" y="318" text-anchor="middle">calcHotRankDataByBizType</text>
+  <text class="node-text" x="1180" y="344" text-anchor="middle">找对应 strategy 并执行</text>
+  <rect class="decision" x="1460" y="220" width="360" height="170"/>
+  <text class="node-title" x="1640" y="282" text-anchor="middle">StrategyFactory</text>
+  <text class="node-text" x="1640" y="318" text-anchor="middle">按 bizType 路由</text>
+  <text class="node-text" x="1640" y="344" text-anchor="middle">BLOG / SHOP / PRODUCT ...</text>
+  <rect class="store" x="1920" y="220" width="240" height="170"/>
+  <text class="node-title" x="2040" y="282" text-anchor="middle">增量热榜结果</text>
+  <text class="node-text" x="2040" y="318" text-anchor="middle">刷新 Redis ZSet</text>
+  <text class="node-text" x="2040" y="344" text-anchor="middle">保留 TEMP 清理</text>
+  <path class="line" d="M460 305 H548"/><text class="step" x="504" y="289" text-anchor="middle">1. 触发任务</text>
+  <path class="line" d="M900 305 H988"/><text class="step" x="944" y="289" text-anchor="middle">2. 异步执行</text>
+  <path class="line" d="M1360 305 H1448"/><text class="step" x="1404" y="289" text-anchor="middle">3. 路由策略</text>
+  <path class="line" d="M1820 305 H1908"/><text class="step" x="1864" y="289" text-anchor="middle">4. 写回榜单</text>
+
+  <text class="section" x="70" y="454">2. 全量重建：凌晨统一遍历所有业务类型，修正长期累计偏差</text>
+  <rect class="node" x="130" y="500" width="380" height="170"/>
+  <text class="node-title" x="320" y="562" text-anchor="middle">FullRebuildJobHandler</text>
+  <text class="node-text" x="320" y="598" text-anchor="middle">allFullRebuildRankJob</text>
+  <text class="node-text" x="320" y="624" text-anchor="middle">也支持分业务单独重建</text>
+  <rect class="decision" x="610" y="500" width="360" height="170"/>
+  <text class="node-title" x="790" y="562" text-anchor="middle">遍历 GlobalBizTypeEnum</text>
+  <text class="node-text" x="790" y="598" text-anchor="middle">跳过 USER</text>
+  <text class="node-text" x="790" y="624" text-anchor="middle">其余都重建</text>
+  <rect class="node" x="1070" y="500" width="420" height="170"/>
+  <text class="node-title" x="1280" y="562" text-anchor="middle">fullRebuildHotRankByBizType</text>
+  <text class="node-text" x="1280" y="598" text-anchor="middle">拿策略后调 fullRebuildRank()</text>
+  <text class="node-text" x="1280" y="624" text-anchor="middle">批量拉全量资源数据</text>
+  <rect class="store" x="1590" y="500" width="430" height="170"/>
+  <text class="node-title" x="1805" y="562" text-anchor="middle">删除旧榜 + 全量写榜</text>
+  <text class="node-text" x="1805" y="598" text-anchor="middle">deleteObject(hotRankKey)</text>
+  <text class="node-text" x="1805" y="624" text-anchor="middle">setCacheZSet(new tuples)</text>
+  <path class="line" d="M510 585 H598"/><text class="step" x="554" y="569" text-anchor="middle">5. 凌晨触发</text>
+  <path class="line" d="M970 585 H1058"/><text class="step" x="1014" y="569" text-anchor="middle">6. 遍历类型</text>
+  <path class="line" d="M1490 585 H1578"/><text class="step" x="1534" y="569" text-anchor="middle">7. 替换全量榜</text>
+
+  <text class="section" x="70" y="726">3. 两套任务分工不同：增量维护保实时，凌晨重建保最终一致性</text>
+  <rect class="decision" x="170" y="770" width="430" height="190"/>
+  <text class="node-title" x="385" y="832" text-anchor="middle">增量维护职责</text>
+  <text class="node-text" x="385" y="868" text-anchor="middle">消费 calcQueue 中有变化的资源</text>
+  <text class="node-text" x="385" y="894" text-anchor="middle">结合当前榜单头部做洗牌</text>
+  <rect class="decision" x="710" y="770" width="430" height="190"/>
+  <text class="node-title" x="925" y="832" text-anchor="middle">全量重建职责</text>
+  <text class="node-text" x="925" y="868" text-anchor="middle">按全量数据重新计算分数</text>
+  <text class="node-text" x="925" y="894" text-anchor="middle">修正历史遗漏、脏数据和长期漂移</text>
+  <rect class="store" x="1250" y="770" width="420" height="190"/>
+  <text class="node-title" x="1460" y="832" text-anchor="middle">首页 / 搜索 / 推荐只读热榜</text>
+  <text class="node-text" x="1460" y="868" text-anchor="middle">热门店铺榜、商品榜、博客榜</text>
+  <text class="node-text" x="1460" y="894" text-anchor="middle">都消费最终结果，不直接参与调度</text>
+  <rect class="store" x="1780" y="770" width="320" height="190"/>
+  <text class="node-title" x="1940" y="832" text-anchor="middle">可视化运维</text>
+  <text class="node-text" x="1940" y="868" text-anchor="middle">XXL-JOB 后台可看任务状态</text>
+  <text class="node-text" x="1940" y="894" text-anchor="middle">失败可补跑和排查</text>
+  <path class="dash" d="M2040 670 V730 H385 V758"/><text class="step" x="1212" y="714" text-anchor="middle">8. 增量与全量共同保证榜单稳定</text>
+
+  <text class="section" x="70" y="1030">4. 这张调度图和首页读链路的边界</text>
+  <rect class="note" x="70" y="1068" width="660" height="210"/>
+  <text class="note-title" x="102" y="1112">补充 A：为什么要保留两套任务</text>
+  <text class="note-text" x="102" y="1144">- 只有增量任务会越跑越偏，只有全量任务又会让榜单更新不及时。</text>
+  <text class="note-text" x="102" y="1172">- 把两者叠加，才能同时拿到实时性和最终一致性。</text>
+  <text class="note-text" x="102" y="1200">- 这也是 XXL-JOB 在项目里不可替代的一部分价值。</text>
+  <rect class="note" x="800" y="1068" width="660" height="210"/>
+  <text class="note-title" x="832" y="1112">补充 B：这张图故意不讲首页请求</text>
+  <text class="note-text" x="832" y="1144">- 首页只消费热榜结果，不参与调度，这是另一张“首页热门面板与热门博客读取链路”。</text>
+  <text class="note-text" x="832" y="1172">- 这张图的主角是 XXL-JOB、HotRankServiceImpl 和各策略类。</text>
+  <text class="note-text" x="832" y="1200">- 这样分开后，读者更容易分清“读路径”和“算榜路径”。</text>
+  <rect class="note" x="1530" y="1068" width="660" height="210"/>
+  <text class="note-title" x="1562" y="1112">代码锚点</text>
+  <text class="note-text" x="1562" y="1144">- HotRankJobHandler：5 个增量热榜任务。</text>
+  <text class="note-text" x="1562" y="1172">- FullRebuildJobHandler：allFullRebuildRankJob 与按类型重建。</text>
+  <text class="note-text" x="1562" y="1200">- HotRankServiceImpl：calcHotRankDataByBizType / fullRebuildHotRankByBizType。</text>
+  <text class="note-text" x="1562" y="1228">- 各 HotRankStrategy：增量洗牌与全量重建的真正实现点。</text>
+</svg>

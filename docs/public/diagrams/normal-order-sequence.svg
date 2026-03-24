@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>普通下单：订单创建与状态流转</title>
+  <desc id='desc'>展示普通订单从异步创建、库存扣减，到支付成功后状态生效的主业务流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>普通下单：订单创建与状态流转</text>
+  <text class='subtitle' x='74' y='132'>对应代码：OrderServiceImpl.createOrder / paySuccess + OrderListener.handleBuyOrder + PayServiceImpl.processCallback</text>
+  <text class='section' x='74' y='188'>1. 普通订单异步创建</text>
+  <rect class='node' x='70' y='220' width='250' height='140'/>
+  <text class='node-title' x='195' y='270' text-anchor='middle'>用户下单</text>
+  <text class='node-text' x='195' y='304' text-anchor='middle'>选择商品和数量</text>
+  <text class='node-text' x='195' y='328' text-anchor='middle'>发起普通购买</text>
+  <rect class='node' x='390' y='220' width='280' height='140'/>
+  <text class='node-title' x='530' y='270' text-anchor='middle'>smartLive-order</text>
+  <text class='node-text' x='530' y='304' text-anchor='middle'>组装 Order</text>
+  <text class='node-text' x='530' y='328' text-anchor='middle'>并做并发防重</text>
+  <rect class='gateway' x='740' y='220' width='250' height='140'/>
+  <text class='node-title' x='865' y='270' text-anchor='middle'>ORDER_BUY_QUEUE</text>
+  <text class='node-text' x='865' y='304' text-anchor='middle'>异步创建订单</text>
+  <text class='node-text' x='865' y='328' text-anchor='middle'>削峰解耦</text>
+  <rect class='node' x='1060' y='220' width='290' height='140'/>
+  <text class='node-title' x='1205' y='270' text-anchor='middle'>OrderListener.handleBuyOrder</text>
+  <text class='node-text' x='1205' y='304' text-anchor='middle'>messageId 幂等</text>
+  <text class='node-text' x='1205' y='328' text-anchor='middle'>手动 ACK</text>
+  <rect class='store' x='1420' y='220' width='310' height='140'/>
+  <text class='node-title' x='1575' y='270' text-anchor='middle'>OrderServiceImpl.createOrder</text>
+  <text class='node-text' x='1575' y='304' text-anchor='middle'>订单落库</text>
+  <text class='node-text' x='1575' y='328' text-anchor='middle'>发送扣库与延迟消息</text>
+  <path class='line' d='M320 290 H378'/>
+  <text class='step' x='349' y='194' text-anchor='middle'>1. 提交订单</text>
+  <text class='step' x='349' y='214' text-anchor='middle'>进入 order 服务</text>
+  <path class='line' d='M670 290 H728'/>
+  <text class='step' x='699' y='194' text-anchor='middle'>2. 发 MQ</text>
+  <text class='step' x='699' y='214' text-anchor='middle'>创建流程异步化</text>
+  <path class='line' d='M990 290 H1048'/>
+  <text class='step' x='1019' y='194' text-anchor='middle'>3. 幂等消费</text>
+  <text class='step' x='1019' y='214' text-anchor='middle'>防止重复建单</text>
+  <path class='line' d='M1350 290 H1408'/>
+  <text class='step' x='1379' y='194' text-anchor='middle'>4. 落库后续</text>
+  <text class='step' x='1379' y='214' text-anchor='middle'>发送扣库和延迟消息</text>
+  <text class='section' x='74' y='468'>2. 支付生效与超时取消</text>
+  <rect class='node' x='90' y='500' width='320' height='140'/>
+  <text class='node-title' x='250' y='550' text-anchor='middle'>Product 库存消息</text>
+  <text class='node-text' x='250' y='584' text-anchor='middle'>实际扣减库存</text>
+  <text class='node-text' x='250' y='608' text-anchor='middle'>避免订单和库存强耦合</text>
+  <rect class='gateway' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>PayServiceImpl</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>unifiedOrder / processCallback</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>承接支付结果</text>
+  <rect class='store' x='910' y='500' width='320' height='140'/>
+  <text class='node-title' x='1070' y='550' text-anchor='middle'>remoteOrderService.paySuccess</text>
+  <text class='node-text' x='1070' y='584' text-anchor='middle'>更新 PAID</text>
+  <text class='node-text' x='1070' y='608' text-anchor='middle'>刷新有效期和销量</text>
+  <rect class='node' x='1320' y='500' width='340' height='140'/>
+  <text class='node-title' x='1490' y='550' text-anchor='middle'>ORDER_DELAY_EXCHANGE</text>
+  <text class='node-text' x='1490' y='584' text-anchor='middle'>未支付自动 cancel</text>
+  <text class='node-text' x='1490' y='608' text-anchor='middle'>恢复库存</text>
+  <path class='line' d='M410 570 H488'/>
+  <text class='step' x='449' y='474' text-anchor='middle'>5. 扣减库存</text>
+  <text class='step' x='449' y='494' text-anchor='middle'>由商品链路独立完成</text>
+  <path class='line' d='M820 570 H898'/>
+  <text class='step' x='859' y='474' text-anchor='middle'>6. 支付回调</text>
+  <text class='step' x='859' y='494' text-anchor='middle'>进入统一支付中枢</text>
+  <path class='line' d='M1230 570 H1308'/>
+  <text class='step' x='1269' y='474' text-anchor='middle'>7. 两种终态</text>
+  <text class='step' x='1269' y='494' text-anchor='middle'>已支付生效 / 未支付取消</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- 普通下单和支付不是同步串死的，中间用 MQ 和回调解耦。</text>
+  <text class='note-text' x='102' y='836'>- 订单生效会同时更新支付方式、有效期和销量。</text>
+  <text class='note-text' x='102' y='866'>- 未支付场景通过延迟消息兜底，不需要定时扫描整表。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- createOrder 会检查重复订单，并在失败时清理占位状态。</text>
+  <text class='note-text' x='682' y='836'>- handleBuyOrder 对普通订单消息也做了 Redis 幂等。</text>
+  <text class='note-text' x='682' y='866'>- paySuccess 会根据商品有效期模式更新订单可用时间窗口。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图和退款补偿图搭配后，订单闭环就完整了。</text>
+  <text class='note-text' x='1262' y='836'>- 如果首页篇幅有限，这张优先级可以低于退款图。</text>
+  <text class='note-text' x='1262' y='866'>- 适合放在订单中心截图附近。</text>
+</svg>

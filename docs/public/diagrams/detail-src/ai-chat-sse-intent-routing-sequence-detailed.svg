@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1640" viewBox="0 0 2360 1640" role="img" aria-labelledby="title desc">
+  <title id="title">AI 对话链路（详细版）</title>
+  <desc id="desc">展示用户端 AI 聊天如何经 SSE 进入会话服务、重建记忆、选择聊天策略、流式输出回复，并在检测到推荐 JSON 时额外发出 card_render 事件。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1640" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1584" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">AI 对话链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：UserAiChatController.chat + UserAiMessageServiceImpl.chat + AgentChatContext + RecommendationCardHelper + MessageTableChatMemoryManager</text>
+
+  <text class="section" x="70" y="182">1. SSE 入口：用户消息先进入会话服务，再重建当前会话记忆</text>
+
+  <rect class="node" x="70" y="220" width="270" height="180"/>
+  <text class="node-title" x="205" y="284" text-anchor="middle">用户端 App</text>
+  <text class="node-text" x="205" y="320" text-anchor="middle">GET /message/chat</text>
+  <text class="node-text" x="205" y="346" text-anchor="middle">sessionId / userId / x / y / region</text>
+  <text class="node-text" x="205" y="372" text-anchor="middle">SSE 持续接收 message 事件</text>
+
+  <rect class="node" x="410" y="220" width="400" height="180"/>
+  <text class="node-title" x="610" y="284" text-anchor="middle">UserAiChatController</text>
+  <text class="node-text" x="610" y="320" text-anchor="middle">把 MessageDTO 交给 IUserAiMessageService.chat</text>
+  <text class="node-text" x="610" y="346" text-anchor="middle">响应类型 text/event-stream</text>
+  <text class="node-text" x="610" y="372" text-anchor="middle">整个链路天然是流式输出</text>
+
+  <rect class="node" x="880" y="220" width="470" height="180"/>
+  <text class="node-title" x="1115" y="284" text-anchor="middle">UserAiMessageServiceImpl.chat</text>
+  <text class="node-text" x="1115" y="320" text-anchor="middle">resolveConversationId(sessionId / userId)</text>
+  <text class="node-text" x="1115" y="346" text-anchor="middle">根据 contextMode 决定是否重建历史记忆</text>
+  <text class="node-text" x="1115" y="372" text-anchor="middle">先保存 user 消息，再进入模型调用</text>
+
+  <rect class="store" x="1420" y="220" width="420" height="180"/>
+  <text class="node-title" x="1630" y="284" text-anchor="middle">MessageTableChatMemoryManager</text>
+  <text class="node-text" x="1630" y="320" text-anchor="middle">rebuildConversationMemory</text>
+  <text class="node-text" x="1630" y="346" text-anchor="middle">按 sessionId 从消息表恢复上下文</text>
+  <text class="node-text" x="1630" y="372" text-anchor="middle">再把新 user 消息 append 到缓存记忆</text>
+
+  <rect class="store" x="1910" y="220" width="370" height="180"/>
+  <text class="node-title" x="2095" y="284" text-anchor="middle">user_ai_message</text>
+  <text class="node-text" x="2095" y="320" text-anchor="middle">role=user / assistant</text>
+  <text class="node-text" x="2095" y="346" text-anchor="middle">session_id / content / create_time</text>
+  <text class="node-text" x="2095" y="372" text-anchor="middle">会话历史可追溯</text>
+
+  <path class="line" d="M340 310 H398"/>
+  <text class="step" x="369" y="294" text-anchor="middle">1. 建立 SSE</text>
+  <path class="line" d="M810 310 H868"/>
+  <text class="step" x="839" y="294" text-anchor="middle">2. 进入消息服务</text>
+  <path class="line" d="M1350 310 H1408"/>
+  <text class="step" x="1379" y="294" text-anchor="middle">3. 重建记忆</text>
+  <path class="dash" d="M1350 346 H1898"/>
+  <text class="step" x="1624" y="370" text-anchor="middle">4. 先保存 user 消息</text>
+
+  <text class="section" x="70" y="474">2. 路由层：按 autonomous 与框架开关选择 Direct / Framework / Agent 策略</text>
+
+  <rect class="node" x="100" y="510" width="400" height="190"/>
+  <text class="node-title" x="300" y="572" text-anchor="middle">AgentChatContext</text>
+  <text class="node-text" x="300" y="608" text-anchor="middle">autonomous=true -&gt; AutonomousAgentStrategy</text>
+  <text class="node-text" x="300" y="634" text-anchor="middle">framework.enabled=true -&gt; FrameworkRoutingStrategy</text>
+  <text class="node-text" x="300" y="660" text-anchor="middle">否则走 DirectRoutingStrategy</text>
+
+  <rect class="decision" x="590" y="510" width="430" height="190"/>
+  <text class="node-title" x="805" y="572" text-anchor="middle">FrameworkRoutingStrategy</text>
+  <text class="node-text" x="805" y="608" text-anchor="middle">更偏“意图路由 + 工具编排”</text>
+  <text class="node-text" x="805" y="634" text-anchor="middle">把用户问题导向店铺、商品、评价、博客等能力</text>
+  <text class="node-text" x="805" y="660" text-anchor="middle">适合当前默认链路</text>
+
+  <rect class="node" x="1110" y="510" width="430" height="190"/>
+  <text class="node-title" x="1325" y="572" text-anchor="middle">ChatClient / Advisor / Tools</text>
+  <text class="node-text" x="1325" y="608" text-anchor="middle">MessageChatMemoryAdvisor</text>
+  <text class="node-text" x="1325" y="634" text-anchor="middle">ShopTools / ProductTools / ReviewTools / BlogTools</text>
+  <text class="node-text" x="1325" y="660" text-anchor="middle">把检索结果组织成自然语言或推荐 JSON</text>
+
+  <rect class="store" x="1630" y="510" width="300" height="190"/>
+  <text class="node-title" x="1780" y="572" text-anchor="middle">RAG / 检索层</text>
+  <text class="node-text" x="1780" y="608" text-anchor="middle">ES / Milvus / 业务服务</text>
+  <text class="node-text" x="1780" y="634" text-anchor="middle">店铺、商品、评价、博客召回</text>
+  <text class="node-text" x="1780" y="660" text-anchor="middle">按用户当前位置补足上下文</text>
+
+  <rect class="decision" x="2020" y="510" width="260" height="190"/>
+  <text class="node-title" x="2150" y="572" text-anchor="middle">模型输出</text>
+  <text class="node-text" x="2150" y="608" text-anchor="middle">纯文本回复</text>
+  <text class="node-text" x="2150" y="634" text-anchor="middle">或带 recommendations JSON</text>
+  <text class="node-text" x="2150" y="660" text-anchor="middle">支持推荐卡片渲染</text>
+
+  <path class="pass" d="M1115 400 V470 H300 V498"/>
+  <text class="step" x="708" y="454" text-anchor="middle">5. 开始生成 AI 响应</text>
+  <path class="line" d="M500 605 H578"/>
+  <text class="step" x="539" y="589" text-anchor="middle">6. 选择默认路由策略</text>
+  <path class="line" d="M1020 605 H1098"/>
+  <text class="step" x="1059" y="589" text-anchor="middle">7. 调工具与记忆顾问</text>
+  <path class="line" d="M1540 605 H1618"/>
+  <text class="step" x="1579" y="589" text-anchor="middle">8. 查询业务数据</text>
+  <path class="line" d="M1930 605 H2008"/>
+  <text class="step" x="1969" y="589" text-anchor="middle">9. 生成模型输出</text>
+
+  <text class="section" x="70" y="786">3. 流式回传：普通文本逐块发 SSE；检测到推荐 JSON 时追加 card_render 事件</text>
+
+  <rect class="node" x="90" y="826" width="430" height="200"/>
+  <text class="node-title" x="305" y="890" text-anchor="middle">Flux&lt;String&gt; chunk stream</text>
+  <text class="node-text" x="305" y="926" text-anchor="middle">每个 chunk 先追加到 fullResponse</text>
+  <text class="node-text" x="305" y="952" text-anchor="middle">再包装成 event=message 的 SSE 片段</text>
+  <text class="node-text" x="305" y="978" text-anchor="middle">前端边接收边渲染打字效果</text>
+
+  <rect class="mq" x="610" y="826" width="480" height="200"/>
+  <text class="node-title" x="850" y="890" text-anchor="middle">RecommendationCardHelper</text>
+  <text class="node-text" x="850" y="926" text-anchor="middle">extractRecommendationJson(fullResponse)</text>
+  <text class="node-text" x="850" y="952" text-anchor="middle">normalizeRecommendationJson 统一 type 字段</text>
+  <text class="node-text" x="850" y="978" text-anchor="middle">额外发 event=card_render 给前端渲染推荐卡</text>
+
+  <rect class="store" x="1180" y="826" width="420" height="200"/>
+  <text class="node-title" x="1390" y="890" text-anchor="middle">助手消息持久化</text>
+  <text class="node-text" x="1390" y="926" text-anchor="middle">doFinally 时保存完整 assistant 文本</text>
+  <text class="node-text" x="1390" y="952" text-anchor="middle">并追加到 chat memory cache</text>
+  <text class="node-text" x="1390" y="978" text-anchor="middle">支持后续继续追问</text>
+
+  <rect class="decision" x="1690" y="826" width="590" height="200"/>
+  <text class="node-title" x="1985" y="890" text-anchor="middle">前端最终效果</text>
+  <text class="node-text" x="1985" y="926" text-anchor="middle">普通问答：只消费 message 事件</text>
+  <text class="node-text" x="1985" y="952" text-anchor="middle">推荐回答：额外消费 card_render，渲染店铺 / 商品推荐卡</text>
+  <text class="node-text" x="1985" y="978" text-anchor="middle">后续还可根据 orderId 等信息跳转订单详情</text>
+
+  <path class="line" d="M2020 700 V760 H305 V814"/>
+  <text class="step" x="1162" y="744" text-anchor="middle">10. 开始按 chunk 流式回传</text>
+  <path class="line" d="M520 926 H598"/>
+  <text class="step" x="559" y="910" text-anchor="middle">11. 识别推荐 JSON</text>
+  <path class="pass" d="M1090 926 H1168"/>
+  <text class="step" x="1129" y="910" text-anchor="middle">12. 保存完整回复</text>
+  <path class="dash" d="M1600 926 H1678"/>
+  <text class="step" x="1639" y="910" text-anchor="middle">13. 前端渲染卡片</text>
+
+  <text class="section" x="70" y="1110">4. 这张详细图补充了展示版没展开的几个内部机制</text>
+
+  <rect class="note" x="70" y="1150" width="700" height="180"/>
+  <text class="note-title" x="102" y="1192">补充 A：SSE 与消息持久化并不冲突</text>
+  <text class="note-text" x="102" y="1222">- 用户先收到流式 chunk，不需要等整段回答结束。</text>
+  <text class="note-text" x="102" y="1250">- 但最终还是会在 doFinally 里把整段 assistant 回复落库，后续重新进会话仍能恢复上下文。</text>
+  <text class="note-text" x="102" y="1278">- 这也是“实时体验”和“会话可追溯”同时成立的原因。</text>
+
+  <rect class="note" x="830" y="1150" width="700" height="180"/>
+  <text class="note-title" x="862" y="1192">补充 B：card_render 是额外事件，不是替代 message</text>
+  <text class="note-text" x="862" y="1222">- 模型回复里如果带 recommendations JSON，服务端会补发一个 card_render 事件。</text>
+  <text class="note-text" x="862" y="1250">- 普通文案仍然通过 message 事件流式输出，所以用户既能看到自然语言解释，也能看到结构化卡片。</text>
+  <text class="note-text" x="862" y="1278">- RecommendationCardHelper 还会把大 JSON 压成记忆摘要，避免会话上下文过重。</text>
+
+  <rect class="note" x="1590" y="1150" width="700" height="180"/>
+  <text class="note-title" x="1622" y="1192">代码锚点</text>
+  <text class="note-text" x="1622" y="1222">- UserAiMessageServiceImpl.chat：保存 user 消息、拼 fullResponse、发送 message 与 card_render。</text>
+  <text class="note-text" x="1622" y="1250">- AgentChatContext：根据 autonomous 与 framework.enabled 决定路由策略。</text>
+  <text class="note-text" x="1622" y="1278">- MessageTableChatMemoryManager / RecommendationCardHelper：分别负责记忆恢复与卡片 JSON 标准化。</text>
+</svg>

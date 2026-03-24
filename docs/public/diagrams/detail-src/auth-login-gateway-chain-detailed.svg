@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1640" viewBox="0 0 2360 1640" role="img" aria-labelledby="title desc">
+  <title id="title">登录鉴权与网关透传链路（详细版）</title>
+  <desc id="desc">展示 App 端短信验证码/密码登录、管理端用户名密码登录、Redis/JWT 会话存储，以及 Gateway 按 admin 与 app 两套口径透传用户上下文的完整流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .gateway { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1640" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1584" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">登录鉴权与网关透传链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：AppTokenController + UserLoginService + TokenController + SysLoginService + Gateway AuthFilter</text>
+
+  <text class="section" x="70" y="182">1. App 端登录：短信验证码或密码登录都落成 Redis Hash 会话</text>
+
+  <rect class="node" x="70" y="220" width="260" height="170"/>
+  <text class="node-title" x="200" y="284" text-anchor="middle">App 用户</text>
+  <text class="node-text" x="200" y="320" text-anchor="middle">输入手机号 + 验证码</text>
+  <text class="node-text" x="200" y="346" text-anchor="middle">或手机号 + 密码</text>
+
+  <rect class="node" x="400" y="220" width="330" height="170"/>
+  <text class="node-title" x="565" y="284" text-anchor="middle">AppTokenController</text>
+  <text class="node-text" x="565" y="320" text-anchor="middle">/appLogin</text>
+  <text class="node-text" x="565" y="346" text-anchor="middle">/appLoginByPassword</text>
+
+  <rect class="store" x="800" y="220" width="320" height="170"/>
+  <text class="node-title" x="960" y="284" text-anchor="middle">Redis</text>
+  <text class="node-text" x="960" y="320" text-anchor="middle">LOGIN_CODE_KEY + phone</text>
+  <text class="node-text" x="960" y="346" text-anchor="middle">LOGIN_USER_KEY + token</text>
+
+  <rect class="node" x="1190" y="220" width="330" height="170"/>
+  <text class="node-title" x="1355" y="284" text-anchor="middle">UserLoginService</text>
+  <text class="node-text" x="1355" y="320" text-anchor="middle">校验验证码 / 密码</text>
+  <text class="node-text" x="1355" y="346" text-anchor="middle">不存在用户则自动创建</text>
+
+  <rect class="store" x="1590" y="220" width="310" height="170"/>
+  <text class="node-title" x="1745" y="284" text-anchor="middle">smartLive-user</text>
+  <text class="node-text" x="1745" y="320" text-anchor="middle">按手机号查用户</text>
+  <text class="node-text" x="1745" y="346" text-anchor="middle">必要时 createUserByPhone</text>
+
+  <rect class="decision" x="1970" y="220" width="280" height="170"/>
+  <text class="node-title" x="2110" y="284" text-anchor="middle">App token</text>
+  <text class="node-text" x="2110" y="320" text-anchor="middle">UUID 随机生成</text>
+  <text class="node-text" x="2110" y="346" text-anchor="middle">以 Hash 形式写入 Redis</text>
+
+  <path class="line" d="M330 305 H388"/>
+  <text class="step" x="359" y="288" text-anchor="middle">1. 发起登录</text>
+  <path class="line" d="M730 305 H788"/>
+  <text class="step" x="759" y="288" text-anchor="middle">2. 读取验证码</text>
+  <path class="line" d="M1120 305 H1178"/>
+  <text class="step" x="1149" y="288" text-anchor="middle">3. 校验凭证</text>
+  <path class="line" d="M1520 305 H1578"/>
+  <text class="step" x="1549" y="288" text-anchor="middle">4. 查用户/自动注册</text>
+  <path class="line" d="M1900 305 H1958"/>
+  <text class="step" x="1929" y="288" text-anchor="middle">5. 生成 token</text>
+
+  <text class="section" x="70" y="468">2. 管理端登录：用户名密码校验、黑名单、密码重试、JWT + Redis 登录态</text>
+
+  <rect class="node" x="70" y="510" width="260" height="180"/>
+  <text class="node-title" x="200" y="574" text-anchor="middle">Admin 用户</text>
+  <text class="node-text" x="200" y="610" text-anchor="middle">输入 username / password</text>
+  <text class="node-text" x="200" y="636" text-anchor="middle">访问 /login</text>
+
+  <rect class="node" x="400" y="510" width="330" height="180"/>
+  <text class="node-title" x="565" y="574" text-anchor="middle">TokenController</text>
+  <text class="node-text" x="565" y="610" text-anchor="middle">SysLoginService.login</text>
+  <text class="node-text" x="565" y="636" text-anchor="middle">TokenService.createToken</text>
+
+  <rect class="store" x="800" y="510" width="320" height="180"/>
+  <text class="node-title" x="960" y="574" text-anchor="middle">Redis 黑名单 / 重试缓存</text>
+  <text class="node-text" x="960" y="610" text-anchor="middle">SYS_LOGIN_BLACKIPLIST</text>
+  <text class="node-text" x="960" y="636" text-anchor="middle">PASSWORD_MAX_RETRY_COUNT</text>
+
+  <rect class="node" x="1190" y="510" width="330" height="180"/>
+  <text class="node-title" x="1355" y="574" text-anchor="middle">SysLoginService</text>
+  <text class="node-text" x="1355" y="610" text-anchor="middle">查 RemoteUserService</text>
+  <text class="node-text" x="1355" y="636" text-anchor="middle">停用/删除/密码错误拦截</text>
+
+  <rect class="store" x="1590" y="510" width="310" height="180"/>
+  <text class="node-title" x="1745" y="574" text-anchor="middle">登录日志 / 用户信息</text>
+  <text class="node-text" x="1745" y="610" text-anchor="middle">recordLogininfor</text>
+  <text class="node-text" x="1745" y="636" text-anchor="middle">recordUserLogin</text>
+
+  <rect class="gateway" x="1970" y="510" width="280" height="180"/>
+  <text class="node-title" x="2110" y="574" text-anchor="middle">Admin token</text>
+  <text class="node-text" x="2110" y="610" text-anchor="middle">JWT 内含 userKey / userId</text>
+  <text class="node-text" x="2110" y="636" text-anchor="middle">Redis 保存 LOGIN_TOKEN_KEY</text>
+
+  <path class="line" d="M330 600 H388"/>
+  <text class="step" x="359" y="584" text-anchor="middle">6. 提交账户密码</text>
+  <path class="line" d="M730 600 H788"/>
+  <text class="step" x="759" y="584" text-anchor="middle">7. 黑名单 / 重试检查</text>
+  <path class="line" d="M1120 600 H1178"/>
+  <text class="step" x="1149" y="584" text-anchor="middle">8. 查远程用户</text>
+  <path class="line" d="M1520 600 H1578"/>
+  <text class="step" x="1549" y="584" text-anchor="middle">9. 记录日志</text>
+  <path class="line" d="M1900 600 H1958"/>
+  <text class="step" x="1929" y="584" text-anchor="middle">10. 返回 JWT</text>
+
+  <text class="section" x="70" y="776">3. Gateway 按 app / admin 两条路径做鉴权，并把用户信息透传给下游微服务</text>
+
+  <rect class="node" x="70" y="820" width="300" height="180"/>
+  <text class="node-title" x="220" y="884" text-anchor="middle">客户端请求</text>
+  <text class="node-text" x="220" y="920" text-anchor="middle">Authorization: Bearer token</text>
+  <text class="node-text" x="220" y="946" text-anchor="middle">路径前缀为 /app/* 或 /admin/*</text>
+
+  <rect class="gateway" x="450" y="820" width="360" height="180"/>
+  <text class="node-title" x="630" y="884" text-anchor="middle">Gateway AuthFilter</text>
+  <text class="node-text" x="630" y="920" text-anchor="middle">extractPathPrefix</text>
+  <text class="node-text" x="630" y="946" text-anchor="middle">命中 ignoreWhite 时直接放行</text>
+
+  <rect class="decision" x="890" y="820" width="340" height="180"/>
+  <text class="node-title" x="1060" y="884" text-anchor="middle">鉴权分支</text>
+  <text class="node-text" x="1060" y="920" text-anchor="middle">admin：解析 JWT + LOGIN_TOKEN_KEY</text>
+  <text class="node-text" x="1060" y="946" text-anchor="middle">app：读取 LOGIN_USER_KEY + token Hash</text>
+
+  <rect class="store" x="1310" y="820" width="360" height="180"/>
+  <text class="node-title" x="1490" y="884" text-anchor="middle">Redis 登录态</text>
+  <text class="node-text" x="1490" y="920" text-anchor="middle">admin：hasKey(LOGIN_TOKEN_KEY + userKey)</text>
+  <text class="node-text" x="1490" y="946" text-anchor="middle">app：getCacheMap + expire(LOGIN_USER_TTL)</text>
+
+  <rect class="node" x="1750" y="820" width="500" height="180"/>
+  <text class="node-title" x="2000" y="884" text-anchor="middle">下游微服务收到透传头</text>
+  <text class="node-text" x="2000" y="920" text-anchor="middle">DETAILS_FROM_SOURCE / DETAILS_USER_ID / DETAILS_USERNAME</text>
+  <text class="node-text" x="2000" y="946" text-anchor="middle">App 侧还会补 DETAILS_USER_ICON / DETAILS_USER_TOKEN</text>
+
+  <path class="line" d="M370 910 H438"/>
+  <text class="step" x="404" y="894" text-anchor="middle">11. 请求进网关</text>
+  <path class="line" d="M810 910 H878"/>
+  <text class="step" x="844" y="894" text-anchor="middle">12. 按路径分流</text>
+  <path class="line" d="M1230 910 H1298"/>
+  <text class="step" x="1264" y="894" text-anchor="middle">13. 读取 Redis</text>
+  <path class="line" d="M1670 910 H1738"/>
+  <text class="step" x="1704" y="894" text-anchor="middle">14. 注入请求头</text>
+
+  <text class="section" x="70" y="1086">4. 代码里最容易忽略的边界</text>
+
+  <rect class="note" x="70" y="1128" width="700" height="210"/>
+  <text class="note-title" x="102" y="1172">边界 A：App 与 Admin 的 token 存储方式完全不同</text>
+  <text class="note-text" x="102" y="1208">- App 端 token 是随机 UUID，用户信息整包存入 Redis Hash。</text>
+  <text class="note-text" x="102" y="1236">- Admin 端 token 是 JWT，Gateway 再去 Redis 校验 LOGIN_TOKEN_KEY 是否存在。</text>
+  <text class="note-text" x="102" y="1264">- 所以文档里不能只写“统一 JWT 鉴权”，那样会把 App 链路讲错。</text>
+
+  <rect class="note" x="830" y="1128" width="700" height="210"/>
+  <text class="note-title" x="862" y="1172">边界 B：Gateway 不是只做拦截，它还负责上下文透传</text>
+  <text class="note-text" x="862" y="1208">- 过滤器会把 userId、nickName、icon、token 编码后塞进请求头。</text>
+  <text class="note-text" x="862" y="1236">- 后续订单、钱包、社交、AI 模块能直接从上下文读当前登录用户。</text>
+  <text class="note-text" x="862" y="1264">- 这也是为什么很多控制器里不自己查 Redis，而是直接用 UserContextHolder。</text>
+
+  <rect class="note" x="1590" y="1128" width="660" height="210"/>
+  <text class="note-title" x="1622" y="1172">代码锚点</text>
+  <text class="note-text" x="1622" y="1208">- UserLoginService.login：验证码登录、自动注册、Redis Hash token。</text>
+  <text class="note-text" x="1622" y="1236">- SysLoginService.login：黑名单、密码重试、登录日志、远程用户校验。</text>
+  <text class="note-text" x="1622" y="1264">- AuthFilter.filter：按 /admin / /app 两套路径校验并刷新 TTL。</text>
+  <text class="note-text" x="1622" y="1292">- TokenController / AppTokenController：两类登录入口分别给 Web 与 App 使用。</text>
+</svg>

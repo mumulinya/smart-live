@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2280" height="1480" viewBox="0 0 2280 1480" role="img" aria-labelledby="title desc">
+  <title id="title">系统通知入库与 IM 推送链路（详细版）</title>
+  <desc id="desc">展示多业务模块发系统通知、chat 模块落库、二次投递到 IM 推送队列，以及在线用户实时接收的完整流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .warn { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="2280" height="1480" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2224" height="1424" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class="title" x="70" y="92">系统通知入库与 IM 推送链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：ChatListener.consumeSystemNotice + SystemNoticeServiceImpl.createAndPush / pushSystemNotice + ImPushConsumer.handlePushMessage</text>
+
+  <text class="section" x="70" y="182">1. 订单、审核、互动等业务模块先统一发 SYSTEM_NOTICE_EXCHANGE</text>
+  <rect class="node" x="70" y="220" width="300" height="170"/>
+  <text class="node-title" x="220" y="282" text-anchor="middle">业务模块</text>
+  <text class="node-text" x="220" y="318" text-anchor="middle">订单临期、审核驳回、互动提醒</text>
+  <text class="node-text" x="220" y="344" text-anchor="middle">构造 SystemNoticeCreateDTO</text>
+  <rect class="mq" x="450" y="220" width="360" height="170"/>
+  <text class="node-title" x="630" y="282" text-anchor="middle">SYSTEM_NOTICE_EXCHANGE</text>
+  <text class="node-text" x="630" y="318" text-anchor="middle">SYSTEM_NOTICE_QUEUE</text>
+  <text class="node-text" x="630" y="344" text-anchor="middle">带 messageId 做幂等</text>
+  <rect class="node" x="890" y="220" width="430" height="170"/>
+  <text class="node-title" x="1105" y="282" text-anchor="middle">ChatListener.consumeSystemNotice</text>
+  <text class="node-text" x="1105" y="318" text-anchor="middle">校验 messageId</text>
+  <text class="node-text" x="1105" y="344" text-anchor="middle">CHAT_PREFIX + messageId 幂等锁</text>
+  <rect class="node" x="1400" y="220" width="420" height="170"/>
+  <text class="node-title" x="1610" y="282" text-anchor="middle">SystemNoticeService.createAndPush</text>
+  <text class="node-text" x="1610" y="318" text-anchor="middle">校验 userId / sourceType / title</text>
+  <text class="node-text" x="1610" y="344" text-anchor="middle">缺省 noticeId 时自动生成</text>
+  <rect class="store" x="1900" y="220" width="280" height="170"/>
+  <text class="node-title" x="2040" y="282" text-anchor="middle">SystemNotice</text>
+  <text class="node-text" x="2040" y="318" text-anchor="middle">readStatus = UNREAD</text>
+  <text class="node-text" x="2040" y="344" text-anchor="middle">payload / rejectReason 入库</text>
+  <path class="line" d="M370 305 H438"/><text class="step" x="404" y="289" text-anchor="middle">1. 发系统通知</text>
+  <path class="line" d="M810 305 H878"/><text class="step" x="844" y="289" text-anchor="middle">2. MQ 消费</text>
+  <path class="line" d="M1320 305 H1388"/><text class="step" x="1354" y="289" text-anchor="middle">3. 进入 chat 服务</text>
+  <path class="line" d="M1820 305 H1888"/><text class="step" x="1854" y="289" text-anchor="middle">4. 先落通知表</text>
+
+  <text class="section" x="70" y="462">2. 通知落库后不会直接推 WebSocket，而是再次发 MQ 给 IM 集群消费</text>
+  <rect class="mq" x="210" y="510" width="420" height="180"/>
+  <text class="node-title" x="420" y="572" text-anchor="middle">pushSystemNotice</text>
+  <text class="node-text" x="420" y="608" text-anchor="middle">payload = {type: SYSTEM_MESSAGE, data: noticeVO}</text>
+  <text class="node-text" x="420" y="634" text-anchor="middle">再次投递到 CHAT_DIRECT_EXCHANGE</text>
+  <rect class="mq" x="750" y="510" width="360" height="180"/>
+  <text class="node-title" x="930" y="572" text-anchor="middle">im.push.user</text>
+  <text class="node-text" x="930" y="608" text-anchor="middle">所有 IM 节点都订阅</text>
+  <text class="node-text" x="930" y="634" text-anchor="middle">靠本地在线状态做最终投递</text>
+  <rect class="node" x="1230" y="510" width="420" height="180"/>
+  <text class="node-title" x="1440" y="572" text-anchor="middle">ImPushConsumer.handlePushMessage</text>
+  <text class="node-text" x="1440" y="608" text-anchor="middle">IM_PREFIX + messageId 幂等校验</text>
+  <text class="node-text" x="1440" y="634" text-anchor="middle">取 userId / json</text>
+  <rect class="decision" x="1770" y="510" width="340" height="180"/>
+  <text class="node-title" x="1940" y="572" text-anchor="middle">Netty 节点在线判断</text>
+  <text class="node-text" x="1940" y="608" text-anchor="middle">isUserOnline(userId)</text>
+  <text class="node-text" x="1940" y="634" text-anchor="middle">在线则 push，不在线则略过</text>
+  <path class="dash" d="M2040 390 V470 H420 V498"/><text class="step" x="1230" y="454" text-anchor="middle">5. DB 落库后再次发 MQ</text>
+  <path class="line" d="M630 600 H738"/><text class="step" x="684" y="584" text-anchor="middle">6. 进入 IM 推送队列</text>
+  <path class="line" d="M1110 600 H1218"/><text class="step" x="1164" y="584" text-anchor="middle">7. IM 集群消费</text>
+  <path class="line" d="M1650 600 H1758"/><text class="step" x="1704" y="584" text-anchor="middle">8. 判断本节点在线</text>
+
+  <text class="section" x="70" y="772">3. 在线用户实时收通知；异常时清理幂等锁并进入重试 / 死信</text>
+  <rect class="store" x="160" y="810" width="420" height="190"/>
+  <text class="node-title" x="370" y="872" text-anchor="middle">在线用户终端</text>
+  <text class="node-text" x="370" y="908" text-anchor="middle">WebSocket 立刻收到 SYSTEM_MESSAGE</text>
+  <text class="node-text" x="370" y="934" text-anchor="middle">系统消息页与角标即时刷新</text>
+  <rect class="store" x="700" y="810" width="420" height="190"/>
+  <text class="node-title" x="910" y="872" text-anchor="middle">离线用户</text>
+  <text class="node-text" x="910" y="908" text-anchor="middle">实时推送略过</text>
+  <text class="node-text" x="910" y="934" text-anchor="middle">下次打开消息页仍可读到 DB 通知</text>
+  <rect class="danger" x="1240" y="810" width="420" height="190"/>
+  <text class="node-title" x="1450" y="872" text-anchor="middle">消费异常</text>
+  <text class="node-text" x="1450" y="908" text-anchor="middle">删除 Redis 幂等键</text>
+  <text class="node-text" x="1450" y="934" text-anchor="middle">抛异常让 RabbitMQ 触发重试</text>
+  <rect class="mq" x="1780" y="810" width="330" height="190"/>
+  <text class="node-title" x="1945" y="872" text-anchor="middle">死信队列</text>
+  <text class="node-text" x="1945" y="908" text-anchor="middle">重试仍失败则进入 DLQ</text>
+  <text class="node-text" x="1945" y="934" text-anchor="middle">后续人工排查</text>
+  <path class="line" d="M1940 690 V760 H370 V798"/><text class="step" x="1155" y="744" text-anchor="middle">9. 在线用户实时收到系统通知</text>
+  <path class="dash" d="M1940 690 V740 H910 V798"/><text class="step" x="1425" y="726" text-anchor="middle">10. 离线用户等待下次拉取</text>
+  <path class="warn" d="M1440 690 V760 H1450 V798"/><text class="step" x="1450" y="744" text-anchor="middle">11. 失败时清理幂等并重试</text>
+  <path class="warn" d="M1660 905 H1768"/><text class="step" x="1714" y="889" text-anchor="middle">12. 重试仍失败进死信</text>
+
+  <text class="section" x="70" y="1070">4. 这张详细图补充了“通知落库”和“实时推送”是两段链路</text>
+  <rect class="note" x="70" y="1108" width="660" height="210"/>
+  <text class="note-title" x="102" y="1152">补充 A：为什么系统通知要二次发 MQ</text>
+  <text class="note-text" x="102" y="1184">- createAndPush 先把通知写进 SystemNotice 表，保证离线用户也能查询。</text>
+  <text class="note-text" x="102" y="1212">- 然后再投递 im.push.user，让在线用户获得实时体验。</text>
+  <text class="note-text" x="102" y="1240">- 所以这条链不是“只推 WebSocket”，而是“先持久化，再实时推”。</text>
+  <rect class="note" x="800" y="1108" width="660" height="210"/>
+  <text class="note-title" x="832" y="1152">补充 B：为什么 IM 集群里要再做一次幂等</text>
+  <text class="note-text" x="832" y="1184">- chat 模块和 im 模块各自有自己的消费边界，不能共用同一个幂等锁。</text>
+  <text class="note-text" x="832" y="1212">- IM 节点会因为重试或集群并发收到重复消息，所以要在 pushMessage 前再拦一次。</text>
+  <text class="note-text" x="832" y="1240">- 出错时删除幂等键，才能让 MQ 继续重试，不会把失败消息彻底吃掉。</text>
+  <rect class="note" x="1530" y="1108" width="660" height="210"/>
+  <text class="note-title" x="1562" y="1152">代码锚点</text>
+  <text class="note-text" x="1562" y="1184">- consumeSystemNotice：messageId 校验、chat 幂等锁、createAndPush。</text>
+  <text class="note-text" x="1562" y="1212">- createAndPush：落 SystemNotice 表后，调用 pushSystemNotice。</text>
+  <text class="note-text" x="1562" y="1240">- handlePushMessage：IM 幂等锁、本节点在线判断、Netty 推送。</text>
+  <text class="note-text" x="1562" y="1268">- 在线失败自动重试，最终走死信做兜底。</text>
+</svg>

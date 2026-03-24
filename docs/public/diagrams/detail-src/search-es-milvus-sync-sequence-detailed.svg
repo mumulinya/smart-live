@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1600" viewBox="0 0 2360 1600" role="img" aria-labelledby="title desc">
+  <title id="title">搜索与向量库同步（详细版）</title>
+  <desc id="desc">展示业务模块如何把增删改同步消息送进 ES 与 Milvus 两条消费链，并通过幂等、死信和策略路由维持搜索索引与向量库的一致性。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .warn { stroke: #c15a5a; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1600" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1544" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">搜索与向量库同步（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：业务模块 publish() / send*SyncMessage + EsSyncListener + MilvusSyncListener + EsSyncStrategy / MilvusSyncStrategy</text>
+
+  <text class="section" x="70" y="182">1. 业务模块只负责发同步消息，不直接写 ES / Milvus</text>
+
+  <rect class="node" x="70" y="220" width="370" height="170"/>
+  <text class="node-title" x="255" y="282" text-anchor="middle">商品 / 店铺 / 博客 / 互动模块</text>
+  <text class="node-text" x="255" y="318" text-anchor="middle">上架、审核通过、更新、删除</text>
+  <text class="node-text" x="255" y="344" text-anchor="middle">统一封装 ContentSyncMessage / ContentBatchSyncMessage</text>
+
+  <rect class="mq" x="520" y="220" width="450" height="170"/>
+  <text class="node-title" x="745" y="282" text-anchor="middle">SEARCH_SYNC_EXCHANGE</text>
+  <text class="node-text" x="745" y="318" text-anchor="middle">ES insert / batchInsert / delete</text>
+  <text class="node-text" x="745" y="344" text-anchor="middle">Milvus insert / batchInsert / delete</text>
+
+  <rect class="mq" x="1050" y="220" width="430" height="170"/>
+  <text class="node-title" x="1265" y="282" text-anchor="middle">消息载荷</text>
+  <text class="node-text" x="1265" y="318" text-anchor="middle">indexName / type / id / data</text>
+  <text class="node-text" x="1265" y="344" text-anchor="middle">messageId 作为全链路幂等键</text>
+
+  <rect class="node" x="1560" y="220" width="320" height="170"/>
+  <text class="node-title" x="1720" y="282" text-anchor="middle">设计边界</text>
+  <text class="node-text" x="1720" y="318" text-anchor="middle">业务表写入和索引同步解耦</text>
+  <text class="node-text" x="1720" y="344" text-anchor="middle">失败后可重试、可进死信</text>
+
+  <rect class="store" x="1960" y="220" width="320" height="170"/>
+  <text class="node-title" x="2120" y="282" text-anchor="middle">最终一致性目标</text>
+  <text class="node-text" x="2120" y="318" text-anchor="middle">业务库是源头</text>
+  <text class="node-text" x="2120" y="344" text-anchor="middle">ES / 向量库准实时追平</text>
+
+  <path class="line" d="M440 305 H508"/>
+  <text class="step" x="474" y="289" text-anchor="middle">1. 发同步消息</text>
+  <path class="line" d="M970 305 H1038"/>
+  <text class="step" x="1004" y="289" text-anchor="middle">2. 写路由键</text>
+  <path class="line" d="M1480 305 H1548"/>
+  <text class="step" x="1514" y="289" text-anchor="middle">3. 异步解耦</text>
+  <path class="dash" d="M1880 305 H1948"/>
+  <text class="step" x="1914" y="289" text-anchor="middle">4. 以业务库为准</text>
+
+  <text class="section" x="70" y="454">2. ES 消费链：按消息类型路由策略，做单条 / 批量 / 删除 / 用户资源同步</text>
+
+  <rect class="node" x="80" y="490" width="390" height="190"/>
+  <text class="node-title" x="275" y="552" text-anchor="middle">EsSyncListener</text>
+  <text class="node-text" x="275" y="588" text-anchor="middle">single insert / batch insert / delete</text>
+  <text class="node-text" x="275" y="614" text-anchor="middle">user resource 宽表同步也走这里</text>
+  <text class="node-text" x="275" y="640" text-anchor="middle">messageId 丢失则直接拒绝消费</text>
+
+  <rect class="store" x="560" y="490" width="410" height="190"/>
+  <text class="node-title" x="765" y="552" text-anchor="middle">Redis 幂等位</text>
+  <text class="node-text" x="765" y="588" text-anchor="middle">SEARCH_PREFIX + insert/delete/batch:messageId</text>
+  <text class="node-text" x="765" y="614" text-anchor="middle">tryConsumeOnce 防重复建索引</text>
+  <text class="node-text" x="765" y="640" text-anchor="middle">异常时删除幂等位触发本地重试</text>
+
+  <rect class="node" x="1060" y="490" width="420" height="190"/>
+  <text class="node-title" x="1270" y="552" text-anchor="middle">EsSyncStrategyFactory</text>
+  <text class="node-text" x="1270" y="588" text-anchor="middle">按 type 选择对应业务策略</text>
+  <text class="node-text" x="1270" y="614" text-anchor="middle">insertOrUpdate / batchInsert / delete</text>
+  <text class="node-text" x="1270" y="640" text-anchor="middle">用户资源同步会组宽表 extraData</text>
+
+  <rect class="store" x="1570" y="490" width="360" height="190"/>
+  <text class="node-title" x="1750" y="552" text-anchor="middle">Elasticsearch 索引</text>
+  <text class="node-text" x="1750" y="588" text-anchor="middle">shops / products / blogs / users</text>
+  <text class="node-text" x="1750" y="614" text-anchor="middle">searchResult 直接依赖这些索引</text>
+  <text class="node-text" x="1750" y="640" text-anchor="middle">删除时物理移除文档</text>
+
+  <rect class="danger" x="2020" y="490" width="260" height="190"/>
+  <text class="node-title" x="2150" y="552" text-anchor="middle">SEARCH_DLQ</text>
+  <text class="node-text" x="2150" y="588" text-anchor="middle">重试耗尽的死信</text>
+  <text class="node-text" x="2150" y="614" text-anchor="middle">用于人工排查</text>
+  <text class="node-text" x="2150" y="640" text-anchor="middle">保留异常原始负载</text>
+
+  <path class="line" d="M470 585 H548"/>
+  <text class="step" x="509" y="569" text-anchor="middle">5. 先做幂等占坑</text>
+  <path class="line" d="M970 585 H1048"/>
+  <text class="step" x="1009" y="569" text-anchor="middle">6. 选择策略</text>
+  <path class="line" d="M1480 585 H1558"/>
+  <text class="step" x="1519" y="569" text-anchor="middle">7. 写 / 删索引</text>
+  <path class="warn" d="M470 640 H2008"/>
+  <text class="step" x="1239" y="664" text-anchor="middle">8. 失败则清幂等位并进入本地重试，最终可能落死信</text>
+
+  <text class="section" x="70" y="756">3. Milvus 消费链：按 type 路由 collection，删除不存在数据时兼容跳过</text>
+
+  <rect class="node" x="100" y="796" width="390" height="190"/>
+  <text class="node-title" x="295" y="858" text-anchor="middle">MilvusSyncListener</text>
+  <text class="node-text" x="295" y="894" text-anchor="middle">single insert / batch insert / delete</text>
+  <text class="node-text" x="295" y="920" text-anchor="middle">同样基于 messageId 幂等</text>
+  <text class="node-text" x="295" y="946" text-anchor="middle">缺失策略时直接 ACK 跳过</text>
+
+  <rect class="store" x="580" y="796" width="410" height="190"/>
+  <text class="node-title" x="785" y="858" text-anchor="middle">MilvusSyncFactory / Strategy</text>
+  <text class="node-text" x="785" y="894" text-anchor="middle">shop / product / review / blog collection</text>
+  <text class="node-text" x="785" y="920" text-anchor="middle">insertOrUpdate / batchInsert / delete</text>
+  <text class="node-text" x="785" y="946" text-anchor="middle">删除不存在数据时兼容跳过，不再把消息打回去</text>
+
+  <rect class="store" x="1080" y="796" width="360" height="190"/>
+  <text class="node-title" x="1260" y="858" text-anchor="middle">Milvus 向量库</text>
+  <text class="node-text" x="1260" y="894" text-anchor="middle">shop / product / review / blog</text>
+  <text class="node-text" x="1260" y="920" text-anchor="middle">供 RAG / AI 推荐检索</text>
+  <text class="node-text" x="1260" y="946" text-anchor="middle">与业务状态保持同步</text>
+
+  <rect class="decision" x="1530" y="796" width="400" height="190"/>
+  <text class="node-title" x="1730" y="858" text-anchor="middle">AI / RAG 读取效果</text>
+  <text class="node-text" x="1730" y="894" text-anchor="middle">已通过的店铺和商品可以被向量检索到</text>
+  <text class="node-text" x="1730" y="920" text-anchor="middle">下架 / 驳回内容不再出现在推荐里</text>
+  <text class="node-text" x="1730" y="946" text-anchor="middle">与 ES 搜索结果方向一致</text>
+
+  <rect class="danger" x="2020" y="796" width="260" height="190"/>
+  <text class="node-title" x="2150" y="858" text-anchor="middle">Milvus DLQ</text>
+  <text class="node-text" x="2150" y="894" text-anchor="middle">同步异常死信</text>
+  <text class="node-text" x="2150" y="920" text-anchor="middle">保留原始 body</text>
+  <text class="node-text" x="2150" y="946" text-anchor="middle">便于排查 collection / schema 问题</text>
+
+  <path class="line" d="M490 891 H568"/>
+  <text class="step" x="529" y="875" text-anchor="middle">9. 幂等消费</text>
+  <path class="line" d="M990 891 H1068"/>
+  <text class="step" x="1029" y="875" text-anchor="middle">10. 选择 collection 策略</text>
+  <path class="line" d="M1440 891 H1518"/>
+  <text class="step" x="1479" y="875" text-anchor="middle">11. 写入向量库</text>
+  <path class="warn" d="M490 946 H2008"/>
+  <text class="step" x="1249" y="970" text-anchor="middle">12. 严重异常才进入 DLQ；常见“不存在即删”已在策略层兼容掉</text>
+
+  <text class="section" x="70" y="1082">4. 这张详细图补了两个边界说明</text>
+
+  <rect class="note" x="70" y="1120" width="700" height="170"/>
+  <text class="note-title" x="102" y="1162">补充 A：ES 和 Milvus 是两条并行但目的不同的同步链</text>
+  <text class="note-text" x="102" y="1192">- ES 服务全文检索和高亮；Milvus 服务向量检索和 AI/RAG。</text>
+  <text class="note-text" x="102" y="1220">- 业务模块只发一次同步消息，但后面会被路由到两个消费者体系分别处理。</text>
+  <text class="note-text" x="102" y="1248">- 所以文档里要分清“搜索索引一致性”和“向量库一致性”。</text>
+
+  <rect class="note" x="830" y="1120" width="700" height="170"/>
+  <text class="note-title" x="862" y="1162">补充 B：幂等和死信是这条链能稳定运行的关键</text>
+  <text class="note-text" x="862" y="1192">- 两个监听器都依赖 messageId 做 tryConsumeOnce，防止重复消费造成索引抖动。</text>
+  <text class="note-text" x="862" y="1220">- 异常时先清幂等位再抛错，才能让本地重试真正生效。</text>
+  <text class="note-text" x="862" y="1248">- 重试耗尽后进入 DLQ，保留排查抓手，而不是静默丢消息。</text>
+</svg>

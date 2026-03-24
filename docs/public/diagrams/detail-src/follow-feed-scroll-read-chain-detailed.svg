@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1660" viewBox="0 0 2360 1660" role="img" aria-labelledby="title desc">
+  <title id="title">关注 Feed 推送与滚动读取（详细版）</title>
+  <desc id="desc">展示内容发布后如何通过 FeedEventMessage 推送到粉丝信箱，再由 Redis ZSet 滚动分页读取并回填资源详情。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .danger { fill: #fff4f4; stroke: #e5a7a7; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2360" height="1660" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2304" height="1604" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">关注 Feed 推送与滚动读取（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：BlogServiceImpl.saveBlog + FollowListener.handleSendNormalToFollowers + FollowServiceImpl.pushToFollowers + FeedServiceImpl.queryFeedList</text>
+
+  <text class="section" x="70" y="182">1. 内容发布成功后，先发 FeedEventMessage，再由 interaction 模块把动态推到粉丝信箱</text>
+
+  <rect class="node" x="70" y="220" width="280" height="170"/>
+  <text class="node-title" x="210" y="280" text-anchor="middle">用户发布博客 / 商品动态</text>
+  <text class="node-text" x="210" y="316" text-anchor="middle">BlogService.saveBlog</text>
+  <text class="node-text" x="210" y="342" text-anchor="middle">正式发布才触发 FeedEventMessage</text>
+
+  <rect class="store" x="410" y="220" width="300" height="170"/>
+  <text class="node-title" x="560" y="280" text-anchor="middle">业务数据表</text>
+  <text class="node-text" x="560" y="316" text-anchor="middle">Blog / Product 等资源已落库</text>
+  <text class="node-text" x="560" y="342" text-anchor="middle">bizId 已确定</text>
+
+  <rect class="mq" x="770" y="220" width="360" height="170"/>
+  <text class="node-title" x="950" y="280" text-anchor="middle">FeedEventMessage</text>
+  <text class="node-text" x="950" y="316" text-anchor="middle">feedType / sourceType / sourceId</text>
+  <text class="node-text" x="950" y="342" text-anchor="middle">bizType / bizId / action / publishTime</text>
+
+  <rect class="node" x="1190" y="220" width="360" height="170"/>
+  <text class="node-title" x="1370" y="280" text-anchor="middle">FollowListener</text>
+  <text class="node-text" x="1370" y="316" text-anchor="middle">消费 INTERACT_FEED_QUEUE</text>
+  <text class="node-text" x="1370" y="342" text-anchor="middle">messageId 幂等 + 失败重试 / 死信</text>
+
+  <rect class="node" x="1610" y="220" width="360" height="170"/>
+  <text class="node-title" x="1790" y="280" text-anchor="middle">FollowService.pushToFollowers</text>
+  <text class="node-text" x="1790" y="316" text-anchor="middle">先读 Redis 粉丝 ZSet</text>
+  <text class="node-text" x="1790" y="342" text-anchor="middle">为空再 fallback 数据库查询 follow 表</text>
+
+  <rect class="store" x="2030" y="220" width="250" height="170"/>
+  <text class="node-title" x="2155" y="280" text-anchor="middle">粉丝 ID 列表</text>
+  <text class="node-text" x="2155" y="316" text-anchor="middle">userIdSet -> userIdList</text>
+  <text class="node-text" x="2155" y="342" text-anchor="middle">没有粉丝则直接 return</text>
+
+  <path class="line" d="M350 305 H398"/>
+  <text class="step" x="374" y="289" text-anchor="middle">1. 发布</text>
+  <path class="line" d="M710 305 H758"/>
+  <text class="step" x="734" y="289" text-anchor="middle">2. 构造事件</text>
+  <path class="line" d="M1130 305 H1178"/>
+  <text class="step" x="1154" y="289" text-anchor="middle">3. MQ 消费</text>
+  <path class="line" d="M1550 305 H1598"/>
+  <text class="step" x="1574" y="289" text-anchor="middle">4. 推送逻辑</text>
+  <path class="line" d="M1970 305 H2018"/>
+  <text class="step" x="1994" y="289" text-anchor="middle">5. 查粉丝</text>
+
+  <text class="section" x="70" y="464">2. 推送阶段会同时写“个人 Feed 信箱”和“全量 Feed 聚合层”，并对商品动态额外发系统通知</text>
+
+  <rect class="node" x="90" y="500" width="420" height="200"/>
+  <text class="node-title" x="300" y="564" text-anchor="middle">value 组装规则</text>
+  <text class="node-text" x="300" y="600" text-anchor="middle">bizDomain:bizId</text>
+  <text class="node-text" x="300" y="626" text-anchor="middle">若有 action，则变成 action:bizDomain:bizId</text>
+  <text class="node-text" x="300" y="652" text-anchor="middle">店铺动态还会把 shopId 拼到最前面</text>
+
+  <rect class="store" x="590" y="500" width="360" height="200"/>
+  <text class="node-title" x="770" y="564" text-anchor="middle">用户个人 Feed 信箱</text>
+  <text class="node-text" x="770" y="600" text-anchor="middle">feedKeyPrefix + userId</text>
+  <text class="node-text" x="770" y="626" text-anchor="middle">setCacheZSetBatch(userFeedKeys, value, ts)</text>
+  <text class="node-text" x="770" y="652" text-anchor="middle">只存本用户需要看到的动态</text>
+
+  <rect class="store" x="1030" y="500" width="360" height="200"/>
+  <text class="node-title" x="1210" y="564" text-anchor="middle">全量 Feed 聚合层</text>
+  <text class="node-text" x="1210" y="600" text-anchor="middle">ALL_FEED + userId</text>
+  <text class="node-text" x="1210" y="626" text-anchor="middle">同样用 ZSet 批量写入</text>
+  <text class="node-text" x="1210" y="652" text-anchor="middle">供“全部动态”类入口读取</text>
+
+  <rect class="mq" x="1470" y="500" width="360" height="200"/>
+  <text class="node-title" x="1650" y="564" text-anchor="middle">商品动态系统通知</text>
+  <text class="node-text" x="1650" y="600" text-anchor="middle">bizType=PRODUCT 时 createSystemNotice</text>
+  <text class="node-text" x="1650" y="626" text-anchor="middle">发到 SYSTEM_NOTICE_EXCHANGE</text>
+  <text class="node-text" x="1650" y="652" text-anchor="middle">用户端消息中心能看到“你关注的店铺上新”</text>
+
+  <rect class="store" x="1910" y="500" width="320" height="200"/>
+  <text class="node-title" x="2070" y="564" text-anchor="middle">Redis 时间分数</text>
+  <text class="node-text" x="2070" y="600" text-anchor="middle">score = currentTimeMillis</text>
+  <text class="node-text" x="2070" y="626" text-anchor="middle">后续滚动分页按 score 倒序读取</text>
+  <text class="node-text" x="2070" y="652" text-anchor="middle">天然按发布时间排序</text>
+
+  <path class="line" d="M510 595 H578"/>
+  <text class="step" x="544" y="579" text-anchor="middle">6. 组装 feed value</text>
+  <path class="line" d="M950 595 H1018"/>
+  <text class="step" x="984" y="579" text-anchor="middle">7. 批量写个人信箱</text>
+  <path class="line" d="M1390 595 H1458"/>
+  <text class="step" x="1424" y="579" text-anchor="middle">8. 同步写 ALL_FEED</text>
+  <path class="dash" d="M1830 595 H1898"/>
+  <text class="step" x="1864" y="579" text-anchor="middle">9. 记录排序分值</text>
+
+  <text class="section" x="70" y="784">3. 读取阶段不是传统 page/offset，而是用 Redis ZSet 做 reverseRangeByScore 的滚动分页</text>
+
+  <rect class="node" x="100" y="820" width="320" height="200"/>
+  <text class="node-title" x="260" y="884" text-anchor="middle">FeedController.queryFeedList</text>
+  <text class="node-text" x="260" y="920" text-anchor="middle">参数：feedType / max / offset</text>
+  <text class="node-text" x="260" y="946" text-anchor="middle">feedType 决定读个人信箱还是 ALL_FEED</text>
+  <text class="node-text" x="260" y="972" text-anchor="middle">max+offset 形成滚动游标</text>
+
+  <rect class="node" x="500" y="820" width="420" height="200"/>
+  <text class="node-title" x="710" y="884" text-anchor="middle">FeedService.queryFeedList</text>
+  <text class="node-text" x="710" y="920" text-anchor="middle">reverseRangeByScore(key, 0, max, offset, pageSize)</text>
+  <text class="node-text" x="710" y="946" text-anchor="middle">边读边计算 minTime 和新的 offset</text>
+  <text class="node-text" x="710" y="972" text-anchor="middle">相同 score 的记录合并处理</text>
+
+  <rect class="store" x="1000" y="820" width="380" height="200"/>
+  <text class="node-title" x="1190" y="884" text-anchor="middle">groupedMap</text>
+  <text class="node-text" x="1190" y="920" text-anchor="middle">按 bizType -> bizId -> ActionRecordBO 列表分组</text>
+  <text class="node-text" x="1190" y="946" text-anchor="middle">同一资源可能对应多个 action</text>
+  <text class="node-text" x="1190" y="972" text-anchor="middle">避免重复打详情查询</text>
+
+  <rect class="node" x="1460" y="820" width="420" height="200"/>
+  <text class="node-title" x="1670" y="884" text-anchor="middle">ResourceStrategyFactory</text>
+  <text class="node-text" x="1670" y="920" text-anchor="middle">按 bizDomain 选 Blog / Product / Shop 策略</text>
+  <text class="node-text" x="1670" y="946" text-anchor="middle">批量 getResourceList(ids)</text>
+  <text class="node-text" x="1670" y="972" text-anchor="middle">商品流还会批量补 shopName / shopLogo</text>
+
+  <rect class="store" x="1960" y="820" width="300" height="200"/>
+  <text class="node-title" x="2110" y="884" text-anchor="middle">ScrollResult</text>
+  <text class="node-text" x="2110" y="920" text-anchor="middle">list / minTime / offset</text>
+  <text class="node-text" x="2110" y="946" text-anchor="middle">前端据此继续下拉加载</text>
+  <text class="node-text" x="2110" y="972" text-anchor="middle">不会出现传统分页深翻页问题</text>
+
+  <path class="line" d="M420 915 H488"/>
+  <text class="step" x="454" y="899" text-anchor="middle">10. 发起读请求</text>
+  <path class="line" d="M920 915 H988"/>
+  <text class="step" x="954" y="899" text-anchor="middle">11. Redis 滚动读取</text>
+  <path class="line" d="M1380 915 H1448"/>
+  <text class="step" x="1414" y="899" text-anchor="middle">12. 分组聚合</text>
+  <path class="line" d="M1880 915 H1948"/>
+  <text class="step" x="1914" y="899" text-anchor="middle">13. 资源详情回填</text>
+
+  <text class="section" x="70" y="1104">4. 这条链路的价值不只是“能看到动态”，而是“写快、读稳、扩展不同资源类型时不用重做分页逻辑”</text>
+
+  <rect class="node" x="120" y="1140" width="420" height="210"/>
+  <text class="node-title" x="330" y="1204" text-anchor="middle">为什么要有个人 Feed 和 ALL_FEED 两层</text>
+  <text class="node-text" x="330" y="1240" text-anchor="middle">个人 Feed 适合“我关注的人/店铺发了什么”</text>
+  <text class="node-text" x="330" y="1266" text-anchor="middle">ALL_FEED 适合“全部动态”或运营聚合入口</text>
+  <text class="node-text" x="330" y="1292" text-anchor="middle">同一份 value 可以同时写两层，不需要二次计算</text>
+
+  <rect class="node" x="620" y="1140" width="420" height="210"/>
+  <text class="node-title" x="830" y="1204" text-anchor="middle">为什么是滚动分页，不是 page/current</text>
+  <text class="node-text" x="830" y="1240" text-anchor="middle">ZSet 的 score 就是时间，天然适合倒序流式读取</text>
+  <text class="node-text" x="830" y="1266" text-anchor="middle">max+offset 可以处理“同一毫秒多条动态”</text>
+  <text class="node-text" x="830" y="1292" text-anchor="middle">用户持续下拉时稳定，不会因插入新动态导致翻页错位</text>
+
+  <rect class="node" x="1120" y="1140" width="420" height="210"/>
+  <text class="node-title" x="1330" y="1204" text-anchor="middle">为什么要用 ResourceStrategyFactory</text>
+  <text class="node-text" x="1330" y="1240" text-anchor="middle">Feed 值里只保留 type/id/action，避免写入时塞大对象</text>
+  <text class="node-text" x="1330" y="1266" text-anchor="middle">读取时再按资源类型批量补详情，新增一种资源只需加策略</text>
+  <text class="node-text" x="1330" y="1292" text-anchor="middle">不会把分页逻辑绑死在博客或商品上</text>
+
+  <rect class="store" x="1620" y="1140" width="620" height="210"/>
+  <text class="node-title" x="1930" y="1204" text-anchor="middle">最终体验</text>
+  <text class="node-text" x="1930" y="1240" text-anchor="middle">粉丝能及时看到新博客、新商品或店铺动态；商品上新还会额外收到系统消息。</text>
+  <text class="node-text" x="1930" y="1266" text-anchor="middle">下拉加载时不会出现重复翻页或遗漏数据，且不同资源类型能统一出现在同一条 Feed 流里。</text>
+  <text class="node-text" x="1930" y="1292" text-anchor="middle">如果 Redis 粉丝集为空，服务会回落数据库，避免冷缓存时整条链路失效。</text>
+
+  <text class="section" x="70" y="1444">5. 这张详细图比展示版多补了哪些内部机制</text>
+
+  <rect class="note" x="70" y="1480" width="700" height="134"/>
+  <text class="note-title" x="102" y="1522">补充 A：推送阶段其实是“批量写 ZSet”，不是一条条循环塞信箱</text>
+  <text class="note-text" x="102" y="1552">- FollowServiceImpl 用 setCacheZSetBatch 一次性写 userFeedKeys 和 allFeedKeys，这也是高粉丝量场景还能扛住的关键。</text>
+  <text class="note-text" x="102" y="1580">- 商品事件还会额外 createSystemNotice，所以用户看到的不只是 Feed 卡片，还有消息提醒。</text>
+
+  <rect class="note" x="830" y="1480" width="700" height="134"/>
+  <text class="note-title" x="862" y="1522">补充 B：读取阶段是“先轻后重”，先拿轻量 value，再批量补资源详情</text>
+  <text class="note-text" x="862" y="1552">- Feed ZSet 里只放 type/id/action，不直接放大对象；真正的博客、商品、店铺详情由策略层统一批量回填。</text>
+  <text class="note-text" x="862" y="1580">- 这样既节省写扩散成本，也让不同业务资源共用同一套滚动分页算法。</text>
+
+  <rect class="note" x="1590" y="1480" width="700" height="134"/>
+  <text class="note-title" x="1622" y="1522">代码锚点</text>
+  <text class="note-text" x="1622" y="1552">- BlogServiceImpl.saveBlog：构造 FeedEventMessage 并发到 INTERACT_FEED_EXCHANGE。</text>
+  <text class="note-text" x="1622" y="1580">- FollowServiceImpl.pushToFollowers / FeedServiceImpl.queryFeedList：分别负责写扩散和读聚合。</text>
+</svg>

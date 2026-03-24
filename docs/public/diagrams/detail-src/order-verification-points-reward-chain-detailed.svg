@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2260" height="1460" viewBox="0 0 2260 1460" role="img" aria-labelledby="title desc">
+  <title id="title">订单核销、店铺销量与积分奖励链路（详细版）</title>
+  <desc id="desc">展示核销入口、verifyShopId 校验、订单状态更新、店铺销量累加，以及消费积分 MQ 异步发放的完整流程。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#255792"/>
+    </marker>
+    <style>
+      .title { font: 700 36px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 18px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f6d8f; }
+      .section { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #153454; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #36516d; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #25496f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a8c2e2; stroke-width: 2; rx: 24; }
+      .store { fill: #f3fbf5; stroke: #a7d6b7; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #f0b884; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f3ff; stroke: #c7a6ea; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #255792; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d92c0; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .pass { stroke: #2b8c61; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="2260" height="1460" fill="url(#bg)"/>
+  <rect x="28" y="28" width="2204" height="1404" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="70" y="92">订单核销、店铺销量与积分奖励链路（详细版）</text>
+  <text class="subtitle" x="70" y="128">对应代码：OrderServiceImpl.use / incrementShopSales + PointsListener.consumeOrderPoints + PointsService.addPoints</text>
+
+  <text class="section" x="70" y="182">1. 核销入口先校验订单与核销门店，再把订单状态切到 VERIFIED</text>
+
+  <rect class="node" x="70" y="220" width="280" height="160"/>
+  <text class="node-title" x="210" y="278" text-anchor="middle">用户端 / 店员端</text>
+  <text class="node-text" x="210" y="314" text-anchor="middle">到店消费后发起核销</text>
+  <text class="node-text" x="210" y="340" text-anchor="middle">传入 orderId + verifyShopId</text>
+
+  <rect class="node" x="420" y="220" width="360" height="160"/>
+  <text class="node-title" x="600" y="278" text-anchor="middle">OrderService.use</text>
+  <text class="node-text" x="600" y="314" text-anchor="middle">校验订单存在、状态允许核销</text>
+  <text class="node-text" x="600" y="340" text-anchor="middle">verifyShopId 不能为空</text>
+
+  <rect class="decision" x="850" y="220" width="360" height="160"/>
+  <text class="node-title" x="1030" y="278" text-anchor="middle">核销门店权限判断</text>
+  <text class="node-text" x="1030" y="314" text-anchor="middle">allowedShopIds 包含 verifyShopId</text>
+  <text class="node-text" x="1030" y="340" text-anchor="middle">否则直接拒绝核销</text>
+
+  <rect class="store" x="1280" y="220" width="400" height="160"/>
+  <text class="node-title" x="1480" y="278" text-anchor="middle">订单表</text>
+  <text class="node-text" x="1480" y="314" text-anchor="middle">status = VERIFIED</text>
+  <text class="node-text" x="1480" y="340" text-anchor="middle">记录 useTime / verifyShopId</text>
+
+  <rect class="store" x="1750" y="220" width="420" height="160"/>
+  <text class="node-title" x="1960" y="278" text-anchor="middle">店铺销量累计</text>
+  <text class="node-text" x="1960" y="314" text-anchor="middle">incrementShopSales(order)</text>
+  <text class="node-text" x="1960" y="340" text-anchor="middle">按 verifyShopId 增加销量计数</text>
+
+  <path class="line" d="M350 300 H408"/>
+  <text class="step" x="379" y="284" text-anchor="middle">1. 发起核销</text>
+  <path class="line" d="M780 300 H838"/>
+  <text class="step" x="809" y="284" text-anchor="middle">2. 校验订单</text>
+  <path class="line" d="M1210 300 H1268"/>
+  <text class="step" x="1239" y="284" text-anchor="middle">3. 校验核销门店</text>
+  <path class="line" d="M1680 300 H1738"/>
+  <text class="step" x="1709" y="284" text-anchor="middle">4. 更新状态</text>
+
+  <text class="section" x="70" y="458">2. 只有真实支付金额大于 0，才会继续走消费积分异步发放</text>
+
+  <rect class="decision" x="180" y="500" width="340" height="170"/>
+  <text class="node-title" x="350" y="560" text-anchor="middle">payAmount 判断</text>
+  <text class="node-text" x="350" y="596" text-anchor="middle">payAmount == null / 0</text>
+  <text class="node-text" x="350" y="622" text-anchor="middle">只核销，不发积分消息</text>
+
+  <rect class="mq" x="620" y="500" width="420" height="170"/>
+  <text class="node-title" x="830" y="560" text-anchor="middle">OrderPointsMessage</text>
+  <text class="node-text" x="830" y="596" text-anchor="middle">messageId / orderId / userId</text>
+  <text class="node-text" x="830" y="622" text-anchor="middle">points = payAmount.intValue()</text>
+
+  <rect class="mq" x="1140" y="500" width="360" height="170"/>
+  <text class="node-title" x="1320" y="560" text-anchor="middle">积分 MQ</text>
+  <text class="node-text" x="1320" y="596" text-anchor="middle">POINTS_DIRECT_EXCHANGE</text>
+  <text class="node-text" x="1320" y="622" text-anchor="middle">POINTS_ORDER_ROUTING_KEY</text>
+
+  <rect class="node" x="1600" y="500" width="420" height="170"/>
+  <text class="node-title" x="1810" y="560" text-anchor="middle">PointsListener.consumeOrderPoints</text>
+  <text class="node-text" x="1810" y="596" text-anchor="middle">messageId 幂等校验</text>
+  <text class="node-text" x="1810" y="622" text-anchor="middle">重复消息直接 ACK</text>
+
+  <path class="dash" d="M1960 380 V450 H350 V488"/>
+  <text class="step" x="1155" y="436" text-anchor="middle">5. 零金额订单到此结束</text>
+  <path class="pass" d="M1960 380 V450 H830 V488"/>
+  <text class="step" x="1470" y="418" text-anchor="middle">6. 有实付金额才构造积分消息</text>
+  <path class="pass" d="M1040 585 H1128"/>
+  <text class="step" x="1084" y="569" text-anchor="middle">7. 发送 MQ</text>
+  <path class="pass" d="M1500 585 H1588"/>
+  <text class="step" x="1544" y="569" text-anchor="middle">8. 幂等消费</text>
+
+  <text class="section" x="70" y="748">3. 积分模块只做一次加分；异常时清理幂等锁，让 MQ 走重试</text>
+
+  <rect class="store" x="200" y="790" width="420" height="180"/>
+  <text class="node-title" x="410" y="852" text-anchor="middle">Redis 幂等键</text>
+  <text class="node-text" x="410" y="888" text-anchor="middle">points:order:messageId:{id}</text>
+  <text class="node-text" x="410" y="914" text-anchor="middle">tryConsumeOnce 成功后才继续</text>
+  <text class="node-text" x="410" y="940" text-anchor="middle">异常则删除幂等键</text>
+
+  <rect class="node" x="760" y="790" width="420" height="180"/>
+  <text class="node-title" x="970" y="852" text-anchor="middle">PointsService.addPoints</text>
+  <text class="node-text" x="970" y="888" text-anchor="middle">bizType = CONSUMPTION</text>
+  <text class="node-text" x="970" y="914" text-anchor="middle">bizId = orderId</text>
+  <text class="node-text" x="970" y="940" text-anchor="middle">remark = 订单消费奖励</text>
+
+  <rect class="store" x="1320" y="790" width="420" height="180"/>
+  <text class="node-title" x="1530" y="852" text-anchor="middle">积分账户 / 积分流水</text>
+  <text class="node-text" x="1530" y="888" text-anchor="middle">累计用户积分</text>
+  <text class="node-text" x="1530" y="914" text-anchor="middle">记录消费奖励来源</text>
+  <text class="node-text" x="1530" y="940" text-anchor="middle">供积分中心和抽奖页展示</text>
+
+  <rect class="decision" x="1880" y="790" width="260" height="180"/>
+  <text class="node-title" x="2010" y="852" text-anchor="middle">ACK / 重试</text>
+  <text class="node-text" x="2010" y="888" text-anchor="middle">成功后 ACK</text>
+  <text class="node-text" x="2010" y="914" text-anchor="middle">失败则抛异常重试</text>
+  <text class="node-text" x="2010" y="940" text-anchor="middle">保证最终发放成功</text>
+
+  <path class="line" d="M620 880 H748"/>
+  <text class="step" x="684" y="864" text-anchor="middle">9. 锁住首次消费</text>
+  <path class="line" d="M1180 880 H1308"/>
+  <text class="step" x="1244" y="864" text-anchor="middle">10. 增加消费积分</text>
+  <path class="line" d="M1740 880 H1868"/>
+  <text class="step" x="1804" y="864" text-anchor="middle">11. 返回 ACK</text>
+
+  <text class="section" x="70" y="1046">4. 这张详细图比展示版多补了哪些边界</text>
+
+  <rect class="note" x="70" y="1084" width="660" height="200"/>
+  <text class="note-title" x="102" y="1128">补充 A：核销和积分发放是两段逻辑</text>
+  <text class="note-text" x="102" y="1160">- use() 先完成订单核销与门店销量增长，积分只是核销后的异步奖励。</text>
+  <text class="note-text" x="102" y="1188">- 这样即便积分 MQ 短时抖动，也不会影响核销成功与店铺履约。</text>
+  <text class="note-text" x="102" y="1216">- 阅读代码时要把“订单状态变化”和“积分到账”拆开理解。</text>
+
+  <rect class="note" x="800" y="1084" width="660" height="200"/>
+  <text class="note-title" x="832" y="1128">补充 B：为什么 verifyShopId 要单独校验</text>
+  <text class="note-text" x="832" y="1160">- use() 会校验 allowedShopIds 是否包含 verifyShopId，避免跨店铺误核销。</text>
+  <text class="note-text" x="832" y="1188">- 销量增长也是按 verifyShopId 记账，而不是按下单门店的模糊口径。</text>
+  <text class="note-text" x="832" y="1216">- 这条链比简单的“核销成功”多了一层门店归属边界。</text>
+
+  <rect class="note" x="1530" y="1084" width="660" height="200"/>
+  <text class="note-title" x="1562" y="1128">代码锚点</text>
+  <text class="note-text" x="1562" y="1160">- OrderServiceImpl.use：更新 VERIFIED、记录 useTime、verifyShopId、发积分 MQ。</text>
+  <text class="note-text" x="1562" y="1188">- incrementShopSales：核销完成后增长店铺销量。</text>
+  <text class="note-text" x="1562" y="1216">- PointsListener.consumeOrderPoints：Redis 幂等、加分、异常清锁重试。</text>
+  <text class="note-text" x="1562" y="1244">- addPoints：bizType=CONSUMPTION，后续积分页可直接溯源到订单。</text>
+</svg>

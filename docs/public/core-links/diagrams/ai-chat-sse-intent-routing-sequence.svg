@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id='title'>AI 对话 SSE 与意图路由链路</title>
+  <desc id='desc'>展示用户侧 AI 对话请求如何重建会话上下文、选择路由策略、触发 RAG 检索，并通过 SSE 输出连续文本流与推荐卡片事件。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fbff"/><stop offset="100%" stop-color="#eef5ff"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11 Z" fill="#335c9e"/></marker>
+    <style>.title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#16335b}.subtitle{font:500 17px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#486586}.section{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#1f4b82}.node-title{font:700 22px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#12314f}.node-text{font:500 16px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#35506f}.step{font:600 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#24476f}.note-title{font:700 19px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#21415d}.note-text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#506882}.node{fill:#fff;stroke:#9cb9de;stroke-width:2;rx:24}.store{fill:#f1fbf6;stroke:#9fd0b3;stroke-width:2;rx:24}.gateway{fill:#fff6ec;stroke:#f0b37a;stroke-width:2;rx:24}.note{fill:#fff;stroke:#d5e2f3;stroke-width:1.5;rx:20}.line{stroke:#335c9e;stroke-width:4;fill:none;marker-end:url(#arrow)}.dash{stroke:#6d90bf;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="972" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <text class='title' x='74' y='96'>AI 对话 SSE 与意图路由链路</text>
+  <text class='subtitle' x='74' y='132'>对应代码：UserAiChatController.chat + UserAiMessageServiceImpl.chat + AgentChatContext.generateResponse</text>
+  <text class='section' x='74' y='188'>1. 组装上下文并路由对话</text>
+  <rect class='node' x='70' y='220' width='260' height='140'/>
+  <text class='node-title' x='200' y='270' text-anchor='middle'>用户端 AI 页面</text>
+  <text class='node-text' x='200' y='304' text-anchor='middle'>发送 message / region</text>
+  <text class='node-text' x='200' y='328' text-anchor='middle'>携带坐标和 sessionId</text>
+  <rect class='node' x='400' y='220' width='260' height='140'/>
+  <text class='node-title' x='530' y='270' text-anchor='middle'>UserAiChatController</text>
+  <text class='node-text' x='530' y='304' text-anchor='middle'>/message/chat</text>
+  <text class='node-text' x='530' y='328' text-anchor='middle'>返回 SSE 流</text>
+  <rect class='node' x='730' y='220' width='300' height='140'/>
+  <text class='node-title' x='880' y='270' text-anchor='middle'>UserAiMessageServiceImpl</text>
+  <text class='node-text' x='880' y='304' text-anchor='middle'>保存 user 消息</text>
+  <text class='node-text' x='880' y='328' text-anchor='middle'>协调流式输出</text>
+  <rect class='store' x='1100' y='220' width='280' height='140'/>
+  <text class='node-title' x='1240' y='270' text-anchor='middle'>ChatMemoryManager</text>
+  <text class='node-text' x='1240' y='304' text-anchor='middle'>重建历史上下文</text>
+  <text class='node-text' x='1240' y='328' text-anchor='middle'>appendMessageToCache</text>
+  <rect class='gateway' x='1450' y='220' width='260' height='140'/>
+  <text class='node-title' x='1580' y='270' text-anchor='middle'>AgentChatContext</text>
+  <text class='node-text' x='1580' y='304' text-anchor='middle'>选择路由策略</text>
+  <text class='node-text' x='1580' y='328' text-anchor='middle'>生成响应流</text>
+  <path class='line' d='M330 290 H388'/>
+  <text class='step' x='359' y='194' text-anchor='middle'>1. 发起对话</text>
+  <text class='step' x='359' y='214' text-anchor='middle'>带上上下文信息</text>
+  <path class='line' d='M660 290 H718'/>
+  <text class='step' x='689' y='194' text-anchor='middle'>2. 进入服务层</text>
+  <text class='step' x='689' y='214' text-anchor='middle'>先保存用户消息</text>
+  <path class='line' d='M1030 290 H1088'/>
+  <text class='step' x='1059' y='194' text-anchor='middle'>3. 重建记忆</text>
+  <text class='step' x='1059' y='214' text-anchor='middle'>准备后续推理</text>
+  <path class='line' d='M1380 290 H1438'/>
+  <text class='step' x='1409' y='194' text-anchor='middle'>4. 进入 Agent</text>
+  <text class='step' x='1409' y='214' text-anchor='middle'>选择合适策略</text>
+  <text class='section' x='74' y='468'>2. RAG 检索与 SSE 事件返回</text>
+  <rect class='gateway' x='90' y='500' width='320' height='140'/>
+  <text class='node-title' x='250' y='550' text-anchor='middle'>FrameworkRoutingStrategy</text>
+  <text class='node-text' x='250' y='584' text-anchor='middle'>直连 / ReAct / 多 Agent</text>
+  <text class='node-text' x='250' y='608' text-anchor='middle'>按场景切换</text>
+  <rect class='store' x='500' y='500' width='320' height='140'/>
+  <text class='node-title' x='660' y='550' text-anchor='middle'>Shop / Product / Review / Blog</text>
+  <text class='node-text' x='660' y='584' text-anchor='middle'>RAG + Milvus 检索</text>
+  <text class='node-text' x='660' y='608' text-anchor='middle'>补充业务事实</text>
+  <rect class='node' x='910' y='500' width='320' height='140'/>
+  <text class='node-title' x='1070' y='550' text-anchor='middle'>SSE 事件流</text>
+  <text class='node-text' x='1070' y='584' text-anchor='middle'>message</text>
+  <text class='node-text' x='1070' y='608' text-anchor='middle'>card_render</text>
+  <rect class='node' x='1320' y='500' width='340' height='140'/>
+  <text class='node-title' x='1490' y='550' text-anchor='middle'>UserAiMessage</text>
+  <text class='node-text' x='1490' y='584' text-anchor='middle'>持久化 assistant 回复</text>
+  <text class='node-text' x='1490' y='608' text-anchor='middle'>回填聊天历史</text>
+  <path class='line' d='M410 570 H488'/>
+  <text class='step' x='449' y='474' text-anchor='middle'>5. 路由策略</text>
+  <text class='step' x='449' y='494' text-anchor='middle'>决定是否查知识库</text>
+  <path class='line' d='M820 570 H898'/>
+  <text class='step' x='859' y='474' text-anchor='middle'>6. 生成事件</text>
+  <text class='step' x='859' y='494' text-anchor='middle'>边推流边累计答案</text>
+  <path class='line' d='M1230 570 H1308'/>
+  <text class='step' x='1269' y='474' text-anchor='middle'>7. 结束后落库</text>
+  <text class='step' x='1269' y='494' text-anchor='middle'>保留完整会话记录</text>
+  <rect class='note' x='70' y='720' width='500' height='220'/>
+  <text class='note-title' x='102' y='766'>这张图说明了什么</text>
+  <text class='note-text' x='102' y='806'>- 用户端 AI 不只是普通问答，而是带会话记忆、RAG 和卡片事件的完整闭环。</text>
+  <text class='note-text' x='102' y='836'>- 先流式返回，再在 finally 阶段落库，是这条链路体验好的关键。</text>
+  <text class='note-text' x='102' y='866'>- 推荐卡片不是另开接口，而是通过 SSE 事件一起下发。</text>
+  <rect class='note' x='650' y='720' width='500' height='220'/>
+  <text class='note-title' x='682' y='766'>代码里最值得看</text>
+  <text class='note-text' x='682' y='806'>- UserAiMessageServiceImpl 会先保存 user 消息，再拼接 fullResponse。</text>
+  <text class='note-text' x='682' y='836'>- RecommendationCardHelper 会从完整答案里提取卡片 JSON 并发 card_render。</text>
+  <text class='note-text' x='682' y='866'>- ChatMemoryManager 负责重建和缓存会话上下文。</text>
+  <rect class='note' x='1230' y='720' width='500' height='220'/>
+  <text class='note-title' x='1262' y='766'>文档展示建议</text>
+  <text class='note-text' x='1262' y='806'>- 这张图适合和 AI 对话页、博客生成、评价生成能力一起展示。</text>
+  <text class='note-text' x='1262' y='836'>- 如果要写简历，直接可以讲“用户端 AI 对话 SSE + RAG 路由”。</text>
+  <text class='note-text' x='1262' y='866'>- 首页里建议只放入口，详细文档再放高清图。</text>
+</svg>

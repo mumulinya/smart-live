@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1140" viewBox="0 0 1800 1140" role="img" aria-labelledby="title desc">
+  <title id="title">热榜增量维护与全量重建链路</title>
+  <desc id="desc">展示互动写入后如何进入 calcQueue，占位热榜后再由 XXL-JOB 增量维护榜单，并在凌晨进行全量重建的热榜调度链路。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1140" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1072" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">热榜增量维护与全量重建链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：HotRankJobHandler + FullRebuildJobHandler + HotRankServiceImpl + ShopHotRankStrategyImpl / ReviewHotRankStrategyImpl</text>
+
+  <text class="section" x="74" y="188">1. 互动写入先触发热榜占位与待计算队列</text>
+
+  <rect class="node" x="70" y="220" width="320" height="150"/>
+  <text class="node-title" x="230" y="274" text-anchor="middle">点赞 / 收藏 / 评论 / 购买</text>
+  <text class="node-text" x="230" y="308" text-anchor="middle">业务写操作更新 Redis 热数据</text>
+  <text class="node-text" x="230" y="334" text-anchor="middle">同时触发热榜待计算标记</text>
+
+  <rect class="store" x="490" y="220" width="300" height="150"/>
+  <text class="node-title" x="640" y="274" text-anchor="middle">calcQueue</text>
+  <text class="node-text" x="640" y="308" text-anchor="middle">按 bizType 写入待洗牌 ID</text>
+  <text class="node-text" x="640" y="334" text-anchor="middle">只记录有变更的对象</text>
+
+  <rect class="store" x="890" y="220" width="300" height="150"/>
+  <text class="node-title" x="1040" y="274" text-anchor="middle">占位热榜 ZSet</text>
+  <text class="node-text" x="1040" y="308" text-anchor="middle">发布即占位，缓解冷启动</text>
+  <text class="node-text" x="1040" y="334" text-anchor="middle">先给基础分，再等异步重算</text>
+
+  <rect class="node" x="1290" y="220" width="330" height="150"/>
+  <text class="node-title" x="1455" y="274" text-anchor="middle">XXL-JOB 增量洗牌</text>
+  <text class="node-text" x="1455" y="308" text-anchor="middle">HotRankJobHandler 定时扫描</text>
+  <text class="node-text" x="1455" y="334" text-anchor="middle">逐业务类型触发重算</text>
+
+  <path class="line" d="M390 295 H478"/>
+  <text class="step" x="434" y="280" text-anchor="middle">1. 标记待计算对象</text>
+
+  <path class="dash" d="M230 370 V430 H1040 V382"/>
+  <text class="step" x="650" y="424" text-anchor="middle">2. 新对象先占位，避免完全没有曝光</text>
+
+  <path class="line" d="M1190 295 H1278"/>
+  <text class="step" x="1234" y="280" text-anchor="middle">3. 定时任务开始洗牌</text>
+
+  <text class="section" x="74" y="510">2. 增量洗牌会合并活跃 ID 与旧榜 Top N，再重算热度分</text>
+
+  <rect class="node" x="170" y="560" width="320" height="160"/>
+  <text class="node-title" x="330" y="616" text-anchor="middle">HotRankServiceImpl</text>
+  <text class="node-text" x="330" y="652" text-anchor="middle">按 bizType 调度具体策略</text>
+  <text class="node-text" x="330" y="678" text-anchor="middle">calcHotRankDataByBizType</text>
+
+  <rect class="decision" x="590" y="560" width="340" height="160"/>
+  <text class="node-title" x="760" y="616" text-anchor="middle">具体策略实现</text>
+  <text class="node-text" x="760" y="652" text-anchor="middle">合并 calcQueue 与当前 Top N</text>
+  <text class="node-text" x="760" y="678" text-anchor="middle">根据销量、评分、评论、时间衰减重算</text>
+
+  <rect class="store" x="1030" y="560" width="320" height="160"/>
+  <text class="node-title" x="1190" y="616" text-anchor="middle">热榜 Redis ZSet</text>
+  <text class="node-text" x="1190" y="652" text-anchor="middle">写回最新分值与排序</text>
+  <text class="node-text" x="1190" y="678" text-anchor="middle">榜单读请求直接命中 Redis</text>
+
+  <rect class="store" x="1450" y="560" width="260" height="160"/>
+  <text class="node-title" x="1580" y="616" text-anchor="middle">temp / old key</text>
+  <text class="node-text" x="1580" y="652" text-anchor="middle">旧榜与临时键切换</text>
+  <text class="node-text" x="1580" y="678" text-anchor="middle">避免直接覆盖带来抖动</text>
+
+  <path class="line" d="M1455 370 V470 H330 V548"/>
+  <text class="step" x="900" y="454" text-anchor="middle">4. 增量洗牌按业务类型分发</text>
+
+  <path class="line" d="M490 640 H578"/>
+  <text class="step" x="534" y="626" text-anchor="middle">5. 进入具体算分策略</text>
+
+  <path class="line" d="M930 640 H1018"/>
+  <text class="step" x="974" y="626" text-anchor="middle">6. 重算后写回榜单</text>
+
+  <path class="dash" d="M1350 640 H1438"/>
+  <text class="step" x="1394" y="626" text-anchor="middle">7. 旧榜切换</text>
+
+  <text class="section" x="74" y="810">3. 凌晨全量重建兜底，修正长期偏差</text>
+
+  <rect class="mq" x="300" y="850" width="320" height="150"/>
+  <text class="node-title" x="460" y="904" text-anchor="middle">FullRebuildJobHandler</text>
+  <text class="node-text" x="460" y="938" text-anchor="middle">凌晨按 bizType 全量跑</text>
+  <text class="node-text" x="460" y="964" text-anchor="middle">兜底修正脏数据与遗漏对象</text>
+
+  <rect class="store" x="730" y="850" width="320" height="150"/>
+  <text class="node-title" x="890" y="904" text-anchor="middle">批量拉取全量对象</text>
+  <text class="node-text" x="890" y="938" text-anchor="middle">getAllIds + batch detail</text>
+  <text class="node-text" x="890" y="964" text-anchor="middle">重新生成完整榜单元组</text>
+
+  <rect class="store" x="1160" y="850" width="320" height="150"/>
+  <text class="node-title" x="1320" y="904" text-anchor="middle">删除旧榜并重建</text>
+  <text class="node-text" x="1320" y="938" text-anchor="middle">清空老 ZSet，再批量写新榜</text>
+  <text class="node-text" x="1320" y="964" text-anchor="middle">保证长期排序可回正</text>
+
+  <path class="line" d="M620 925 H718"/>
+  <text class="step" x="669" y="910" text-anchor="middle">8. 全量拉数</text>
+
+  <path class="line" d="M1050 925 H1148"/>
+  <text class="step" x="1099" y="910" text-anchor="middle">9. 全量重建榜单</text>
+
+  <rect class="note" x="1500" y="830" width="230" height="190"/>
+  <text class="note-title" x="1530" y="872">亮点</text>
+  <text class="note-text" x="1530" y="906">- 增量洗牌与</text>
+  <text class="note-text" x="1530" y="932">全量重建双轨并存。</text>
+  <text class="note-text" x="1530" y="958">- 既兼顾实时性，</text>
+  <text class="note-text" x="1530" y="984">又能避免长期霸榜。</text>
+</svg>
