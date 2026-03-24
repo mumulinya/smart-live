@@ -12,6 +12,10 @@ const coreLinksDiagramsSourceDir = path.join(root, 'docs', 'core-links', 'diagra
 const coreLinksDiagramsPublicDir = path.join(docsPublicDir, 'core-links', 'diagrams')
 const sitePagesDir = path.join(root, 'docs', 'site-pages')
 const systemArchitecturePath = path.join(sitePagesDir, 'SYSTEM_ARCHITECTURE.md')
+const featuresStackPath = path.join(sitePagesDir, 'FEATURES_STACK.md')
+const performancePath = path.join(sitePagesDir, 'PERFORMANCE.md')
+const learningsPath = path.join(sitePagesDir, 'LEARNINGS.md')
+const roadmapPath = path.join(sitePagesDir, 'ROADMAP.md')
 const techSelectionPath = path.join(sitePagesDir, 'TECH_SELECTION.md')
 const pitfallsPath = path.join(sitePagesDir, 'PITFALLS.md')
 const faqPath = path.join(sitePagesDir, 'FAQ.md')
@@ -276,6 +280,14 @@ function extractSyncBlock(text, marker) {
   return match[1].trim()
 }
 
+function getReadmeBlockOrSection(text, marker, startAnchorId, endAnchorId) {
+  try {
+    return extractSyncBlock(text, marker)
+  } catch {
+    return extractReadmeSection(text, startAnchorId, endAnchorId)
+  }
+}
+
 const readme = readTextWithBom(readmePath)
 let readmeText = readme.text
 readmeText = replaceBlock(
@@ -308,51 +320,12 @@ writeTextWithBom(docsIndexPath, docsIndexText, docsIndex.hasBom)
 
 const architectureBody = normalizeReadmeContentForDocs(extractReadmeSection(readmeText, '系统架构', '项目结构'))
 const projectStructureBody = normalizeReadmeContentForDocs(extractReadmeSection(readmeText, '项目结构', '技术选型理由'))
-const projectOverviewBody = normalizeReadmeContentForDocs(extractReadmeSection(readmeText, '项目简介', '5分钟读懂项目'))
-const contributionBody = normalizeReadmeContentForDocs(
-  extractHeadingBlock(
-    extractReadmeSection(readmeText, '项目简介', '5分钟读懂项目'),
-    /^### 👨‍💻 个人贡献亮点/,
-    [/^### 🎯 核心亮点/]
-  )
-)
-const coreHighlightsBody = normalizeReadmeContentForDocs(
-  extractHeadingBlock(
-    extractReadmeSection(readmeText, '项目简介', '5分钟读懂项目'),
-    /^### 🎯 核心亮点/
-  )
-)
-const techSelectionBody = normalizeReadmeContentForDocs(extractReadmeSection(readmeText, '技术选型理由', '核心业务链路'))
-const pitfallsBody = normalizeReadmeContentForDocs(extractReadmeSection(readmeText, '难点踩坑与解决方案', '项目沉淀'))
-const faqBody = normalizeReadmeContentForDocs(extractReadmeSection(readmeText, '常见问题', '未来规划'))
 
-writeGeneratedMarkdown(
-  projectOverviewPath,
-  renderProjectOverviewPage(projectOverviewBody)
-)
-writeGeneratedMarkdown(
-  contributionsPath,
-  renderContributionPage(contributionBody)
-)
-writeGeneratedMarkdown(
-  coreHighlightsPath,
-  renderCoreHighlightsPage(coreHighlightsBody)
-)
+// Site detail pages are maintained independently. Only shared scale data and
+// architecture overview continue to be synced from README / shared stats.
 writeGeneratedMarkdown(
   systemArchitecturePath,
   renderSystemArchitecturePage(data.docsHomeCards, architectureBody, projectStructureBody)
-)
-writeGeneratedMarkdown(
-  techSelectionPath,
-  renderReadmeDrivenPage('🤔 技术选型理由', '本页根据 `README.md` 中“技术选型理由”章节自动同步。', techSelectionBody)
-)
-writeGeneratedMarkdown(
-  pitfallsPath,
-  renderReadmeDrivenPage('🚧 难点踩坑与解决方案', '本页根据 `README.md` 中“难点踩坑与解决方案”章节自动同步。', pitfallsBody)
-)
-writeGeneratedMarkdown(
-  faqPath,
-  renderFaqPage(faqBody)
 )
 
 syncStaticDirectory(diagramsSourceDir, diagramsPublicDir)

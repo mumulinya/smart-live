@@ -53,8 +53,12 @@
   align-items: center;
 }
 
+.VPHome .VPHero {
+  padding-top: 24px;
+}
+
 .VPHome .VPHero .main {
-  max-width: 760px;
+  max-width: 720px;
 }
 
 .VPHome .VPHero .name {
@@ -67,9 +71,9 @@
 }
 
 .VPHome .VPHero .tagline {
-  max-width: 760px;
-  font-size: 20px;
-  line-height: 1.7;
+  max-width: 680px;
+  font-size: 18px;
+  line-height: 1.65;
   color: #475569;
 }
 

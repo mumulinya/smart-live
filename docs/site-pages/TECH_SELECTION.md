@@ -1,6 +1,6 @@
 ﻿# 🤔 技术选型理由
 
-> 本页根据 `README.md` 中“技术选型理由”章节自动同步。
+> 本页作为网站详细版页面维护，适合单独承接技术判断、选型对比与面试展开。
 
 ### 1. 为什么服务基础选 Spring Boot，并在微服务治理层使用 Spring Cloud Alibaba
 **我的选择：Spring Boot + Spring Cloud Alibaba**

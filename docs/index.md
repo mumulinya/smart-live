@@ -5,9 +5,9 @@ title: SmartLive 智评生活
 titleTemplate: 开源本地生活微服务平台
 
 hero:
-  name: SmartLive 智评生活
-  text: 本地生活微服务平台
-  tagline: 覆盖发现、交易、履约、社交、热榜与 AI/RAG 的完整业务闭环实践
+  name: SmartLive
+  text: 智评生活 · 本地生活微服务平台
+  tagline: 覆盖发现、交易、履约、社交、热榜与 AI/RAG 的完整业务闭环落地
   actions:
     - theme: brand
       text: 🚀 快速开始
@@ -16,8 +16,6 @@ hero:
       text: 👀 查看页面与链路
       link: /SHOWCASE
 ---
-
-<br/>
 
 <div class="smartlive-tech-strip">
   <span class="smartlive-tech-chip">Spring Boot 3.2.2</span>
