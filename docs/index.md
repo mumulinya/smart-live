@@ -32,6 +32,25 @@ hero:
   <span class="smartlive-tech-chip">JDK 17+</span>
 </div>
 
+<div class="smartlive-hero-metrics">
+  <div class="smartlive-hero-metric">
+    <strong>19</strong>
+    <span>服务应用</span>
+  </div>
+  <div class="smartlive-hero-metric">
+    <strong>16</strong>
+    <span>业务模块</span>
+  </div>
+  <div class="smartlive-hero-metric">
+    <strong>28</strong>
+    <span>XXL-JOB 任务</span>
+  </div>
+  <div class="smartlive-hero-metric">
+    <strong>双端</strong>
+    <span>App + 管理端 Web</span>
+  </div>
+</div>
+
 <div class="smartlive-home-nav">
   <a href="./site-pages/SYSTEM_ARCHITECTURE.html" class="smartlive-home-nav-pill">架构与规模</a>
   <a href="./PAGE_GALLERY.html" class="smartlive-home-nav-pill">页面导览</a>
