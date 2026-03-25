@@ -1,52 +1,179 @@
 ﻿# SmartLive 页面导览
 
-这份文档承接 [网站首页](/) 里的“效果预览”，按真实使用路径把用户端 App 和管理端 Web 的页面一次看顺。
+这份文档聚焦“页面本身怎么呈现”。它承接 [网站首页](/) 的效果预览，按真实使用路径把用户端 App、商家端 Web 和平台管理端 Web 的核心页面一次看顺。
 
 **文档导航：** [网站首页](/) · [视觉导览](SHOWCASE.md) · [开源接入](OPEN_SOURCE.md)
 
 **第一次建议先看：** [登录与进入](#app-login-entry) -> [发现入口与热榜](#app-discovery) -> [店铺决策与商品详情](#app-shop-product) -> [支付、订单、钱包与积分](#app-trade-assets) -> [AI 智能助手与 AIGC](#app-ai-capability)
 
-- README 只保留最主要的页面入口，方便第一次进仓库的人快速扫一遍。
-- 这里继续展开完整页面，按“进入 -> 发现 -> 决策 -> 交易 -> 内容 -> 社交 -> AI -> 个人资产”的顺序往下看。
+- 网站首页只保留最主要的页面入口，方便第一次进项目的人先快速建立印象。
+- 这页偏“页面视角”，适合先看产品长什么样；如果想继续看系统全景和关键链路，可以跳去 [视觉导览](SHOWCASE.md)。
+- 推荐按“进入 -> 发现 -> 决策 -> 交易 -> 内容 -> 社交 -> AI -> 个人资产”的顺序往下读。
 
-## 快速跳转
+## 1. 快速跳转
 
-- [用户端 App：登录与进入](#app-login-entry)
-- [用户端 App：发现入口与热榜](#app-discovery)
-- [用户端 App：搜索与 LBS 找店](#app-search-map)
-- [用户端 App：店铺决策与商品详情](#app-shop-product)
-- [用户端 App：支付、订单、钱包与积分](#app-trade-assets)
-- [用户端 App：内容创作与评价互动](#app-content-creation)
-- [用户端 App：社交关系与消息](#app-social-message)
-- [用户端 App：AI 智能助手与 AIGC](#app-ai-capability)
-- [用户端 App：个人中心、收藏与安全设置](#app-profile-assets)
-- [管理端 Web：经营总览](#admin-dashboard)
-- [管理端 Web：业务与履约后台](#admin-business)
-- [管理端 Web：内容治理与运营后台](#admin-governance)
-- [管理端 Web：AI 经营与系统后台](#admin-system)
-- [XXL-JOB 调度后台](#admin-scheduler)
+<div class="smartlive-gallery-quickjump">
+  <a href="#app-login-entry" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>登录与进入</span>
+  </a>
+  <a href="#app-discovery" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>发现入口与热榜</span>
+  </a>
+  <a href="#app-search-map" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>搜索与 LBS 找店</span>
+  </a>
+  <a href="#app-shop-product" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>店铺决策与商品详情</span>
+  </a>
+  <a href="#app-trade-assets" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>支付、订单、钱包与积分</span>
+  </a>
+  <a href="#app-content-creation" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>内容创作与评价互动</span>
+  </a>
+  <a href="#app-social-message" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>社交关系与消息</span>
+  </a>
+  <a href="#app-ai-capability" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>AI 智能助手与 AIGC</span>
+  </a>
+  <a href="#app-profile-assets" class="smartlive-gallery-quickjump-card">
+    <strong>用户端 App</strong>
+    <span>个人中心、收藏与安全设置</span>
+  </a>
+  <a href="#merchant-dashboard" class="smartlive-gallery-quickjump-card">
+    <strong>商家端 Web</strong>
+    <span>经营总览</span>
+  </a>
+  <a href="#merchant-business" class="smartlive-gallery-quickjump-card">
+    <strong>商家端 Web</strong>
+    <span>店铺与商品经营</span>
+  </a>
+  <a href="#merchant-growth" class="smartlive-gallery-quickjump-card">
+    <strong>商家端 Web</strong>
+    <span>履约与增长配置</span>
+  </a>
+  <a href="#merchant-ai" class="smartlive-gallery-quickjump-card">
+    <strong>商家端 Web</strong>
+    <span>AI 经营助手</span>
+  </a>
+  <a href="#admin-governance" class="smartlive-gallery-quickjump-card">
+    <strong>平台管理端 Web</strong>
+    <span>内容治理与运营后台</span>
+  </a>
+  <a href="#admin-system" class="smartlive-gallery-quickjump-card">
+    <strong>平台管理端 Web</strong>
+    <span>系统与权限后台</span>
+  </a>
+  <a href="#admin-scheduler" class="smartlive-gallery-quickjump-card">
+    <strong>调度后台</strong>
+    <span>XXL-JOB 调度后台</span>
+  </a>
+</div>
 
-## 🧭 页面能力映射表
+## 2. 页面能力映射表
 
 这张表不是替代截图，而是把“页面入口、后端模块和对应链路”串起来，方便从页面快速跳到源码和链路文档。
 
-| 能力 / 页面 | 主要前端页 | 对应后端模块 | 关键链路 | 延伸阅读 |
-|:---|:---|:---|:---|:---|
-| 首页发现与热门面板 | 首页入口、热门内容流、本地必吃榜、抢手好券榜 | `shop / product / blog / index / interaction` | 首页热门面板读取链路、热榜维护链路 | [业务链路视觉走查](SHOWCASE.md) |
-| 搜索与地图找店 | 搜索入口页、搜索结果页、地图找店 | `search / shop / product / interaction` | LBS 搜索与热词链路 | [核心链路总览](core-links/index.md) |
-| 店铺决策与商品详情 | 店铺详情页、商品详情页、秒杀专区 | `shop / product / order / interaction` | 订单支付退款链路、秒杀抢购链路 | [核心链路总览](core-links/index.md) |
-| 支付、订单、钱包与积分 | 收银台、支付结果、订单详情、钱包、积分中心 | `order / wallet / points / product` | 订单支付退款链路、订单超时取消链路 | [业务链路视觉走查](SHOWCASE.md) |
-| 内容创作与评价 | 发布页、博客详情、评论区、我的评价、草稿箱 | `blog / interaction / audit / ai` | 审核责任链与搜索双写、Feed 推送链路 | [业务链路视觉走查](SHOWCASE.md) |
-| 社交关系与消息 | 关注页、粉丝明细、会话列表、即时通讯、系统消息 | `interaction / chat / im / user` | Feed 推送与互动同步、系统通知与 IM 推送 | [核心链路总览](core-links/index.md) |
-| AI 智能助手与 AIGC | AI 会话、推荐卡片、下单卡片、博客生成、评价生成 | `ai / search / shop / product / blog / interaction` | AI 路由策略与 RAG 生成链路 | [核心链路总览](core-links/index.md) |
-| 管理端经营与治理 | 仪表盘、店铺商品管理、审核、日志、角色权限 | `system / shop / product / audit / user / monitor` | 审核责任链、调度与治理链路 | [开源接入说明](OPEN_SOURCE.md) |
-| XXL-JOB 调度后台 | 调度总览、任务管理、执行器管理 | `common-xxl / product / order / interaction` | 热榜重建、订单兜底、秒杀预热链路 | [业务链路视觉走查](SHOWCASE.md) |
+<div class="smartlive-capability-matrix">
+  <table>
+    <thead>
+      <tr>
+        <th>能力 / 页面</th>
+        <th>主要前端页</th>
+        <th>对应后端模块</th>
+        <th>关键链路</th>
+        <th>延伸阅读</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>首页发现与热门面板</strong></td>
+        <td>首页入口、热门内容流、本地必吃榜、抢手好券榜</td>
+        <td><code>shop / product / blog / index / interaction</code></td>
+        <td>首页热门面板读取链路、热榜维护链路</td>
+        <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
+      </tr>
+      <tr>
+        <td><strong>搜索与地图找店</strong></td>
+        <td>搜索入口页、搜索结果页、地图找店</td>
+        <td><code>search / shop / product / interaction</code></td>
+        <td>LBS 搜索与热词链路</td>
+        <td><a href="core-links/index.md">核心链路总览</a></td>
+      </tr>
+      <tr>
+        <td><strong>店铺决策与商品详情</strong></td>
+        <td>店铺详情页、商品详情页、秒杀专区</td>
+        <td><code>shop / product / order / interaction</code></td>
+        <td>订单支付退款链路、秒杀抢购链路</td>
+        <td><a href="core-links/index.md">核心链路总览</a></td>
+      </tr>
+      <tr>
+        <td><strong>支付、订单、钱包与积分</strong></td>
+        <td>收银台、支付结果、订单详情、钱包、积分中心</td>
+        <td><code>order / wallet / points / product</code></td>
+        <td>订单支付退款链路、订单超时取消链路</td>
+        <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
+      </tr>
+      <tr>
+        <td><strong>内容创作与评价</strong></td>
+        <td>发布页、博客详情、评论区、我的评价、草稿箱</td>
+        <td><code>blog / interaction / audit / ai</code></td>
+        <td>审核责任链与搜索双写、Feed 推送链路</td>
+        <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
+      </tr>
+      <tr>
+        <td><strong>社交关系与消息</strong></td>
+        <td>关注页、粉丝明细、会话列表、即时通讯、系统消息</td>
+        <td><code>interaction / chat / im / user</code></td>
+        <td>Feed 推送与互动同步、系统通知与 IM 推送</td>
+        <td><a href="core-links/index.md">核心链路总览</a></td>
+      </tr>
+      <tr>
+        <td><strong>AI 智能助手与 AIGC</strong></td>
+        <td>AI 会话、推荐卡片、下单卡片、博客生成、评价生成</td>
+        <td><code>ai / search / shop / product / blog / interaction</code></td>
+        <td>AI 路由策略与 RAG 生成链路</td>
+        <td><a href="core-links/index.md">核心链路总览</a></td>
+      </tr>
+      <tr>
+        <td><strong>商家端经营后台</strong></td>
+        <td>经营总览、店铺管理、商品管理、订单管理、AI 经营助手</td>
+        <td><code>shop / product / order / ai</code></td>
+        <td>订单支付退款链路、AI 路由与经营分析</td>
+        <td><a href="OPEN_SOURCE.md">开源接入说明</a></td>
+      </tr>
+      <tr>
+        <td><strong>平台管理端治理后台</strong></td>
+        <td>审核中心、博客管理、评论评价、抽奖配置、积分记录、角色权限、日志与监控</td>
+        <td><code>system / audit / blog / user / points / monitor</code></td>
+        <td>审核责任链、调度与治理链路</td>
+        <td><a href="OPEN_SOURCE.md">开源接入说明</a></td>
+      </tr>
+      <tr>
+        <td><strong>XXL-JOB 调度后台</strong></td>
+        <td>调度总览、任务管理、执行器管理</td>
+        <td><code>common-xxl / product / order / interaction</code></td>
+        <td>热榜重建、订单兜底、秒杀预热链路</td>
+        <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <div class="smartlive-gallery-sections">
 
-## <a id="app-pages"></a>1. 用户端 App 全链路展示
+## <a id="app-pages"></a>3. 用户端 App 全链路展示
 
-### <a id="app-login-entry"></a>1.1 登录与进入
+### <a id="app-login-entry"></a>3.1 登录与进入
 
 <p align="center">
   <img src="./screenshots/login-page.png" alt="登录页" width="260">
@@ -54,7 +181,7 @@
 
 登录页负责建立账号入口和用户登录态，是第一次进入 App 的起点。
 
-### <a id="app-discovery"></a>1.2 发现入口与热榜
+### <a id="app-discovery"></a>3.2 发现入口与热榜
 
 | 首页入口 | 热门内容流 |
 |:---:|:---:|
@@ -71,7 +198,7 @@
 | <img src="./screenshots/shop-list.png" alt="店铺分类列表" width="260"> |
 | 分类找店与按类浏览入口 |
 
-### <a id="app-search-map"></a>1.3 搜索与 LBS 找店
+### <a id="app-search-map"></a>3.3 搜索与 LBS 找店
 
 | 搜索入口页 | 搜索结果页 |
 |:---:|:---:|
@@ -83,7 +210,7 @@
 | <img src="./screenshots/map-view.png" alt="地图找店" width="260"> |
 | 地图模式承接附近找店和 LBS 分布查看 |
 
-### <a id="app-shop-product"></a>1.4 店铺决策与商品详情
+### <a id="app-shop-product"></a>3.4 店铺决策与商品详情
 
 | 店铺详情页 | 商品详情页 |
 |:---:|:---:|
@@ -95,7 +222,7 @@
 | <img src="./screenshots/seckill-page.png" alt="限时秒杀专区" width="260"> |
 | 秒杀活动入口与限时抢购承接页 |
 
-### <a id="app-trade-assets"></a>1.5 支付、订单、钱包与积分
+### <a id="app-trade-assets"></a>3.5 支付、订单、钱包与积分
 
 | 支付收银台 | 支付结果页 |
 |:---:|:---:|
@@ -127,7 +254,7 @@
 | <img src="./screenshots/sign-in.png" alt="签到与抽奖" width="260"> |
 | 连续签到、抽奖玩法与积分增长入口 |
 
-### <a id="app-content-creation"></a>1.6 内容创作与评价互动
+### <a id="app-content-creation"></a>3.6 内容创作与评价互动
 
 | 内容创作发布 | 博客详情页 |
 |:---:|:---:|
@@ -154,7 +281,7 @@
 | <img src="./screenshots/draft-box.png" alt="草稿箱" width="230"> | <img src="./screenshots/app-blog-edit.png" alt="博客编辑页" width="230"> |
 | 未发布内容管理 | 图文编辑与 AI 写作入口 |
 
-### <a id="app-social-message"></a>1.7 社交关系与消息
+### <a id="app-social-message"></a>3.7 社交关系与消息
 
 | 动态关注流 | 我的关注页 |
 |:---:|:---:|
@@ -186,7 +313,7 @@
 | <img src="./screenshots/app-system-notice.png" alt="系统消息页" width="230"> | <img src="./screenshots/app-my-interactions.png" alt="我的互动" width="230"> |
 | 审核、系统与业务提醒 | 被赞、被评和互动消息汇总 |
 
-### <a id="app-ai-capability"></a>1.8 AI 智能助手与 AIGC
+### <a id="app-ai-capability"></a>3.8 AI 智能助手与 AIGC
 
 | AI 智能助手 | AI 会话列表 |
 |:---:|:---:|
@@ -208,7 +335,7 @@
 | <img src="./screenshots/app-ai-review-generate.png" alt="AI 评价生成" width="260"> |
 | AIGC 消费评价生成 |
 
-### <a id="app-profile-assets"></a>1.9 个人中心、收藏与安全设置
+### <a id="app-profile-assets"></a>3.9 个人中心、收藏与安全设置
 
 | 个人中心（含顶部搜索按钮） | 资料编辑页 |
 |:---:|:---:|
@@ -225,33 +352,54 @@
 | <img src="./screenshots/app-set-password.png" alt="设置密码页" width="230"> | <img src="./screenshots/app-update-password.png" alt="修改密码页" width="230"> |
 | 首次设置登录密码 | 旧密码校验后的账号安全修改 |
 
-## <a id="admin-pages"></a>2. 管理端 Web 核心入口
+## <a id="merchant-pages"></a>4. 商家端 Web 核心入口
 
-### <a id="admin-dashboard"></a>2.1 登录与经营总览
+### <a id="merchant-dashboard"></a>4.1 登录与经营总览
 
 | 管理端登录页 | 经营总览仪表盘 |
 |:---:|:---:|
 | <img src="./screenshots/admin-login.png" alt="管理端登录页" width="420"> | <img src="./screenshots/admin-dashboard.png" alt="经营总览仪表盘" width="420"> |
-| 后台登录入口 | 商家经营总览与数据面板 |
+| 商家端登录入口 | 商家经营总览与数据面板 |
 
-### <a id="admin-business"></a>2.2 业务与履约后台
+### <a id="merchant-business"></a>4.2 店铺与商品经营
 
 | 店铺管理 | 商品管理 |
 |:---:|:---:|
 | <img src="./screenshots/admin-shop-manage.png" alt="店铺管理" width="420"> | <img src="./screenshots/admin-product-manage.png" alt="商品管理" width="420"> |
-| 店铺列表与审核状态 | 商品与营销商品统一管理 |
+| 商家自有店铺列表与状态管理 | 商家自有商品创建、编辑与营销管理 |
+
+| 待补：新增店铺页 | 待补：新增商品页 |
+|:---:|:---:|
+| <strong>待补图位</strong><br><code>merchant-shop-create.png</code><br>来源：<code>business/shop/index.vue</code> 的新增店铺弹窗 | <strong>待补图位</strong><br><code>merchant-product-create.png</code><br>来源：<code>business/product/index.vue</code> 的新增商品弹窗 |
+| 适合突出商家创建店铺、基础信息填写与提交审核入口 | 适合突出商家创建商品、价格库存与营销字段配置 |
+
+| 待补：编辑店铺页 | 待补：编辑商品页 |
+|:---:|:---:|
+| <strong>待补图位</strong><br><code>merchant-shop-edit.png</code><br>来源：<code>business/shop/index.vue</code> 的编辑店铺弹窗 | <strong>待补图位</strong><br><code>merchant-product-edit.png</code><br>来源：<code>business/product/index.vue</code> 的编辑商品弹窗 |
+| 适合突出商家对自有店铺资料、封面和状态的维护 | 适合突出商品编辑、上下架与营销字段调整 |
+
+### <a id="merchant-growth"></a>4.3 履约与增长配置
 
 | 店铺分类管理 | 订单管理 |
 |:---:|:---:|
 | <img src="./screenshots/admin-shop-type.png" alt="店铺分类管理" width="420"> | <img src="./screenshots/admin-order-manage.png" alt="订单管理" width="420"> |
-| 店铺分类与业务归类 | 履约状态与订单筛选 |
+| 店铺分类与经营归类配置 | 商家订单履约状态与筛选 |
 
-| 抽奖配置 | 积分记录 |
+### <a id="merchant-ai"></a>4.4 AI 经营助手
+
+| AI 经营助手 |
+|:---:|
+| <img src="./screenshots/admin-ai-assistant.png" alt="AI 经营助手" width="420"> |
+| 商家侧 AI 建议、商品分析与经营辅助问答 |
+
+| 待补：店铺选择与经营分析视图 | 待补：商品选择与经营问答视图 |
 |:---:|:---:|
-| <img src="./screenshots/admin-lottery-config.png" alt="抽奖配置" width="420"> | <img src="./screenshots/admin-points-records.png" alt="积分记录" width="420"> |
-| 奖品配置与库存概览 | 积分记录与发放流水 |
+| <strong>待补图位</strong><br><code>merchant-ai-shop-analysis.png</code><br>来源：<code>business/ai/index.vue</code> 的店铺选择与经营分析区 | <strong>待补图位</strong><br><code>merchant-ai-product-analysis.png</code><br>来源：<code>business/ai/index.vue</code> 的商品选择与经营问答区 |
+| 适合突出商家按店铺查看经营分析与评价建议 | 适合突出商家按商品查看销量、文案生成与 AI 辅助经营 |
 
-### <a id="admin-governance"></a>2.3 内容治理与运营后台
+## <a id="admin-pages"></a>5. 平台管理端 Web 核心入口
+
+### <a id="admin-governance"></a>5.1 内容治理与运营后台
 
 | 审核中心 | 博客管理 |
 |:---:|:---:|
@@ -266,31 +414,36 @@
 | 公告通知管理 | 业务用户 |
 |:---:|:---:|
 | <img src="./screenshots/admin-notice-manage.png" alt="公告通知管理" width="420"> | <img src="./screenshots/admin-business-user.png" alt="业务用户" width="420"> |
-| 公告与通知运营 | 商家侧用户运营列表 |
+| 公告与通知运营 | 商家侧用户运营列表与平台查看入口 |
 
-### <a id="admin-system"></a>2.4 AI 经营与系统后台
-
-| AI 经营助手 | 用户管理 |
+| 抽奖配置 | 积分记录 |
 |:---:|:---:|
-| <img src="./screenshots/admin-ai-assistant.png" alt="AI 经营助手" width="420"> | <img src="./screenshots/admin-user-manage.png" alt="用户管理" width="420"> |
-| 商家侧 AI 建议 | 系统账号与权限管理 |
+| <img src="./screenshots/admin-lottery-config.png" alt="抽奖配置" width="420"> | <img src="./screenshots/admin-points-records.png" alt="积分记录" width="420"> |
+| 平台侧奖品配置与增长玩法管理 | 平台侧积分记录与发放流水审计 |
 
-| 菜单权限 | 参数设置 |
+### <a id="admin-system"></a>5.2 系统管理与权限审计
+
+| 用户管理 | 菜单权限 |
 |:---:|:---:|
-| <img src="./screenshots/admin-menu.png" alt="菜单权限" width="420"> | <img src="./screenshots/admin-config.png" alt="参数设置" width="420"> |
-| 菜单树与按钮权限配置 | 系统参数与开关配置 |
+| <img src="./screenshots/admin-user-manage.png" alt="用户管理" width="420"> | <img src="./screenshots/admin-menu.png" alt="菜单权限" width="420"> |
+| 系统账号与权限管理 | 菜单树与按钮权限配置 |
 
-| 在线监控 | 角色管理 |
+| 参数设置 | 在线监控 |
 |:---:|:---:|
-| <img src="./screenshots/admin-online-monitor.png" alt="在线监控" width="420"> | <img src="./screenshots/admin-role-manage.png" alt="角色管理" width="420"> |
-| 在线用户与强退 | 角色与权限字符维护 |
+| <img src="./screenshots/admin-config.png" alt="参数设置" width="420"> | <img src="./screenshots/admin-online-monitor.png" alt="在线监控" width="420"> |
+| 系统参数与开关配置 | 在线用户与强退 |
 
-| 登录日志 | 操作日志 |
+| 角色管理 | 登录日志 |
 |:---:|:---:|
-| <img src="./screenshots/admin-logininfor.png" alt="登录日志" width="420"> | <img src="./screenshots/admin-operlog.png" alt="操作日志" width="420"> |
-| 登录审计与状态追踪 | 后台操作留痕与行为审计 |
+| <img src="./screenshots/admin-role-manage.png" alt="角色管理" width="420"> | <img src="./screenshots/admin-logininfor.png" alt="登录日志" width="420"> |
+| 角色与权限字符维护 | 登录审计与状态追踪 |
 
-### <a id="admin-scheduler"></a>2.5 XXL-JOB 调度后台
+| 操作日志 |
+|:---:|
+| <img src="./screenshots/admin-operlog.png" alt="操作日志" width="420"> |
+| 后台操作留痕与行为审计 |
+
+### <a id="admin-scheduler"></a>5.3 XXL-JOB 调度后台
 
 | 调度总览 | 任务管理 |
 |:---:|:---:|

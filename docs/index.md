@@ -103,7 +103,7 @@ hero:
 **SmartLive 智评生活** 把本地生活场景中的交易、内容、社交和 AI 能力放进同一套微服务体系里，强调真实业务闭环和工程化落地。
 
 <div class="smartlive-figure-frame" align="center">
-  <img src="./screenshots/architecture.png" alt="System Architecture" width="90%"/>
+  <img src="./diagrams/system-architecture-overview.svg" alt="System Architecture" width="100%"/>
 </div>
 
 ## <a id="home-highlights"></a>✨ 项目能力亮点
@@ -157,7 +157,7 @@ hero:
 如果你是第一次进入 SmartLive，建议不要一上来就试图把所有模块、页面和中间件一次性看完。更顺的阅读方式是：
 
 1. 先看 [开源启动与接入](/OPEN_SOURCE)，建立项目边界、依赖矩阵和启动顺序的整体认知。
-2. 再看 [页面效果图导览](/PAGE_GALLERY)，快速知道用户端 App 和管理端 Web 分别覆盖了哪些真实业务页面。
+2. 再看 [页面效果图导览](/PAGE_GALLERY)，快速知道用户端 App、商家端 Web 和平台管理端 Web 分别覆盖了哪些真实业务页面。
 3. 接着看 [业务链路视觉走查](/SHOWCASE)，把截图和缓存、调度、审核、交易等核心链路对上。
 4. 最后进入 [核心链路总览](/core-links/)，按主题选择最适合自己的阅读顺序，再深入看源码级实现细节。
 
@@ -215,7 +215,7 @@ hero:
   <a href="https://github.com/mumulinya/smartLive-admin.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
     <span class="smartlive-link-tag">ADMIN</span>
     <strong>smartLive-admin</strong>
-    <span>管理端 Web 仓库，适合联调商品、订单、审核、运营和系统后台页面。</span>
+  <span>商家端 Web 与平台管理后台仓库，适合联调店铺、商品、订单、审核、运营和系统后台页面。</span>
   </a>
   <a href="https://github.com/mumulinya/smartLive-web.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
     <span class="smartlive-link-tag">APP</span>

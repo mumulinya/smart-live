@@ -302,7 +302,7 @@ README 首页只保留 4 个最常用的文档入口：
 - [系统架构与项目规模](docs/site-pages/SYSTEM_ARCHITECTURE.md)
 
 <div align="center">
-  <img src="docs/screenshots/architecture.png" alt="SmartLive 系统架构图" width="100%">
+  <img src="docs/diagrams/system-architecture-overview.svg" alt="SmartLive 系统架构图" width="100%">
 </div>
 
 首页先记住这 3 个点：

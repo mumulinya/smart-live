@@ -5,13 +5,13 @@
 
 ---
 
-## 一、消息可靠性全链路总览
+## 1. 消息可靠性全链路总览
 
 ![RabbitMQ 全链路总览](./diagrams/rabbitmq-reliability-overview.svg)
 
 ---
 
-## 二、消息发送工具类封装
+## 2. 消息发送工具类封装
 
 ### 为什么要封装？
 
@@ -113,7 +113,7 @@ public class RabbitMQHelper {
 
 ---
 
-## 三、生产者 Confirm 确认机制
+## 3. 生产者 Confirm 确认机制
 
 ### 什么是 Confirm？
 
@@ -207,7 +207,7 @@ public class RabbitMQConfig {
 
 ---
 
-## 四、消费者 ACK / NACK 机制
+## 4. 消费者 ACK / NACK 机制
 
 ### 三种确认模式
 
@@ -326,7 +326,7 @@ public class OrderMessageConsumer {
 
 ---
 
-## 五、消息幂等性保障
+## 5. 消息幂等性保障
 
 ### 为什么会重复消费？
 
@@ -455,7 +455,7 @@ public class IdempotentService {
 
 ---
 
-## 六、重试机制
+## 6. 重试机制
 
 ### 两种重试层次
 
@@ -530,7 +530,7 @@ public MessageRecoverer messageRecoverer(RabbitTemplate rabbitTemplate) {
 
 ---
 
-## 七、死信队列（DLX）
+## 7. 死信队列（DLX）
 
 ![死信队列与延迟消息](./diagrams/rabbitmq-dlx-delay-overview.svg)
 
@@ -636,7 +636,7 @@ public class DeadLetterConsumer {
 
 ---
 
-## 八、延迟队列实现
+## 8. 延迟队列实现
 
 ### 两种方案对比
 
@@ -675,7 +675,7 @@ public class DeadLetterConsumer {
 
 ---
 
-## 九、消息日志表 + XXL-JOB 兜底
+## 9. 消息日志表 + XXL-JOB 兜底
 
 ### 消息日志表设计
 
@@ -745,7 +745,7 @@ public void mqMessageRetryJob() {
 
 ---
 
-## 十、完整消息生命周期图
+## 10. 完整消息生命周期图
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -800,7 +800,7 @@ public void mqMessageRetryJob() {
 
 ---
 
-## 十一、技术点汇总
+## 11. 技术点汇总
 
 ```
 ┌────────────────────────────────────────────────────────────┐
@@ -833,7 +833,7 @@ public void mqMessageRetryJob() {
 
 ---
 
-## 十二、面试 10 分钟讲述模板
+## 12. 面试 10 分钟讲述模板
 
 ### 开场（30 秒）
 
@@ -861,7 +861,7 @@ public void mqMessageRetryJob() {
 
 ---
 
-## 十三、高频追问速查表
+## 13. 高频追问速查表
 
 | 追问方向 | 关键问题 | 核心回答 |
 |:---|:---|:---|

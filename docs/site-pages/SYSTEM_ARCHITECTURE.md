@@ -1,8 +1,8 @@
-﻿# 🏗️ 系统架构与项目规模
+﻿# 系统架构与项目规模
 
 > 本页作为网站详细版页面维护；项目规模卡片继续和共享数据源同步。
 
-## 📊 项目规模与关键数据
+## 1. 项目规模与关键数据
 
 <div class="smartlive-stats-grid">
 <!-- AUTO_SYNC:SYSTEM_ARCH_STATS_CARDS:START -->
@@ -49,7 +49,7 @@
 <!-- AUTO_SYNC:SYSTEM_ARCH_STATS_CARDS:END -->
 </div>
 
-## 🔢 统计口径说明
+## 2. 统计口径说明
 
 | 指标 | 统计口径 |
 |------|----------|
@@ -60,15 +60,60 @@
 | 链路图 | 分开展示版 `SVG` 与详细版 `SVG` 两套数量，均以 `docs/diagrams` 当前可访问文件为准 |
 | XXL-JOB 任务 | 以调度后台当前可见任务数为准，和文档中的后台截图口径保持一致 |
 
-## 🗺️ 系统架构
+## 3. 系统架构
 
-下面这张图适合先建立全局心智模型，再继续往下看模块拆分和技术选型。
+这张图不是为了讲单条时序链路，而是为了先把 **入口、治理、业务服务簇、基础设施** 四层关系放在一张图里，帮助你快速建立全局心智模型。
 
-<div align="center">
-  <img src="../screenshots/architecture.png" alt="SmartLive 系统架构图" width="100%">
+### 3.1 怎么看这张图
+
+<div class="smartlive-arch-reading-grid">
+  <div class="smartlive-arch-reading-card">
+    <strong>1. 先看入口层</strong>
+  <span>用户端 App、商家端 / 平台管理端 Web 先经过 Nginx，再统一进入 Gateway，理解系统的统一入口和流量边界。</span>
+  </div>
+  <div class="smartlive-arch-reading-card">
+    <strong>2. 再看治理层</strong>
+    <span>Auth、Nacos、Sentinel、Seata 这层不直接承接业务页面，但决定了鉴权、注册配置、限流熔断和分布式事务怎么统一治理。</span>
+  </div>
+  <div class="smartlive-arch-reading-card">
+    <strong>3. 再看业务服务簇</strong>
+    <span>业务层不是简单平铺服务，而是拆成基础服务、交易履约、内容社交、搜索智能治理四个服务簇，更方便理解职责边界。</span>
+  </div>
+  <div class="smartlive-arch-reading-card">
+    <strong>4. 最后看基础设施层</strong>
+    <span>MySQL、Redis、RabbitMQ、Elasticsearch、Milvus、MinIO、XXL-JOB 分别承接存储、缓存、异步、副本检索、向量检索、对象存储和调度兜底。</span>
+  </div>
 </div>
 
-### 🔗 服务依赖关系总览
+<div align="center">
+  <img src="../diagrams/system-architecture-overview.svg" alt="SmartLive 系统架构图" width="100%">
+</div>
+
+### 3.2 这张图回答什么问题
+
+<div class="smartlive-arch-focus-grid">
+  <div class="smartlive-arch-focus-card">
+    <strong>统一入口在哪里</strong>
+    <span>先回答“用户请求从哪进来”，避免一上来就迷失在 19 个服务应用里。</span>
+  </div>
+  <div class="smartlive-arch-focus-card">
+    <strong>治理能力放在哪里</strong>
+    <span>把认证、配置、限流、事务和监控从业务服务里抽出来看，才能理解为什么这个项目不是“单体拆模块”。</span>
+  </div>
+  <div class="smartlive-arch-focus-card">
+    <strong>业务簇如何协作</strong>
+    <span>交易履约、内容社交、搜索智能治理并不是孤立存在，而是围绕缓存、副本、MQ、调度共同协作。</span>
+  </div>
+</div>
+
+**建议带着这 4 个问题往下读：**
+
+- 哪些服务是统一入口、统一治理，哪些才是真正承接业务闭环的核心服务。
+- 交易、社交、搜索、AI 为什么拆成独立服务簇，而不是堆进一个“大业务服务”。
+- Redis、RabbitMQ、Elasticsearch、Milvus、MinIO、XXL-JOB 分别在系统里承担什么角色。
+- 当你顺着一条链路往下看时，应该从哪个服务开始找 controller、service、listener 和 job。
+
+### 3.3 服务依赖关系总览
 
 这张图不是时序图，而是把入口层、业务服务簇和基础设施依赖放在同一张图里，方便先理解“谁依赖谁”，再去看具体链路。
 
@@ -78,11 +123,11 @@
 
 **建议阅读方式：**
 
-- 先看 `用户端 App / 管理端 Web -> Gateway -> Auth` 的统一入口。
+- 先看 `用户端 App / 商家端 / 平台管理端 Web -> Gateway -> Auth` 的统一入口。
 - 再看四个业务服务簇：基础服务、交易履约、内容社交、搜索智能治理。
 - 最后看底部基础设施：`MySQL / Redis / RabbitMQ / Elasticsearch / Milvus / MinIO / Nacos / XXL-JOB`，理解它们分别承接什么职责。
 
-## 🧩 服务职责矩阵
+## 4. 服务职责矩阵
 
 这张表和上面的依赖图配合看会更清楚：依赖图负责先看“谁和谁相连”，职责矩阵负责再看“每个服务到底干什么”。
 
@@ -110,7 +155,7 @@
 
 > 阅读建议：如果你第一次读这个仓库，可以先挑 `gateway / auth / user / shop / search` 这五个服务看，再回来看交易、社交和 AI 模块会顺很多。
 
-## 📁 项目结构
+## 5. 项目结构
 
 下面只展示与阅读项目最相关的目录，省略 `.idea`、`logs`、`arthas-output` 等环境或运行时目录。
 

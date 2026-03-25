@@ -5,7 +5,7 @@
 
 ---
 
-## 一、分层缓存架构总览
+## 1. 分层缓存架构总览
 
 ### 核心思想
 
@@ -23,7 +23,7 @@
 
 ---
 
-## 二、列表层 —— ZSet 滚动分页
+## 2. 列表层 —— ZSet 滚动分页
 
 ### 场景说明
 
@@ -72,7 +72,7 @@ Value: ZSet
 
 ---
 
-## 三、详情层 —— String 缓存 + 三兄弟防护
+## 3. 详情层 —— String 缓存 + 三兄弟防护
 
 ### 场景说明
 
@@ -162,7 +162,7 @@ Value: ZSet
 
 ---
 
-## 四、计数层 —— 原子计数 + 异步回刷
+## 4. 计数层 —— 原子计数 + 异步回刷
 
 ### 场景说明
 
@@ -228,7 +228,7 @@ Value: ZSet
 
 ---
 
-## 五、状态层 —— 布尔判断缓存
+## 5. 状态层 —— 布尔判断缓存
 
 ### 场景说明
 
@@ -274,7 +274,7 @@ Value: ZSet
 
 ---
 
-## 六、缓存一致性 —— 更新策略
+## 6. 缓存一致性 —— 更新策略
 
 ### 核心问题
 
@@ -353,7 +353,7 @@ public void updateShop(Shop shop) {
 
 ---
 
-## 七、聚合读链路 —— CompletableFuture 并发查询
+## 7. 聚合读链路 —— CompletableFuture 并发查询
 
 ### 场景说明
 
@@ -421,7 +421,7 @@ public ShopDetailVO getShopDetail(Long shopId, Long userId) {
 
 ---
 
-## 八、完整读链路示意图
+## 8. 完整读链路示意图
 
 列表层 / 滚动分页：  
 ![Feed / 列表 ZSet 缓存链路](./diagrams/redis-feed-zset-cache-chain.svg)
@@ -431,13 +431,13 @@ public ShopDetailVO getShopDetail(Long shopId, Long userId) {
 
 ---
 
-## 九、缓存更新全景图
+## 9. 缓存更新全景图
 
 ![缓存更新全景图](./diagrams/redis-cache-update-overview.svg)
 
 ---
 
-## 十、技术点汇总
+## 10. 技术点汇总
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -470,7 +470,7 @@ public ShopDetailVO getShopDetail(Long shopId, Long userId) {
 
 ---
 
-## 十一、面试 10 分钟讲述模板
+## 11. 面试 10 分钟讲述模板
 
 ### 开场（30 秒）
 
@@ -498,7 +498,7 @@ public ShopDetailVO getShopDetail(Long shopId, Long userId) {
 
 ---
 
-## 十二、高频追问速查表
+## 12. 高频追问速查表
 
 | 追问方向 | 关键问题 | 核心回答 |
 |:---|:---|:---|

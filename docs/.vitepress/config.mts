@@ -13,11 +13,11 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
-      { text: '开源接入', link: '/OPEN_SOURCE' },
       { text: '页面导览', link: '/PAGE_GALLERY' },
       { text: '视觉导览', link: '/SHOWCASE' },
       { text: '核心链路', link: '/core-links/' },
-      { text: '面试入口', link: '/PROJECT_OVERVIEW' }
+      { text: '面试入口', link: '/PROJECT_OVERVIEW' },
+      { text: '开源接入', link: '/OPEN_SOURCE' }
     ],
 
     sidebar: [
@@ -25,10 +25,10 @@ export default defineConfig({
         text: '💡 项目概览与导览',
         collapsed: true,
         items: [
-          { text: '01 开源启动与接入', link: '/OPEN_SOURCE' },
-          { text: '02 系统架构与项目规模', link: '/site-pages/SYSTEM_ARCHITECTURE' },
-          { text: '03 页面效果图导览', link: '/PAGE_GALLERY' },
-          { text: '04 业务链路视觉走查', link: '/SHOWCASE' }
+          { text: '01 系统架构与项目规模', link: '/site-pages/SYSTEM_ARCHITECTURE' },
+          { text: '02 页面效果图导览', link: '/PAGE_GALLERY' },
+          { text: '03 业务链路视觉走查', link: '/SHOWCASE' },
+          { text: '04 开源启动与接入', link: '/OPEN_SOURCE' }
         ]
       },
       {
@@ -36,15 +36,15 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: '01 核心链路总览', link: '/core-links/' },
-          { text: '02 订单支付与退款补偿链路', link: '/core-links/2. 下单_统一支付_退款补偿链路' },
-          { text: '03 秒杀抢购全链路', link: '/core-links/秒杀抢购全链路详解' },
-          { text: '04 Redis 分层缓存链路', link: '/core-links/Redis分层缓存链路详解' },
-          { text: '05 RabbitMQ 消息可靠链路', link: '/core-links/RabbitMQ消息可靠性全链路详解' },
-          { text: '06 Feed 推送与互动同步链路', link: '/core-links/4. Feed 推送与滚动读取 + 互动双轨同步链路' },
-          { text: '07 审核责任链与搜索双写', link: '/core-links/5. 审核中心责任链 + 发布审核与搜索 向量同步链路' },
-          { text: '08 LBS 搜索与热词链路', link: '/core-links/6. 搜索读链路 + 热词沉淀链路' },
-          { text: '09 热榜洗牌与全量重建链路', link: '/core-links/7. 热榜增量洗牌与全量重建链路' },
-          { text: '10 AI 路由策略与 RAG 生成', link: '/core-links/8. AI Agent策略路由与RAG多维增强生成链路' }
+          { text: '02 订单支付退款', link: '/core-links/2. 下单_统一支付_退款补偿链路' },
+          { text: '03 秒杀抢购链路', link: '/core-links/秒杀抢购全链路详解' },
+          { text: '04 Redis 分层缓存', link: '/core-links/Redis分层缓存链路详解' },
+          { text: '05 RabbitMQ 可靠性', link: '/core-links/RabbitMQ消息可靠性全链路详解' },
+          { text: '06 Feed 与互动同步', link: '/core-links/4. Feed 推送与滚动读取 + 互动双轨同步链路' },
+          { text: '07 审核链与搜索双写', link: '/core-links/5. 审核中心责任链 + 发布审核与搜索 向量同步链路' },
+          { text: '08 LBS 搜索与热词', link: '/core-links/6. 搜索读链路 + 热词沉淀链路' },
+          { text: '09 热榜洗牌与重建', link: '/core-links/7. 热榜增量洗牌与全量重建链路' },
+          { text: '10 AI 路由与 RAG', link: '/core-links/8. AI Agent策略路由与RAG多维增强生成链路' }
         ]
       },
       {

@@ -19,12 +19,18 @@ function openLightbox(src: string, alt: string) {
   document.body.classList.add('smartlive-lightbox-open')
 }
 
+function isEligibleImage(image: HTMLImageElement) {
+  if (!image.src) return false
+  if (image.closest('.smartlive-lightbox')) return false
+  if (image.closest('.VPNav, .VPNavBar, .VPSidebar, .VPDocAside, .VPLocalNav')) return false
+  if (!image.closest('.VPDoc, .VPHome')) return false
+  return true
+}
+
 function handleClick(event: MouseEvent) {
   const target = event.target as HTMLElement | null
-  const image = target?.closest(
-    '.smartlive-gallery-sections img, .smartlive-showcase-sections img'
-  ) as HTMLImageElement | null
-  if (!image) return
+  const image = target?.closest('img') as HTMLImageElement | null
+  if (!image || !isEligibleImage(image)) return
   event.preventDefault()
   event.stopPropagation()
   openLightbox(image.currentSrc || image.src, image.alt || '页面截图预览')
