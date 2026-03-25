@@ -1,0 +1,90 @@
+<svg width="640" height="520" viewBox="0 0 640 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="72" y1="32" x2="564" y2="496" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#ECF5FF"/>
+    </linearGradient>
+    <linearGradient id="stroke" x1="104" y1="76" x2="536" y2="432" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#93C5FD"/>
+      <stop offset="0.55" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+    <linearGradient id="chip" x1="118" y1="282" x2="522" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="0.5" stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+    <filter id="shadow" x="40" y="28" width="560" height="468" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="18"/>
+      <feGaussianBlur stdDeviation="22"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0823529 0 0 0 0 0.141176 0 0 0 0 0.262745 0 0 0 0.18 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+    <filter id="glow" x="0" y="0" width="640" height="520" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="28" result="effect1_foregroundBlur_1_1"/>
+    </filter>
+  </defs>
+
+  <rect width="640" height="520" rx="40" fill="url(#bg)"/>
+  <g filter="url(#glow)" opacity="0.75">
+    <circle cx="124" cy="92" r="66" fill="#60A5FA"/>
+    <circle cx="556" cy="112" r="54" fill="#38BDF8"/>
+    <circle cx="520" cy="428" r="74" fill="#818CF8"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="86" y="58" width="468" height="392" rx="34" fill="white" fill-opacity="0.96"/>
+    <rect x="87" y="59" width="466" height="390" rx="33" stroke="url(#stroke)" stroke-opacity="0.7" stroke-width="2"/>
+  </g>
+
+  <rect x="112" y="86" width="416" height="56" rx="18" fill="#F8FBFF"/>
+  <rect x="112.8" y="86.8" width="414.4" height="54.4" rx="17.2" stroke="#DBEAFE" stroke-width="1.6"/>
+  <circle cx="144" cy="114" r="8" fill="#2563EB"/>
+  <circle cx="168" cy="114" r="8" fill="#38BDF8"/>
+  <circle cx="192" cy="114" r="8" fill="#818CF8"/>
+  <text x="222" y="109" fill="#1E3A8A" font-size="14" font-family="Segoe UI, Microsoft YaHei, Arial" font-weight="700">SmartLive Engineering Panel</text>
+  <text x="222" y="129" fill="#64748B" font-size="11" font-family="Segoe UI, Microsoft YaHei, Arial">MICROSERVICES · AI/RAG · HIGH CONCURRENCY</text>
+
+  <rect x="118" y="162" width="194" height="102" rx="22" fill="#F8FBFF"/>
+  <rect x="118.8" y="162.8" width="192.4" height="100.4" rx="21.2" stroke="#BFDBFE" stroke-width="1.6"/>
+  <text x="140" y="192" fill="#0F172A" font-size="15" font-family="Segoe UI, Microsoft YaHei, Arial" font-weight="700">服务与业务闭环</text>
+  <text x="140" y="218" fill="#334155" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial">19 个服务应用</text>
+  <text x="140" y="238" fill="#334155" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial">16 个业务模块</text>
+  <text x="140" y="258" fill="#334155" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial">App + 管理端 Web</text>
+
+  <rect x="328" y="162" width="194" height="102" rx="22" fill="#F8FBFF"/>
+  <rect x="328.8" y="162.8" width="192.4" height="100.4" rx="21.2" stroke="#BFDBFE" stroke-width="1.6"/>
+  <text x="350" y="192" fill="#0F172A" font-size="15" font-family="Segoe UI, Microsoft YaHei, Arial" font-weight="700">并发、缓存与调度</text>
+  <text x="350" y="218" fill="#334155" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial">Redis 分层缓存</text>
+  <text x="350" y="238" fill="#334155" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial">RabbitMQ 最终一致性</text>
+  <text x="350" y="258" fill="#334155" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial">28 个 XXL-JOB 任务</text>
+
+  <rect x="118" y="282" width="404" height="142" rx="26" fill="#F8FBFF"/>
+  <rect x="118.8" y="282.8" width="402.4" height="140.4" rx="25.2" stroke="#BFDBFE" stroke-width="1.6"/>
+  <text x="140" y="314" fill="#0F172A" font-size="15" font-family="Segoe UI, Microsoft YaHei, Arial" font-weight="700">首页核心技术面板</text>
+
+  <rect x="140" y="334" width="76" height="34" rx="12" fill="url(#chip)" fill-opacity="0.12"/>
+  <text x="163" y="356" fill="#1D4ED8" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial" font-weight="700">Redis</text>
+  <rect x="228" y="334" width="96" height="34" rx="12" fill="url(#chip)" fill-opacity="0.12"/>
+  <text x="250" y="356" fill="#1D4ED8" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial" font-weight="700">RabbitMQ</text>
+  <rect x="336" y="334" width="104" height="34" rx="12" fill="url(#chip)" fill-opacity="0.12"/>
+  <text x="361" y="356" fill="#1D4ED8" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial" font-weight="700">Spring AI</text>
+  <rect x="452" y="334" width="52" height="34" rx="12" fill="url(#chip)" fill-opacity="0.12"/>
+  <text x="464" y="356" fill="#1D4ED8" font-size="12" font-family="Segoe UI, Microsoft YaHei, Arial" font-weight="700">ES</text>
+
+  <rect x="140" y="380" width="104" height="22" rx="11" fill="#DBEAFE"/>
+  <text x="150" y="395" fill="#334155" font-size="11" font-family="Segoe UI, Microsoft YaHei, Arial">秒杀 / 订单 / 支付</text>
+  <rect x="252" y="380" width="90" height="22" rx="11" fill="#E0F2FE"/>
+  <text x="265" y="395" fill="#334155" font-size="11" font-family="Segoe UI, Microsoft YaHei, Arial">Feed / 热榜</text>
+  <rect x="350" y="380" width="80" height="22" rx="11" fill="#EDE9FE"/>
+  <text x="365" y="395" fill="#334155" font-size="11" font-family="Segoe UI, Microsoft YaHei, Arial">AI / RAG</text>
+  <rect x="438" y="380" width="66" height="22" rx="11" fill="#DCFCE7"/>
+  <text x="450" y="395" fill="#334155" font-size="11" font-family="Segoe UI, Microsoft YaHei, Arial">IM / 审核</text>
+
+  <text x="140" y="413" fill="#64748B" font-size="11" font-family="Segoe UI, Microsoft YaHei, Arial">项目规模、业务闭环、技术亮点与阅读入口集中展示</text>
+</svg>

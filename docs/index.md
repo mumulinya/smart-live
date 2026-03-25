@@ -1,4 +1,4 @@
-﻿---
+---
 layout: home
 
 title: SmartLive 智评生活
@@ -32,24 +32,6 @@ hero:
   <span class="smartlive-tech-chip">JDK 17+</span>
 </div>
 
-<div class="smartlive-hero-metrics">
-  <div class="smartlive-hero-metric">
-    <strong>19</strong>
-    <span>服务应用</span>
-  </div>
-  <div class="smartlive-hero-metric">
-    <strong>16</strong>
-    <span>业务模块</span>
-  </div>
-  <div class="smartlive-hero-metric">
-    <strong>28</strong>
-    <span>XXL-JOB 任务</span>
-  </div>
-  <div class="smartlive-hero-metric">
-    <strong>双端</strong>
-    <span>App + 管理端 Web</span>
-  </div>
-</div>
 
 <div class="smartlive-home-nav">
   <a href="./site-pages/SYSTEM_ARCHITECTURE.html" class="smartlive-home-nav-pill">架构与规模</a>
@@ -119,6 +101,11 @@ hero:
     <div class="smartlive-stat-value">28 个</div>
     <div class="smartlive-stat-label">XXL-JOB 任务</div>
     <div class="smartlive-stat-desc">统一承接订单兜底、秒杀预热、热榜重建与互动回刷</div>
+  </div>
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">双端覆盖</div>
+    <div class="smartlive-stat-label">移动端 + 管理端</div>
+    <div class="smartlive-stat-desc">Uni-app 用户端 + Vue3/Vite/Antd 管理端 Web</div>
   </div>
 <!-- AUTO_SYNC:DOCS_HOME_STATS_CARDS:END -->
 </div>
