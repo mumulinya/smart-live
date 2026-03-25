@@ -4,6 +4,8 @@ import './style.css'
 import DocOutlineToggle from './DocOutlineToggle.vue'
 import ImageLightbox from './ImageLightbox.vue'
 import HomeSectionNavSpy from './HomeSectionNavSpy.vue'
+import ScrollReveal from './ScrollReveal.vue'
+import CardGlow from './CardGlow.vue'
 
 export default {
   extends: DefaultTheme,
@@ -13,6 +15,8 @@ export default {
       'aside-outline-before': () => h(DocOutlineToggle)
     }),
       h(ImageLightbox),
-      h(HomeSectionNavSpy)
+      h(HomeSectionNavSpy),
+      h(ScrollReveal),
+      h(CardGlow)
     ])
 }

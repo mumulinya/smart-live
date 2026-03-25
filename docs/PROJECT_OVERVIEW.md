@@ -29,10 +29,10 @@
 | 仓库 | 角色定位 | 技术栈 | 入口 |
 |------|------|------|------|
 | **smartLive-Cloud** | 后端微服务主仓库，承接交易、社交、搜索、AI、审核、调度与基础设施编排 | Spring Boot / Spring Cloud Alibaba / Redis / RabbitMQ / Elasticsearch / Milvus | [GitHub](https://github.com/mumulinya/smartLive-Cloud) |
-| **smartLive-ui** | 管理端 Web，覆盖店铺、商品、订单、审核、运营、系统管理等后台能力 | Vue + Element UI | [Gitee](https://gitee.com/mumulinya/smart-live-ui.git) |
-| **smart-live-app** | 用户端 App，覆盖登录、发现、下单、评价、博客、社交消息与 AI 能力 | Vue 移动端 / H5 页面体验 | [Gitee](https://gitee.com/mumulinya/smart-live-html.git) |
+| **smartLive-admin** | 管理端 Web，覆盖店铺、商品、订单、审核、运营、系统管理等后台能力 | Vue + Element UI | [GitHub](https://github.com/mumulinya/smartLive-admin.git) |
+| **smartLive-web** | 用户端 App，覆盖登录、发现、下单、评价、博客、社交消息与 AI 能力 | Vue 移动端 / H5 页面体验 | [GitHub](https://github.com/mumulinya/smartLive-web.git) |
 
-这三者的关系可以简单理解成：`Cloud` 负责后端与中间件协同，`smartLive-ui` 负责商家与平台后台，`smart-live-app` 负责用户端前台体验。阅读项目时，建议先看本仓库，再配合页面导览理解前端呈现。
+这三者的关系可以简单理解成：`Cloud` 负责后端与中间件协同，`smartLive-admin` 负责商家与平台后台，`smartLive-web` 负责用户端前台体验。阅读项目时，建议先看本仓库，再配合页面导览理解前端呈现。
 
 ## 🔍 为什么值得开源阅读
 

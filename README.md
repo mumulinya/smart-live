@@ -11,12 +11,12 @@
 [![Spring Cloud Alibaba](https://img.shields.io/badge/Spring%20Cloud%20Alibaba-2023.0.1.0-orange.svg)](https://github.com/alibaba/spring-cloud-alibaba)
 [![JDK](https://img.shields.io/badge/JDK-17+-red.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Star](https://gitee.com/mumulinya/smart-live/badge/star.svg?theme=dark)](https://gitee.com/mumulinya/smart-live/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/mumulinya/smartLive-Cloud?style=flat&logo=github)](https://github.com/mumulinya/smartLive-Cloud/stargazers)
 ![Personal Project](https://img.shields.io/badge/个人独立项目-从零设计开发-ff69b4.svg)
 
 ### 📚 **[项目在线文档网站（完整排版版）](https://mumulinya.github.io/smartLive-Cloud/)**
 
-**文档导航：** [在线文档](https://mumulinya.github.io/smartLive-Cloud/) · [视觉导览](docs/SHOWCASE.md) · [页面导览](docs/PAGE_GALLERY.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://gitee.com/mumulinya/smart-live/issues)
+**文档导航：** [在线文档](https://mumulinya.github.io/smartLive-Cloud/) · [视觉导览](docs/SHOWCASE.md) · [页面导览](docs/PAGE_GALLERY.md) · [开源接入](docs/OPEN_SOURCE.md) · [提交 Issue](https://github.com/mumulinya/smartLive-Cloud/issues)
 
 ---
 
@@ -425,8 +425,8 @@ README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG �
 当前仓库主要是 **后端微服务主仓库**，负责用户、店铺、商品、订单、互动、搜索、AI、IM、审核、钱包等核心服务，以及中间件编排和部署脚本。  
 前端仓库已单独拆分：
 
-- `smartLive-ui`：后台管理端（Vue + Element UI）
-- `smart-live-app`：用户端 App（Vue 移动端 / H5 页面）
+- `smartLive-admin`：后台管理端（Vue + Element UI）
+- `smartLive-web`：用户端 App（Vue 移动端 / H5 页面）
 
 对应仓库入口可以直接查看文档中的 [项目仓库](#项目仓库) 一节。
 </details>
@@ -437,7 +437,7 @@ README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG �
 
 - **基础中间件**：MySQL、Redis、Nacos、RabbitMQ
 - **核心服务**：Gateway、Auth、User、Shop、Product、Order、Blog、Interaction、Search
-- **管理端 / 用户端前端**：按你的体验目标选择 `smartLive-ui` 或 `smart-live-app`
+- **管理端 / 用户端前端**：按你的体验目标选择 `smartLive-admin` 或 `smartLive-web`
 
 AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补。更完整的接入顺序见 [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md)。
 </details>
@@ -481,8 +481,8 @@ AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补�
 | 仓库 | 说明 | 链接 |
 |:---:|:---:|:---:|
 | **smartLive-Cloud** | 后端微服务（本仓库） | [GitHub](https://github.com/mumulinya/smartLive-Cloud) |
-| **smartLive-ui** | 后台管理端（Vue + Element UI） | [Gitee](https://gitee.com/mumulinya/smart-live-ui.git) |
-| **smart-live-app** | 用户端 App（Vue 移动端 / H5 页面） | [Gitee](https://gitee.com/mumulinya/smart-live-html.git) |
+| **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin.git) |
+| **smartLive-web** | 用户端 App（Vue 移动端 / H5 页面） | [GitHub](https://github.com/mumulinya/smartLive-web.git) |
 
 
 ## <a id="参与贡献"></a>🤝 参与贡献
@@ -509,7 +509,7 @@ AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补�
 
 - **邮箱**：mumulinya167@gmail.com
 - **GitHub Issues**：[mumulinya/smartLive-Cloud](https://github.com/mumulinya/smartLive-Cloud/issues)
-- **Gitee Issues**：[mumulinya/smart-live](https://gitee.com/mumulinya/smart-live/issues)
+- **GitHub Issues**：[mumulinya/smartLive-Cloud](https://github.com/mumulinya/smartLive-Cloud/issues)
 
 更适合交流的话题：
 

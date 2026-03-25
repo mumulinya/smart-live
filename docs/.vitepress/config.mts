@@ -17,7 +17,7 @@ export default defineConfig({
       { text: '页面导览', link: '/PAGE_GALLERY' },
       { text: '视觉导览', link: '/SHOWCASE' },
       { text: '核心链路', link: '/core-links/' },
-      { text: 'FAQ', link: '/site-pages/FAQ' }
+      { text: '面试入口', link: '/PROJECT_OVERVIEW' }
     ],
 
     sidebar: [
@@ -29,17 +29,6 @@ export default defineConfig({
           { text: '02 系统架构与项目规模', link: '/site-pages/SYSTEM_ARCHITECTURE' },
           { text: '03 页面效果图导览', link: '/PAGE_GALLERY' },
           { text: '04 业务链路视觉走查', link: '/SHOWCASE' }
-        ]
-      },
-      {
-        text: '🎤 面试拆解与答辩',
-        collapsed: true,
-        items: [
-          { text: '01 项目全貌与答辩说明', link: '/PROJECT_OVERVIEW' },
-          { text: '02 我的核心设计与实现', link: '/site-pages/CONTRIBUTIONS' },
-          { text: '03 技术选型理由', link: '/site-pages/TECH_SELECTION' },
-          { text: '04 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
-          { text: '05 常见问题 FAQ', link: '/site-pages/FAQ' }
         ]
       },
       {
@@ -56,6 +45,17 @@ export default defineConfig({
           { text: '08 LBS 搜索与热词链路', link: '/core-links/6. 搜索读链路 + 热词沉淀链路' },
           { text: '09 热榜洗牌与全量重建链路', link: '/core-links/7. 热榜增量洗牌与全量重建链路' },
           { text: '10 AI 路由策略与 RAG 生成', link: '/core-links/8. AI Agent策略路由与RAG多维增强生成链路' }
+        ]
+      },
+      {
+        text: '🎤 面试拆解与答辩',
+        collapsed: true,
+        items: [
+          { text: '01 项目全貌与答辩说明', link: '/PROJECT_OVERVIEW' },
+          { text: '02 我的核心设计与实现', link: '/site-pages/CONTRIBUTIONS' },
+          { text: '03 技术选型理由', link: '/site-pages/TECH_SELECTION' },
+          { text: '04 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
+          { text: '05 常见问题 FAQ', link: '/site-pages/FAQ' }
         ]
       },
       {

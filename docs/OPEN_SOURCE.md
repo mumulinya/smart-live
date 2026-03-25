@@ -52,8 +52,8 @@ outline: 2
 | 仓库 | 角色定位 | 适合什么时候看 | 入口 |
 |:---|:---|:---|:---|
 | **smartLive-Cloud** | 后端微服务主仓库，承接交易、搜索、审核、AI、调度与基础设施协同 | 准备启动服务、看链路、看源码时先看它 | [GitHub](https://github.com/mumulinya/smartLive-Cloud.git) |
-| **smartLive-ui** | 管理端 Web，覆盖商品、订单、审核、运营、系统后台能力 | 想看后台页面、联调管理端时再看它 | [Gitee](https://gitee.com/mumulinya/smart-live-ui.git) |
-| **smart-live-app** | 用户端 App，覆盖登录、发现、下单、评价、社交消息与 AI 页面 | 想看用户端体验、截图与页面联调时再看它 | [Gitee](https://gitee.com/mumulinya/smart-live-html.git) |
+| **smartLive-admin** | 管理端 Web，覆盖商品、订单、审核、运营、系统后台能力 | 想看后台页面、联调管理端时再看它 | [GitHub](https://github.com/mumulinya/smartLive-admin.git) |
+| **smartLive-web** | 用户端 App，覆盖登录、发现、下单、评价、社交消息与 AI 页面 | 想看用户端体验、截图与页面联调时再看它 | [GitHub](https://github.com/mumulinya/smartLive-web.git) |
 
 ## 5. 体验边界说明
 

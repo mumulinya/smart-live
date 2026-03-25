@@ -9,15 +9,18 @@ hero:
   text: 智评生活 · 本地生活微服务平台
   tagline: 覆盖发现、交易、履约、社交、热榜与 AI/RAG 的完整业务闭环落地
   actions:
-    - theme: brand
-      text: 🚀 快速开始
+    - theme: alt
+      text: 💡 项目概览与导览
       link: /OPEN_SOURCE
     - theme: alt
-      text: 👀 查看页面与链路
-      link: /SHOWCASE
+      text: 🔥 核心链路与实现
+      link: /core-links/
     - theme: alt
-      text: 🎤 面试入口
+      text: 🎤 面试拆解与答辩
       link: /PROJECT_OVERVIEW
+    - theme: alt
+      text: 👨‍💻 项目复盘与学习
+      link: /site-pages/LEARNINGS
 ---
 
 <div class="smartlive-tech-strip">
@@ -32,20 +35,8 @@ hero:
   <span class="smartlive-tech-chip">JDK 17+</span>
 </div>
 
-
-<div class="smartlive-home-nav">
-  <a href="./site-pages/SYSTEM_ARCHITECTURE.html" class="smartlive-home-nav-pill">架构与规模</a>
-  <a href="./PAGE_GALLERY.html" class="smartlive-home-nav-pill">页面导览</a>
-  <a href="./SHOWCASE.html" class="smartlive-home-nav-pill">视觉导览</a>
-  <a href="./core-links/" class="smartlive-home-nav-pill">核心链路</a>
-  <a href="./site-pages/TECH_SELECTION.html" class="smartlive-home-nav-pill">技术选型</a>
-</div>
-
-<details class="smartlive-section-nav-wrap" open>
-  <summary class="smartlive-section-nav-summary">
-    <span class="smartlive-section-nav-title">首页导航</span>
-    <span class="smartlive-section-nav-toggle">收起</span>
-  </summary>
+<nav class="smartlive-section-nav-bar">
+  <div class="smartlive-section-nav-bar__label">📍 导航</div>
   <div class="smartlive-section-nav">
     <a href="#home-stats" class="smartlive-section-nav-pill">项目规模</a>
     <a href="#home-architecture" class="smartlive-section-nav-pill">系统架构</a>
@@ -56,7 +47,7 @@ hero:
     <a href="#home-pitch-path" class="smartlive-section-nav-pill">讲解路径</a>
     <a href="#home-quickstart" class="smartlive-section-nav-pill">极速启动</a>
   </div>
-</details>
+</nav>
 
 ## <a id="home-stats"></a>📊 项目规模与关键数据
 
@@ -101,11 +92,6 @@ hero:
     <div class="smartlive-stat-value">28 个</div>
     <div class="smartlive-stat-label">XXL-JOB 任务</div>
     <div class="smartlive-stat-desc">统一承接订单兜底、秒杀预热、热榜重建与互动回刷</div>
-  </div>
-  <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">双端覆盖</div>
-    <div class="smartlive-stat-label">移动端 + 管理端</div>
-    <div class="smartlive-stat-desc">Uni-app 用户端 + Vue3/Vite/Antd 管理端 Web</div>
   </div>
 <!-- AUTO_SYNC:DOCS_HOME_STATS_CARDS:END -->
 </div>
@@ -226,14 +212,14 @@ hero:
     <strong>smartLive-Cloud</strong>
     <span>后端微服务主仓库，先看它就能建立服务结构、链路和启动顺序的整体认知。</span>
   </a>
-  <a href="https://gitee.com/mumulinya/smart-live-ui.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
+  <a href="https://github.com/mumulinya/smartLive-admin.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
     <span class="smartlive-link-tag">ADMIN</span>
-    <strong>smartLive-ui</strong>
+    <strong>smartLive-admin</strong>
     <span>管理端 Web 仓库，适合联调商品、订单、审核、运营和系统后台页面。</span>
   </a>
-  <a href="https://gitee.com/mumulinya/smart-live-html.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
+  <a href="https://github.com/mumulinya/smartLive-web.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
     <span class="smartlive-link-tag">APP</span>
-    <strong>smart-live-app</strong>
+    <strong>smartLive-web</strong>
     <span>用户端 App 仓库，适合联调登录、发现、下单、评价、社交消息与 AI 页面。</span>
   </a>
 </div>
@@ -245,10 +231,10 @@ hero:
 git clone https://github.com/mumulinya/smartLive-Cloud.git
 
 # 2. 获取管理端源码（按需）
-git clone https://gitee.com/mumulinya/smart-live-ui.git
+git clone https://github.com/mumulinya/smartLive-admin.git
 
 # 3. 获取用户端 App 源码（按需）
-git clone https://gitee.com/mumulinya/smart-live-html.git
+git clone https://github.com/mumulinya/smartLive-web.git
 
 # 4. 导入 MySQL / Redis / Nacos 配置
 # 请参考我们在 /docs/OPEN_SOURCE.md 中提供的初始化脚本
