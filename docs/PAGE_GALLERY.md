@@ -42,6 +42,8 @@
 | 管理端经营与治理 | 仪表盘、店铺商品管理、审核、日志、角色权限 | `system / shop / product / audit / user / monitor` | 审核责任链、调度与治理链路 | [开源接入说明](OPEN_SOURCE.md) |
 | XXL-JOB 调度后台 | 调度总览、任务管理、执行器管理 | `common-xxl / product / order / interaction` | 热榜重建、订单兜底、秒杀预热链路 | [业务链路视觉走查](SHOWCASE.md) |
 
+<div class="smartlive-gallery-sections">
+
 ## <a id="app-pages"></a>1. 用户端 App 全链路展示
 
 ### <a id="app-login-entry"></a>1.1 登录与进入
@@ -299,3 +301,5 @@
 |:---:|
 | <img src="./screenshots/admin-xxl-executors.png" alt="XXL-JOB 执行器管理" width="420"> |
 | 6 个执行器配置与在线节点查看 |
+
+</div>

@@ -15,12 +15,20 @@ hero:
     - theme: alt
       text: 👀 查看页面与链路
       link: /SHOWCASE
+    - theme: alt
+      text: 🎤 面试入口
+      link: /PROJECT_OVERVIEW
 ---
 
 <div class="smartlive-tech-strip">
   <span class="smartlive-tech-chip">Spring Boot 3.2.2</span>
-  <span class="smartlive-tech-chip">Spring Cloud 2023.0.0</span>
   <span class="smartlive-tech-chip">Spring Cloud Alibaba 2023.0.1.0</span>
+  <span class="smartlive-tech-chip">Redis</span>
+  <span class="smartlive-tech-chip">RabbitMQ</span>
+  <span class="smartlive-tech-chip">Elasticsearch</span>
+  <span class="smartlive-tech-chip">Milvus</span>
+  <span class="smartlive-tech-chip">Spring AI</span>
+  <span class="smartlive-tech-chip">XXL-JOB</span>
   <span class="smartlive-tech-chip">JDK 17+</span>
 </div>
 
@@ -204,15 +212,41 @@ hero:
 
 ## <a id="home-quickstart"></a>🚀 极速启动与本地体验
 
-想立刻在本地跑起来？只需简单几步克隆代码并一键拉起后端核心依赖：
+如果你想立刻开始，本页就先给你两样最有用的内容：仓库入口和可直接复制的 `git clone` 命令。后端主仓库负责服务与中间件协同，管理端和用户端仓库按你的联调目标再补即可。
+
+<div class="smartlive-link-grid">
+  <a href="https://github.com/mumulinya/smartLive-Cloud.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
+    <span class="smartlive-link-tag">BACKEND</span>
+    <strong>smartLive-Cloud</strong>
+    <span>后端微服务主仓库，先看它就能建立服务结构、链路和启动顺序的整体认知。</span>
+  </a>
+  <a href="https://gitee.com/mumulinya/smart-live-ui.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
+    <span class="smartlive-link-tag">ADMIN</span>
+    <strong>smartLive-ui</strong>
+    <span>管理端 Web 仓库，适合联调商品、订单、审核、运营和系统后台页面。</span>
+  </a>
+  <a href="https://gitee.com/mumulinya/smart-live-html.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
+    <span class="smartlive-link-tag">APP</span>
+    <strong>smart-live-app</strong>
+    <span>用户端 App 仓库，适合联调登录、发现、下单、评价、社交消息与 AI 页面。</span>
+  </a>
+</div>
+
+先克隆你需要的仓库，再决定这次是只跑后端，还是把后台和 App 一起带起来：
 
 ```bash
 # 1. 获取后端源码
-git clone https://gitee.com/mumulinya/smart-live.git
+git clone https://github.com/mumulinya/smartLive-Cloud.git
 
-# 2. 导入 MySQL / Redis / Nacos 配置
+# 2. 获取管理端源码（按需）
+git clone https://gitee.com/mumulinya/smart-live-ui.git
+
+# 3. 获取用户端 App 源码（按需）
+git clone https://gitee.com/mumulinya/smart-live-html.git
+
+# 4. 导入 MySQL / Redis / Nacos 配置
 # 请参考我们在 /docs/OPEN_SOURCE.md 中提供的初始化脚本
 
-# 3. IDEA 启动核心微服务组件
+# 5. IDEA 启动核心微服务组件
 ```
 > 👉 详细的 Docker 完整部署与微服务启动顺序，请参阅 **[快速入门指南](/OPEN_SOURCE)**。

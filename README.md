@@ -26,13 +26,26 @@
 
 - [📖 项目简介](#项目简介)
 - [📏 项目规模](#项目规模)
+- [👨‍💻 个人贡献亮点](#个人贡献亮点)
 - [🧭 5 分钟读懂项目](#5分钟读懂项目)
 - [🎨 效果预览](#效果预览)
 - [🚀 快速开始](#快速开始)
 - [📄 项目文档](#项目文档)
 - [🎯 核心亮点](#核心亮点)
+- [📚 扩展导航](#扩展导航)
 - [❓ 常见问题 FAQ](#常见问题)
 - [🚧 未来规划 Roadmap](#未来规划)
+
+---
+
+## <a id="扩展导航"></a>📚 扩展导航
+
+主目录只保留首页最核心的入口，下面这些“下沉但仍保留在 README 正文中的章节”可以从这里直接跳转：
+
+- **架构与能力：** [功能特性](#功能特性) · [技术栈](#技术栈) · [系统架构](#系统架构) · [项目结构](#项目结构)
+- **链路与实践：** [核心业务链路](#核心业务链路) · [核心链路与面经](#核心链路与面经) · [技术选型理由](#技术选型理由) · [性能压测报告](#性能压测报告)
+- **工程与维护：** [开源使用提示](#开源使用提示) · [难点踩坑与解决方案](#难点踩坑与解决方案) · [项目沉淀](#项目沉淀)
+- **仓库与协作：** [项目仓库](#项目仓库) · [参与贡献](#参与贡献) · [开源协议](#开源协议) · [联系我](#联系我)
 
 ---
 
@@ -84,7 +97,7 @@
 | XXL-JOB 任务 | 以调度后台当前可见任务数为准，和文档中的后台截图口径保持一致 |
 <!-- AUTO_SYNC:README_STATS_SCOPE:END -->
 
-### 👨‍💻 个人贡献亮点（本项目核心设计与实现）
+### <a id="个人贡献亮点"></a>👨‍💻 [个人贡献亮点（本项目核心设计与实现）](docs/site-pages/CONTRIBUTIONS.md)
 
 这里只保留首页版摘要，完整展开建议直接看：
 
@@ -107,7 +120,7 @@
 - **消息可靠投递与幂等消费**：统一封装发送端 Confirm / Return、消费端 Redis 幂等和手动 ACK/NACK，把重复消费和补偿边界收口。
 - **用户端 AI 与 AIGC 闭环**：打通 SSE 对话、RAG 检索、推荐卡片、博客生成、评价生成等用户侧可感知能力。
 
-### 🎯 核心亮点
+### <a id="核心亮点"></a>🎯 [核心亮点](docs/site-pages/CORE_HIGHLIGHTS.md)
 
 这里只保留项目级能力摘要，完整版本建议直接看：
 
@@ -307,7 +320,7 @@ README 首页不再展开完整目录树，模块结构、服务依赖和推荐�
 
 如果只想先抓主干，建议先从 `auth -> gateway -> user/shop/search` 读起，再按交易、社交、AI 三条线往下展开。
 
-## <a id="技术选型理由"></a>🤔 技术选型理由 - 为什么选这些而不是其他？
+## <a id="技术选型理由"></a>🤔 [技术选型理由](docs/site-pages/TECH_SELECTION.md) - 为什么选这些而不是其他？
 
 这里保留首页版摘要，完整选型对比建议直接看：
 
@@ -362,7 +375,7 @@ README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG �
 - 先抓住缓存分层、策略工厂、责任链、MQ + 调度补偿这几个核心设计点，再读具体模块。
 - AI、对象存储、支付、向量检索都依赖外部配置，第一次阅读更适合先看链路和接口，再补齐环境。
 
-## <a id="性能压测报告"></a>📈 性能压测报告
+## <a id="性能压测报告"></a>📈 [性能压测报告](docs/site-pages/PERFORMANCE.md)
 
 这里保留首页版摘要，完整压测表与工程表现已独立到网站页：
 
@@ -375,7 +388,7 @@ README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG �
 - 详情类读链路通过 `String 缓存 + 逻辑过期`，TP99 可以压到 `< 5ms`
 - 高并发写场景尽量走 `Lua + MQ + 定时补偿`，避免直接把压力打到主库
 
-## <a id="难点踩坑与解决方案"></a>🚧 难点踩坑与解决方案
+## <a id="难点踩坑与解决方案"></a>🚧 [难点踩坑与解决方案](docs/site-pages/PITFALLS.md)
 
 这里保留首页版摘要，完整踩坑复盘建议直接看：
 
@@ -390,7 +403,7 @@ README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG �
 5. `内容治理`：审核中心用策略工厂 + 责任链，把博客、商品、评论、用户资料等多条线统一收口。
 
 
-## <a id="项目沉淀"></a>🧠 我通过这个项目学到的东西
+## <a id="项目沉淀"></a>🧠 [我通过这个项目学到的东西](docs/site-pages/LEARNINGS.md)
 
 这里保留首页版摘要，完整复盘内容已独立到网站页：
 
@@ -401,7 +414,7 @@ README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG �
 
 ---
 
-## <a id="常见问题"></a>❓ 常见问题 FAQ
+## <a id="常见问题"></a>❓ [常见问题 FAQ](docs/site-pages/FAQ.md)
 
 这里保留首页版最有用的 4 条，完整问答建议直接看：
 
@@ -412,8 +425,8 @@ README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG �
 当前仓库主要是 **后端微服务主仓库**，负责用户、店铺、商品、订单、互动、搜索、AI、IM、审核、钱包等核心服务，以及中间件编排和部署脚本。  
 前端仓库已单独拆分：
 
-- `smartLive-admin`：后台管理端（Vue + Element UI）
-- `smartLive-web`：用户前台（Vue 响应式，兼容移动端）
+- `smartLive-ui`：后台管理端（Vue + Element UI）
+- `smart-live-app`：用户端 App（Vue 移动端 / H5 页面）
 
 对应仓库入口可以直接查看文档中的 [项目仓库](#项目仓库) 一节。
 </details>
@@ -424,7 +437,7 @@ README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG �
 
 - **基础中间件**：MySQL、Redis、Nacos、RabbitMQ
 - **核心服务**：Gateway、Auth、User、Shop、Product、Order、Blog、Interaction、Search
-- **管理端 / 用户端前端**：按你的体验目标选择 `smartLive-admin` 或 `smartLive-web`
+- **管理端 / 用户端前端**：按你的体验目标选择 `smartLive-ui` 或 `smart-live-app`
 
 AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补。更完整的接入顺序见 [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md)。
 </details>
@@ -453,7 +466,7 @@ AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补�
 <br>
 
 
-## <a id="未来规划"></a>🗺️ 未来规划 Roadmap
+## <a id="未来规划"></a>🗺️ [未来规划 Roadmap](docs/site-pages/ROADMAP.md)
 
 这里保留首页版两条核心方向，完整规划建议直接看：
 
@@ -467,9 +480,9 @@ AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补�
 
 | 仓库 | 说明 | 链接 |
 |:---:|:---:|:---:|
-| **smartLive-Cloud** | 后端微服务（本仓库） | [GitHub](https://github.com/mumulinya/smart-live) |
-| **smartLive-admin** | 后台管理端（Vue + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin) |
-| **smartLive-web** | 用户端前台（Vue 响应式，兼容移动端） | [GitHub](https://github.com/mumulinya/smartLive-web) |
+| **smartLive-Cloud** | 后端微服务（本仓库） | [GitHub](https://github.com/mumulinya/smartLive-Cloud) |
+| **smartLive-ui** | 后台管理端（Vue + Element UI） | [Gitee](https://gitee.com/mumulinya/smart-live-ui.git) |
+| **smart-live-app** | 用户端 App（Vue 移动端 / H5 页面） | [Gitee](https://gitee.com/mumulinya/smart-live-html.git) |
 
 
 ## <a id="参与贡献"></a>🤝 参与贡献
@@ -494,8 +507,8 @@ AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补�
 
 如果你想交流项目、源码设计或招聘机会，首页保留这 3 个入口就够了：
 
-- **邮箱**：mumulinya@foxmail.com
-- **GitHub Issues**：[mumulinya/smart-live](https://github.com/mumulinya/smart-live/issues)
+- **邮箱**：mumulinya167@gmail.com
+- **GitHub Issues**：[mumulinya/smartLive-Cloud](https://github.com/mumulinya/smartLive-Cloud/issues)
 - **Gitee Issues**：[mumulinya/smart-live](https://gitee.com/mumulinya/smart-live/issues)
 
 更适合交流的话题：

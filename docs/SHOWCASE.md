@@ -14,6 +14,8 @@
 - **想看 AI 与个人资产**：[AI 与个人资产](#showcase-ai) -> [内容审核与搜索图组](#chains-search) -> [AI 与经营图组](#chains-ai)
 - **想看 Redis / 调度设计**：[缓存与性能专题](#chains-cache) -> [调度与定时任务](#chains-schedule)
 
+<div class="smartlive-showcase-sections">
+
 ## <a id="showcase-overview"></a>1. 项目全景
 
 <div align="center">
@@ -391,6 +393,8 @@ AI 推荐卡片承接商品与团购推荐结果。
 | UGC 异步审核与分发 | 审核消息投递、责任链处理、回调源服务 | <a href="./diagrams/ugc-audit-flow.svg" target="_blank" rel="noreferrer"><img src="./diagrams/ugc-audit-flow.svg" alt="UGC 异步审核与分发" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/ugc-audit-flow-detailed.svg) |
 | Feed 动态扇出 | 发布动态、粉丝分发、读扩散 / 写扩散 | <a href="./diagrams/feed-fanout-sequence.svg" target="_blank" rel="noreferrer"><img src="./diagrams/feed-fanout-sequence.svg" alt="Feed 动态扇出" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/feed-fanout-sequence-detailed.svg) |
 | 搜索与向量库同步 | ES 索引同步、Milvus 向量写入、异步一致性 | <a href="./diagrams/search-es-milvus-sync-sequence.svg" target="_blank" rel="noreferrer"><img src="./diagrams/search-es-milvus-sync-sequence.svg" alt="搜索与向量库同步" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/search-es-milvus-sync-sequence-detailed.svg) |
+
+</div>
 
 ## 7. 如何继续阅读
 

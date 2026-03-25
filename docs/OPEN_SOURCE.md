@@ -45,7 +45,17 @@ outline: 2
 - 先跑“最小可运行链路”，确认登录、店铺、搜索和后台管理可用后，再补 AI、审核、积分、支付等扩展能力。
 - `docker/` 下仍保留部分历史模块命名与复制脚本，使用前要和当前 Maven 模块、当前端口、当前 JAR 名称逐项核对。
 
-## 4. 体验边界说明
+## 4. 项目入口与仓库矩阵
+
+如果你是第一次接这个项目，建议把“仓库入口”也放在启动视角里一起看。先明确后端主仓库、管理端仓库和用户端仓库分别在哪，再决定你这次是只跑后端、只看后台，还是要把 App 也一起联起来。
+
+| 仓库 | 角色定位 | 适合什么时候看 | 入口 |
+|:---|:---|:---|:---|
+| **smartLive-Cloud** | 后端微服务主仓库，承接交易、搜索、审核、AI、调度与基础设施协同 | 准备启动服务、看链路、看源码时先看它 | [GitHub](https://github.com/mumulinya/smartLive-Cloud.git) |
+| **smartLive-ui** | 管理端 Web，覆盖商品、订单、审核、运营、系统后台能力 | 想看后台页面、联调管理端时再看它 | [Gitee](https://gitee.com/mumulinya/smart-live-ui.git) |
+| **smart-live-app** | 用户端 App，覆盖登录、发现、下单、评价、社交消息与 AI 页面 | 想看用户端体验、截图与页面联调时再看它 | [Gitee](https://gitee.com/mumulinya/smart-live-html.git) |
+
+## 5. 体验边界说明
 
 | 类型 | 当前状态 | 说明 |
 |:---|:---|:---|
@@ -53,7 +63,7 @@ outline: 2
 | 需要额外配置 | Elasticsearch、Milvus、MinIO、XXL-JOB、模型 API Key、支付相关配置 | 搜索、AI/RAG、对象存储、调度后台、支付回调等能力依赖额外中间件或密钥 |
 | 更适合先读源码 | 死信补偿扩展、更多外部平台接入、完整线上观测与告警闭环 | 这些能力在仓库里已经有接口和骨架，更适合作为源码阅读和后续扩展点理解 |
 
-## 5. 两条启动路径
+## 6. 两条启动路径
 
 ### 路径一：最小可运行链路
 
@@ -71,7 +81,7 @@ outline: 2
 - 额外模块：`smartLive-product`、`smartLive-order`、`smartLive-interaction`、`smartLive-chat`、`smartLive-im`、`smartLive-ai`、`smartLive-wallet`、`smartLive-points`、`smartLive-blog`、`smartLive-audit`、`smartLive-file`
 - 如果要体验 RAG、向量检索、异步审核、积分抽奖、消息通知或延迟队列链路，必须补齐这些依赖
 
-## 6. 推荐启动顺序
+## 7. 推荐启动顺序
 
 ### 最小链路
 
@@ -99,7 +109,7 @@ outline: 2
 11. `smartLive-file`
 12. `smartLive-index`
 
-## 7. 依赖矩阵
+## 8. 依赖矩阵
 
 | 能力 | 必需依赖 | 备注 |
 |:---|:---|:---|
@@ -111,7 +121,7 @@ outline: 2
 | 定时任务 | XXL-JOB、Nacos | 依赖 `xxl-job-common.yml` |
 | 流量治理 | Sentinel、Nacos | 可按需启用 |
 
-### 7.1 按能力体验的最小依赖矩阵
+### 8.1 按能力体验的最小依赖矩阵
 
 | 想体验的能力 | 推荐启动模块 | 最少中间件 | 说明 |
 |:---|:---|:---|:---|

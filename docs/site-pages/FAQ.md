@@ -11,8 +11,8 @@
 当前仓库主要是 **后端微服务主仓库**，负责用户、店铺、商品、订单、互动、搜索、AI、IM、审核、钱包等核心服务，以及中间件编排和部署脚本。  
 前端仓库已单独拆分：
 
-- `smartLive-admin`：后台管理端（Vue + Element UI）
-- `smartLive-web`：用户前台（Vue 响应式，兼容移动端）
+- `smartLive-ui`：后台管理端（Vue + Element UI）
+- `smart-live-app`：用户端 App（Vue 移动端 / H5 页面）
 
 对应仓库入口可以直接查看文档中的 README 的“项目仓库” 一节。
 
@@ -22,7 +22,7 @@
 
 - **基础中间件**：MySQL、Redis、Nacos、RabbitMQ
 - **核心服务**：Gateway、Auth、User、Shop、Product、Order、Blog、Interaction、Search
-- **管理端 / 用户端前端**：按你的体验目标选择 `smartLive-admin` 或 `smartLive-web`
+- **管理端 / 用户端前端**：按你的体验目标选择 `smartLive-ui` 或 `smart-live-app`
 
 AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补。更完整的接入顺序见 [docs/OPEN_SOURCE.md](/OPEN_SOURCE)。
 
