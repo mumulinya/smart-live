@@ -6,95 +6,7 @@ networks:
 
 services:
   # =========================================
-  # 1. 基础中间件 (Infrastructure)
-  # =========================================
-
-  # MySQL 数据库
-  smartLive-mysql:
-    container_name: smartLive-mysql
-    image: mysql:8.0.43
-    build:
-      context: ./mysql
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./mysql/conf:/etc/mysql/conf.d
-      - ./mysql/logs:/logs
-      - ./mysql/data:/var/lib/mysql
-    command: [
-      'mysqld',
-      '--innodb-buffer-pool-size=80M',
-      '--character-set-server=utf8mb4',
-      '--collation-server=utf8mb4_unicode_ci',
-      '--default-time-zone=+8:00',
-      '--lower-case-table-names=1'
-    ]
-    environment:
-      MYSQL_ROOT_PASSWORD: 123167
-
-  # Redis 缓存
-  smartLive-redis:
-    container_name: smartLive-redis
-    image: redis
-    build:
-      context: ./redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./redis/conf/redis.conf:/usr/local/etc/redis/redis.conf
-      - ./redis/data:/data
-    command: redis-server /usr/local/etc/redis/redis.conf
-
-  # RabbitMQ 消息队列
-  smartLive-rabbitmq:
-    container_name: smartLive-rabbitmq
-    image: rabbitmq:3.12-management
-    build:
-      context: ./rabbitmq
-    environment:
-      - RABBITMQ_DEFAULT_USER=smart-live
-      - RABBITMQ_DEFAULT_PASS=123167
-      - RABBITMQ_DEFAULT_VHOST=smart-live
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - ./rabbitmq/data:/var/lib/rabbitmq
-      - ./rabbitmq/logs:/var/log/rabbitmq
-    healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "check_running" ]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  # =========================================
-  # 2. 服务治理与配置 (Service Discovery)
-  # =========================================
-
-  # Nacos 注册中心与配置中心
-  smartLive-nacos:
-    container_name: smartLive-nacos
-    image: smartlive-nacos
-    build:
-      context: ./nacos
-    environment:
-      - MODE=standalone
-      - NACOS_AUTH_ENABLE=false
-      - NACOS_AUTH_TOKEN=U2VjcmV0S2V5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5
-      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
-      - NACOS_AUTH_IDENTITY_VALUE=security
-    volumes:
-      - ./nacos/logs/:/home/nacos/logs
-      - ./nacos/conf/application.properties:/home/nacos/conf/application.properties
-    ports:
-      - "8848:8848"
-      - "9848:9848"
-      - "9849:9849"
-    depends_on:
-      - smartLive-mysql
-
-  # =========================================
-  # 3. 核心网关与认证 (Gateway & Auth)
+  # 1. 核心网关与认证 (Gateway & Auth)
   # =========================================
 
   # API 网关 [8080]
@@ -116,8 +28,6 @@ services:
       dockerfile: dockerfile
     ports:
       - "8080:8080"
-    depends_on:
-      - smartLive-nacos
 
   # 认证中心 [9900]
   smartLive-auth:
@@ -136,152 +46,9 @@ services:
       dockerfile: dockerfile
     ports:
       - "9900:9900"
-    depends_on:
-      - smartLive-nacos
-
-  # Nginx 前端代理
-  smartLive-nginx:
-    container_name: smartLive-nginx
-    image: nginx
-    build:
-      context: ./nginx
-    environment:
-      - GATEWAY_HOST=${GATEWAY_HOST}
-    command: >
-      /bin/sh -c "envsubst '$$GATEWAY_HOST' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
-      && nginx -g 'daemon off;'"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8081:8081"
-    volumes:
-      - ./nginx/html/app:/home/smartLive/projects/web
-      - ./nginx/html/admin:/home/smartLive/projects/admin
-      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf.template
-      - ./nginx/logs:/var/log/nginx
-      - ./nginx/conf.d:/etc/nginx/conf.d
 
   # =========================================
-  # 4. 搜索与数据分析 (Search & Analytics)
-  # =========================================
-
-  # Elasticsearch 搜索引擎
-  smartLive-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.16
-    container_name: smartLive-elasticsearch
-    build:
-      context: ./elasticsearch
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - xpack.security.enabled=false
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - ./elasticsearch/data:/usr/share/elasticsearch/data
-      - ./elasticsearch/plugins:/usr/share/elasticsearch/plugins
-
-  # Kibana 可视化面板
-  smartLive-kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.16
-    container_name: smartLive-kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://smartLive-elasticsearch:9200
-    ports:
-      - "5601:5601"
-    depends_on:
-      - smartLive-elasticsearch
-
-  # =========================================
-  # 5. 向量数据库与对象存储 (AI Support)
-  # =========================================
-
-  # Etcd (Milvus 依赖)
-  smartLive-etcd:
-    container_name: smartLive-milvus-etcd
-    image: quay.io/coreos/etcd:v3.5.5
-    build:
-      context: ./milvus/etcd
-    environment:
-      - ETCD_AUTO_COMPACTION_MODE=revision
-      - ETCD_AUTO_COMPACTION_RETENTION=1000
-      - ETCD_QUOTA_BACKEND_BYTES=4294967296
-      - ETCD_SNAPSHOT_COUNT=50000
-    volumes:
-      - ./milvus/etcd/data:/etcd
-    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
-    healthcheck:
-      test: [ "CMD", "etcdctl", "endpoint", "health" ]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  # MinIO 对象存储 (也是 Milvus 依赖)
-  smartLive-minio:
-    container_name: smartLive-milvus-minio
-    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
-    build:
-      context: ./milvus/minio
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    ports:
-      - "9001:9001"
-      - "9000:9000"
-    volumes:
-      - ./milvus/minio/data:/minio_data
-    command: minio server /minio_data --console-address ":9001"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  # MinIO 初始化 (创建 Bucket)
-  smartLive-minio-init:
-    image: minio/mc
-    depends_on:
-      smartLive-minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set smartlive http://smartLive-minio:9000 minioadmin minioadmin;
-      mc mb -p smartlive/smart-live;
-      mc anonymous set public smartlive/smart-live;
-      echo '✅ bucket smart-live ready';
-      exit 0;
-      "
-
-  # Milvus 向量数据库
-  smartLive-milvus:
-    container_name: smartLive-milvus
-    image: milvusdb/milvus:v2.3.4
-    build:
-      context: ./milvus/milvus
-    command: [ "milvus", "run", "standalone" ]
-    environment:
-      - ETCD_ENDPOINTS=smartLive-etcd:2379
-      - MINIO_ADDRESS=smartLive-minio:9000
-    volumes:
-      - ./milvus/milvus/data:/var/lib/milvus
-    ports:
-      - "19530:19530"
-      - "9091:9091"
-    depends_on:
-      smartLive-etcd:
-        condition: service_healthy
-      smartLive-minio:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
-      interval: 30s
-      start_period: 90s
-      timeout: 20s
-      retries: 3
-
-  # =========================================
-  # 6. 业务微服务模块 (Business Modules)
+  # 2. 业务微服务模块 (Business Modules)
   # =========================================
 
   # 用户模块 [9201]
@@ -308,8 +75,6 @@ services:
       dockerfile: dockerfile
     ports:
       - "9201:9201"
-    depends_on:
-      - smartLive-nacos
 
   # 系统模块 [9202]
   smartLive-modules-system:
@@ -381,8 +146,6 @@ services:
       dockerfile: dockerfile
     ports:
       - "9204:9204"
-    depends_on:
-      - smartLive-elasticsearch
 
   # 订单模块 [9205]
   smartLive-modules-order:
@@ -606,8 +369,6 @@ services:
       dockerfile: dockerfile
     ports:
       - "9213:9213"
-    depends_on:
-      - smartLive-milvus
 
   # IM 消息模块 [9214 + Netty 8888]
   smartLive-modules-im:
@@ -683,7 +444,7 @@ services:
       - "9216:9216"
 
   # =========================================
-  # 7. 监控与运维 (Monitoring & Ops)
+  # 3. 监控与运维 (Monitoring & Ops)
   # =========================================
 
   # Sentinel 流量治理控制台 [8718]
@@ -703,8 +464,6 @@ services:
       dockerfile: dockerfile
     ports:
       - "8718:8718"
-    depends_on:
-      - smartLive-nacos
 
   # 系统监控可视化 [9100]
   smartLive-visual-monitor:
@@ -724,5 +483,3 @@ services:
       dockerfile: dockerfile
     ports:
       - "9100:9100"
-    depends_on:
-      - smartLive-nacos

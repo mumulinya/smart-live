@@ -2,11 +2,13 @@
 
 # 使用说明
 usage() {
- echo "Usage: sh deploy.sh [port|base|heavy|modules|stop|rm]"
+ echo "Usage: sh deploy.sh [port|infra|base|heavy|java|modules|stop|rm]"
  echo "  port    : 开放防火墙端口"
+ echo "  infra   : 启动中间件与基础设施 (MySQL/Redis/Nacos/RabbitMQ/ES/Milvus/Nginx)"
  echo "  base    : 启动基础中间件 (MySQL, Redis, Nacos, RabbitMQ)"
  echo "  heavy   : 启动重型中间件 (ES, Kibana, MinIO, Milvus, Etcd)"
- echo "  modules : 启动所有 Java 微服务模块、网关和 Nginx"
+ echo "  java    : 启动所有 Java 微服务模块、网关与监控"
+ echo "  modules : 启动所有 Java 微服务模块、网关与监控"
  echo "  stop    : 停止所有服务"
  echo "  rm      : 删除所有容器"
  exit 1
@@ -34,6 +36,8 @@ port(){
  # MinIO
  firewall-cmd --add-port=9000/tcp --permanent
  firewall-cmd --add-port=9001/tcp --permanent
+ # XXL-JOB
+ firewall-cmd --add-port=9080/tcp --permanent
  # Milvus
  firewall-cmd --add-port=19530/tcp --permanent
  firewall-cmd --add-port=9091/tcp --permanent
@@ -48,16 +52,17 @@ port(){
  firewall-cmd --add-port=9203/tcp --permanent # Shop
  firewall-cmd --add-port=9204/tcp --permanent # Search
  firewall-cmd --add-port=9205/tcp --permanent # Order
- firewall-cmd --add-port=9206/tcp --permanent # Marketing
- firewall-cmd --add-port=9207/tcp --permanent # Map
- firewall-cmd --add-port=9209/tcp --permanent # Interaction
- firewall-cmd --add-port=9210/tcp --permanent # Index
- firewall-cmd --add-port=9212/tcp --permanent # File
- firewall-cmd --add-port=9213/tcp --permanent # Chat
- firewall-cmd --add-port=9214/tcp --permanent # Blog
- firewall-cmd --add-port=9215/tcp --permanent # Audit
- firewall-cmd --add-port=9216/tcp --permanent # AI
- firewall-cmd --add-port=9217/tcp --permanent # IM
+ firewall-cmd --add-port=9206/tcp --permanent # Product
+ firewall-cmd --add-port=9207/tcp --permanent # Interaction
+ firewall-cmd --add-port=9208/tcp --permanent # Index
+ firewall-cmd --add-port=9209/tcp --permanent # File
+ firewall-cmd --add-port=9210/tcp --permanent # Chat
+ firewall-cmd --add-port=9211/tcp --permanent # Blog
+ firewall-cmd --add-port=9212/tcp --permanent # Audit
+ firewall-cmd --add-port=9213/tcp --permanent # AI
+ firewall-cmd --add-port=9214/tcp --permanent # IM
+ firewall-cmd --add-port=9215/tcp --permanent # Points
+ firewall-cmd --add-port=9216/tcp --permanent # Wallet
  firewall-cmd --add-port=8888/tcp --permanent # IM Netty
 
  service firewalld reload
@@ -67,61 +72,47 @@ port(){
 # 1. 启动轻量级基础环境（必须优先启动）
 base(){
  echo "正在启动基础中间件..."
- docker-compose up -d smartLive-mysql smartLive-redis smartLive-nacos smartLive-rabbitmq
+ docker compose -f docker-compose-infra.yml up -d smartLive-mysql smartLive-redis smartLive-nacos smartLive-rabbitmq
  echo "基础中间件启动完毕，请等待 Nacos 完全就绪后再启动模块。"
 }
 
 # 2. 启动重型组件（按需启动，吃内存大户）
 heavy(){
  echo "正在启动重型中间件 (ES, MinIO, Milvus)..."
- docker-compose up -d smartLive-elasticsearch smartLive-kibana smartLive-minio smartLive-etcd smartLive-milvus
+ docker compose -f docker-compose-infra.yml up -d smartLive-elasticsearch smartLive-kibana smartLive-minio smartLive-etcd smartLive-milvus
  echo "重型中间件启动完毕。"
+}
+
+# 2. 启动全部中间件与基础设施
+infra(){
+ echo "正在启动中间件与基础设施..."
+ docker compose -f docker-compose-infra.yml up -d
+ echo "基础设施启动完毕。"
 }
 
 # 3. 启动所有业务模块（依赖 base 和 heavy）
 modules(){
  echo "正在启动业务微服务..."
- # 先启动核心：网关、认证、系统
- docker-compose up -d smartLive-gateway smartLive-auth smartLive-modules-system
-
- # 稍微停顿一下，防止并发太高卡死数据库
- sleep 5
-
- # 启动其他所有模块 (使用通配符不太好控制顺序，建议明确列出或直接 up -d)
- # 这里列出所有 smartLive-modules- 开头的服务
- docker-compose up -d smartLive-modules-user smartLive-modules-shop smartLive-modules-search smartLive-modules-order \
-                      smartLive-modules-marketing smartLive-modules-map \
-                      smartLive-modules-interaction smartLive-modules-file  smartLive-modules-chat \
-                      smartLive-modules-blog smartLive-modules-index smartLive-modules-ai \
-                      smartLive-modules-audit smartLive-modules-im
-
- # 最后启动前端和监控
- docker-compose up -d smartLive-nginx smartLive-sentinel smartLive-visual-monitor
+ docker compose -f docker-compose-java.yml up -d
  echo "所有模块已发送启动命令！"
 }
 
 # 4.启动基础业务模块
 baseModules(){
   echo "正在启动业务微服务..."
-   # 先启动核心：网关、认证、系统
-  docker-compose up -d smartLive-gateway smartLive-auth smartLive-modules-system
-  sleep 5
-
-  docker-compose up -d  smartLive-modules-user smartLive-modules-shop smartLive-modules-search \
-                        smartLive-modules-marketing smartLive-modules-map  \
-                        smartLive-modules-chat smartLive-modules-blog \
-                        smartLive-modules-audit smartLive-modules-im
-  docker-compose up -d smartLive-nginx
+  docker compose -f docker-compose-java.yml up -d
 }
 
 # 关闭所有环境/模块
 stop(){
- docker-compose stop
+ docker compose -f docker-compose-infra.yml stop
+ docker compose -f docker-compose-java.yml stop
 }
 
 # 删除所有环境/模块
 rm(){
- docker-compose rm
+ docker compose -f docker-compose-infra.yml rm
+ docker compose -f docker-compose-java.yml rm
 }
 
 # 根据输入参数选择执行
@@ -134,6 +125,12 @@ case "$1" in
 ;;
 "heavy")
  heavy
+;;
+"infra")
+ infra
+;;
+"java")
+ modules
 ;;
 "modules")
  modules

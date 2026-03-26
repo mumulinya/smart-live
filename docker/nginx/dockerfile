@@ -6,10 +6,10 @@ MAINTAINER smartLive
 # 挂载目录
 VOLUME /home/smartLive/projects
 # 创建目录
-RUN mkdir -p /home/smartLive/projects/smartLive-ui\
-    && mkdir -p /home/smartLive/projects/smartLive-html
+RUN mkdir -p /home/smartLive/projects/admin \
+    && mkdir -p /home/smartLive/projects/web
 # 复制conf文件到路径
 COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 # 复制html文件到路径
-COPY ./html/dist /home/smartLive/projects/smartLive-ui
-COPY ./html/html /home/smartLive/projects/smartLive-html
+COPY ./html/admin /home/smartLive/projects/admin
+COPY ./html/web /home/smartLive/projects/web

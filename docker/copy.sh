@@ -39,19 +39,19 @@ cp ../sql/*.sql ./mysql/db 2>/dev/null || echo "⚠️  提示: ../sql/ 目录�
 # 2. 复制 前端资源
 # ====================================================
 echo "=== 开始复制 HTML 资源 ==="
+if [ -d "../smart-live-app/dist" ]; then
+    mkdir -p ./nginx/html/app
+    cp -r ../smart-live-app/dist/* ./nginx/html/app
+    echo "✅ [OK] 前端web资源复制完成"
+else
+    echo "⚠️  跳过: 未找到前端 dist 目录 (../smart-live-app/dist)"
+fi
 if [ -d "../smartLive-ui/dist" ]; then
-    mkdir -p ./nginx/html/dist
-    cp -r ../smartLive-ui/dist/* ./nginx/html/dist
-    echo "✅ [OK] 前端ui资源复制完成"
+    mkdir -p ./nginx/html/admin
+    cp -r ../smartLive-ui/dist/* ./nginx/html/admin
+    echo "✅ [OK] 前端admin资源复制完成"
 else
     echo "⚠️  跳过: 未找到前端 dist 目录 (../smartLive-ui/dist)"
-fi
-if [ -d "../smartLive-html/html" ]; then
-    mkdir -p ./nginx/html/html
-    cp -r ../smartLive-html/html/* ./nginx/html/html
-    echo "✅ [OK] 前端html资源复制完成"
-else
-    echo "⚠️  跳过: 未找到前端 html 目录 (../smartLive-html/html)"
 fi
 
 # ====================================================
@@ -77,12 +77,13 @@ copy_jar "../smartLive-modules/smartLive-blog/target/smartLive-modules-blog.jar"
 copy_jar "../smartLive-modules/smartLive-chat/target/smartLive-modules-chat.jar" "./smartLive/modules/chat/jar"
 copy_jar "../smartLive-modules/smartLive-interaction/target/smartLive-modules-interaction.jar" "./smartLive/modules/interaction/jar"
 copy_jar "../smartLive-modules/smartLive-index/target/smartLive-modules-index.jar" "./smartLive/modules/index/jar"
-copy_jar "../smartLive-modules/smartLive-map/target/smartLive-modules-map.jar" "./smartLive/modules/map/jar"
-copy_jar "../smartLive-modules/smartLive-marketing/target/smartLive-modules-marketing.jar" "./smartLive/modules/marketing/jar"
 copy_jar "../smartLive-modules/smartLive-order/target/smartLive-modules-order.jar" "./smartLive/modules/order/jar"
+copy_jar "../smartLive-modules/smartLive-product/target/smartLive-modules-product.jar" "./smartLive/modules/product/jar"
 copy_jar "../smartLive-modules/smartLive-search/target/smartLive-modules-search.jar" "./smartLive/modules/search/jar"
 copy_jar "../smartLive-modules/smartLive-shop/target/smartLive-modules-shop.jar" "./smartLive/modules/shop/jar"
 copy_jar "../smartLive-modules/smartLive-audit/target/smartLive-modules-audit.jar" "./smartLive/modules/audit/jar"
 copy_jar "../smartLive-modules/smartLive-im/target/smartLive-modules-im.jar" "./smartLive/modules/im/jar"
+copy_jar "../smartLive-modules/smartLive-points/target/smartLive-modules-points.jar" "./smartLive/modules/points/jar"
+copy_jar "../smartLive-modules/smartLive-wallet/target/smartLive-modules-wallet.jar" "./smartLive/modules/wallet/jar"
 
 echo "🎉 所有复制任务执行完毕！"
