@@ -1,6 +1,7 @@
 package com.smartLive.points.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -43,4 +44,16 @@ public class PointsRecord implements Serializable {
 
     /** 创建时间 */
     private LocalDateTime createTime;
+
+    /** 用户名称 */
+    @TableField(exist = false)
+    private String userName;
+
+    /** 用户昵称 */
+    @TableField(exist = false)
+    private String nickName;
+
+    /** 用户头像 */
+    @TableField(exist = false)
+    private String avatar;
 }

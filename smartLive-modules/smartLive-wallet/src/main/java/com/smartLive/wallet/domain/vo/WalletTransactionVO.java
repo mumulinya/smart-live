@@ -1,9 +1,11 @@
 package com.smartLive.wallet.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * Wallet transaction view object.
@@ -16,8 +18,8 @@ public class WalletTransactionVO implements Serializable {
     private Long id;
 
     private String title;
-
-    private String time;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date time;
 
     private BigDecimal amount;
 

@@ -91,7 +91,7 @@ public class WalletServiceImpl implements IWalletService {
             WalletTransactionVO item = new WalletTransactionVO();
             item.setId(transaction.getId());
             item.setTitle(transaction.getTitle());
-            item.setTime(transaction.getCreateTime() == null ? null : transaction.getCreateTime().toString());
+            item.setTime(transaction.getCreateTime() == null ? null : transaction.getCreateTime());
             item.setAmount(transaction.getAmount());
             item.setType(transaction.getDirection() != null && transaction.getDirection() == DIRECTION_IN ? "in" : "out");
             item.setStatus(toStatusText(transaction.getStatus()));

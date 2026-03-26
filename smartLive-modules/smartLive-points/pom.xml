@@ -94,6 +94,10 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-redis</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-user</artifactId>
+        </dependency>
 
     </dependencies>
 

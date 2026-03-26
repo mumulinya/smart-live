@@ -103,7 +103,15 @@
 
 独立好券热榜页展示热门优惠商品。
 
-### 3.6 搜索结果
+### 3.6 抢手团购榜
+
+<p align="center">
+  <img src="./screenshots/app-top-group-deals.png" alt="app-top-group-deals" width="300">
+</p>
+
+独立团购热榜页展示热门团购套餐与排行。
+
+### 3.7 搜索结果
 
 <p align="center">
   <img src="./screenshots/search-results.png" alt="search-results" width="300">
@@ -111,7 +119,7 @@
 
 搜索结果承接全文检索、热词和排序策略。
 
-### 3.7 搜索与地图
+### 3.8 搜索与地图
 
 <p align="center">
   <img src="./screenshots/map-view.png" alt="map-view" width="300">
@@ -145,7 +153,15 @@
 
 秒杀专区对应 Redis Lua 和 MQ 异步削峰链路。
 
-### 4.4 订单中心
+### 4.4 优惠专区
+
+<p align="center">
+  <img src="./screenshots/discount-zone.png" alt="discount-zone" width="300">
+</p>
+
+优惠专区承接折扣商品、团购券和活动聚合入口。
+
+### 4.5 订单中心
 
 <p align="center">
   <img src="./screenshots/order-page.png" alt="order-page" width="300">
@@ -153,7 +169,7 @@
 
 订单中心展示待支付、进行中和已完成订单。
 
-### 4.5 钱包中心
+### 4.6 钱包中心
 
 <p align="center">
   <img src="./screenshots/wallet-page.png" alt="wallet-page" width="300">
@@ -161,7 +177,7 @@
 
 钱包中心承接余额、支付记录和资产入口。
 
-### 4.6 积分中心
+### 4.7 积分中心
 
 <p align="center">
   <img src="./screenshots/points-page.png" alt="points-page" width="300">
@@ -169,7 +185,7 @@
 
 积分中心承接签到、抽奖和成长体系。
 
-### 4.7 签到抽奖
+### 4.8 签到抽奖
 
 <p align="center">
   <img src="./screenshots/sign-in.png" alt="sign-in" width="300">
@@ -179,21 +195,33 @@
 
 ## <a id="showcase-social"></a>5. 内容创作、社交与消息
 
-### 5.1 发布页
+### 5.1 发布与编辑
 
-<p align="center">
-  <img src="./screenshots/publish-page.png" alt="publish-page" width="300">
-</p>
+| 发布页 | 编辑页 |
+|:---:|:---:|
+| <img src="./screenshots/publish-page.png" alt="publish-page" width="230"> | <img src="./screenshots/app-blog-edit.png" alt="app-blog-edit" width="230"> |
+| 新内容创建入口 | 已有笔记编辑与改稿 |
 
-发布页承接图文创作与草稿管理。
+发布与编辑页共同承接图文创作、改稿和草稿管理。
 
-### 5.2 评论区
+### 5.2 评价互动
 
-<p align="center">
-  <img src="./screenshots/comment-section.png" alt="comment-section" width="300">
-</p>
+| 评价列表页 | 评价发布页 | 评价修改页 |
+|:---:|:---:|:---:|
+| <img src="./screenshots/app-review-list.png" alt="app-review-list" width="180"> | <img src="./screenshots/app-review-publish.png" alt="app-review-publish" width="180"> | <img src="./screenshots/app-review-edit.png" alt="app-review-edit" width="180"> |
+| 商品页内查看网友评价 | 评分、文案、媒体上传与 AI 辅助生成 | 已发布评价再次编辑 |
 
-评论和评价承接互动计数与审核链路。
+| 评价详情页 | 评论区 | 我的评价页 |
+|:---:|:---:|:---:|
+| <img src="./screenshots/app-review-detail.png" alt="app-review-detail" width="180"> | <img src="./screenshots/comment-section.png" alt="comment-section" width="180"> | <img src="./screenshots/app-my-reviews.png" alt="app-my-reviews" width="180"> |
+| 单条评价详情与评论承接 | 评论与评价承接互动计数 | 评价状态筛选 |
+
+| 待评价页 | 评价草稿页 |
+|:---:|:---:|
+| <img src="./screenshots/app-wait-review.png" alt="app-wait-review" width="230"> | <img src="./screenshots/app-review-drafts.png" alt="app-review-drafts" width="230"> |
+| 履约后去评价 | 待发布评价继续编辑 |
+
+评价相关页面已经收拢为完整的评价链路分组。
 
 ### 5.3 我的发布
 
@@ -211,23 +239,7 @@
 
 草稿箱承接未发布内容和二次编辑。
 
-### 5.5 评价草稿页
-
-<p align="center">
-  <img src="./screenshots/app-review-drafts.png" alt="app-review-drafts" width="300">
-</p>
-
-评价草稿页用于继续编辑和清理待发布评价。
-
-### 5.6 评价发布页
-
-<p align="center">
-  <img src="./screenshots/app-review-publish.png" alt="app-review-publish" width="300">
-</p>
-
-评价发布页承接评分、文案、媒体上传和 AI 辅助生成。
-
-### 5.7 动态流
+### 5.5 动态流
 
 <p align="center">
   <img src="./screenshots/feed-flow.png" alt="feed-flow" width="300">
@@ -235,7 +247,7 @@
 
 动态流展示关注内容与推荐内容混合分发。
 
-### 5.8 我的关注
+### 5.6 我的关注
 
 <p align="center">
   <img src="./screenshots/follow-list.png" alt="follow-list" width="300">
@@ -243,7 +255,7 @@
 
 独立关注页按用户、店铺、商品三类关系组织关注资产。
 
-### 5.9 我的收藏
+### 5.7 我的收藏
 
 <p align="center">
   <img src="./screenshots/user-favorites.png" alt="user-favorites" width="300">
@@ -251,7 +263,7 @@
 
 独立收藏页承接店铺、笔记和商品三类收藏资产。
 
-### 5.10 粉丝明细页
+### 5.8 粉丝明细页
 
 <p align="center">
   <img src="./screenshots/app-user-list.png" alt="app-user-list" width="300">
@@ -259,7 +271,7 @@
 
 粉丝明细页承接个人主页下钻后的社交关系查看。
 
-### 5.11 会话列表
+### 5.9 会话列表
 
 <p align="center">
   <img src="./screenshots/app-chat-list.png" alt="app-chat-list" width="300">
@@ -267,7 +279,7 @@
 
 会话列表承接私聊入口与未读状态。
 
-### 5.12 系统通知
+### 5.10 系统通知
 
 <p align="center">
   <img src="./screenshots/app-system-notice.png" alt="app-system-notice" width="300">
@@ -275,7 +287,7 @@
 
 审核结果和系统提醒会通过站内通知下发。
 
-### 5.13 IM 私聊
+### 5.11 IM 私聊
 
 <p align="center">
   <img src="./screenshots/app-chat-detail.png" alt="app-chat-detail" width="300">

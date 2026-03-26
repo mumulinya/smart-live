@@ -12,6 +12,8 @@ import com.smartLive.points.mapper.PointsLotteryPrizeMapper;
 import com.smartLive.points.mapper.PointsRecordMapper;
 import com.smartLive.points.mapper.UserPointsWalletMapper;
 import com.smartLive.points.service.IPointsService;
+import com.smartLive.user.api.RemoteAppUserService;
+import com.smartLive.user.api.domain.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,6 +45,9 @@ public class PointsServiceImpl implements IPointsService {
 
     @Autowired
     private PointsLotteryPrizeMapper prizeMapper;
+
+    @Autowired
+    private RemoteAppUserService remoteAppUserService;
 
     /** 每次抽奖消耗积分 */
     private static final int LOTTERY_COST = 50;
@@ -326,7 +331,40 @@ public class PointsServiceImpl implements IPointsService {
             wrapper.eq(PointsRecord::getBizType, record.getBizType());
         }
         wrapper.orderByDesc(PointsRecord::getCreateTime);
-        return recordMapper.selectList(wrapper);
+        List<PointsRecord> records = recordMapper.selectList(wrapper);
+        
+        // 填充用户信息
+        if (records != null && !records.isEmpty()) {
+            List<Long> userIds = records.stream()
+                    .map(PointsRecord::getUserId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (!userIds.isEmpty()) {
+                try {
+                    List<UserDTO> users = remoteAppUserService.getUserList(userIds);
+                    if (users != null && !users.isEmpty()) {
+                        java.util.Map<Long, UserDTO> userMap = users.stream()
+                                .collect(java.util.stream.Collectors.toMap(UserDTO::getId, u -> u));
+
+                        for (PointsRecord r : records) {
+                            if (r.getUserId() != null) {
+                                UserDTO user = userMap.get(r.getUserId());
+                                if (user != null) {
+                                    r.setNickName(user.getNickName());
+                                    r.setAvatar(user.getIcon()); // 用户头像通常存放在 icon 字段
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("批量获取用户信息失败, userIds: {}", userIds, e);
+                }
+            }
+        }
+        
+        return records;
     }
 
     @Override
