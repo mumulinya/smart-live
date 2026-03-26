@@ -118,7 +118,7 @@
       </tr>
       <tr>
         <td><strong>支付、订单、钱包与积分</strong></td>
-        <td>收银台、支付结果、订单详情、钱包、积分中心</td>
+        <td>收银台、订单详情、钱包、积分中心</td>
         <td><code>order / wallet / points / product</code></td>
         <td>订单支付退款链路、订单超时取消链路</td>
         <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
@@ -139,7 +139,7 @@
       </tr>
       <tr>
         <td><strong>AI 智能助手与 AIGC</strong></td>
-        <td>AI 会话、推荐卡片、下单卡片、博客生成、评价生成</td>
+        <td>AI 会话、快捷提问、店铺推荐、商品推荐、下单卡片、博客生成、评价生成</td>
         <td><code>ai / search / shop / product / blog / interaction</code></td>
         <td>AI 路由策略与 RAG 生成链路</td>
         <td><a href="core-links/index.md">核心链路总览</a></td>
@@ -224,10 +224,10 @@
 
 ### <a id="app-trade-assets"></a>3.5 支付、订单、钱包与积分
 
-| 支付收银台 | 支付结果页 |
-|:---:|:---:|
-| <img src="./screenshots/app-pay-checkout.png" alt="支付收银台" width="230"> | <img src="./screenshots/app-pay-result.png" alt="支付结果页" width="230"> |
-| 支付收银与确认 | 支付成功与失败反馈 |
+| 支付收银台 |
+|:---:|
+| <img src="./screenshots/app-pay-checkout.png" alt="支付收银台" width="230"> |
+| 支付收银与确认 |
 
 | 我的订单 | 订单详情页 |
 |:---:|:---:|
@@ -320,20 +320,20 @@
 | <img src="./screenshots/ai-chat.png" alt="AI 助手浮层" width="230"> | <img src="./screenshots/app-ai-session-list.png" alt="AI 会话列表" width="230"> |
 | 点击小精灵后的助手入口浮层 | 历史会话恢复 |
 
-| AI 快捷提问 | AI 推荐结果卡片 |
+| AI 快捷提问页 | AI 店铺推荐卡片 |
 |:---:|:---:|
-| <img src="./screenshots/app-ai-suggestion-prompts.png" alt="AI 快捷提问" width="230"> | <img src="./screenshots/app-ai-recommend-card.png" alt="AI 推荐结果卡片" width="230"> |
-| 首次进入时的推荐问题与快捷引导 | 商品与团购推荐卡片 |
+| <img src="./screenshots/app-ai-quick-ask.png" alt="AI 快捷提问页" width="230"> | <img src="./screenshots/app-ai-store-recommend.png" alt="AI 店铺推荐卡片" width="230"> |
+| 首次进入时的推荐问题与快捷引导 | 附近店铺推荐结果卡片 |
 
-| AI 下单结果与订单卡片 | AI 博客生成 |
+| AI 商品推荐卡片 | AI 下单结果与订单卡片 |
 |:---:|:---:|
-| <img src="./screenshots/app-ai-order-card.png" alt="AI 下单结果与订单卡片" width="230"> | <img src="./screenshots/app-ai-blog-generate.png" alt="AI 博客生成" width="230"> |
-| 下单成功后的订单状态卡片 | AIGC 探店内容 |
+| <img src="./screenshots/app-ai-product-recommend.png" alt="AI 商品推荐卡片" width="230"> | <img src="./screenshots/app-ai-order-card.png" alt="AI 下单结果与订单卡片" width="230"> |
+| 团购与商品推荐结果卡片 | 下单成功后的订单状态卡片 |
 
-| AI 评价生成 |
-|:---:|
-| <img src="./screenshots/app-ai-review-generate.png" alt="AI 评价生成" width="260"> |
-| AIGC 消费评价生成 |
+| AI 博客生成 | AI 评价生成 |
+|:---:|:---:|
+| <img src="./screenshots/app-ai-blog-generate.png" alt="AI 博客生成" width="230"> | <img src="./screenshots/app-ai-review-generate.png" alt="AI 评价生成" width="230"> |
+| AIGC 探店内容 | AIGC 消费评价生成 |
 
 ### <a id="app-profile-assets"></a>3.9 个人中心、收藏与安全设置
 

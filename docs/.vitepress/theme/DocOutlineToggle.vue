@@ -15,6 +15,7 @@ const collapsed = ref(false)
 const collapsedParents = ref<Record<string, boolean>>({})
 const activeHash = ref('')
 const outlineItems = ref<HeaderItem[]>([])
+const outlineNavRef = ref<HTMLElement | null>(null)
 
 let refreshTimer: number | null = null
 let observer: MutationObserver | null = null
@@ -131,11 +132,6 @@ function updateActiveHash() {
   const routeHash = decodeURIComponent(window.location.hash.replace(/^#/, ''))
   const allSlugs = flatSlugs(outlineItems.value)
 
-  if (routeHash && allSlugs.includes(routeHash)) {
-    activeHash.value = routeHash
-    return
-  }
-
   let currentSlug = ''
   let bestTop = -Infinity
 
@@ -150,7 +146,31 @@ function updateActiveHash() {
     }
   })
 
-  activeHash.value = currentSlug || allSlugs[0] || ''
+  activeHash.value =
+    currentSlug || (routeHash && allSlugs.includes(routeHash) ? routeHash : '') || allSlugs[0] || ''
+}
+
+function scrollActiveItemIntoView() {
+  nextTick(() => {
+    const content = outlineNavRef.value?.querySelector('.content') as HTMLElement | null
+    const activeItem = content?.querySelector('.outline-link.active') as HTMLElement | null
+
+    if (!content || !activeItem) return
+
+    const contentRect = content.getBoundingClientRect()
+    const activeRect = activeItem.getBoundingClientRect()
+    const padding = 16
+
+    if (activeRect.top < contentRect.top + padding) {
+      content.scrollBy({
+        top: activeRect.top - contentRect.top - padding
+      })
+    } else if (activeRect.bottom > contentRect.bottom - padding) {
+      content.scrollBy({
+        top: activeRect.bottom - contentRect.bottom + padding
+      })
+    }
+  })
 }
 
 function toggleParent(slug: string) {
@@ -310,6 +330,16 @@ watch(
     refreshForRoute()
   }
 )
+
+watch(activeHash, () => {
+  scrollActiveItemIntoView()
+})
+
+watch(collapsed, (isCollapsed) => {
+  if (!isCollapsed) {
+    scrollActiveItemIntoView()
+  }
+})
 </script>
 
 <template>
@@ -332,6 +362,7 @@ watch(
 
     <nav
       v-if="outlineItems.length && !collapsed"
+      ref="outlineNavRef"
       class="VPDocAsideOutline has-outline smartlive-custom-outline"
       aria-label="本页大纲"
     >

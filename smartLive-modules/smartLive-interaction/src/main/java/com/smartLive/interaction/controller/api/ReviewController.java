@@ -61,7 +61,6 @@ public class ReviewController extends BaseController
     /**
      * 获取评论详细信息
      */
-    @RequiresPermissions("review:review:query")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
