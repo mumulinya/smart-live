@@ -22,8 +22,30 @@
 
 </div>
 
-## 📋 目录
+## 📦 项目仓库矩阵
 
+| 仓库 | 说明 | 链接 |
+|:---:|:---:|:---:|
+| **smartLive-Cloud** | 后端主仓库与在线总文档（本仓库） | [GitHub](https://github.com/mumulinya/smartLive-Cloud) |
+| **smartLive-web** | 用户端 App（Vue 3 / H5 页面） | [GitHub](https://github.com/mumulinya/smartLive-web.git) |
+| **smartLive-admin** | 商家端与平台管理后台（Vue 2 + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin.git) |
+
+## 🖼️ 页面导览入口
+
+| 分组 | 内容说明 | 入口 |
+|:---|:---|:---|
+| 用户端视觉导览 | 登录、首页、搜索、店铺、商品、订单、评价、社交、AI、钱包与积分的完整走查 | [SHOWCASE](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE) |
+| 商家端 Web 页面走查 | 经营总览、店铺管理、商品管理、订单履约、商家助手等链路展示 | [SHOWCASE](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE) |
+| 平台管理端页面走查 | 审核中心、博客管理、评论管理、评价管理、业务用户、积分配置等治理页面 | [SHOWCASE](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE) |
+| 页面映射总表 | 用户端、商家端、平台管理端全部页面名称与截图索引 | [PAGE_GALLERY](https://mumulinya.github.io/smartLive-Cloud/PAGE_GALLERY) |
+| 开源接入与部署 | 本地运行、依赖矩阵、端口配置、部署与排错入口 | [OPEN_SOURCE](https://mumulinya.github.io/smartLive-Cloud/OPEN_SOURCE) |
+
+- 推荐阅读顺序：先看“页面导览入口”，再看“效果预览”和“5 分钟读懂项目”；如果准备本地运行，直接从开源接入说明开始。
+
+## 📋 文档导航
+
+- [📦 项目仓库矩阵](#项目仓库矩阵)
+- [🖼️ 页面导览入口](#页面导览入口)
 - [📖 项目简介](#项目简介)
 - [📏 项目规模](#项目规模)
 - [👨‍💻 个人贡献亮点](#个人贡献亮点)
