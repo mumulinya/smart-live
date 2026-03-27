@@ -13,10 +13,10 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
-      { text: '页面导览', link: '/PAGE_GALLERY' },
-      { text: '视觉导览', link: '/SHOWCASE' },
+      { text: '3分钟评审', link: '/THREE_MINUTES' },
+      { text: '页面总览', link: '/PAGE_GALLERY' },
+      { text: '业务走查', link: '/SHOWCASE' },
       { text: '核心链路', link: '/core-links/' },
-      { text: '面试入口', link: '/PROJECT_OVERVIEW' },
       { text: '开源接入', link: '/OPEN_SOURCE' }
     ],
 
@@ -25,10 +25,11 @@ export default defineConfig({
         text: '💡 项目概览与导览',
         collapsed: true,
         items: [
-          { text: '01 系统架构与项目规模', link: '/site-pages/SYSTEM_ARCHITECTURE' },
-          { text: '02 页面效果图导览', link: '/PAGE_GALLERY' },
-          { text: '03 业务链路视觉走查', link: '/SHOWCASE' },
-          { text: '04 开源启动与接入', link: '/OPEN_SOURCE' }
+          { text: '01 3分钟快速评审', link: '/THREE_MINUTES' },
+          { text: '02 系统架构与项目规模', link: '/site-pages/SYSTEM_ARCHITECTURE' },
+          { text: '03 页面效果图导览', link: '/PAGE_GALLERY' },
+          { text: '04 业务链路视觉走查', link: '/SHOWCASE' },
+          { text: '05 开源启动与接入', link: '/OPEN_SOURCE' }
         ]
       },
       {
@@ -52,10 +53,13 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: '01 项目全貌与答辩说明', link: '/PROJECT_OVERVIEW' },
-          { text: '02 我的核心设计与实现', link: '/site-pages/CONTRIBUTIONS' },
-          { text: '03 技术选型理由', link: '/site-pages/TECH_SELECTION' },
-          { text: '04 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
-          { text: '05 常见问题 FAQ', link: '/site-pages/FAQ' }
+          { text: '02 核心亮点与项目价值', link: '/site-pages/CORE_HIGHLIGHTS' },
+          { text: '03 我的核心设计与实现', link: '/site-pages/CONTRIBUTIONS' },
+          { text: '04 性能指标与结果', link: '/site-pages/PERFORMANCE' },
+          { text: '05 技术选型理由', link: '/site-pages/TECH_SELECTION' },
+          { text: '06 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
+          { text: '07 未来规划 Roadmap', link: '/site-pages/ROADMAP' },
+          { text: '08 常见问题 FAQ', link: '/site-pages/FAQ' }
         ]
       },
       {

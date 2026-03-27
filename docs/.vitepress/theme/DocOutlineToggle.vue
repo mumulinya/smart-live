@@ -11,7 +11,6 @@ type HeaderItem = {
 const route = useRoute()
 const { page } = useData()
 
-const collapsed = ref(false)
 const collapsedParents = ref<Record<string, boolean>>({})
 const activeHash = ref('')
 const outlineItems = ref<HeaderItem[]>([])
@@ -293,7 +292,6 @@ const OutlineBranch = defineComponent({
 })
 
 function resetOutlineState() {
-  collapsed.value = false
   collapsedParents.value = {}
   activeHash.value = ''
   outlineItems.value = []
@@ -334,41 +332,17 @@ watch(
 watch(activeHash, () => {
   scrollActiveItemIntoView()
 })
-
-watch(collapsed, (isCollapsed) => {
-  if (!isCollapsed) {
-    scrollActiveItemIntoView()
-  }
-})
 </script>
 
 <template>
-  <div
-    class="smartlive-doc-outline-toggle"
-    :class="{ 'is-collapsed': collapsed }"
+  <nav
+    v-if="outlineItems.length"
+    ref="outlineNavRef"
+    class="smartlive-doc-outline-toggle VPDocAsideOutline has-outline smartlive-custom-outline"
+    aria-label="页面目录"
   >
-    <button
-      type="button"
-      class="smartlive-doc-outline-button"
-      @click="collapsed = !collapsed"
-      :aria-expanded="(!collapsed).toString()"
-      aria-label="切换本页大纲"
-    >
-      <span class="smartlive-doc-outline-button__title">本页大纲</span>
-      <span class="smartlive-doc-outline-button__state">
-        {{ collapsed ? '展开' : '收起' }}
-      </span>
-    </button>
-
-    <nav
-      v-if="outlineItems.length && !collapsed"
-      ref="outlineNavRef"
-      class="VPDocAsideOutline has-outline smartlive-custom-outline"
-      aria-label="本页大纲"
-    >
-      <div class="content">
-        <OutlineBranch :items="outlineItems" />
-      </div>
-    </nav>
-  </div>
+    <div class="content">
+      <OutlineBranch :items="outlineItems" />
+    </div>
+  </nav>
 </template>
