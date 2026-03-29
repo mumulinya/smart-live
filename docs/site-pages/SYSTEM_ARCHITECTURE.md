@@ -22,14 +22,9 @@
     <div class="smartlive-stat-desc">核心业务口径 3万+，当前仓库 Java 总量约 72,000+ 行</div>
   </div>
   <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">200+</div>
-    <div class="smartlive-stat-label">Git 提交</div>
-    <div class="smartlive-stat-desc">完整保留从 0 到 1 的迭代与重构轨迹</div>
-  </div>
-  <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">8+ 个月</div>
-    <div class="smartlive-stat-label">独立开发</div>
-    <div class="smartlive-stat-desc">覆盖需求、建模、实现、压测、文档与上线展示</div>
+    <div class="smartlive-stat-value">53 张</div>
+    <div class="smartlive-stat-label">核心表</div>
+    <div class="smartlive-stat-desc">业务、治理与调度三类核心表已经形成完整数据模型</div>
   </div>
   <div class="smartlive-stat-card">
     <div class="smartlive-stat-value">3200+</div>
@@ -37,14 +32,9 @@
     <div class="smartlive-stat-desc">Lua 预扣库存 + MQ 异步落单 + 延迟补偿兜底</div>
   </div>
   <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">20-40 倍</div>
-    <div class="smartlive-stat-label">Redis 提升</div>
-    <div class="smartlive-stat-desc">列表、详情、计数等高频读链路经过分层缓存优化</div>
-  </div>
-  <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">28 个</div>
-    <div class="smartlive-stat-label">XXL-JOB 任务</div>
-    <div class="smartlive-stat-desc">统一承接订单兜底、秒杀预热、热榜重建与互动回刷</div>
+    <div class="smartlive-stat-value">73 / 102 / 11</div>
+    <div class="smartlive-stat-label">链路图 / 截图 / 专题页</div>
+    <div class="smartlive-stat-desc">项目不仅能跑，还沉淀了完整视觉导览、链路图和专题文档</div>
   </div>
 <!-- AUTO_SYNC:SYSTEM_ARCH_STATS_CARDS:END -->
 </div>
@@ -58,7 +48,77 @@
 | 代码量 | README 保留“核心业务代码 3万+”口径；网站首页卡片展示仓库当前 Java 总量 `7万+`，两者分别用于强调业务密度与工程总体量 |
 | 页面截图 | 统计 `docs/screenshots` 中当前被在线文档实际引用的截图，不包含 `legacy` 归档图 |
 | 链路图 | 分开展示版 `SVG` 与详细版 `SVG` 两套数量，均以 `docs/diagrams` 当前可访问文件为准 |
-| XXL-JOB 任务 | 以调度后台当前可见任务数为准，和文档中的后台截图口径保持一致 |
+| XXL-JOB 任务 | 对外展示继续沿用调度后台截图中的 `28` 个任务口径；如果按代码内 `@XxlJob` 处理器统计，当前为 `26` 个 |
+
+## 2.5 从代码里还能补出的工程密度
+
+如果你希望这页不仅能讲“架构分层”，也能讲“工程体量”，下面这组数据最适合补充到口头介绍或答辩里。
+
+| 维度 | 当前数据 | 能说明什么 |
+|------|------|------|
+| API 契约模块 | **10 个** | `smartLive-api` 已按 AI、博客、聊天、互动、订单、积分、商品、店铺、系统、用户拆成独立契约层 |
+| 通用基础组件 | **11 个** | `smartLive-common` 已下沉 Redis、RabbitMQ、XXL-JOB、安全、日志、敏感词、多数据源等复用能力 |
+| Java 文件数 | **831 个** | 能体现工程总体量，不只是少量 Controller + Service 的演示型项目 |
+| Controller 数量 | **71 个** | 说明系统已经形成多业务域、多个服务边界的控制层入口 |
+| FeignClient 数量 | **18 个** | 可以佐证你服务间接口调用和边界拆分是成体系存在的 |
+| RabbitMQ 监听器 | **30 个** | 能支撑“项目主一致性方案是消息驱动 + 幂等 + 补偿”的表达 |
+| 文档资产 | **73 张链路图 + 102 张引用截图 + 11 篇专题页** | 说明这个仓库不仅能跑，还能被阅读、被讲解、被复盘 |
+
+## 2.6 怎么把这些数据讲成一套完整口径
+
+如果你后面要把这页内容用于简历、面试或项目答辩，最推荐的讲法不是把所有数字一股脑念出来，而是分成下面 3 层：
+
+### 第一层：先讲项目规模
+
+这一层回答的是“这个项目是不是足够大、足够完整、不是 demo”。
+
+| 指标 | 当前数据 | 更适合怎么讲 |
+|------|------|------|
+| 业务模块 | **16 个** | 覆盖交易、内容、社交、搜索、审核、AI、钱包、IM 等完整业务能力 |
+| 服务应用 | **19 个** | 16 个业务模块 + `auth` + `gateway` + `monitor`，按可运行服务口径统计 |
+| Java 代码量 | **7万+ 行** | 说明仓库不只是少量样例代码，而是具备完整工程骨架 |
+| Git 提交 | **200+** | 能证明这是持续演进的项目，而不是一次性拼装 |
+| 独立开发周期 | **6 个月** | 从需求、建模、开发、压测、文档到展示全链路独立完成 |
+| 秒杀能力 | **3200+ QPS** | 体现关键高并发链路已经做过专项优化和压测 |
+
+### 第二层：再讲服务协同密度
+
+这一层回答的是“模块多不多不是重点，关键是这些服务之间是不是真的形成了协同网络”。
+
+| 指标 | 当前数据 | 能说明什么 |
+|------|------|------|
+| FeignClient | **18 个** | 服务间接口调用已经形成较完整的契约化协作关系 |
+| RabbitMQ 监听器 | **30 个** | 核心一致性方案确实是消息驱动，而不是只在文档里提了一句 MQ |
+| `@XxlJob` 处理器 | **26 个** | 代码层面已经有较多定时调度入口承接补偿、预热、回刷、重建 |
+| 调度后台任务 | **28 个** | 对外展示延续后台截图口径，体现运维视角下的任务规模 |
+| Controller | **71 个** | 不只是内部封装，控制层入口和对外接口已经形成完整边界 |
+
+> 这一层特别适合用来回答“为什么这个项目不是单体拆模块”“为什么你能说自己做过微服务协同”。
+
+### 第三层：最后讲数据与文档资产
+
+这一层回答的是“这个项目是不是有完整数据模型、是不是足够可阅读、可讲解、可复盘”。
+
+| 指标 | 当前数据 | 能说明什么 |
+|------|------|------|
+| 核心表数量 | **53 张** | 业务、治理、调度三类核心表已经形成完整模型 |
+| 数据域 | **8 个** | 用户资产、店铺商品、交易履约、内容互动、消息会话、AI 审核、平台治理、调度中心 |
+| API 契约模块 | **10 个** | 契约层已按 AI、博客、聊天、互动、订单、积分、商品、店铺、系统、用户拆分 |
+| 通用基础组件 | **11 个** | Redis、RabbitMQ、XXL-JOB、安全、日志、敏感词、多数据源等能力已下沉复用 |
+| 链路图资产 | **73 张** | 可以支撑“从链路角度讲架构和关键闭环” |
+| 页面截图 | **102 张** | 用户端、商家端、平台管理端已经具备完整视觉走查材料 |
+| 专题页 | **11 篇** | 文档不是附属品，而是项目的一部分，能支撑开源阅读与面试讲解 |
+
+## 2.7 这页最值得主动讲的 3 组数据
+
+如果你只有 30 秒介绍系统架构与规模，最推荐主动讲这 3 组：
+
+1. **16 个业务模块 + 19 个服务应用**
+   - 先证明项目足够完整，覆盖用户端、商家端、平台管理端三类入口。
+2. **18 个 FeignClient + 30 个 RabbitMQ 监听器 + 26 个 `@XxlJob` 处理器**
+   - 再证明服务之间不是平铺模块，而是真的形成了调用、消息和调度协同网络。
+3. **53 张核心表 + 73 张链路图 + 102 张页面截图**
+   - 最后证明这个项目不仅能跑，还能被阅读、被讲解、被复盘。
 
 ## 3. 系统架构
 
@@ -157,6 +217,10 @@
 
 ## 5. 项目结构
 
+如果你看完这页后，想继续从“服务边界”往下钻到“数据边界”，推荐接着看：
+
+- [数据模型与核心表关系概览](/site-pages/DATA_MODEL)
+
 下面只展示与阅读项目最相关的目录，省略 `.idea`、`logs`、`arthas-output` 等环境或运行时目录。
 
 ```text
@@ -229,3 +293,4 @@ smart-live-Cloud
 - **想看交易闭环**：`smartLive-product -> smartLive-order -> smartLive-wallet -> smartLive-points`
 - **想看社交与推荐**：`smartLive-blog -> smartLive-interaction -> smartLive-index -> smartLive-search`
 - **想看 AI 与治理链路**：`smartLive-ai -> smartLive-audit -> smartLive-chat -> smartLive-im`
+- **想看数据库与核心表关系**：继续看 [数据模型与核心表关系概览](/site-pages/DATA_MODEL)

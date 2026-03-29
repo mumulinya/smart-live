@@ -1,89 +1,128 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="920" viewBox="0 0 1800 920" role="img" aria-labelledby="title desc">
-  <title id="title">SmartLive 开源文档阅读路径</title>
-  <desc id="desc">展示第一次阅读 SmartLive 开源文档时，建议按 README、OPEN_SOURCE、DEPLOYMENT_GUIDE、CONTRIBUTING 的顺序推进。</desc>
+<svg width="1560" height="860" viewBox="0 0 1560 860" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fbfcff"/>
-      <stop offset="100%" stop-color="#f3f8ff"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1560" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#F4F8FF"/>
     </linearGradient>
-    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    <filter id="shadow" x="-30" y="-30" width="1620" height="920" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#1D4ED8" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#4A7CEB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <style>
-      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
-      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
-      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
-      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
-      .step { font: 700 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
-      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
-      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
-      .blue { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
-      .orange { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
-      .green { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
-      .purple { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
-      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
-      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .title { font: 700 30px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .subtitle { font: 500 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #64748B; }
+      .cardTitle { font: 700 20px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .body { font: 500 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #55657E; }
+      .small { font: 500 13px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #6D7A8F; }
+      .chip { font: 700 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #2C60D4; }
+      .step { font: 700 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #FFFFFF; }
+      .accent { font: 700 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #2C60D4; }
     </style>
   </defs>
 
-  <rect width="1800" height="920" fill="url(#bg)"/>
-  <rect x="34" y="34" width="1732" height="852" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <rect width="1560" height="860" rx="28" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="18" y="18" width="1524" height="824" rx="24" fill="#FFFFFF" fill-opacity="0.9"/>
+  </g>
 
-  <text class="title" x="74" y="96">SmartLive 开源文档阅读路径</text>
-  <text class="subtitle" x="74" y="132">先理解项目，再跑最小链路，最后看部署和贡献规范。第一次接入按这个顺序会更稳，也更不容易迷路。</text>
+  <text x="780" y="72" text-anchor="middle" class="title">SmartLive 开源文档阅读路径</text>
+  <text x="780" y="102" text-anchor="middle" class="subtitle">先理解项目，再看开源接入，最后进入部署和贡献规范。第一次读文档按这个顺序会更稳，也更不容易迷路。</text>
 
-  <rect class="blue" x="80" y="210" width="360" height="220"/>
-  <text class="step" x="112" y="250">01 READ FIRST</text>
-  <text class="node-title" x="112" y="292">README.md</text>
-  <text class="node-text" x="112" y="332">项目定位</text>
-  <text class="node-text" x="112" y="360">系统架构</text>
-  <text class="node-text" x="112" y="388">核心业务链路</text>
-  <text class="node-text" x="112" y="416">页面与视觉导览入口</text>
+  <g transform="translate(78 154)">
+    <rect width="320" height="184" rx="24" fill="#EEF5FF" stroke="#C6DAFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#2F6CF4"/>
+    <text x="40" y="46" text-anchor="middle" class="step">1</text>
+    <text x="80" y="46" class="cardTitle">网站首页 / README</text>
+    <text x="24" y="92" class="body">• 先看项目定位和系统全貌</text>
+    <text x="24" y="122" class="body">• 先建立“这项目是什么”的整体认知</text>
+    <text x="24" y="152" class="body">• 再决定接下来是看页面、看链路还是准备启动</text>
+  </g>
 
-  <rect class="orange" x="500" y="210" width="360" height="220"/>
-  <text class="step" x="532" y="250">02 RUN FIRST</text>
-  <text class="node-title" x="532" y="292">OPEN_SOURCE.md</text>
-  <text class="node-text" x="532" y="332">依赖矩阵</text>
-  <text class="node-text" x="532" y="360">端口和模块启动顺序</text>
-  <text class="node-text" x="532" y="388">最小可运行链路</text>
-  <text class="node-text" x="532" y="416">已知注意事项</text>
+  <g transform="translate(430 154)">
+    <rect width="320" height="184" rx="24" fill="#F0FBF6" stroke="#C9ECD9" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#1BA672"/>
+    <text x="40" y="46" text-anchor="middle" class="step">2</text>
+    <text x="80" y="46" class="cardTitle">OPEN_SOURCE</text>
+    <text x="24" y="92" class="body">• 看依赖矩阵、端口、Nacos 和 SQL</text>
+    <text x="24" y="122" class="body">• 明确最小可运行链路该先配什么</text>
+    <text x="24" y="152" class="body">• 解决“第一次怎么开始”的问题</text>
+  </g>
 
-  <rect class="green" x="920" y="210" width="360" height="220"/>
-  <text class="step" x="952" y="250">03 DEPLOY NEXT</text>
-  <text class="node-title" x="952" y="292">DEPLOYMENT_GUIDE.md</text>
-  <text class="node-text" x="952" y="332">Docker Compose</text>
-  <text class="node-text" x="952" y="360">镜像重建</text>
-  <text class="node-text" x="952" y="388">JAR 校验</text>
-  <text class="node-text" x="952" y="416">部署排错</text>
+  <g transform="translate(782 154)">
+    <rect width="320" height="184" rx="24" fill="#FFF7EC" stroke="#FFD8AD" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#F08B22"/>
+    <text x="40" y="46" text-anchor="middle" class="step">3</text>
+    <text x="80" y="46" class="cardTitle">DEPLOYMENT_GUIDE</text>
+    <text x="24" y="92" class="body">• 看本地联调和 Docker 演示两条部署路径</text>
+    <text x="24" y="122" class="body">• 决定你这次是做联调、演示还是部署准备</text>
+    <text x="24" y="152" class="body">• 把部署问题和启动问题分开处理</text>
+  </g>
 
-  <rect class="purple" x="1340" y="210" width="360" height="220"/>
-  <text class="step" x="1372" y="250">04 CONTRIBUTE</text>
-  <text class="node-title" x="1372" y="292">CONTRIBUTING.md</text>
-  <text class="node-text" x="1372" y="332">分支规范</text>
-  <text class="node-text" x="1372" y="360">提交格式</text>
-  <text class="node-text" x="1372" y="388">自查清单</text>
-  <text class="node-text" x="1372" y="416">安全边界</text>
+  <g transform="translate(1134 154)">
+    <rect width="348" height="184" rx="24" fill="#F6F0FF" stroke="#DCCEFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#7D63F7"/>
+    <text x="40" y="46" text-anchor="middle" class="step">4</text>
+    <text x="80" y="46" class="cardTitle">CONTRIBUTING / SECURITY</text>
+    <text x="24" y="92" class="body">• 最后再看分支、提交、自查与安全边界</text>
+    <text x="24" y="122" class="body">• 适合准备提 PR、改配置、做二次扩展时进入</text>
+    <text x="24" y="152" class="body">• 不是第一次接仓库时最先需要读的东西</text>
+  </g>
 
-  <path class="line" d="M440 320 H488"/>
-  <path class="line" d="M860 320 H908"/>
-  <path class="line" d="M1280 320 H1328"/>
+  <path d="M398 246H420" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M750 246H772" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M1102 246H1124" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
 
-  <rect class="note" x="120" y="530" width="1560" height="120"/>
-  <text class="note-title" x="152" y="574">第一次接入最稳的路径</text>
-  <text class="note-text" x="152" y="608">先启动 auth、gateway、system、user、shop、search，先确认登录、店铺、搜索和后台管理可用。</text>
+  <g transform="translate(82 382)">
+    <rect width="456" height="184" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="110" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="79" y="44" text-anchor="middle" class="chip">第一次最稳路径</text>
+    <text x="24" y="88" class="cardTitle">先理解，再启动，再部署</text>
+    <text x="24" y="124" class="body">不要一上来就陷进 Docker、Nacos 或镜像问题里。</text>
+    <text x="24" y="154" class="body">先把项目边界和最小链路看明白，后面排错会轻松很多。</text>
+  </g>
 
-  <rect class="note" x="120" y="700" width="500" height="120"/>
-  <text class="note-title" x="152" y="744">这张图适合怎么讲</text>
-  <text class="note-text" x="152" y="778">- README 用来看全貌，OPEN_SOURCE 用来第一次跑项目，部署和贡献文档放在后面按需进入。</text>
-  <text class="note-text" x="152" y="806">- 这样新读者不会一上来就掉进部署细节里。</text>
+  <g transform="translate(552 382)">
+    <rect width="456" height="184" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="108" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="78" y="44" text-anchor="middle" class="chip">和页面的关系</text>
+    <text x="24" y="88" class="cardTitle">如果你更关心“项目长什么样”</text>
+    <text x="24" y="124" class="body">可以先从页面总览和业务走查进入，再回到开源接入。</text>
+    <text x="24" y="154" class="body">文档阅读路径本身就是接入成本管理的一部分。</text>
+  </g>
 
-  <rect class="note" x="650" y="700" width="500" height="120"/>
-  <text class="note-title" x="682" y="744">和链路图的关系</text>
-  <text class="note-text" x="682" y="778">- 先看 README 里的业务链路和页面导览，再决定要跑哪一条链、看哪一组详细图。</text>
-  <text class="note-text" x="682" y="806">- 文档阅读路径本身就是接入成本管理的一部分。</text>
+  <g transform="translate(1022 382)">
+    <rect width="456" height="184" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="132" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="90" y="44" text-anchor="middle" class="chip">这张图怎么讲</text>
+    <text x="24" y="88" class="cardTitle">它不是流程图，而是阅读优先级图</text>
+    <text x="24" y="124" class="body">推荐讲法：主页看全貌，开源页看接入，部署页看环境，规范页看协作边界。</text>
+    <text x="24" y="154" class="body">这样第一次接仓库的人不会一开始就迷路。</text>
+  </g>
 
-  <rect class="note" x="1180" y="700" width="500" height="120"/>
-  <text class="note-title" x="1212" y="744">统一风格说明</text>
-  <text class="note-text" x="1212" y="778">- 这张图现在和展示版链路图使用同一套标题区、卡片边框、底部说明卡片风格。</text>
-  <text class="note-text" x="1212" y="806">- 打开 README、SHOWCASE 和 OPEN_SOURCE 时观感会更统一。</text>
+  <g transform="translate(82 626)">
+    <rect width="1396" height="154" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <text x="28" y="46" class="cardTitle">一句话总结</text>
+    <g transform="translate(28 66)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">先看全貌</text>
+      <text x="18" y="44" class="small">主页 / README 用来快速建立项目认知</text>
+    </g>
+    <g transform="translate(360 66)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">再看接入</text>
+      <text x="18" y="44" class="small">OPEN_SOURCE 解决“第一次怎么跑起来”</text>
+    </g>
+    <g transform="translate(692 66)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">按需看部署</text>
+      <text x="18" y="44" class="small">DEPLOYMENT_GUIDE 更适合演示和服务器准备</text>
+    </g>
+    <g transform="translate(1024 66)">
+      <rect width="344" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">最后看规范</text>
+      <text x="18" y="44" class="small">贡献和安全边界放在真正准备改仓库时再读</text>
+    </g>
+  </g>
 </svg>

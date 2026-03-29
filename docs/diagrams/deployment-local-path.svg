@@ -1,0 +1,100 @@
+<svg width="1560" height="760" viewBox="0 0 1560 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1560" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#F4F8FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-30" y="-30" width="1620" height="820" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#1D4ED8" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#4A7CEB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .title { font: 700 30px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .subtitle { font: 500 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #64748B; }
+      .cardTitle { font: 700 20px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .body { font: 500 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #55657E; }
+      .chip { font: 700 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #2C60D4; }
+      .step { font: 700 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #FFFFFF; }
+    </style>
+  </defs>
+
+  <rect width="1560" height="760" rx="28" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="18" y="18" width="1524" height="724" rx="24" fill="#FFFFFF" fill-opacity="0.9"/>
+  </g>
+
+  <text x="780" y="72" text-anchor="middle" class="title">本地联调版部署路径</text>
+  <text x="780" y="102" text-anchor="middle" class="subtitle">适合第一次接项目、排查配置问题、逐步验证最小业务链路。</text>
+
+  <g transform="translate(78 154)">
+    <rect width="260" height="152" rx="24" fill="#EEF5FF" stroke="#C6DAFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#2F6CF4"/>
+    <text x="40" y="46" text-anchor="middle" class="step">1</text>
+    <text x="80" y="46" class="cardTitle">准备数据库与配置</text>
+    <text x="24" y="88" class="body">• 导入建库脚本和业务 SQL</text>
+    <text x="24" y="116" class="body">• 导入 Nacos 公共配置与服务私有配置</text>
+    <text x="24" y="144" class="body">• 先别急着把所有能力都打开</text>
+  </g>
+
+  <g transform="translate(388 154)">
+    <rect width="260" height="152" rx="24" fill="#F0FBF6" stroke="#C9ECD9" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#1BA672"/>
+    <text x="40" y="46" text-anchor="middle" class="step">2</text>
+    <text x="80" y="46" class="cardTitle">只起核心中间件</text>
+    <text x="24" y="88" class="body">• MySQL</text>
+    <text x="24" y="116" class="body">• Redis / Nacos / RabbitMQ</text>
+    <text x="24" y="144" class="body">• 有需要再补 ES / MinIO / Milvus</text>
+  </g>
+
+  <g transform="translate(698 154)">
+    <rect width="260" height="152" rx="24" fill="#FFF7EC" stroke="#FFD8AD" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#F08B22"/>
+    <text x="40" y="46" text-anchor="middle" class="step">3</text>
+    <text x="80" y="46" class="cardTitle">IDE 启动最小链路</text>
+    <text x="24" y="88" class="body">• auth → gateway → system</text>
+    <text x="24" y="116" class="body">• user → shop</text>
+    <text x="24" y="144" class="body">• ES 就绪后再补 search</text>
+  </g>
+
+  <g transform="translate(1008 154)">
+    <rect width="474" height="152" rx="24" fill="#F6F0FF" stroke="#DCCEFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#7D63F7"/>
+    <text x="40" y="46" text-anchor="middle" class="step">4</text>
+    <text x="80" y="46" class="cardTitle">逐条验结果，再扩能力</text>
+    <text x="24" y="88" class="body">• 先确认登录、用户、店铺、后台基础菜单</text>
+    <text x="24" y="116" class="body">• 再补 product / order / interaction / blog / audit / ai / wallet / points</text>
+    <text x="24" y="144" class="body">• 每补一类能力，就顺手验证相关中间件和日志</text>
+  </g>
+
+  <path d="M338 230H378" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M648 230H688" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M958 230H998" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <g transform="translate(82 362)">
+    <rect width="670" height="310" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="128" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="88" y="44" text-anchor="middle" class="chip">为什么推荐这条路</text>
+    <text x="24" y="92" class="cardTitle">更适合排错，也更符合你当前项目的结构现实</text>
+    <text x="24" y="132" class="body">• `bin/` 目录只覆盖了少数模块，不能当作完整启动入口</text>
+    <text x="24" y="164" class="body">• 先从最小链路起，可以快速确认 Nacos、Redis、MQ、数据库是否配对成功</text>
+    <text x="24" y="196" class="body">• 搜索、AI、调度、对象存储都依赖额外环境，后补更稳</text>
+    <text x="24" y="228" class="body">• 面试演示时，也更容易先讲核心链路，再讲增强能力</text>
+    <rect x="24" y="256" width="618" height="34" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+    <text x="42" y="278" class="body">一句话：先把“能跑起来”做对，再把“跑得更完整”做全。</text>
+  </g>
+
+  <g transform="translate(788 362)">
+    <rect width="690" height="310" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="118" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="83" y="44" text-anchor="middle" class="chip">推荐验证清单</text>
+    <text x="24" y="90" class="body">1. 登录接口成功，Gateway 能正常转发到 Auth</text>
+    <text x="24" y="124" class="body">2. 用户接口和店铺接口无残留旧地址，数据库连接正常</text>
+    <text x="24" y="158" class="body">3. Nacos 中最小链路相关 dataId 已全部命中</text>
+    <text x="24" y="192" class="body">4. RabbitMQ、Redis、MySQL 启动日志无连接异常</text>
+    <text x="24" y="226" class="body">5. 如果加了 Search，再确认 ES 已健康并验证搜索接口</text>
+    <rect x="24" y="252" width="642" height="36" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+    <text x="42" y="275" class="body">适合第一次接仓库、联调配置、准备源码讲解或演示环境时使用。</text>
+  </g>
+</svg>

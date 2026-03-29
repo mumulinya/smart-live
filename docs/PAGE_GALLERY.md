@@ -9,6 +9,32 @@
 - 网站首页只保留最主要的页面入口，方便第一次进项目的人先快速建立印象。
 - 这页偏“页面视角”，适合先看产品长什么样；如果想继续看系统全景和关键链路，可以跳去 [视觉导览](./SHOWCASE.html)。
 - 推荐按“进入 -> 发现 -> 决策 -> 交易 -> 内容 -> 社交 -> AI -> 个人资产”的顺序往下读。
+- 如果你想看得更快：用户端建议从 `3.1 -> 3.9` 顺读，商家端建议从 `4.1 -> 4.4` 顺读，后台治理建议从 `5.1 -> 5.4` 顺读。
+
+## 页面总览数据
+
+<div class="smartlive-stats-grid">
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">63 张</div>
+    <div class="smartlive-stat-label">用户端页面截图</div>
+    <div class="smartlive-stat-desc">覆盖登录、发现、交易、内容、社交、AI 与个人资产全链路页面</div>
+  </div>
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">17 张</div>
+    <div class="smartlive-stat-label">商家端页面截图</div>
+    <div class="smartlive-stat-desc">覆盖经营总览、店铺商品管理、订单履约与 AI 经营助手</div>
+  </div>
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">22 张</div>
+    <div class="smartlive-stat-label">平台管理端截图</div>
+    <div class="smartlive-stat-desc">覆盖审核中心、内容治理、业务用户、积分增长、系统权限与调度后台</div>
+  </div>
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">102 张</div>
+    <div class="smartlive-stat-label">当前总引用截图</div>
+    <div class="smartlive-stat-desc">当前页面导览里已经引用的全部真实截图资产，可直接用于项目展示和面试讲解</div>
+  </div>
+</div>
 
 ## 1. 快速跳转
 
@@ -67,7 +93,11 @@
   </a>
   <a href="#admin-governance" class="smartlive-gallery-quickjump-card">
     <strong>平台管理端 Web</strong>
-    <span>内容治理与运营后台</span>
+    <span>内容审核与内容治理</span>
+  </a>
+  <a href="#admin-operations" class="smartlive-gallery-quickjump-card">
+    <strong>平台管理端 Web</strong>
+    <span>运营用户与积分增长</span>
   </a>
   <a href="#admin-system" class="smartlive-gallery-quickjump-card">
     <strong>平台管理端 Web</strong>
@@ -356,9 +386,9 @@
 
 ### <a id="merchant-dashboard"></a>4.1 登录与经营总览
 
-| 管理端登录页 | 经营总览仪表盘 |
+| 商家端登录页 | 经营总览仪表盘 |
 |:---:|:---:|
-| <img src="./screenshots/admin-login.png" alt="管理端登录页" width="420"> | <img src="./screenshots/admin-dashboard.png" alt="经营总览仪表盘" width="420"> |
+| <img src="./screenshots/admin-login.png" alt="商家端登录页" width="420"> | <img src="./screenshots/admin-dashboard.png" alt="经营总览仪表盘" width="420"> |
 | 商家端登录入口 | 商家经营总览与数据面板 |
 
 ### <a id="merchant-business"></a>4.2 店铺与商品经营
@@ -409,7 +439,7 @@
 
 ## <a id="admin-pages"></a>5. 平台管理端 Web 核心入口
 
-### <a id="admin-governance"></a>5.1 内容治理与运营后台
+### <a id="admin-governance"></a>5.1 内容审核与内容治理
 
 | 审核中心 | 审核详情页 |
 |:---:|:---:|
@@ -431,6 +461,8 @@
 | <img src="./screenshots/admin-comment-manage.png" alt="评论管理列表" width="420"> | <img src="./screenshots/admin-comment-detail.png" alt="评论详情页" width="420"> |
 | 评论治理与清理 | 单条评论详情、来源内容与状态查看 |
 
+### <a id="admin-operations"></a>5.2 运营用户与积分增长
+
 | 业务用户 | 业务用户详情页 |
 |:---:|:---:|
 | <img src="./screenshots/admin-business-user.png" alt="业务用户" width="420"> | <img src="./screenshots/admin-business-user-detail.png" alt="业务用户详情页" width="420"> |
@@ -441,7 +473,7 @@
 | <img src="./screenshots/admin-lottery-config.png" alt="抽奖配置" width="420"> | <img src="./screenshots/admin-points-records.png" alt="积分记录" width="420"> |
 | 平台侧奖品配置与增长玩法管理 | 平台侧积分记录与发放流水审计 |
 
-### <a id="admin-system"></a>5.2 系统管理与权限审计
+### <a id="admin-system"></a>5.3 系统管理与权限审计
 
 | 用户管理 | 菜单权限 |
 |:---:|:---:|
@@ -463,7 +495,7 @@
 | <img src="./screenshots/admin-operlog.png" alt="操作日志" width="420"> |
 | 后台操作留痕与行为审计 |
 
-### <a id="admin-scheduler"></a>5.3 XXL-JOB 调度后台
+### <a id="admin-scheduler"></a>5.4 XXL-JOB 调度后台
 
 | 调度总览 | 任务管理 |
 |:---:|:---:|

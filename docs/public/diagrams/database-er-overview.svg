@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1480" viewBox="0 0 2200 1480" role="img" aria-labelledby="title desc">
+  <title id="title">SmartLive 数据库全库 ER 总览</title>
+  <desc id="desc">按用户资产、店铺商品、交易履约、内容互动、消息会话、AI 审核、平台系统治理与 XXL-JOB 调度八个业务域，汇总展示 SmartLive 项目的核心库表与主要关系。</desc>
+  <defs>
+    <linearGradient id="canvasBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#eef4ff"/>
+    </linearGradient>
+    <linearGradient id="heroBg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#eaf2ff"/>
+      <stop offset="100%" stop-color="#f8fbff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#9fb4d8" flood-opacity="0.18"/>
+    </filter>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#c8d6ee" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrowSolid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5673ab"/>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#89a0cb"/>
+    </marker>
+    <style>
+      .canvas { fill: url(#canvasBg); stroke: #d7e3fb; stroke-width: 2; }
+      .hero { fill: url(#heroBg); stroke: #dfe9fb; stroke-width: 2; }
+      .hero-title { font: 700 44px 'Segoe UI', 'PingFang SC', sans-serif; fill: #16233b; }
+      .hero-desc { font: 400 20px 'Segoe UI', 'PingFang SC', sans-serif; fill: #5d6d8d; }
+      .section-card { fill: #ffffff; stroke: #dfe7f6; stroke-width: 2; }
+      .section-bar { rx: 14; ry: 14; }
+      .section-title { font: 700 30px 'Segoe UI', 'PingFang SC', sans-serif; fill: #16233b; }
+      .section-sub { font: 400 16px 'Segoe UI', 'PingFang SC', sans-serif; fill: #62738f; }
+      .section-count { font: 700 15px 'Segoe UI', 'PingFang SC', sans-serif; fill: #2f4d84; }
+      .stat-chip { fill: #ffffff; stroke: #dfe7f6; stroke-width: 2; }
+      .stat-k { font: 700 28px 'Segoe UI', 'PingFang SC', sans-serif; fill: #18315d; }
+      .stat-v { font: 500 15px 'Segoe UI', 'PingFang SC', sans-serif; fill: #60708d; }
+      .chip { rx: 12; ry: 12; stroke-width: 1.4; }
+      .chip-text { font: 600 17px 'Consolas', 'SFMono-Regular', monospace; fill: #18315d; }
+      .legend-title { font: 700 18px 'Segoe UI', 'PingFang SC', sans-serif; fill: #18315d; }
+      .legend-text { font: 400 15px 'Segoe UI', 'PingFang SC', sans-serif; fill: #64748b; }
+      .note-title { font: 700 20px 'Segoe UI', 'PingFang SC', sans-serif; fill: #18315d; }
+      .note-text { font: 400 15px 'Segoe UI', 'PingFang SC', sans-serif; fill: #5f708e; }
+      .solid { fill: none; stroke: #5673ab; stroke-width: 3.4; marker-end: url(#arrowSolid); }
+      .dashed { fill: none; stroke: #89a0cb; stroke-width: 3; stroke-dasharray: 10 8; marker-end: url(#arrowDash); }
+      .mini-line { stroke-linecap: round; }
+    </style>
+  </defs>
+
+  <rect x="16" y="16" width="2168" height="1448" rx="34" ry="34" class="canvas"/>
+
+  <rect x="44" y="42" width="2112" height="160" rx="30" ry="30" class="hero"/>
+  <text x="1100" y="106" text-anchor="middle" class="hero-title">SmartLive 数据库全库 ER 总览</text>
+  <text x="1100" y="142" text-anchor="middle" class="hero-desc">53 张核心业务、治理与调度表按 8 个业务域重组展示，重点强调领域边界与主要关系，而不是字段级外键。</text>
+
+  <g filter="url(#softShadow)">
+    <rect x="78" y="228" width="210" height="82" rx="22" ry="22" class="stat-chip"/>
+    <text x="108" y="270" class="stat-k">53 张</text>
+    <text x="108" y="295" class="stat-v">纳入总览的核心表</text>
+
+    <rect x="312" y="228" width="230" height="82" rx="22" ry="22" class="stat-chip"/>
+    <text x="342" y="270" class="stat-k">8 个</text>
+    <text x="342" y="295" class="stat-v">业务域 / 调度域分区</text>
+
+    <rect x="566" y="228" width="280" height="82" rx="22" ry="22" class="stat-chip"/>
+    <text x="596" y="270" class="stat-k">软关联优先</text>
+    <text x="596" y="295" class="stat-v">与微服务边界和消息驱动一致</text>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="1574" y="220" width="582" height="110" rx="24" ry="24" class="stat-chip"/>
+    <text x="1606" y="258" class="legend-title">读图说明</text>
+    <line x1="1608" y1="286" x2="1676" y2="286" class="solid mini-line"/>
+    <text x="1692" y="291" class="legend-text">主关系：订单、资产、内容、消息等关键数据流</text>
+    <line x1="1608" y1="318" x2="1676" y2="318" class="dashed mini-line"/>
+    <text x="1692" y="323" class="legend-text">弱耦合关系：source_id、biz_id、审核回写、分析快照</text>
+  </g>
+
+  <path d="M 584 468 C 666 468, 688 468, 736 468" class="solid"/>
+  <path d="M 1064 462 C 1120 462, 1142 462, 1186 462" class="solid"/>
+  <path d="M 1424 446 C 1522 432, 1566 420, 1628 414" class="dashed"/>
+  <path d="M 1288 550 C 1288 624, 1288 650, 1288 692" class="solid"/>
+  <path d="M 1300 540 C 1162 610, 1078 676, 1032 742" class="dashed"/>
+  <path d="M 382 596 C 382 642, 382 676, 382 722" class="solid"/>
+  <path d="M 584 820 C 664 812, 694 770, 736 770" class="dashed"/>
+  <path d="M 584 848 C 860 860, 1068 846, 1186 824" class="dashed"/>
+  <path d="M 1032 846 C 1032 930, 1032 968, 1032 1038" class="dashed"/>
+  <path d="M 1188 1116 C 1088 1160, 948 1162, 856 1138" class="dashed"/>
+  <path d="M 1624 804 C 1530 790, 1452 746, 1392 688" class="dashed"/>
+  <path d="M 1664 1124 C 1556 1158, 1362 1166, 1188 1120" class="dashed"/>
+  <path d="M 1628 414 C 1304 486, 1126 560, 1032 742" class="dashed"/>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="360" width="520" height="250" rx="28" ry="28" class="section-card"/>
+    <rect x="94" y="386" width="168" height="36" fill="#e7f0ff" stroke="#9abcf7" class="section-bar"/>
+    <text x="116" y="412" class="section-count">用户与资产域 · 9 张表</text>
+    <text x="94" y="456" class="section-title">账号、钱包、支付与积分</text>
+    <text x="94" y="485" class="section-sub">账号主数据、钱包流水、积分账户、签到与抽奖都在这里汇总。</text>
+    <rect x="94" y="520" width="136" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="112" y="545" class="chip-text">user</text>
+    <rect x="246" y="520" width="176" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="264" y="545" class="chip-text">user_info</text>
+    <rect x="94" y="570" width="188" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="112" y="595" class="chip-text">user_wallet</text>
+    <rect x="298" y="570" width="218" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="316" y="595" class="chip-text">payment_record</text>
+    <rect x="94" y="620" width="250" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="112" y="645" class="chip-text">wallet_transaction</text>
+    <rect x="94" y="670" width="248" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="112" y="695" class="chip-text">user_points_wallet</text>
+    <rect x="358" y="670" width="158" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="376" y="695" class="chip-text">points_record</text>
+    <rect x="94" y="720" width="178" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="112" y="745" class="chip-text">daily_sign_in</text>
+    <rect x="288" y="720" width="228" height="38" fill="#eef4ff" stroke="#b9cdf7" class="chip"/><text x="306" y="745" class="chip-text">points_lottery_prize</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="730" y="360" width="350" height="220" rx="28" ry="28" class="section-card"/>
+    <rect x="754" y="386" width="182" height="36" fill="#ebfbf1" stroke="#85d8a4" class="section-bar"/>
+    <text x="776" y="412" class="section-count">店铺与商品域 · 4 张表</text>
+    <text x="754" y="456" class="section-title">店铺主数据与商品模型</text>
+    <text x="754" y="485" class="section-sub">店铺分类、店铺主表、商品统一模型和经营分析快照。</text>
+    <rect x="754" y="530" width="132" height="38" fill="#effcf4" stroke="#9fe0b7" class="chip"/><text x="772" y="555" class="chip-text">shop_type</text>
+    <rect x="902" y="530" width="120" height="38" fill="#effcf4" stroke="#9fe0b7" class="chip"/><text x="920" y="555" class="chip-text">shop</text>
+    <rect x="754" y="580" width="152" height="38" fill="#effcf4" stroke="#9fe0b7" class="chip"/><text x="772" y="605" class="chip-text">product</text>
+    <rect x="754" y="630" width="268" height="38" fill="#effcf4" stroke="#9fe0b7" class="chip"/><text x="772" y="655" class="chip-text">shop_analysis_record</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1180" y="360" width="280" height="180" rx="28" ry="28" class="section-card"/>
+    <rect x="1204" y="386" width="182" height="36" fill="#fff2e6" stroke="#ffbb7b" class="section-bar"/>
+    <text x="1226" y="412" class="section-count">交易履约域 · 1 张主表</text>
+    <text x="1204" y="456" class="section-title">订单统一事实表</text>
+    <text x="1204" y="485" class="section-sub">下单、支付、核销、退款、评价状态统一沉淀在订单主表。</text>
+    <rect x="1204" y="525" width="128" height="40" fill="#fff4ea" stroke="#ffc899" class="chip"/><text x="1222" y="551" class="chip-text">order</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1610" y="350" width="430" height="210" rx="28" ry="28" class="section-card"/>
+    <rect x="1634" y="376" width="154" height="36" fill="#f3ecff" stroke="#bca4ff" class="section-bar"/>
+    <text x="1656" y="402" class="section-count">AI 与审核域 · 3 张表</text>
+    <text x="1634" y="446" class="section-title">商家助手与审核任务中心</text>
+    <text x="1634" y="475" class="section-sub">商家 AI 会话沉淀、消息上下文与审核任务快照都集中在这一层。</text>
+    <rect x="1634" y="520" width="184" height="38" fill="#f7f2ff" stroke="#c9b3ff" class="chip"/><text x="1652" y="545" class="chip-text">merchant_ai_session</text>
+    <rect x="1634" y="570" width="202" height="38" fill="#f7f2ff" stroke="#c9b3ff" class="chip"/><text x="1652" y="595" class="chip-text">merchant_ai_message</text>
+    <rect x="1852" y="570" width="116" height="38" fill="#f7f2ff" stroke="#c9b3ff" class="chip"/><text x="1870" y="595" class="chip-text">audit_task</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="720" width="520" height="230" rx="28" ry="28" class="section-card"/>
+    <rect x="94" y="746" width="178" height="36" fill="#e9fbff" stroke="#89d8e8" class="section-bar"/>
+    <text x="116" y="772" class="section-count">内容与互动域 · 6 张表</text>
+    <text x="94" y="816" class="section-title">博客、评价、评论与社交互动</text>
+    <text x="94" y="845" class="section-sub">内容主表和互动行为通过 source_id / biz_id 串起博客、评价、评论、点赞、收藏和关注。</text>
+    <rect x="94" y="890" width="120" height="38" fill="#eefcff" stroke="#a8e4ee" class="chip"/><text x="112" y="915" class="chip-text">blog</text>
+    <rect x="230" y="890" width="146" height="38" fill="#eefcff" stroke="#a8e4ee" class="chip"/><text x="248" y="915" class="chip-text">review</text>
+    <rect x="392" y="890" width="158" height="38" fill="#eefcff" stroke="#a8e4ee" class="chip"/><text x="410" y="915" class="chip-text">comment</text>
+    <rect x="94" y="940" width="182" height="38" fill="#eefcff" stroke="#a8e4ee" class="chip"/><text x="112" y="965" class="chip-text">like_record</text>
+    <rect x="292" y="940" width="120" height="38" fill="#eefcff" stroke="#a8e4ee" class="chip"/><text x="310" y="965" class="chip-text">star</text>
+    <rect x="428" y="940" width="122" height="38" fill="#eefcff" stroke="#a8e4ee" class="chip"/><text x="446" y="965" class="chip-text">follow</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="730" y="700" width="350" height="250" rx="28" ry="28" class="section-card"/>
+    <rect x="754" y="726" width="178" height="36" fill="#fff8e8" stroke="#f2cb7c" class="section-bar"/>
+    <text x="776" y="752" class="section-count">消息与会话域 · 4 张表</text>
+    <text x="754" y="796" class="section-title">即时通讯与会话聚合</text>
+    <text x="754" y="825" class="section-sub">消息落库、会话列表和系统通知汇总，支撑私聊与会话历史回放。</text>
+    <rect x="754" y="870" width="174" height="38" fill="#fffaf0" stroke="#f4d598" class="chip"/><text x="772" y="895" class="chip-text">chat_sessions</text>
+    <rect x="754" y="920" width="188" height="38" fill="#fffaf0" stroke="#f4d598" class="chip"/><text x="772" y="945" class="chip-text">chat_messages</text>
+    <rect x="958" y="870" width="154" height="38" fill="#fffaf0" stroke="#f4d598" class="chip"/><text x="976" y="895" class="chip-text">user_sessions</text>
+    <rect x="958" y="920" width="230" height="38" fill="#fffaf0" stroke="#f4d598" class="chip"/><text x="976" y="945" class="chip-text">chat_system_notice</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1180" y="660" width="860" height="420" rx="28" ry="28" class="section-card"/>
+    <rect x="1204" y="686" width="224" height="36" fill="#fff0f4" stroke="#ffb3c1" class="section-bar"/>
+    <text x="1226" y="712" class="section-count">平台系统治理域 · 18 张表</text>
+    <text x="1204" y="756" class="section-title">后台账号、权限、字典、日志与治理能力</text>
+    <text x="1204" y="785" class="section-sub">后台用户、角色、菜单、部门、岗位、字典、公告、配置、操作日志与任务配置集中沉淀在这里。</text>
+    <rect x="1204" y="828" width="130" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1222" y="852" class="chip-text">sys_user</text>
+    <rect x="1350" y="828" width="128" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1368" y="852" class="chip-text">sys_role</text>
+    <rect x="1494" y="828" width="132" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1512" y="852" class="chip-text">sys_menu</text>
+    <rect x="1642" y="828" width="130" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1660" y="852" class="chip-text">sys_dept</text>
+    <rect x="1788" y="828" width="128" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1806" y="852" class="chip-text">sys_post</text>
+    <rect x="1204" y="876" width="146" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1222" y="900" class="chip-text">sys_config</text>
+    <rect x="1366" y="876" width="146" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1384" y="900" class="chip-text">sys_notice</text>
+    <rect x="1528" y="876" width="190" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1546" y="900" class="chip-text">sys_logininfor</text>
+    <rect x="1734" y="876" width="176" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1752" y="900" class="chip-text">sys_oper_log</text>
+    <rect x="1204" y="924" width="118" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1222" y="948" class="chip-text">sys_job</text>
+    <rect x="1338" y="924" width="152" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1356" y="948" class="chip-text">sys_job_log</text>
+    <rect x="1506" y="924" width="172" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1524" y="948" class="chip-text">sys_dict_type</text>
+    <rect x="1694" y="924" width="174" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1712" y="948" class="chip-text">sys_dict_data</text>
+    <rect x="1204" y="972" width="186" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1222" y="996" class="chip-text">sys_user_role</text>
+    <rect x="1406" y="972" width="186" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1424" y="996" class="chip-text">sys_user_post</text>
+    <rect x="1608" y="972" width="188" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1626" y="996" class="chip-text">sys_user_shop</text>
+    <rect x="1204" y="1020" width="188" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1222" y="1044" class="chip-text">sys_role_menu</text>
+    <rect x="1408" y="1020" width="186" height="36" fill="#fff6f8" stroke="#ffc7d1" class="chip"/><text x="1426" y="1044" class="chip-text">sys_role_dept</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="760" y="1030" width="360" height="260" rx="28" ry="28" class="section-card"/>
+    <rect x="784" y="1056" width="180" height="36" fill="#f3f6fb" stroke="#b8c7dc" class="section-bar"/>
+    <text x="806" y="1082" class="section-count">XXL-JOB 调度域 · 8 张表</text>
+    <text x="784" y="1126" class="section-title">调度执行器、任务与日志</text>
+    <text x="784" y="1155" class="section-sub">定时任务配置、执行日志、注册中心、分布式锁与调度用户。</text>
+    <rect x="784" y="1200" width="178" height="36" fill="#f8fafc" stroke="#c7d2df" class="chip"/><text x="802" y="1224" class="chip-text">xxl_job_group</text>
+    <rect x="978" y="1200" width="164" height="36" fill="#f8fafc" stroke="#c7d2df" class="chip"/><text x="996" y="1224" class="chip-text">xxl_job_info</text>
+    <rect x="784" y="1248" width="160" height="36" fill="#f8fafc" stroke="#c7d2df" class="chip"/><text x="802" y="1272" class="chip-text">xxl_job_lock</text>
+    <rect x="960" y="1248" width="150" height="36" fill="#f8fafc" stroke="#c7d2df" class="chip"/><text x="978" y="1272" class="chip-text">xxl_job_log</text>
+    <rect x="1144" y="1200" width="200" height="36" fill="#f8fafc" stroke="#c7d2df" class="chip"/><text x="1162" y="1224" class="chip-text">xxl_job_log_report</text>
+    <rect x="1144" y="1248" width="190" height="36" fill="#f8fafc" stroke="#c7d2df" class="chip"/><text x="1162" y="1272" class="chip-text">xxl_job_registry</text>
+    <rect x="784" y="1296" width="194" height="36" fill="#f8fafc" stroke="#c7d2df" class="chip"/><text x="802" y="1320" class="chip-text">xxl_job_logglue</text>
+    <rect x="994" y="1296" width="162" height="36" fill="#f8fafc" stroke="#c7d2df" class="chip"/><text x="1012" y="1320" class="chip-text">xxl_job_user</text>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="70" y="1308" width="630" height="118" rx="24" ry="24" class="stat-chip"/>
+    <text x="102" y="1348" class="note-title">为什么这张图没有数据库外键线</text>
+    <text x="102" y="1380" class="note-text">项目主关系以业务主键和软关联为主，ER 总览更强调领域边界与数据归属，避免被过细的字段线条淹没。</text>
+
+    <rect x="734" y="1308" width="662" height="118" rx="24" ry="24" class="stat-chip"/>
+    <text x="766" y="1348" class="note-title">为什么弱关系用虚线表示</text>
+    <text x="766" y="1380" class="note-text">评论、点赞、收藏、审核、经营分析等能力经常通过 source_type + source_id 或 biz_id 建立多态引用，更适合画成治理辅助关系。</text>
+
+    <rect x="1430" y="1308" width="656" height="118" rx="24" ry="24" class="stat-chip"/>
+    <text x="1462" y="1348" class="note-title">哪些表被刻意排除在外</text>
+    <text x="1462" y="1380" class="note-text">Nacos 配置中心运行表没有纳入核心业务 ER；它们属于基础设施运行数据，不属于 SmartLive 业务模型本身。</text>
+  </g>
+</svg>

@@ -17,7 +17,8 @@ export default defineConfig({
       { text: '页面总览', link: '/PAGE_GALLERY' },
       { text: '业务走查', link: '/SHOWCASE' },
       { text: '核心链路', link: '/core-links/' },
-      { text: '开源接入', link: '/OPEN_SOURCE' }
+      { text: '开源接入', link: '/OPEN_SOURCE' },
+      { text: '部署说明', link: '/DEPLOYMENT_GUIDE' }
     ],
 
     sidebar: [
@@ -27,9 +28,11 @@ export default defineConfig({
         items: [
           { text: '01 3分钟快速评审', link: '/THREE_MINUTES' },
           { text: '02 系统架构与项目规模', link: '/site-pages/SYSTEM_ARCHITECTURE' },
-          { text: '03 页面效果图导览', link: '/PAGE_GALLERY' },
-          { text: '04 业务链路视觉走查', link: '/SHOWCASE' },
-          { text: '05 开源启动与接入', link: '/OPEN_SOURCE' }
+          { text: '03 数据模型与核心表关系', link: '/site-pages/DATA_MODEL' },
+          { text: '04 页面效果图导览', link: '/PAGE_GALLERY' },
+          { text: '05 业务链路视觉走查', link: '/SHOWCASE' },
+          { text: '06 开源启动与接入', link: '/OPEN_SOURCE' },
+          { text: '07 部署说明', link: '/DEPLOYMENT_GUIDE' }
         ]
       },
       {
@@ -53,13 +56,14 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: '01 项目全貌与答辩说明', link: '/PROJECT_OVERVIEW' },
-          { text: '02 核心亮点与项目价值', link: '/site-pages/CORE_HIGHLIGHTS' },
-          { text: '03 我的核心设计与实现', link: '/site-pages/CONTRIBUTIONS' },
-          { text: '04 性能指标与结果', link: '/site-pages/PERFORMANCE' },
-          { text: '05 技术选型理由', link: '/site-pages/TECH_SELECTION' },
-          { text: '06 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
-          { text: '07 未来规划 Roadmap', link: '/site-pages/ROADMAP' },
-          { text: '08 常见问题 FAQ', link: '/site-pages/FAQ' }
+          { text: '02 数据建模与表关系怎么讲', link: '/DATA_MODEL_INTERVIEW' },
+          { text: '03 核心亮点与项目价值', link: '/site-pages/CORE_HIGHLIGHTS' },
+          { text: '04 我的核心设计与实现', link: '/site-pages/CONTRIBUTIONS' },
+          { text: '05 性能指标与结果', link: '/site-pages/PERFORMANCE' },
+          { text: '06 技术选型理由', link: '/site-pages/TECH_SELECTION' },
+          { text: '07 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
+          { text: '08 未来规划 Roadmap', link: '/site-pages/ROADMAP' },
+          { text: '09 核心架构拷问 FAQ', link: '/site-pages/FAQ' }
         ]
       },
       {

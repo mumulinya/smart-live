@@ -1,0 +1,98 @@
+<svg width="1560" height="760" viewBox="0 0 1560 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1560" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#F4F8FF"/>
+    </linearGradient>
+    <filter id="shadow2" x="-30" y="-30" width="1620" height="820" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#1D4ED8" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrow2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#4A7CEB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .title { font: 700 30px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .subtitle { font: 500 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #64748B; }
+      .cardTitle { font: 700 20px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .body { font: 500 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #55657E; }
+      .chip { font: 700 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #2C60D4; }
+      .step { font: 700 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #FFFFFF; }
+    </style>
+  </defs>
+
+  <rect width="1560" height="760" rx="28" fill="url(#bg2)"/>
+  <g filter="url(#shadow2)">
+    <rect x="18" y="18" width="1524" height="724" rx="24" fill="#FFFFFF" fill-opacity="0.9"/>
+  </g>
+
+  <text x="780" y="72" text-anchor="middle" class="title">Docker 演示版部署路径</text>
+  <text x="780" y="102" text-anchor="middle" class="subtitle">适合在服务器或演示环境中快速整合前后端、微服务和基础设施。</text>
+
+  <g transform="translate(82 150)">
+    <rect width="320" height="152" rx="24" fill="#EEF5FF" stroke="#C6DAFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#2F6CF4"/>
+    <text x="40" y="46" text-anchor="middle" class="step">1</text>
+    <text x="80" y="46" class="cardTitle">先看三份 Compose 的职责</text>
+    <text x="24" y="88" class="body">• infra：基础设施与中间件</text>
+    <text x="24" y="116" class="body">• java：后端服务容器</text>
+    <text x="24" y="144" class="body">• full：整套演示环境</text>
+  </g>
+
+  <g transform="translate(452 150)">
+    <rect width="320" height="152" rx="24" fill="#F0FBF6" stroke="#C9ECD9" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#1BA672"/>
+    <text x="40" y="46" text-anchor="middle" class="step">2</text>
+    <text x="80" y="46" class="cardTitle">先把基础设施单独拉起</text>
+    <text x="24" y="88" class="body">• docker-compose-infra.yml</text>
+    <text x="24" y="116" class="body">• 确认 MySQL / Redis / Nacos / MQ / ES / MinIO / Milvus / XXL-JOB</text>
+    <text x="24" y="144" class="body">• 先看健康状态，再看端口占用</text>
+  </g>
+
+  <g transform="translate(822 150)">
+    <rect width="320" height="152" rx="24" fill="#FFF7EC" stroke="#FFD8AD" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#F08B22"/>
+    <text x="40" y="46" text-anchor="middle" class="step">3</text>
+    <text x="80" y="46" class="cardTitle">再补 Java 服务容器</text>
+    <text x="24" y="88" class="body">• docker-compose-java.yml</text>
+    <text x="24" y="116" class="body">• 依赖 MIDDLEWARE_HOST 等环境变量</text>
+    <text x="24" y="144" class="body">• 更适合验证后端镜像和服务编排</text>
+  </g>
+
+  <g transform="translate(1192 150)">
+    <rect width="286" height="152" rx="24" fill="#F6F0FF" stroke="#DCCEFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#7D63F7"/>
+    <text x="40" y="46" text-anchor="middle" class="step">4</text>
+    <text x="80" y="46" class="cardTitle">最后整合前端演示</text>
+    <text x="24" y="88" class="body">• copy.sh 会尝试复制 app / ui 的 dist</text>
+    <text x="24" y="116" class="body">• 再用 docker-compose.yml 做完整演示</text>
+    <text x="24" y="144" class="body">• 适合成果展示，不适合第一次排错</text>
+  </g>
+
+  <path d="M402 226H442" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow2)"/>
+  <path d="M772 226H812" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow2)"/>
+  <path d="M1142 226H1182" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow2)"/>
+
+  <g transform="translate(84 354)">
+    <rect width="680" height="302" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="128" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="88" y="44" text-anchor="middle" class="chip">什么时候更适合它</text>
+    <text x="24" y="92" class="body">• 你已经确认配置、端口、模块名基本稳定</text>
+    <text x="24" y="126" class="body">• 你想在一台机器上快速拉起完整演示环境</text>
+    <text x="24" y="160" class="body">• 你需要把前端页面、网关、后端、调度、AI 能力一起展示给别人看</text>
+    <text x="24" y="194" class="body">• 你愿意接受排错粒度变粗，优先换取“整体可演示”</text>
+    <rect x="24" y="238" width="632" height="40" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+    <text x="42" y="264" class="body">这条路更像“演示环境搭建”，不是“第一次接入学习路径”。</text>
+  </g>
+
+  <g transform="translate(796 354)">
+    <rect width="680" height="302" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="144" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="96" y="44" text-anchor="middle" class="chip">使用前重点核对</text>
+    <text x="24" y="92" class="body">1. Compose 中是否还残留历史命名，如 marketing / map 等</text>
+    <text x="24" y="126" class="body">2. JAR 名、模块名、镜像名是否和当前 Maven 聚合结构一致</text>
+    <text x="24" y="160" class="body">3. Nginx 目录挂载是否和 `smart-live-app`、`smartLive-ui` 的 dist 产物一致</text>
+    <text x="24" y="194" class="body">4. MIDDLEWARE_HOST、Nacos、MQ、Milvus 等环境变量是否指向当前环境</text>
+    <rect x="24" y="238" width="632" height="40" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+    <text x="42" y="264" class="body">一句话：Docker 路径更适合“整套演示”，本地联调路径更适合“逐步做对”。</text>
+  </g>
+</svg>

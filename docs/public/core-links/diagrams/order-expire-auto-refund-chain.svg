@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">订单临期提醒与到期未使用自动退款链路</title>
+  <desc id="desc">展示支付成功后如何回填有效期，XXL-JOB 如何发送临期提醒，以及已支付未核销订单到期后如何自动转为 EXPIRED 并通过退款消息回退到钱包。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#f3f8ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
+      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
+      .section { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #1d4b81; }
+      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
+      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
+      .step { font: 600 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
+      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
+      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
+      .node { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
+      .store { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
+      .mq { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
+      .decision { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
+      .notice { fill: #f6fbff; stroke: #9fcbef; stroke-width: 2; rx: 24; }
+      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
+      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #6d90bf; stroke-width: 3; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#bg)"/>
+  <rect x="34" y="34" width="1732" height="1052" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="96">订单临期提醒与到期未使用自动退款链路</text>
+  <text class="subtitle" x="74" y="132">对应代码：OrderServiceImpl.updateExpireTimeAfterPayment + OrderExpireJobHandler + OrderServiceImpl.expired + OrderRefundListener</text>
+
+  <text class="section" x="74" y="188">1. 支付成功后，订单先回填有效期，为后续提醒与自动退款准备依据</text>
+
+  <rect class="node" x="90" y="230" width="320" height="150"/>
+  <text class="node-title" x="250" y="286" text-anchor="middle">统一支付回调</text>
+  <text class="node-text" x="250" y="322" text-anchor="middle">paySuccess() 幂等处理</text>
+  <text class="node-text" x="250" y="348" text-anchor="middle">状态变更为 PAID</text>
+
+  <rect class="store" x="520" y="230" width="360" height="150"/>
+  <text class="node-title" x="700" y="286" text-anchor="middle">订单有效期计算</text>
+  <text class="node-text" x="700" y="322" text-anchor="middle">固定日期：useStartTime / useEndTime</text>
+  <text class="node-text" x="700" y="348" text-anchor="middle">动态有效期：领取后 N 天</text>
+
+  <rect class="node" x="990" y="230" width="330" height="150"/>
+  <text class="node-title" x="1155" y="286" text-anchor="middle">订单表字段回填</text>
+  <text class="node-text" x="1155" y="322" text-anchor="middle">validStartTime</text>
+  <text class="node-text" x="1155" y="348" text-anchor="middle">expireTime</text>
+
+  <rect class="note" x="1430" y="230" width="280" height="150"/>
+  <text class="note-title" x="1462" y="286">关键边界</text>
+  <text class="note-text" x="1462" y="320">- 只有支付成功后才会有</text>
+  <text class="note-text" x="1462" y="346">  有效期与过期时间。</text>
+  <text class="note-text" x="1462" y="372">- VERIFIED 订单不再参与</text>
+  <text class="note-text" x="1462" y="398">  后续过期退款扫描。</text>
+
+  <path class="line" d="M410 305 H508"/>
+  <text class="step" x="459" y="290" text-anchor="middle">1. 支付完成</text>
+
+  <path class="line" d="M880 305 H978"/>
+  <text class="step" x="929" y="290" text-anchor="middle">2. 写入有效期</text>
+
+  <text class="section" x="74" y="470">2. XXL-JOB 先做临期提醒，再做已支付未使用订单的过期退款</text>
+
+  <rect class="notice" x="90" y="520" width="360" height="170"/>
+  <text class="node-title" x="270" y="576" text-anchor="middle">orderSoonExpireJobHandler</text>
+  <text class="node-text" x="270" y="612" text-anchor="middle">扫描 status = PAID</text>
+  <text class="node-text" x="270" y="638" text-anchor="middle">且 expireTime 在未来 3 天内</text>
+  <text class="node-text" x="270" y="664" text-anchor="middle">发送“订单过期提醒”系统通知</text>
+
+  <rect class="mq" x="560" y="520" width="330" height="170"/>
+  <text class="node-title" x="725" y="576" text-anchor="middle">系统通知 MQ</text>
+  <text class="node-text" x="725" y="612" text-anchor="middle">SYSTEM_NOTICE_EXCHANGE</text>
+  <text class="node-text" x="725" y="638" text-anchor="middle">action = order_expire</text>
+  <text class="node-text" x="725" y="664" text-anchor="middle">提醒用户尽快前往使用</text>
+
+  <rect class="notice" x="1000" y="520" width="360" height="170"/>
+  <text class="node-title" x="1180" y="576" text-anchor="middle">orderExpireJobHandler</text>
+  <text class="node-text" x="1180" y="612" text-anchor="middle">扫描 status = PAID</text>
+  <text class="node-text" x="1180" y="638" text-anchor="middle">且 expireTime &lt;= now 的订单</text>
+  <text class="node-text" x="1180" y="664" text-anchor="middle">调用 orderService.expired(id)</text>
+
+  <rect class="decision" x="1470" y="520" width="240" height="170"/>
+  <text class="node-title" x="1590" y="576" text-anchor="middle">状态机边界</text>
+  <text class="node-text" x="1590" y="612" text-anchor="middle">仅处理 PAID</text>
+  <text class="node-text" x="1590" y="638" text-anchor="middle">VERIFIED 不会误退</text>
+  <text class="node-text" x="1590" y="664" text-anchor="middle">UNPAID 已由超时关单处理</text>
+
+  <path class="dash" d="M1155 380 V450 H270 V508"/>
+  <text class="step" x="712" y="434" text-anchor="middle">3. 距离到期 3 天：提前提醒</text>
+
+  <path class="line" d="M450 605 H548"/>
+  <text class="step" x="499" y="590" text-anchor="middle">4. 发系统通知</text>
+
+  <path class="line" d="M1155 380 V450 H1180 V508"/>
+  <text class="step" x="1180" y="434" text-anchor="middle">5. 到期仍未使用：自动扫描</text>
+
+  <text class="section" x="74" y="790">3. 过期后统一走 expired → 回滚销量 / 库存 → 退款消息 → 钱包入账</text>
+
+  <rect class="node" x="90" y="840" width="330" height="170"/>
+  <text class="node-title" x="255" y="896" text-anchor="middle">OrderService.expired</text>
+  <text class="node-text" x="255" y="932" text-anchor="middle">状态改为 EXPIRED</text>
+  <text class="node-text" x="255" y="958" text-anchor="middle">秒杀活动商品恢复库存</text>
+  <text class="node-text" x="255" y="984" text-anchor="middle">decrementSales 平账</text>
+
+  <rect class="mq" x="520" y="840" width="300" height="170"/>
+  <text class="node-title" x="670" y="896" text-anchor="middle">退款消息</text>
+  <text class="node-text" x="670" y="932" text-anchor="middle">sendRefundMessage</text>
+  <text class="node-text" x="670" y="958" text-anchor="middle">ORDER_REFUND_EXCHANGE</text>
+  <text class="node-text" x="670" y="984" text-anchor="middle">OrderRefundMessage</text>
+
+  <rect class="node" x="920" y="840" width="330" height="170"/>
+  <text class="node-title" x="1085" y="896" text-anchor="middle">OrderRefundListener</text>
+  <text class="node-text" x="1085" y="932" text-anchor="middle">MQ 幂等校验 messageId</text>
+  <text class="node-text" x="1085" y="958" text-anchor="middle">调用 walletService.refundOrder</text>
+  <text class="node-text" x="1085" y="984" text-anchor="middle">ACK 成功消息</text>
+
+  <rect class="store" x="1320" y="840" width="390" height="170"/>
+  <text class="node-title" x="1515" y="896" text-anchor="middle">钱包余额与流水</text>
+  <text class="node-text" x="1515" y="932" text-anchor="middle">addBalance 恢复用户余额</text>
+  <text class="node-text" x="1515" y="958" text-anchor="middle">写 WalletTransaction(type=refund)</text>
+  <text class="node-text" x="1515" y="984" text-anchor="middle">完成自动退款资金闭环</text>
+
+  <path class="line" d="M1180 690 V760 H255 V828"/>
+  <text class="step" x="718" y="744" text-anchor="middle">6. 调 expired() 做逆向补偿</text>
+
+  <path class="line" d="M420 925 H508"/>
+  <text class="step" x="464" y="910" text-anchor="middle">7. 投递退款消息</text>
+
+  <path class="line" d="M820 925 H908"/>
+  <text class="step" x="864" y="910" text-anchor="middle">8. 钱包消费退款</text>
+
+  <path class="line" d="M1250 925 H1308"/>
+  <text class="step" x="1279" y="910" text-anchor="middle">9. 入账并记流水</text>
+
+  <rect class="note" x="70" y="1040" width="500" height="60"/>
+  <text class="note-title" x="102" y="1070">这张图最适合强调什么</text>
+  <text class="note-text" x="102" y="1094">支付成功并不代表链路结束，项目还补了“临期提醒 + 到期未使用自动退款”的履约兜底闭环。</text>
+
+  <rect class="note" x="650" y="1040" width="500" height="60"/>
+  <text class="note-title" x="682" y="1070">和主动退款图的区别</text>
+  <text class="note-text" x="682" y="1094">主动退款是接口触发；这张图是定时任务驱动，专门处理“已支付但一直没核销”的过期订单。</text>
+
+  <rect class="note" x="1230" y="1040" width="500" height="60"/>
+  <text class="note-title" x="1262" y="1070">代码边界也更清楚</text>
+  <text class="note-text" x="1262" y="1094">只扫描 PAID 状态，VERIFIED 已履约订单不会误退；退款仍统一复用 MQ + 钱包流水补偿模型。</text>
+</svg>

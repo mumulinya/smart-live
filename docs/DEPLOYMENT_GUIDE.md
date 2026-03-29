@@ -2,7 +2,7 @@
 
 👉 **完整的图文排版版本，请访问：[SmartLive 在线文档网站](https://mumulinya.github.io/smartLive-Cloud/)**
 
-**文档导航：** [网站首页](/) · [开源接入](OPEN_SOURCE.md) · [视觉导览](SHOWCASE.md) · [页面导览](PAGE_GALLERY.md)
+**文档导航：** [网站首页](/) · [开源接入](./OPEN_SOURCE) · [视觉导览](./SHOWCASE) · [页面导览](./PAGE_GALLERY)
 
 这份文档只聚焦部署相关的 4 件事：
 
@@ -10,6 +10,14 @@
 2. Docker Compose、JAR 包部署分别需要哪些前置条件。
 3. Nacos、中间件、环境变量应该怎么对齐。
 4. 部署失败时优先排查哪些位置。
+
+<div align="center">
+  <img src="./diagrams/deployment-local-path.svg" alt="SmartLive 本地联调版部署路径" width="100%">
+</div>
+
+<div align="center">
+  <img src="./diagrams/deployment-docker-demo-path.svg" alt="SmartLive Docker 演示版部署路径" width="100%">
+</div>
 
 ## 1. 推荐部署路径
 
@@ -147,6 +155,6 @@
 
 ## 7. 继续阅读
 
-- 想看最小启动链路：看 [OPEN_SOURCE.md](OPEN_SOURCE.md)
-- 想看完整页面和后台：看 [PAGE_GALLERY.md](PAGE_GALLERY.md)
-- 想看业务链路与系统图：看 [SHOWCASE.md](SHOWCASE.md)
+- 想看最小启动链路：看 [OPEN_SOURCE](./OPEN_SOURCE)
+- 想看完整页面和后台：看 [PAGE_GALLERY](./PAGE_GALLERY)
+- 想看业务链路与系统图：看 [SHOWCASE](./SHOWCASE)

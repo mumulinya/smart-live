@@ -7,6 +7,26 @@
 - 再反推这条链路涉及的技术点
 - 最后回到代码和文档里验证自己的理解
 
+## 开始前先看：这份复盘指南建立在什么基线上
+
+为了避免这份指南变成“泛学 Java、泛学中间件”的清单，先把当前仓库里最值得作为复盘起点的硬数据放在最前面：
+
+- `16` 个业务模块，`19` 个服务应用
+- `831` 个 Java 文件，`71` 个 Controller
+- `18` 个 FeignClient，`30` 个 RabbitMQ 监听器，`26` 个 `@XxlJob` 处理器
+- `53` 张核心表，覆盖 `8` 个数据域
+- `73` 张链路图、`102` 张截图、`11` 篇专题页
+- `223` 次 Git 提交，已经形成“代码实现 + 图示讲解 + 面试讲法”三层资料
+
+这意味着你后面复盘时，不应该再把 SmartLive 当成“技术点拼盘”，而应该当成一个已经具备：
+
+- 业务闭环
+- 多中间件协同
+- 异步消息与补偿兜底
+- 文档资产与答辩材料
+
+四层结构的完整项目来看。
+
 ## 1. 先说结论
 
 结合当前仓库里的 README、链路图和核心模块，这个项目已经不是单纯的“会用很多技术”，而是形成了比较完整的 **业务闭环 + 中间件协同 + 链路图体系**。  
@@ -80,6 +100,7 @@
 
 - Feed 推送与滚动读取
 - 互动数据回刷与双轨同步
+- `SyncDataServiceImpl` 中 `like / comment / star / review / follow / fans` 六路 `CompletableFuture` 并发同步
 - 热榜增量维护与全量重建
 - 首页热门面板与热门博客读取链路
 - 首页热门面板算分与热榜维护链路
@@ -99,6 +120,7 @@
 ### 4. 审核、搜索与向量同步
 这部分是你项目的“工程化 + AI 化”亮点，包括：
 
+- `用户 / 店铺 / 博客 / 商品 / 评论 / 评价` 六类审核链
 - 发布审核与搜索 / 向量同步
 - 审核中心责任链与业务回写
 - 搜索读链路与热词沉淀
@@ -120,10 +142,12 @@
 包括：
 
 - AI 对话链路
+- `AgentRouter + LlmIntentClassifier` 意图路由
 - 店铺经营分析
 - AI 经营建议
 - 差评关键词抽取
 - RAG / 向量检索 / SSE / 意图路由
+- Milvus 不可用时降级到 `SimpleVectorStore`
 
 这部分适合做加分项。
 
@@ -131,6 +155,7 @@
 你现在已经把定时任务总览和子图都整理出来了，这部分很好。  
 它能支撑：
 
+- `26` 个 `@XxlJob` 处理器覆盖预热、校准、回刷、重建、提醒和过期兜底
 - 秒杀预热与库存校准
 - 热榜增量维护与重建
 - 互动数据回刷
@@ -156,12 +181,12 @@
 | 秒杀抢购全链路 | Redis、Lua、RabbitMQ、幂等、延迟队列、最终一致性 | 这是你最强的高并发交易链路，能同时覆盖缓存、消息和补偿 |
 | 下单 / 统一支付 / 退款补偿 | MySQL 事务、状态流转、幂等、补偿、回调处理 | 适合讲完整业务闭环，也最容易被追问支付状态边界 |
 | Redis 分层缓存链路 | Redis 数据结构、缓存穿透/击穿/雪崩、逻辑过期、分布式锁、Pipeline | 这是你项目里最能体现“性能优化能力”的部分 |
-| Feed 推送与互动同步 | Redis ZSet、滚动分页、批量回刷、CompletableFuture、线程池 | 这是和普通 CRUD 项目拉开差距的社交读写链路 |
+| Feed 推送与互动同步 | Redis ZSet、滚动分页、批量回刷、CompletableFuture、线程池 | 这是和普通 CRUD 项目拉开差距的社交读写链路，尤其适合讲六路并发同步 |
 | 审核责任链与搜索双写 | 责任链模式、MQ 异步解耦、ES / Milvus 最终一致性 | 适合讲工程化治理，而不是单纯写接口 |
-| 搜索与热词沉淀 | Elasticsearch、倒排索引、热词统计、多策略排序、LBS | 很适合回答“为什么不用 MySQL like” |
+| 搜索与热词沉淀 | Elasticsearch、倒排索引、热词统计、多策略排序、LBS | 很适合回答“为什么不用 MySQL like”，也能带出检索与推荐分层 |
 | RabbitMQ 消息可靠链路 | Confirm、ACK / NACK、幂等消费、死信队列、延迟队列 | 适合把你项目里的异步闭环一次讲透 |
 | 热榜洗牌与全量重建 | Redis ZSet、热度模型、XXL-JOB、时间衰减、批量重建 | 这是项目里很硬的推荐/排行设计亮点 |
-| AI 路由与 RAG 生成 | SSE、Spring AI、向量检索、意图路由、Function Calling | 更适合作为加分项，在主链路讲完后补充 |
+| AI 路由与 RAG 生成 | SSE、Spring AI、向量检索、意图路由、Function Calling | 更适合作为加分项，在主链路讲完后补充，也能顺带讲 Milvus 降级兜底 |
 
 ### 2. 关键链路源码入口索引
 
@@ -172,9 +197,9 @@
 |:---|:---|:---|
 | 秒杀抢购全链路 | `ProductController`、`SeckillPurchaseStrategy`、`OrderServiceImpl`、`ProductListener`、`ProductSeckillJobHandler` | 先看秒杀入口，再看 Lua 预扣与落单，再看 MQ 扣库和定时预热/回收 |
 | 下单 / 支付 / 退款补偿 | `OrderController`、`OrderServiceImpl`、`PayServiceImpl`、`PaymentListener`、`OrderListener` | 先看下单，再看支付受理与回调，最后看超时取消和退款补偿 |
-| Feed / 互动 / 热榜 | `BlogServiceImpl`、`FollowServiceImpl`、`InteractionSyncXxlJob`、`HotRankJobHandler`、`FullRebuildJobHandler` | 先看发布/关注触发，再看回刷落库，最后看热榜增量与全量重建 |
+| Feed / 互动 / 热榜 | `BlogServiceImpl`、`FollowServiceImpl`、`SyncDataServiceImpl`、`HotRankJobHandler`、`FullRebuildJobHandler` | 先看发布/关注触发，再看六路并发回刷与落库，最后看热榜增量与全量重建 |
 | 审核 / 搜索 / 向量同步 | `AuditServiceImpl`、`SearchController`、`SearchServiceImpl`、`MilvusSyncListener` | 先看审核任务如何流转，再看搜索读取，最后看 ES / Milvus 副本收敛 |
-| AI 路由与 RAG | `UserAiChatController`、`UserAiMessageServiceImpl`、`ShopTools`、`ShopRagService`、`MilvusSyncListener` | 先看对话入口，再看 Agent 路由和工具调用，最后看向量副本同步 |
+| AI 路由与 RAG | `UserAiChatController`、`UserAiMessageServiceImpl`、`AgentRouter`、`LlmIntentClassifier`、`ShopRagService` | 先看对话入口，再看意图路由和工具调用，最后看向量检索与 SSE 输出 |
 
 ### 3. 复盘时的最小动作
 
@@ -302,6 +327,7 @@
 - 工厂模式
 - 模板方法
 - 责任链模式
+- 结合 `Like / Follow / Review / Comment / Resource / HotRank / Star` 这 7 类策略工厂去理解，不要只背定义
 
 要求不是背定义，而是要能回答：
 - 为什么用
@@ -339,8 +365,9 @@
 - RAG 基本流程
 - 向量库作用
 - SSE 为什么适合流式对话
-- 意图路由
+- `AgentRouter / LlmIntentClassifier` 这类意图路由
 - 向量同步
+- Milvus 不可用时为什么要有 `SimpleVectorStore` 降级
 - AI 在业务里怎么落地
 
 ### 2. Netty / IM
@@ -487,7 +514,7 @@
 - 重试机制怎么设计（本地重试 + 指数退避）
 - 死信队列什么时候触发、怎么处理
 - 延迟队列用 TTL + 死信还是延迟插件
-- 消息日志表 + XXL-JOB 怎么兜底
+- 消息补偿任务 + XXL-JOB 怎么兜底
 
 对应八股：
 - RabbitMQ 交换机 / 队列 / 路由
@@ -638,6 +665,7 @@
 - 为什么这里用 SSE，而不是 WebSocket
 - 向量检索和 ES 检索分别负责什么
 - 为什么要做意图路由，而不是所有请求都走一套提示词
+- Milvus 不可用时为什么不能直接让 AI 链路整体失败
 
 ---
 

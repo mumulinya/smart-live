@@ -69,14 +69,9 @@ hero:
     <div class="smartlive-stat-desc">核心业务口径 3万+，当前仓库 Java 总量约 72,000+ 行</div>
   </div>
   <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">200+</div>
-    <div class="smartlive-stat-label">Git 提交</div>
-    <div class="smartlive-stat-desc">完整保留从 0 到 1 的迭代与重构轨迹</div>
-  </div>
-  <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">8+ 个月</div>
-    <div class="smartlive-stat-label">独立开发</div>
-    <div class="smartlive-stat-desc">覆盖需求、建模、实现、压测、文档与上线展示</div>
+    <div class="smartlive-stat-value">53 张</div>
+    <div class="smartlive-stat-label">核心表</div>
+    <div class="smartlive-stat-desc">业务、治理与调度三类核心表已经形成完整数据模型</div>
   </div>
   <div class="smartlive-stat-card">
     <div class="smartlive-stat-value">3200+</div>
@@ -84,14 +79,9 @@ hero:
     <div class="smartlive-stat-desc">Lua 预扣库存 + MQ 异步落单 + 延迟补偿兜底</div>
   </div>
   <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">20-40 倍</div>
-    <div class="smartlive-stat-label">Redis 提升</div>
-    <div class="smartlive-stat-desc">列表、详情、计数等高频读链路经过分层缓存优化</div>
-  </div>
-  <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">28 个</div>
-    <div class="smartlive-stat-label">XXL-JOB 任务</div>
-    <div class="smartlive-stat-desc">统一承接订单兜底、秒杀预热、热榜重建与互动回刷</div>
+    <div class="smartlive-stat-value">73 / 102 / 11</div>
+    <div class="smartlive-stat-label">链路图 / 截图 / 专题页</div>
+    <div class="smartlive-stat-desc">项目不仅能跑，还沉淀了完整视觉导览、链路图和专题文档</div>
   </div>
 <!-- AUTO_SYNC:DOCS_HOME_STATS_CARDS:END -->
 </div>

@@ -1,0 +1,135 @@
+<svg width="1560" height="860" viewBox="0 0 1560 860" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1560" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#F4F8FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-30" y="-30" width="1620" height="920" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#1D4ED8" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#4A7CEB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .title { font: 700 30px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .subtitle { font: 500 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #64748B; }
+      .cardTitle { font: 700 20px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .body { font: 500 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #55657E; }
+      .small { font: 500 13px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #6D7A8F; }
+      .chip { font: 700 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #2C60D4; }
+      .step { font: 700 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #FFFFFF; }
+      .accent { font: 700 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #2C60D4; }
+    </style>
+  </defs>
+
+  <rect width="1560" height="860" rx="28" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="18" y="18" width="1524" height="824" rx="24" fill="#FFFFFF" fill-opacity="0.9"/>
+  </g>
+
+  <text x="780" y="72" text-anchor="middle" class="title">SmartLive 开源接入启动顺序图</text>
+  <text x="780" y="102" text-anchor="middle" class="subtitle">把第一次接仓库的顺序拆成“建库 → 配置 → 中间件 → 最小链路 → 完整能力”，更适合快速上手和排错。</text>
+
+  <g transform="translate(78 154)">
+    <rect width="320" height="160" rx="24" fill="#EEF5FF" stroke="#C6DAFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#2F6CF4"/>
+    <text x="40" y="46" text-anchor="middle" class="step">1</text>
+    <text x="80" y="46" class="cardTitle">先建库与导入基础 SQL</text>
+    <text x="24" y="88" class="body">• 先导入 `smart-live_create_all_databases.sql`</text>
+    <text x="24" y="116" class="body">• 再导入业务库脚本、配置库和 `xxl_job.sql`</text>
+    <text x="24" y="144" class="body">• 先把“底座”建稳，再去谈启动服务</text>
+  </g>
+
+  <g transform="translate(430 154)">
+    <rect width="320" height="160" rx="24" fill="#F0FBF6" stroke="#C9ECD9" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#1BA672"/>
+    <text x="40" y="46" text-anchor="middle" class="step">2</text>
+    <text x="80" y="46" class="cardTitle">补齐 Nacos 配置</text>
+    <text x="24" y="88" class="body">• 公共配置：`application-dev.yml`</text>
+    <text x="24" y="116" class="body">• 服务配置：`smartLive-服务名-dev.yml`</text>
+    <text x="24" y="144" class="body">• 交易链路再补 `rabbitmq-common.yml` / `xxl-job-common.yml`</text>
+  </g>
+
+  <g transform="translate(782 154)">
+    <rect width="320" height="160" rx="24" fill="#FFF7EC" stroke="#FFD8AD" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#F08B22"/>
+    <text x="40" y="46" text-anchor="middle" class="step">3</text>
+    <text x="80" y="46" class="cardTitle">先起核心中间件</text>
+    <text x="24" y="88" class="body">• MySQL / Redis / Nacos / RabbitMQ</text>
+    <text x="24" y="116" class="body">• 有搜索再补 Elasticsearch</text>
+    <text x="24" y="144" class="body">• 有 AI / RAG 再补 MinIO / Milvus / XXL-JOB</text>
+  </g>
+
+  <g transform="translate(1134 154)">
+    <rect width="348" height="160" rx="24" fill="#F6F0FF" stroke="#DCCEFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#7D63F7"/>
+    <text x="40" y="46" text-anchor="middle" class="step">4</text>
+    <text x="80" y="46" class="cardTitle">推荐启动顺序</text>
+    <text x="24" y="88" class="body">• 最小链路：auth → gateway → system → user → shop</text>
+    <text x="24" y="116" class="body">• ES 就绪后，再补 search</text>
+    <text x="24" y="144" class="body">• 再按交易、内容、治理、AI 逐项扩能力</text>
+  </g>
+
+  <path d="M398 234H420" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M750 234H772" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M1102 234H1124" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <g transform="translate(82 362)">
+    <rect width="456" height="236" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="108" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="78" y="44" text-anchor="middle" class="chip">最小链路目标</text>
+    <text x="24" y="92" class="cardTitle">第一天先把这 3 件事做对</text>
+    <text x="24" y="132" class="body">1. 网关联通，登录鉴权可用</text>
+    <text x="24" y="164" class="body">2. 用户和店铺接口能正常返回</text>
+    <text x="24" y="196" class="body">3. 商家后台基础菜单和店铺管理能打开</text>
+  </g>
+
+  <g transform="translate(552 362)">
+    <rect width="456" height="236" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="132" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="90" y="44" text-anchor="middle" class="chip">完整能力扩展</text>
+    <text x="24" y="92" class="cardTitle">第二阶段按专题逐条补齐</text>
+    <text x="24" y="132" class="body">• 交易：product / order / wallet / points</text>
+    <text x="24" y="164" class="body">• 内容：interaction / blog / chat / im</text>
+    <text x="24" y="196" class="body">• 治理与 AI：audit / ai / file / index</text>
+  </g>
+
+  <g transform="translate(1022 362)">
+    <rect width="456" height="236" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <rect x="24" y="24" width="134" height="30" rx="15" fill="#E9F1FF"/>
+    <text x="91" y="44" text-anchor="middle" class="chip">推荐使用方式</text>
+    <text x="24" y="92" class="cardTitle">先本地联调，再整套演示</text>
+    <text x="24" y="132" class="body">• 第一次接仓库，优先 IDE 按最小链路逐个启动</text>
+    <text x="24" y="164" class="body">• Docker 更适合整套演示，不适合作为第一次排错入口</text>
+    <text x="24" y="196" class="body">• 先做对，再做全，会比一上来全量编排更稳</text>
+  </g>
+
+  <g transform="translate(82 636)">
+    <rect width="1396" height="144" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <text x="28" y="44" class="cardTitle">最终接入检查表</text>
+
+    <g transform="translate(28 64)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">配置面</text>
+      <text x="18" y="44" class="small">application-dev / 服务私有配置 / MQ 与调度公共配置齐全</text>
+    </g>
+
+    <g transform="translate(360 64)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">中间件面</text>
+      <text x="18" y="44" class="small">MySQL / Redis / RabbitMQ / Nacos 健康，必要时再补 ES / Milvus</text>
+    </g>
+
+    <g transform="translate(692 64)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">服务面</text>
+      <text x="18" y="44" class="small">auth / gateway / system / user / shop 已注册并能正常返回接口</text>
+    </g>
+
+    <g transform="translate(1024 64)">
+      <rect width="344" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">阅读面</text>
+      <text x="18" y="44" class="small">想继续看页面、部署、贡献边界，分别跳 PAGE_GALLERY / DEPLOYMENT_GUIDE / SECURITY</text>
+    </g>
+  </g>
+</svg>

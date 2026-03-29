@@ -2,12 +2,38 @@
 
 这份文档聚焦“项目全景与关键链路怎么串起来”。它承接 [网站首页](/) 的核心入口，帮助第一次看到 SmartLive 的人，在几分钟内看清项目全景、核心页面和关键链路。
 
-**文档导航：** [网站首页](/) · [页面导览](PAGE_GALLERY.md) · [开源接入](OPEN_SOURCE.md)
+**文档导航：** [网站首页](/) · [页面导览](./PAGE_GALLERY.html) · [开源接入](./OPEN_SOURCE.html)
 
 **第一次建议先看：** [项目全景](#showcase-overview) -> [用户进入、发现与找店](#showcase-discovery) -> [决策、交易与增长](#showcase-trade)
 
 - 网站首页只保留精选入口，这页继续承接“全景 + 页面 + 链路”的完整视觉走查。
-- 这页偏“系统与链路视角”，适合先建立整体认知；如果想逐页细看产品页面，可以跳去 [页面导览](PAGE_GALLERY.md)。
+- 这页偏“系统与链路视角”，适合先建立整体认知；如果想逐页细看产品页面，可以跳去 [页面导览](./PAGE_GALLERY.html)。
+- 如果你想看得更快：用户端建议从 `3 -> 6` 顺读，商家端建议从 `7.1 -> 7.6` 顺读，后台治理建议从 `8.1 -> 8.5` 顺读，链路图建议从 `9.1 -> 9.12` 选读。
+
+## 视觉总览数据
+
+<div class="smartlive-stats-grid">
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">85 张</div>
+    <div class="smartlive-stat-label">页面截图引用</div>
+    <div class="smartlive-stat-desc">覆盖用户端、商家端、平台管理端与调度后台的页面视觉走查</div>
+  </div>
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">42 张</div>
+    <div class="smartlive-stat-label">链路图引用</div>
+    <div class="smartlive-stat-desc">覆盖交易、审核、社交、推荐、缓存、调度与 AI 经营等核心链路</div>
+  </div>
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">3 端</div>
+    <div class="smartlive-stat-label">业务入口视角</div>
+    <div class="smartlive-stat-desc">用户端 App、商家端 Web、平台管理端 Web 都能从页面和链路两侧看顺</div>
+  </div>
+  <div class="smartlive-stat-card">
+    <div class="smartlive-stat-value">12 组</div>
+    <div class="smartlive-stat-label">链路专题分组</div>
+    <div class="smartlive-stat-desc">从交易履约、审核搜索到 Redis 缓存与 XXL-JOB 调度专题都已单独拆开</div>
+  </div>
+</div>
 
 **按目标看图：**
 
@@ -399,127 +425,102 @@ AIGC 可根据评分和消费体验生成评价草稿，减少手动输入成本
 
 ## <a id="showcase-merchant"></a>7. 商家端 Web 页面走查
 
-### 7.1 登录与经营总览
+### 7.1 登录入口
 
-| 管理端登录页 | 经营总览仪表盘 |
-|:---:|:---:|
-| <img src="./screenshots/admin-login.png" alt="admin-login" width="230"> | <img src="./screenshots/admin-dashboard.png" alt="admin-dashboard" width="230"> |
-| 商家端登录入口 | 商家经营总览与数据面板 |
+<p align="center">
+  <img src="./screenshots/admin-login.png" alt="merchant-login" width="300">
+</p>
 
-### 7.2 店铺与商品经营
+商家端先从统一后台登录页进入，再进入自有经营工作台。
 
-| 店铺列表页 | 商品列表页 |
-|:---:|:---:|
-| <img src="./screenshots/admin-shop-manage.png" alt="admin-shop-manage" width="230"> | <img src="./screenshots/admin-product-manage.png" alt="admin-product-manage" width="230"> |
-| 商家自有店铺列表与状态管理 | 商家商品列表、状态维护与上下架管理 |
+### 7.2 经营总览
 
-| 新增店铺页 | 新建商品页 |
-|:---:|:---:|
-| <img src="./screenshots/merchant-shop-create.png" alt="merchant-shop-create" width="230"> | <img src="./screenshots/merchant-product-create.png" alt="merchant-product-create" width="230"> |
-| 商家创建店铺、填写基础信息与地图定位 | 商家新建商品、价格规则与营销字段配置 |
+<p align="center">
+  <img src="./screenshots/admin-dashboard.png" alt="admin-dashboard" width="760">
+</p>
 
-| 编辑店铺页 | 编辑商品页 |
-|:---:|:---:|
-| <img src="./screenshots/merchant-shop-edit.png" alt="merchant-shop-edit" width="230"> | <img src="./screenshots/merchant-product-edit.png" alt="merchant-product-edit" width="230"> |
-| 商家维护店铺资料、图片素材与定位 | 商家调整商品信息、价格与有效期规则 |
+经营总览负责承接店铺、订单、代金券、用户和评价的总体数据看板。
 
-| 店铺详情页 | 商品详情页 |
-|:---:|:---:|
-| <img src="./screenshots/merchant-shop-detail.png" alt="merchant-shop-detail" width="230"> | <img src="./screenshots/merchant-product-detail.png" alt="merchant-product-detail" width="230"> |
-| 商家查看店铺经营信息、审核状态与相册 | 商家查看商品价格、库存与时间规则 |
+### 7.3 店铺经营流程
 
-### 7.3 订单履约与详情
+| 店铺列表页 | 新增店铺页 | 编辑店铺页 | 店铺详情页 |
+|:---:|:---:|:---:|:---:|
+| <img src="./screenshots/admin-shop-manage.png" alt="admin-shop-manage" width="180"> | <img src="./screenshots/merchant-shop-create.png" alt="merchant-shop-create" width="180"> | <img src="./screenshots/merchant-shop-edit.png" alt="merchant-shop-edit" width="180"> | <img src="./screenshots/merchant-shop-detail.png" alt="merchant-shop-detail" width="180"> |
+| 店铺列表与状态管理 | 创建店铺、基础信息与地图定位 | 维护店铺资料、图片与定位 | 查看审核状态、经营信息与相册 |
+
+### 7.4 商品经营流程
+
+| 商品列表页 | 新建商品页 | 编辑商品页 | 商品详情页 |
+|:---:|:---:|:---:|:---:|
+| <img src="./screenshots/admin-product-manage.png" alt="admin-product-manage" width="180"> | <img src="./screenshots/merchant-product-create.png" alt="merchant-product-create" width="180"> | <img src="./screenshots/merchant-product-edit.png" alt="merchant-product-edit" width="180"> | <img src="./screenshots/merchant-product-detail.png" alt="merchant-product-detail" width="180"> |
+| 商品列表、上下架与活动筛选 | 配置价格、活动类型与使用规则 | 调整库存、有效期与营销字段 | 查看售价、库存与时间设置 |
+
+### 7.5 订单履约流程
 
 | 订单管理 | 订单详情页 |
 |:---:|:---:|
-| <img src="./screenshots/admin-order-manage.png" alt="admin-order-manage" width="230"> | <img src="./screenshots/merchant-order-detail.png" alt="merchant-order-detail" width="230"> |
-| 商家订单履约状态与筛选 | 商家查看订单进度、支付信息与用户信息 |
+| <img src="./screenshots/admin-order-manage.png" alt="admin-order-manage" width="260"> | <img src="./screenshots/merchant-order-detail.png" alt="merchant-order-detail" width="260"> |
+| 订单状态筛选、核销流转与售后入口 | 订单进度、支付信息、商品信息与用户信息查看 |
 
-### 7.4 AI 经营助手
+### 7.6 AI 经营助手流程
 
 <p align="center">
-  <img src="./screenshots/admin-ai-assistant.png" alt="admin-ai-assistant" width="560">
+  <img src="./screenshots/admin-ai-assistant.png" alt="admin-ai-assistant" width="760">
 </p>
 
-商家端 AI 助手统一承接经营问答、经营分析、营销文案和评价回复。
+AI 商家助手先承接统一会话入口，再按评价回复、经营分析、营销文案和经营改进四类能力继续下钻。
 
-| 评价回复页 | 经营状况分析页 |
-|:---:|:---:|
-| <img src="./screenshots/merchant-ai-review-reply.png" alt="merchant-ai-review-reply" width="230"> | <img src="./screenshots/merchant-ai-analysis.png" alt="merchant-ai-analysis" width="230"> |
-| AI 辅助生成商家评价回复建议 | AI 分析店铺经营数据并给出阶段性建议 |
-
-| 商品营销文案页 | 经营改进建议页 |
-|:---:|:---:|
-| <img src="./screenshots/merchant-ai-copywriting.png" alt="merchant-ai-copywriting" width="230"> | <img src="./screenshots/merchant-ai-improve.png" alt="merchant-ai-improve" width="230"> |
-| AI 辅助生成商品推广文案与营销表达 | AI 综合经营数据输出改进方向与优化建议 |
+| 评价回复页 | 经营状况分析页 | 商品营销文案页 | 经营改进建议页 |
+|:---:|:---:|:---:|:---:|
+| <img src="./screenshots/merchant-ai-review-reply.png" alt="merchant-ai-review-reply" width="180"> | <img src="./screenshots/merchant-ai-analysis.png" alt="merchant-ai-analysis" width="180"> | <img src="./screenshots/merchant-ai-copywriting.png" alt="merchant-ai-copywriting" width="180"> | <img src="./screenshots/merchant-ai-improve.png" alt="merchant-ai-improve" width="180"> |
+| AI 辅助生成评价回复建议 | 汇总订单、评分和差评关键词做阶段分析 | 生成商品推广文案与营销表达 | 输出经营改进方向与执行建议 |
 
 ## <a id="showcase-admin"></a>8. 平台管理端 Web 页面走查
 
-### 8.1 内容治理与运营后台
+### 8.1 审核中心流程
 
 | 审核中心 | 审核详情页 |
 |:---:|:---:|
-| <img src="./screenshots/admin-audit-center.png" alt="admin-audit-center" width="230"> | <img src="./screenshots/admin-audit-detail.png" alt="admin-audit-detail" width="230"> |
-| 审核流与驳回回写 | 单条审核内容、附件与处理动作查看 |
+| <img src="./screenshots/admin-audit-center.png" alt="admin-audit-center" width="260"> | <img src="./screenshots/admin-audit-detail.png" alt="admin-audit-detail" width="260"> |
+| 待审内容汇总、状态筛选与进入审核动作 | 单条审核内容、附件、关联目标与通过 / 驳回动作 |
 
-| 博客管理列表 | 博客详情页 |
-|:---:|:---:|
-| <img src="./screenshots/admin-blog-manage.png" alt="admin-blog-manage" width="230"> | <img src="./screenshots/admin-blog-detail.png" alt="admin-blog-detail" width="230"> |
-| 博客内容治理与运营维护 | 单篇博客详情、状态与内容查看 |
+### 8.2 内容治理流程
 
-| 评价管理列表 | 评价详情页 |
-|:---:|:---:|
-| <img src="./screenshots/admin-review-manage.png" alt="admin-review-manage" width="230"> | <img src="./screenshots/admin-review-detail.png" alt="admin-review-detail" width="230"> |
-| 评价治理、状态筛选与批量处理 | 单条评价详情、评分维度与附件查看 |
+| 博客管理列表 | 博客详情页 | 评价管理列表 | 评价详情页 |
+|:---:|:---:|:---:|:---:|
+| <img src="./screenshots/admin-blog-manage.png" alt="admin-blog-manage" width="180"> | <img src="./screenshots/admin-blog-detail.png" alt="admin-blog-detail" width="180"> | <img src="./screenshots/admin-review-manage.png" alt="admin-review-manage" width="180"> | <img src="./screenshots/admin-review-detail.png" alt="admin-review-detail" width="180"> |
+| 博客内容治理与状态筛选 | 单篇博客详情、内容与状态查看 | 评价治理、筛选与批量处理 | 单条评价详情、评分维度与附件查看 |
 
 | 评论管理列表 | 评论详情页 |
 |:---:|:---:|
-| <img src="./screenshots/admin-comment-manage.png" alt="admin-comment-manage" width="230"> | <img src="./screenshots/admin-comment-detail.png" alt="admin-comment-detail" width="230"> |
-| 评论治理与清理 | 单条评论详情、来源内容与状态查看 |
+| <img src="./screenshots/admin-comment-manage.png" alt="admin-comment-manage" width="260"> | <img src="./screenshots/admin-comment-detail.png" alt="admin-comment-detail" width="260"> |
+| 评论清理、来源筛选与状态治理 | 单条评论内容、来源内容与审核状态查看 |
 
-| 业务用户 | 业务用户详情页 |
-|:---:|:---:|
-| <img src="./screenshots/admin-business-user.png" alt="admin-business-user" width="230"> | <img src="./screenshots/admin-business-user-detail.png" alt="admin-business-user-detail" width="230"> |
-| 商家侧用户运营列表与平台查看入口 | 业务用户基础资料与头像信息查看 |
+### 8.3 业务用户与积分运营
 
-| 抽奖配置 | 积分记录 |
-|:---:|:---:|
-| <img src="./screenshots/admin-lottery-config.png" alt="admin-lottery-config" width="230"> | <img src="./screenshots/admin-points-records.png" alt="admin-points-records" width="230"> |
-| 平台侧奖品配置与增长玩法管理 | 平台侧积分记录与发放流水审计 |
+| 业务用户 | 业务用户详情页 | 抽奖配置 | 积分记录 |
+|:---:|:---:|:---:|:---:|
+| <img src="./screenshots/admin-business-user.png" alt="admin-business-user" width="180"> | <img src="./screenshots/admin-business-user-detail.png" alt="admin-business-user-detail" width="180"> | <img src="./screenshots/admin-lottery-config.png" alt="admin-lottery-config" width="180"> | <img src="./screenshots/admin-points-records.png" alt="admin-points-records" width="180"> |
+| 业务用户列表与平台查看入口 | 用户资料、头像与基础信息查看 | 奖品配置、概率与上下架管理 | 积分变动流水与业务类型审计 |
 
-### 8.2 系统管理与权限审计
+### 8.4 系统管理与权限审计
 
-| 用户管理 | 菜单权限 |
-|:---:|:---:|
-| <img src="./screenshots/admin-user-manage.png" alt="admin-user-manage" width="230"> | <img src="./screenshots/admin-menu.png" alt="admin-menu" width="230"> |
-| 系统账号与权限管理 | 菜单树与按钮权限配置 |
+| 用户管理 | 角色管理 | 菜单权限 |
+|:---:|:---:|:---:|
+| <img src="./screenshots/admin-user-manage.png" alt="admin-user-manage" width="180"> | <img src="./screenshots/admin-role-manage.png" alt="admin-role-manage" width="180"> | <img src="./screenshots/admin-menu.png" alt="admin-menu" width="180"> |
+| 系统账号与权限管理 | 角色与权限字符维护 | 菜单树与按钮权限配置 |
 
-| 参数设置 | 在线监控 |
-|:---:|:---:|
-| <img src="./screenshots/admin-config.png" alt="admin-config" width="230"> | <img src="./screenshots/admin-online-monitor.png" alt="admin-online-monitor" width="230"> |
-| 系统参数与开关配置 | 在线用户与强退 |
+| 参数设置 | 在线监控 | 登录日志 | 操作日志 |
+|:---:|:---:|:---:|:---:|
+| <img src="./screenshots/admin-config.png" alt="admin-config" width="180"> | <img src="./screenshots/admin-online-monitor.png" alt="admin-online-monitor" width="180"> | <img src="./screenshots/admin-logininfor.png" alt="admin-logininfor" width="180"> | <img src="./screenshots/admin-operlog.png" alt="admin-operlog" width="180"> |
+| 系统参数与开关配置 | 在线用户与强退 | 登录审计与状态追踪 | 后台操作留痕与行为审计 |
 
-| 角色管理 | 登录日志 |
-|:---:|:---:|
-| <img src="./screenshots/admin-role-manage.png" alt="admin-role-manage" width="230"> | <img src="./screenshots/admin-logininfor.png" alt="admin-logininfor" width="230"> |
-| 角色与权限字符维护 | 登录审计与状态追踪 |
+### 8.5 调度后台流程
 
-| 操作日志 |
-|:---:|
-| <img src="./screenshots/admin-operlog.png" alt="admin-operlog" width="300"> |
-| 后台操作留痕与行为审计 |
-
-### 8.3 调度后台
-
-| 调度总览 | 任务管理 |
-|:---:|:---:|
-| <img src="./screenshots/admin-xxl-dashboard.png" alt="admin-xxl-dashboard" width="230"> | <img src="./screenshots/admin-xxl-job-manage.png" alt="admin-xxl-job-manage" width="230"> |
-| 任务、执行器与运行状态总览 | 按执行器查看 JobHandler、CRON 和状态 |
-
-| 执行器管理 |
-|:---:|
-| <img src="./screenshots/admin-xxl-executors.png" alt="admin-xxl-executors" width="300"> |
-| 执行器配置与在线节点查看 |
+| 调度总览 | 任务管理 | 执行器管理 |
+|:---:|:---:|:---:|
+| <img src="./screenshots/admin-xxl-dashboard.png" alt="admin-xxl-dashboard" width="180"> | <img src="./screenshots/admin-xxl-job-manage.png" alt="admin-xxl-job-manage" width="180"> | <img src="./screenshots/admin-xxl-executors.png" alt="admin-xxl-executors" width="180"> |
+| 任务、执行器与运行状态总览 | 按执行器查看 JobHandler、CRON 和状态 | 执行器配置与在线节点查看 |
 
 ## <a id="showcase-chains"></a>9. 核心链路图集
 
@@ -613,7 +614,7 @@ AIGC 可根据评分和消费体验生成评价草稿，减少手动输入成本
 
 ### 9.11 <a id="chains-schedule"></a>调度与定时任务
 
-这组主要看订单兜底、秒杀预热、互动回刷、热榜重建和销量同步如何由调度体系统一承接。真实后台页、任务列表和执行器截图可以继续看 [PAGE_GALLERY.md - XXL-JOB 调度后台](PAGE_GALLERY.md#admin-scheduler)。
+这组主要看订单兜底、秒杀预热、互动回刷、热榜重建和销量同步如何由调度体系统一承接。真实后台页、任务列表和执行器截图可以继续看 [页面导览 - XXL-JOB 调度后台](./PAGE_GALLERY.html#admin-scheduler)。
 
 #### 9.11.1 第一层：总览图
 
@@ -642,8 +643,8 @@ AIGC 可根据评分和消费体验生成评价草稿，减少手动输入成本
 
 ## 10. 如何继续阅读
 
-- 想按页面继续看用户端 App / 商家端 Web / 平台管理端 Web：看 [PAGE_GALLERY.md](PAGE_GALLERY.md)
-- 想把项目跑起来：看 [OPEN_SOURCE.md](OPEN_SOURCE.md)
-- 想做本地或服务器部署：看 [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- 想按页面继续看用户端 App / 商家端 Web / 平台管理端 Web：看 [页面导览](./PAGE_GALLERY.html)
+- 想把项目跑起来：看 [开源接入](./OPEN_SOURCE.html)
+- 想做本地或服务器部署：看 [部署指南](./DEPLOYMENT_GUIDE.html)
 - 想参与贡献：看 [GitHub · CONTRIBUTING.md](https://github.com/mumulinya/smartLive-Cloud/blob/main/CONTRIBUTING.md)
 - 想了解安全和密钥边界：看 [GitHub · SECURITY.md](https://github.com/mumulinya/smartLive-Cloud/blob/main/SECURITY.md)

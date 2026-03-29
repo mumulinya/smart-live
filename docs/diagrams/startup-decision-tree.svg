@@ -1,80 +1,104 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="980" viewBox="0 0 1800 980" role="img" aria-labelledby="title desc">
-  <title id="title">第一次接入 SmartLive 应该怎么启动</title>
-  <desc id="desc">展示第一次接入 SmartLive 时，如何在最小可运行链路、完整业务链路和部署路径之间做启动决策。</desc>
+<svg width="1560" height="900" viewBox="0 0 1560 900" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fbfcff"/>
-      <stop offset="100%" stop-color="#f3f8ff"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1560" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#F4F8FF"/>
     </linearGradient>
-    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-      <path d="M1,1 L11,6 L1,11 Z" fill="#2d5d9f"/>
+    <filter id="shadow" x="-30" y="-30" width="1620" height="960" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#1D4ED8" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#4A7CEB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <style>
-      .title { font: 700 34px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #17365e; }
-      .subtitle { font: 500 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b6988; }
-      .node-title { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #143250; }
-      .node-text { font: 500 16px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #35516e; }
-      .step { font: 700 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #24486f; }
-      .note-title { font: 700 19px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #23425f; }
-      .note-text { font: 500 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #506983; }
-      .blue { fill: #ffffff; stroke: #a2bcdd; stroke-width: 2; rx: 24; }
-      .green { fill: #f2fbf5; stroke: #a6d5b6; stroke-width: 2; rx: 24; }
-      .orange { fill: #fff6eb; stroke: #efb882; stroke-width: 2; rx: 24; }
-      .purple { fill: #f8f4ff; stroke: #c4a4e8; stroke-width: 2; rx: 24; }
-      .note { fill: #ffffff; stroke: #d7e3f4; stroke-width: 1.5; rx: 20; }
-      .line { stroke: #2d5d9f; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .title { font: 700 30px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .subtitle { font: 500 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #64748B; }
+      .cardTitle { font: 700 20px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #1F2A44; }
+      .body { font: 500 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #55657E; }
+      .small { font: 500 13px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #6D7A8F; }
+      .chip { font: 700 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #2C60D4; }
+      .step { font: 700 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #FFFFFF; }
+      .accent { font: 700 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #2C60D4; }
     </style>
   </defs>
 
-  <rect width="1800" height="980" fill="url(#bg)"/>
-  <rect x="34" y="34" width="1732" height="912" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+  <rect width="1560" height="900" rx="28" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="18" y="18" width="1524" height="864" rx="24" fill="#FFFFFF" fill-opacity="0.9"/>
+  </g>
 
-  <text class="title" x="74" y="96">第一次接入 SmartLive 应该怎么启动</text>
-  <text class="subtitle" x="74" y="132">先明确这次要验证什么，再决定走最小可运行链路、完整业务链路，还是直接进入部署路径。</text>
+  <text x="780" y="72" text-anchor="middle" class="title">第一次接入 SmartLive 的启动决策图</text>
+  <text x="780" y="102" text-anchor="middle" class="subtitle">先明确你这次要验证的目标，再决定走最小链路、完整功能链路，还是直接进入部署演示路径。</text>
 
-  <rect class="blue" x="600" y="190" width="600" height="120"/>
-  <text class="node-title" x="900" y="246" text-anchor="middle">你的目标是什么？</text>
-  <text class="node-text" x="900" y="282" text-anchor="middle">别一上来就把全部模块和中间件都拉起来，先确认这次接入最想验证哪条链路。</text>
+  <g transform="translate(480 154)">
+    <rect width="600" height="118" rx="24" fill="#EEF5FF" stroke="#C6DAFF" stroke-width="2"/>
+    <rect x="24" y="24" width="96" height="30" rx="15" fill="#D9E8FF"/>
+    <text x="72" y="44" text-anchor="middle" class="chip">决策起点</text>
+    <text x="300" y="78" text-anchor="middle" class="cardTitle">你这次最想验证什么？</text>
+    <text x="300" y="106" text-anchor="middle" class="body">别一上来就把全部模块和中间件都拉起来，先确认目标，再选启动路径。</text>
+  </g>
 
-  <path class="line" d="M900 310 V360"/>
-  <path class="line" d="M900 360 H300"/>
-  <path class="line" d="M900 360 H900"/>
-  <path class="line" d="M900 360 H1500"/>
+  <path d="M780 272V326" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M780 326H272" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M780 326H780" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M780 326H1288" stroke="#4A7CEB" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
 
-  <rect class="orange" x="90" y="390" width="420" height="260"/>
-  <text class="step" x="122" y="430">PATH A</text>
-  <text class="node-title" x="122" y="472">先把服务跑起来</text>
-  <text class="node-text" x="122" y="512">最小可运行链路</text>
-  <text class="node-text" x="122" y="540">MySQL / Redis / Nacos / RabbitMQ</text>
-  <text class="node-text" x="122" y="568">auth / gateway / system / user / shop / search</text>
-  <text class="node-text" x="122" y="596">适合先验证登录、店铺、搜索和后台管理</text>
+  <g transform="translate(78 360)">
+    <rect width="430" height="250" rx="24" fill="#FFF7EC" stroke="#FFD8AD" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#F08B22"/>
+    <text x="40" y="46" text-anchor="middle" class="step">A</text>
+    <text x="80" y="46" class="cardTitle">先把服务跑起来</text>
+    <text x="24" y="96" class="body">• 走最小可运行链路</text>
+    <text x="24" y="128" class="body">• 先起 MySQL / Redis / Nacos / RabbitMQ</text>
+    <text x="24" y="160" class="body">• 再起 auth / gateway / system / user / shop</text>
+    <text x="24" y="192" class="body">• 如果 Elasticsearch 已好，再补 search</text>
+    <text x="24" y="224" class="body">适合第一次接仓库、联调配置、验证登录和店铺链路。</text>
+  </g>
 
-  <rect class="green" x="690" y="390" width="420" height="260"/>
-  <text class="step" x="722" y="430">PATH B</text>
-  <text class="node-title" x="722" y="472">体验完整业务能力</text>
-  <text class="node-text" x="722" y="512">完整功能链路</text>
-  <text class="node-text" x="722" y="540">补齐 ES / Milvus / MinIO / XXL-JOB / Sentinel</text>
-  <text class="node-text" x="722" y="568">product / order / interaction / chat / im / ai / wallet / points</text>
-  <text class="node-text" x="722" y="596">适合验证 RAG、审核、积分、支付和消息链路</text>
+  <g transform="translate(564 360)">
+    <rect width="430" height="250" rx="24" fill="#F0FBF6" stroke="#C9ECD9" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#1BA672"/>
+    <text x="40" y="46" text-anchor="middle" class="step">B</text>
+    <text x="80" y="46" class="cardTitle">体验完整业务能力</text>
+    <text x="24" y="96" class="body">• 在最小链路稳定后继续扩展</text>
+    <text x="24" y="128" class="body">• 补 Elasticsearch / Milvus / MinIO / XXL-JOB / Sentinel</text>
+    <text x="24" y="160" class="body">• 再补 product / order / interaction / blog / audit / ai / wallet / points</text>
+    <text x="24" y="208" class="body">适合体验搜索、RAG、审核、积分、支付和异步补偿闭环。</text>
+  </g>
 
-  <rect class="purple" x="1290" y="390" width="420" height="260"/>
-  <text class="step" x="1322" y="430">PATH C</text>
-  <text class="node-title" x="1322" y="472">准备部署或演示</text>
-  <text class="node-text" x="1322" y="512">直接看 DEPLOYMENT_GUIDE</text>
-  <text class="node-text" x="1322" y="540">关注 JAR 构建、镜像重建、Nacos 和 Docker</text>
-  <text class="node-text" x="1322" y="568">部署前先把敏感配置迁出仓库</text>
-  <text class="node-text" x="1322" y="596">适合做服务器演示、联调和生产前校验</text>
+  <g transform="translate(1050 360)">
+    <rect width="430" height="250" rx="24" fill="#F6F0FF" stroke="#DCCEFF" stroke-width="2"/>
+    <circle cx="40" cy="40" r="22" fill="#7D63F7"/>
+    <text x="40" y="46" text-anchor="middle" class="step">C</text>
+    <text x="80" y="46" class="cardTitle">准备部署或演示</text>
+    <text x="24" y="96" class="body">• 直接进入 DEPLOYMENT_GUIDE</text>
+    <text x="24" y="128" class="body">• 重点关注 Docker、JAR、Nacos、环境变量与敏感配置</text>
+    <text x="24" y="160" class="body">• 更适合整套演示、联调环境或部署前准备</text>
+    <text x="24" y="208" class="body">不建议把它当作第一次认识项目的首选路径。</text>
+  </g>
 
-  <rect class="note" x="120" y="720" width="1560" height="110"/>
-  <text class="note-title" x="152" y="764">建议顺序</text>
-  <text class="note-text" x="152" y="798">先走 PATH A，确认最小链路稳定；再按需要扩展到 PATH B 或 PATH C。这样最省时间，也最容易快速建立对项目的掌控感。</text>
-
-  <rect class="note" x="120" y="850" width="500" height="70"/>
-  <text class="note-text" x="152" y="894">PATH A 适合第一次接入；PATH B 适合体验完整业务；PATH C 适合部署和演示准备。</text>
-
-  <rect class="note" x="650" y="850" width="500" height="70"/>
-  <text class="note-text" x="682" y="894">这张图现在也和主链路图统一成了同一套标题区、卡片边框和底部说明卡片样式。</text>
-
-  <rect class="note" x="1180" y="850" width="500" height="70"/>
-  <text class="note-text" x="1212" y="894">点开 OPEN_SOURCE.md 时，这张决策图会更自然地承接 README 里的“5 分钟读懂项目”。</text>
+  <g transform="translate(82 662)">
+    <rect width="1396" height="160" rx="24" fill="#FFFFFF" stroke="#D7E6FF" stroke-width="2"/>
+    <text x="28" y="46" class="cardTitle">建议顺序</text>
+    <g transform="translate(28 68)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">先走 A</text>
+      <text x="18" y="44" class="small">最省时间，也最容易先把最小链路做对</text>
+    </g>
+    <g transform="translate(360 68)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">再看 B</text>
+      <text x="18" y="44" class="small">想体验完整业务能力时，再补更多中间件和模块</text>
+    </g>
+    <g transform="translate(692 68)">
+      <rect width="304" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">按需进 C</text>
+      <text x="18" y="44" class="small">做部署、联调演示或环境交付时，再集中处理 Docker</text>
+    </g>
+    <g transform="translate(1024 68)">
+      <rect width="344" height="56" rx="16" fill="#F7FAFF" stroke="#E2EBFF"/>
+      <text x="18" y="24" class="accent">一句话</text>
+      <text x="18" y="44" class="small">先做对，再做全，会比一上来全量启动更稳、更容易排错</text>
+    </g>
+  </g>
 </svg>
