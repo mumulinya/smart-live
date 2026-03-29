@@ -2,12 +2,12 @@
 
 这份文档聚焦“页面本身怎么呈现”。它承接 [网站首页](/) 的效果预览，按真实使用路径把用户端 App、商家端 Web 和平台管理端 Web 的核心页面一次看顺。
 
-**文档导航：** [网站首页](/) · [视觉导览](SHOWCASE.md) · [开源接入](OPEN_SOURCE.md)
+**文档导航：** [网站首页](/) · [视觉导览](./SHOWCASE.html) · [开源接入](./OPEN_SOURCE.html)
 
 **第一次建议先看：** [登录与进入](#app-login-entry) -> [发现入口与热榜](#app-discovery) -> [店铺决策与商品详情](#app-shop-product) -> [支付、订单、钱包与积分](#app-trade-assets) -> [AI 智能助手与 AIGC](#app-ai-capability)
 
 - 网站首页只保留最主要的页面入口，方便第一次进项目的人先快速建立印象。
-- 这页偏“页面视角”，适合先看产品长什么样；如果想继续看系统全景和关键链路，可以跳去 [视觉导览](SHOWCASE.md)。
+- 这页偏“页面视角”，适合先看产品长什么样；如果想继续看系统全景和关键链路，可以跳去 [视觉导览](./SHOWCASE.html)。
 - 推荐按“进入 -> 发现 -> 决策 -> 交易 -> 内容 -> 社交 -> AI -> 个人资产”的顺序往下读。
 
 ## 1. 快速跳转
@@ -100,70 +100,70 @@
         <td>首页入口、热门内容流、本地必吃榜、抢手好券榜</td>
         <td><code>shop / product / blog / index / interaction</code></td>
         <td>首页热门面板读取链路、热榜维护链路</td>
-        <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
+        <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
       <tr>
         <td><strong>搜索与地图找店</strong></td>
         <td>搜索入口页、搜索结果页、地图找店</td>
         <td><code>search / shop / product / interaction</code></td>
         <td>LBS 搜索与热词链路</td>
-        <td><a href="core-links/index.md">核心链路总览</a></td>
+        <td><a href="./core-links/index.html">核心链路总览</a></td>
       </tr>
       <tr>
         <td><strong>店铺决策与商品详情</strong></td>
         <td>店铺详情页、商品详情页、秒杀专区</td>
         <td><code>shop / product / order / interaction</code></td>
         <td>订单支付退款链路、秒杀抢购链路</td>
-        <td><a href="core-links/index.md">核心链路总览</a></td>
+        <td><a href="./core-links/index.html">核心链路总览</a></td>
       </tr>
       <tr>
         <td><strong>支付、订单、钱包与积分</strong></td>
         <td>收银台、订单详情、钱包、积分中心</td>
         <td><code>order / wallet / points / product</code></td>
         <td>订单支付退款链路、订单超时取消链路</td>
-        <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
+        <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
       <tr>
         <td><strong>内容创作与评价</strong></td>
         <td>发布页、博客详情、评论区、我的评价、草稿箱</td>
         <td><code>blog / interaction / audit / ai</code></td>
         <td>审核责任链与搜索双写、Feed 推送链路</td>
-        <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
+        <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
       <tr>
         <td><strong>社交关系与消息</strong></td>
         <td>关注页、粉丝明细、会话列表、即时通讯、系统消息</td>
         <td><code>interaction / chat / im / user</code></td>
         <td>Feed 推送与互动同步、系统通知与 IM 推送</td>
-        <td><a href="core-links/index.md">核心链路总览</a></td>
+        <td><a href="./core-links/index.html">核心链路总览</a></td>
       </tr>
       <tr>
         <td><strong>AI 智能助手与 AIGC</strong></td>
         <td>AI 会话、快捷提问、店铺推荐、商品推荐、下单卡片、博客生成、评价生成</td>
         <td><code>ai / search / shop / product / blog / interaction</code></td>
         <td>AI 路由策略与 RAG 生成链路</td>
-        <td><a href="core-links/index.md">核心链路总览</a></td>
+        <td><a href="./core-links/index.html">核心链路总览</a></td>
       </tr>
       <tr>
         <td><strong>商家端经营后台</strong></td>
         <td>经营总览、店铺管理、商品管理、订单管理、AI 经营助手</td>
         <td><code>shop / product / order / ai</code></td>
         <td>订单支付退款链路、AI 路由与经营分析</td>
-        <td><a href="OPEN_SOURCE.md">开源接入说明</a></td>
+        <td><a href="./OPEN_SOURCE.html">开源接入说明</a></td>
       </tr>
       <tr>
         <td><strong>平台管理端治理后台</strong></td>
         <td>审核中心、博客管理、评论评价、抽奖配置、积分记录、角色权限、日志与监控</td>
         <td><code>system / audit / blog / user / points / monitor</code></td>
         <td>审核责任链、调度与治理链路</td>
-        <td><a href="OPEN_SOURCE.md">开源接入说明</a></td>
+        <td><a href="./OPEN_SOURCE.html">开源接入说明</a></td>
       </tr>
       <tr>
         <td><strong>XXL-JOB 调度后台</strong></td>
         <td>调度总览、任务管理、执行器管理</td>
         <td><code>common-xxl / product / order / interaction</code></td>
         <td>热榜重建、订单兜底、秒杀预热链路</td>
-        <td><a href="SHOWCASE.md">业务链路视觉走查</a></td>
+        <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
     </tbody>
   </table>
