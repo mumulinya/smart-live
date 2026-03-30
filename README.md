@@ -30,6 +30,31 @@
 | **smartLive-web** | 用户端 App（Vue 3 / H5 页面） | [GitHub](https://github.com/mumulinya/smartLive-web.git) |
 | **smartLive-admin** | 商家端与平台管理后台（Vue 2 + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin.git) |
 
+## 👀 第一次看这个仓库，建议先从这里进入
+
+这个 README 不只是“项目介绍”，更是你第一次阅读源码时的入口导航。  
+如果你是第一次点进仓库，建议先按下面这张表选阅读路径，而不是直接在 `smartLive-modules/` 里盲翻。
+
+| 你现在最想判断什么 | 先看哪里 | 再看哪里 | 为什么 |
+|:---|:---|:---|:---|
+| 项目是不是完整、是不是自己做的 | [项目全貌与答辩说明](https://mumulinya.github.io/smartLive-Cloud/PROJECT_OVERVIEW) | [系统架构与项目规模](https://mumulinya.github.io/smartLive-Cloud/site-pages/SYSTEM_ARCHITECTURE) | 先建立模块规模、服务边界、数据模型和文档资产认知 |
+| 页面是不是对应真实业务，不是空壳 Demo | [页面导览](https://mumulinya.github.io/smartLive-Cloud/PAGE_GALLERY) | [业务走查](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE) | 先看用户端、商家端、平台管理端页面，再看业务流程 |
+| 哪几条链路最值得读源码 | [核心链路总览](https://mumulinya.github.io/smartLive-Cloud/core-links/) | [性能压测与工程表现](https://mumulinya.github.io/smartLive-Cloud/site-pages/PERFORMANCE) | 先知道“读哪条链路最值”，再看这些设计为什么站得住 |
+| 想直接把服务跑起来 | [开源接入说明](https://mumulinya.github.io/smartLive-Cloud/OPEN_SOURCE) | [部署说明](https://mumulinya.github.io/smartLive-Cloud/DEPLOYMENT_GUIDE) | 先补依赖矩阵、配置来源和启动顺序，避免一上来踩全套环境坑 |
+
+### 🧭 GitHub 源码阅读入口
+
+如果你更习惯直接从目录读代码，这几组入口最值得优先看：
+
+| 想看什么能力 | 推荐先读的目录 / 模块 | 重点看什么 |
+|:---|:---|:---|
+| 统一入口、安全与双端鉴权 | [`smartLive-gateway`](./smartLive-gateway) · [`smartLive-auth`](./smartLive-auth) | Gateway 过滤链、后台 JWT 与 App Token 的入口分流 |
+| 店铺、商品、订单、支付与退款 | [`smartLive-modules/smartLive-order`](./smartLive-modules/smartLive-order) · [`smartLive-modules/smartLive-product`](./smartLive-modules/smartLive-product) · [`smartLive-modules/smartLive-wallet`](./smartLive-modules/smartLive-wallet) | 下单、统一支付、退款补偿、订单过期与钱包回滚 |
+| 博客、评价、评论、点赞、关注与 Feed | [`smartLive-modules/smartLive-blog`](./smartLive-modules/smartLive-blog) · [`smartLive-modules/smartLive-interaction`](./smartLive-modules/smartLive-interaction) · [`smartLive-modules/smartLive-review`](./smartLive-modules/smartLive-review) | 互动策略工厂、Feed 滚动分页、审核流转与副本同步 |
+| 搜索、热榜、LBS 与向量检索 | [`smartLive-modules/smartLive-search`](./smartLive-modules/smartLive-search) · [`smartLive-modules/smartLive-shop`](./smartLive-modules/smartLive-shop) | ES 检索、Milvus 降级、热门词与热榜维护 |
+| AI 对话、推荐卡片与经营助手 | [`smartLive-modules/smartLive-ai`](./smartLive-modules/smartLive-ai) | Agent Router、意图识别、RAG 检索、商家助手与 AIGC |
+| 实时聊天、会话与通知 | [`smartLive-modules/smartLive-im`](./smartLive-modules/smartLive-im) · [`smartLive-modules/smartLive-chat`](./smartLive-modules/smartLive-chat) | Netty 长连接、消息持久化、会话聚合与系统通知 |
+
 ## 🖼️ 页面导览入口
 
 | 分组 | 内容说明 | 入口 |
@@ -45,6 +70,7 @@
 ## 📋 文档导航
 
 - [📦 项目仓库矩阵](#项目仓库矩阵)
+- [👀 第一次看这个仓库](#第一次看这个仓库建议先从这里进入)
 - [🖼️ 页面导览入口](#页面导览入口)
 - [📖 项目简介](#项目简介)
 - [📏 项目规模](#项目规模)
@@ -280,20 +306,20 @@ README 首页只保留最小可运行链路，完整启动顺序、端口表、�
 
 ## <a id="项目文档"></a>📚 项目文档
 
-README 首页只保留 4 个最常用的文档入口：
+如果你已经看完上半部分，这里只需要记住 6 个最有用的文档入口：
 
-- 📘 [在线文档网站](https://mumulinya.github.io/smartLive-Cloud/) — 完整排版版，适合顺着导航继续阅读
-- 🖼️ [视觉导览](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE) — 看页面截图、系统总览图和链路图集
-- 📌 [开源使用说明](https://mumulinya.github.io/smartLive-Cloud/OPEN_SOURCE) — 看依赖矩阵、端口表、配置来源和启动建议
-- 🚀 [部署说明](https://mumulinya.github.io/smartLive-Cloud/DEPLOYMENT_GUIDE) — 看 Docker、增量部署、镜像与排错
+| 你接下来要做什么 | 直接看哪里 |
+|:---|:---|
+| 看完整在线文档 | [在线文档网站](https://mumulinya.github.io/smartLive-Cloud/) |
+| 看所有页面和截图 | [页面导览](https://mumulinya.github.io/smartLive-Cloud/PAGE_GALLERY) |
+| 按业务流程看页面和链路 | [视觉导览](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE) |
+| 看系统规模、服务边界、数据模型 | [系统架构与项目规模](https://mumulinya.github.io/smartLive-Cloud/site-pages/SYSTEM_ARCHITECTURE) |
+| 看接入和启动顺序 | [开源接入说明](https://mumulinya.github.io/smartLive-Cloud/OPEN_SOURCE) |
+| 看 Docker 和部署排错 | [部署说明](https://mumulinya.github.io/smartLive-Cloud/DEPLOYMENT_GUIDE) |
 
 ## <a id="功能特性"></a>✨ 功能特性
 
-这里保留首页版摘要，完整功能矩阵和技术列表已独立到网站页，适合继续深入看：
-
-- [功能特性与技术栈](https://mumulinya.github.io/smartLive-Cloud/site-pages/FEATURES_STACK)
-- [页面效果图导览](https://mumulinya.github.io/smartLive-Cloud/PAGE_GALLERY)
-- [业务链路视觉走查](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE)
+GitHub 首页只保留一句话版本，完整矩阵看 [功能特性与技术栈](https://mumulinya.github.io/smartLive-Cloud/site-pages/FEATURES_STACK)。
 
 当前项目可以先概括成 4 组能力：
 
@@ -304,12 +330,7 @@ README 首页只保留 4 个最常用的文档入口：
 
 ## <a id="技术栈"></a>🔧 技术栈
 
-这里保留首页版摘要，完整技术清单和选型说明建议直接看：
-
-- [功能特性与技术栈](https://mumulinya.github.io/smartLive-Cloud/site-pages/FEATURES_STACK)
-- [技术选型理由](https://mumulinya.github.io/smartLive-Cloud/site-pages/TECH_SELECTION)
-
-当前这套工程的核心技术组合可以先记住这 5 组：
+首页只保留技术轮廓，完整对比请看 [技术选型理由](https://mumulinya.github.io/smartLive-Cloud/site-pages/TECH_SELECTION)。
 
 - 服务基础：Spring Boot 3.2.2 + Spring Cloud 2023 + Spring Cloud Alibaba 2023.0.1.0
 - 治理组件：Nacos、Gateway、Sentinel、Seata、XXL-JOB
@@ -319,36 +340,36 @@ README 首页只保留 4 个最常用的文档入口：
 
 ## <a id="系统架构"></a>🏗️ 系统架构
 
-首页只保留系统全景入口，完整的架构说明、服务依赖图和项目结构请直接看：
-
-- [系统架构与项目规模](https://mumulinya.github.io/smartLive-Cloud/site-pages/SYSTEM_ARCHITECTURE)
+GitHub 首页只保留一张总图，详细讲法直接看 [系统架构与项目规模](https://mumulinya.github.io/smartLive-Cloud/site-pages/SYSTEM_ARCHITECTURE)。
 
 <div align="center">
   <img src="docs/diagrams/system-architecture-overview.svg" alt="SmartLive 系统架构图" width="100%">
 </div>
 
-首页先记住这 3 个点：
+先记住这 3 个点：
 
 - `Gateway + Auth` 统一承接入口层鉴权与流量治理
 - 业务上按基础服务、交易履约、内容社交、搜索智能治理四个服务簇拆分
 - 基础设施由 `MySQL / Redis / RabbitMQ / Elasticsearch / Milvus / MinIO / Nacos / XXL-JOB` 协同支撑
 
-
 ## <a id="项目结构"></a>📁 项目结构
 
-README 首页不再展开完整目录树，模块结构、服务依赖和推荐阅读顺序请直接看：
+这里只保留源码阅读主干，详细结构说明请看 [系统架构与项目规模](https://mumulinya.github.io/smartLive-Cloud/site-pages/SYSTEM_ARCHITECTURE)。
 
-- [系统架构与项目规模](https://mumulinya.github.io/smartLive-Cloud/site-pages/SYSTEM_ARCHITECTURE)
+```text
+smartLive-auth / smartLive-gateway / smartLive-monitor
+smartLive-modules/*                  # 16 个业务模块
+smartLive-api/*                      # 10 个 API 契约模块
+smartLive-common/*                   # 11 个通用基础组件
+docs/                                # 在线文档、链路图、页面导览
+sql/                                 # 建库、业务库、配置库、调度库脚本
+```
 
-如果只想先抓主干，建议先从 `auth -> gateway -> user/shop/search` 读起，再按交易、社交、AI 三条线往下展开。
+第一次读源码，建议先从 `auth -> gateway -> user -> shop -> search -> order` 这条主干开始。
 
 ## <a id="技术选型理由"></a>🤔 [技术选型理由](https://mumulinya.github.io/smartLive-Cloud/site-pages/TECH_SELECTION) - 为什么选这些而不是其他？
 
-这里保留首页版摘要，完整选型对比建议直接看：
-
-- [技术选型理由（网站详细版）](https://mumulinya.github.io/smartLive-Cloud/site-pages/TECH_SELECTION)
-
-首页先记住这 5 个最关键的判断：
+首页只保留 5 个判断，详细对比在网站详细版里。
 
 1. `Spring Boot + Spring Cloud Alibaba`：单服务开发底座和微服务治理分层清楚，适合当前 `19` 个服务应用规模。
 2. `Nacos + Gateway + Sentinel + Seata`：注册、配置、统一入口与限流熔断能力已经接齐，`Seata` 作为强一致链路的基础设施预留，后续主要用于余额支付、退款与券状态流转等场景。
@@ -359,143 +380,88 @@ README 首页不再展开完整目录树，模块结构、服务依赖和推荐�
 
 ## <a id="核心业务链路"></a>🌊 核心业务链路
 
-README 首页不再展开全量链路图，完整的展示版 / 详细版 SVG 请直接看：
+第一次读源码，最值得先追的 4 条链路是：
 
-- [业务链路视觉走查](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE)
+- [秒杀抢购全链路](https://mumulinya.github.io/smartLive-Cloud/core-links/%E7%A7%92%E6%9D%80%E6%8A%A2%E8%B4%AD%E5%85%A8%E9%93%BE%E8%B7%AF%E8%AF%A6%E8%A7%A3)
+- [订单支付与退款补偿](https://mumulinya.github.io/smartLive-Cloud/core-links/2.%20%E4%B8%8B%E5%8D%95_%E7%BB%9F%E4%B8%80%E6%94%AF%E4%BB%98_%E9%80%80%E6%AC%BE%E8%A1%A5%E5%81%BF%E9%93%BE%E8%B7%AF)
+- [Redis 分层缓存链路](https://mumulinya.github.io/smartLive-Cloud/core-links/Redis%E5%88%86%E5%B1%82%E7%BC%93%E5%AD%98%E9%93%BE%E8%B7%AF%E8%AF%A6%E8%A7%A3)
+- [发布审核与搜索 / 向量同步](https://mumulinya.github.io/smartLive-Cloud/core-links/7.%20%E5%8F%91%E5%B8%83_%E5%AE%A1%E6%A0%B8_%E6%90%9C%E7%B4%A2_Milvus_%E5%85%A8%E9%93%BE%E8%B7%AF)
 
-如果只想先看代表性链路，建议优先点这 4 条：
-
-- [秒杀抢购全链路](docs/diagrams/seckill-flow.svg)
-- [订单支付与退款补偿](docs/diagrams/unified-pay-sequence.svg)
-- [Redis 分层缓存设计](docs/diagrams/redis-layered-cache-architecture.svg)
-- [发布审核与搜索 / 向量同步](docs/diagrams/publish-audit-search-sync-chain.svg)
-
-其余按交易、搜索、社交、AI、Redis、调度分组的完整图集，放到网站页里阅读会更舒服。
+完整链路图集请直接看 [业务链路视觉走查](https://mumulinya.github.io/smartLive-Cloud/SHOWCASE) 或 [核心链路总览](https://mumulinya.github.io/smartLive-Cloud/core-links/)。
 
 
 ## <a id="核心链路与面经"></a>🔥 核心链路与面经
 
-首页只保留入口，完整深度解析和面试展开顺序请直接看：
+如果你准备拿这个项目做面试讲解，建议顺序是：
 
-- [核心链路总览](https://mumulinya.github.io/smartLive-Cloud/core-links/)
-
-如果你准备做项目讲解，建议先讲秒杀、订单支付退款、Redis 分层缓存，再回到 [项目驱动学习复盘指南](https://mumulinya.github.io/smartLive-Cloud/core-links/SmartLive_Java_Internship_Review_Plan_Updated) 串起答辩顺序。
+1. [项目全貌与答辩说明](https://mumulinya.github.io/smartLive-Cloud/PROJECT_OVERVIEW)
+2. [系统架构与项目规模](https://mumulinya.github.io/smartLive-Cloud/site-pages/SYSTEM_ARCHITECTURE)
+3. [核心链路总览](https://mumulinya.github.io/smartLive-Cloud/core-links/)
+4. [项目驱动学习复盘指南](https://mumulinya.github.io/smartLive-Cloud/core-links/SmartLive_Java_Internship_Review_Plan_Updated)
 
 
 ## <a id="开源使用提示"></a>📌 开源使用提示
 
-这部分只保留首页版提醒，完整说明已放进：
-
-- [开源接入说明](https://mumulinya.github.io/smartLive-Cloud/OPEN_SOURCE)
-- [安全与敏感配置边界](SECURITY.md)
-- [参与贡献说明](CONTRIBUTING.md)
-
-首页先记住这 4 条：
+第一次接项目，记住这 4 条就够了：
 
 - 先跑最小链路，不要一上来把 AI、支付、审核、IM 一次性全开。
 - 先理解 `MySQL 是真实源，ES / Milvus / Redis 是查询副本`，再去看搜索、热榜和向量检索。
 - 先抓住缓存分层、策略工厂、责任链、MQ + 调度补偿这几个核心设计点，再读具体模块。
 - AI、对象存储、支付、向量检索都依赖外部配置，第一次阅读更适合先看链路和接口，再补齐环境。
 
+完整接入说明见 [开源接入说明](https://mumulinya.github.io/smartLive-Cloud/OPEN_SOURCE)，安全边界见 [SECURITY.md](SECURITY.md)。
+
 ## <a id="性能压测报告"></a>📈 [性能压测报告](https://mumulinya.github.io/smartLive-Cloud/site-pages/PERFORMANCE)
 
-这里保留首页版摘要，完整压测表与工程表现已独立到网站页：
-
-- [性能压测与工程表现](https://mumulinya.github.io/smartLive-Cloud/site-pages/PERFORMANCE)
-
-先看最关键的 4 个结论：
+如果你只看首页，先记住这 3 个结论：
 
 - 秒杀抢购链路在 `5000` 并发线程下，QPS 保底 `3200+`
 - 列表类查询通过 `Redis ZSet + 批量回填`，相比直查数据库提升约 `20-40 倍`
-- 详情类读链路通过 `String 缓存 + 逻辑过期`，TP99 可以压到 `< 5ms`
-- 高并发写场景尽量走 `Lua + MQ + 定时补偿`，避免直接把压力打到主库
+- 高并发写链路尽量走 `Lua + MQ + 定时补偿`，避免直接把压力打到主库
+
+完整压测表和讲法看 [性能压测与工程表现](https://mumulinya.github.io/smartLive-Cloud/site-pages/PERFORMANCE)。
 
 ## <a id="难点踩坑与解决方案"></a>🚧 [难点踩坑与解决方案](https://mumulinya.github.io/smartLive-Cloud/site-pages/PITFALLS)
 
-这里保留首页版摘要，完整踩坑复盘建议直接看：
-
-- [难点踩坑与解决方案（网站详细版）](https://mumulinya.github.io/smartLive-Cloud/site-pages/PITFALLS)
-
-首页先保留 5 组最能体现工程性的难点：
+首页只保留 4 个最值得讲的坑：
 
 1. `缓存与一致性`：高频写场景下，用 `Redis Hash 增量更新 + RENAME 快照归档 + 批量落库` 把读写路径拆开。
 2. `交易与补偿`：秒杀和订单链路通过 `Lua + RabbitMQ 延迟队列 + 状态校验` 处理超卖、少卖和重复补偿。
 3. `消息与最终一致性`：发送端 Confirm / Return、消费端 Redis 幂等、手动 ACK/NACK、延迟 / 死信队列一起闭环。
-4. `推荐与社交`：Feed 用滚动分页解决数据偏移，热门面板用增量洗牌 + 全量重建解决冷启动和长期霸榜。
-5. `内容治理`：审核中心用策略工厂 + 责任链，把博客、商品、评论、用户资料等多条线统一收口。
+4. `推荐与社交`：Feed 用滚动分页解决数据偏移，热榜用增量洗牌 + 全量重建解决冷启动和长期霸榜。
 
+完整踩坑复盘见 [网站详细版](https://mumulinya.github.io/smartLive-Cloud/site-pages/PITFALLS)。
 
 ## <a id="项目沉淀"></a>🧠 [我通过这个项目学到的东西](https://mumulinya.github.io/smartLive-Cloud/site-pages/LEARNINGS)
 
-这里保留首页版摘要，完整复盘内容已独立到网站页：
+如果只保留一句话，我最想强调的是：  
+**好项目不仅要能跑，还要能把边界、链路、取舍和复盘讲清楚。**
 
+完整复盘看：
 - [项目沉淀与学习复盘](https://mumulinya.github.io/smartLive-Cloud/site-pages/LEARNINGS)
 - [项目驱动学习复盘指南](https://mumulinya.github.io/smartLive-Cloud/core-links/SmartLive_Java_Internship_Review_Plan_Updated)
-
-如果只看首页，我最想保留的一句话是：好项目不仅要能跑，还要能把边界、链路、取舍和复盘讲清楚。
 
 ---
 
 ## <a id="常见问题"></a>❓ [常见问题 FAQ](https://mumulinya.github.io/smartLive-Cloud/site-pages/FAQ)
 
-这里保留首页版最有用的 4 条，完整问答建议直接看：
+首页版 FAQ 我压成 4 条短答案，完整问答看 [网站详细版](https://mumulinya.github.io/smartLive-Cloud/site-pages/FAQ)。
 
-- [常见问题 FAQ（网站详细版）](https://mumulinya.github.io/smartLive-Cloud/site-pages/FAQ)
-
-<details>
-<summary><b>1. 这个仓库包含前端吗？前后端仓库分别是什么？</b></summary>
-当前仓库主要是 **后端微服务主仓库**，负责用户、店铺、商品、订单、互动、搜索、AI、IM、审核、钱包等核心服务，以及中间件编排和部署脚本。  
-前端仓库已单独拆分：
-
-- `smartLive-admin`：后台管理端（Vue + Element UI）
-- `smartLive-web`：用户端 App（Vue 移动端 / H5 页面）
-
-对应仓库入口可以直接查看文档中的 [项目仓库](#项目仓库) 一节。
-</details>
-
-<details>
-<summary><b>2. 第一次本地启动，最小需要哪些中间件和模块？</b></summary>
-如果只是想先把系统跑起来并验证主链路，建议优先准备：
-
-- **基础中间件**：MySQL、Redis、Nacos、RabbitMQ
-- **核心服务**：Gateway、Auth、User、Shop、Product、Order、Blog、Interaction、Search
-- **管理端 / 用户端前端**：按你的体验目标选择 `smartLive-admin` 或 `smartLive-web`
-
-AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补。更完整的接入顺序见 [开源接入说明](https://mumulinya.github.io/smartLive-Cloud/OPEN_SOURCE)。
-</details>
-
-<details>
-<summary><b>3. AI 模块在这个项目里到底做了什么？</b></summary>
-这个项目里的 AI 不只是“接一个聊天接口”，而是同时覆盖了 **用户端问答检索** 和 **商家端经营辅助** 两条线：
-
-- **用户端**：支持店铺 / 商品 / 评价 / 博客问答、流式 AI 对话、探店博客生成、消费评价生成
-- **商家端**：支持差评回复、经营建议、营销文案生成、经营分析
-- **底层能力**：基于 Spring AI + Milvus，构建店铺、商品、评价、博客等多套向量检索能力，并支持不同 Agent 策略切换
-
-所以它更像一个嵌入业务系统的 AI 中台，而不是单点聊天 Demo。
-</details>
-
-<details>
-<summary><b>4. 为什么项目里同时用了 RabbitMQ 和 XXL-JOB？</b></summary>
-两者职责不同，不是重复建设：
-
-- **RabbitMQ**：负责异步解耦和准实时处理，例如订单创建、库存扣减、审核投递、消息推送、支付回调后的后续动作
-- **XXL-JOB**：负责周期性扫描、补偿兜底和批处理，例如热榜重算、互动数据回刷、秒杀预热、订单超时处理、销量同步
-
-可以把它理解成：MQ 解决“事件驱动”，XXL-JOB 解决“定时调度与补偿兜底”。两者配合起来，才能把实时性和最终一致性同时兼顾。
-</details>
-
-<br>
+| 问题 | 首页版回答 |
+|:---|:---|
+| 这个仓库包含前端吗？ | 当前仓库是后端主仓库；前端已拆成 `smartLive-admin` 和 `smartLive-web` 两个独立仓库。 |
+| 第一次本地启动最小需要什么？ | 先准备 `MySQL + Redis + Nacos + RabbitMQ`，优先跑 `auth -> gateway -> system -> user -> shop -> search`。 |
+| AI 在项目里做了什么？ | 不只是聊天，而是覆盖用户端问答检索、AIGC 和商家端经营助手的一套 AI 中台能力。 |
+| 为什么同时用了 MQ 和 XXL-JOB？ | MQ 负责事件异步，XXL-JOB 负责定时扫描、补偿兜底和批处理，两者职责不同。 |
 
 
 ## <a id="未来规划"></a>🗺️ [未来规划 Roadmap](https://mumulinya.github.io/smartLive-Cloud/site-pages/ROADMAP)
 
-这里保留首页版两条核心方向，完整规划建议直接看：
+首页只保留 3 个方向，完整规划看 [网站详细版](https://mumulinya.github.io/smartLive-Cloud/site-pages/ROADMAP)。
 
-- [未来规划 Roadmap（网站详细版）](https://mumulinya.github.io/smartLive-Cloud/site-pages/ROADMAP)
-
-- [ ] **性能监控体系闭环**：进一步将现有的监控体系集成 `Prometheus + Grafana`，打造全视角的系统资源消耗监控大盘。
-- [ ] **自动化流水线 (CI/CD)**：在项目中集成完整的 GitHub Actions 或 GitLab CI/CD 流程，覆盖全链路线上的自动化单元测试与 Docker 镜像构建推送。
+- [ ] **可观测性闭环**：补齐 Prometheus + Grafana + 告警与排障链路。
+- [ ] **CI / CD 与质量保障**：把测试、构建、镜像与部署流程进一步标准化。
+- [ ] **强一致链路深化**：未来在余额支付、退款与券状态流转等强一致业务上引入更严格的一致性治理。
 
 
 ## <a id="参与贡献"></a>🤝 参与贡献
@@ -518,7 +484,7 @@ AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补�
 
 ## <a id="联系我"></a>📞 联系我 - 找我聊技术
 
-如果你想交流项目、源码设计或招聘机会，首页保留这 3 个入口就够了：
+如果你想交流项目、源码设计或招聘机会，首页保留这两个入口就够了：
 
 - **邮箱**：mumulinya167@gmail.com
 - **GitHub Issues**：[mumulinya/smartLive-Cloud](https://github.com/mumulinya/smartLive-Cloud/issues)
