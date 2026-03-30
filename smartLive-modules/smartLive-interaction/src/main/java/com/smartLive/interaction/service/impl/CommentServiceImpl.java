@@ -289,7 +289,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
     public List<CommentVO> listChildComment(Comment comment, Integer current) {
         List<Comment> commentList = query()
                 .eq("answer_id", comment.getId())
-                .eq("status", 0)
+                .eq("status", 1)
                 .eq("audit_status", AuditStatusEnum.PASS.getCode())
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE))
