@@ -24,15 +24,16 @@ hero:
 ---
 
 <div class="smartlive-tech-strip">
+  <span class="smartlive-tech-chip">JDK 17+</span>
   <span class="smartlive-tech-chip">Spring Boot 3.2.2</span>
   <span class="smartlive-tech-chip">Spring Cloud Alibaba 2023.0.1.0</span>
+  <span class="smartlive-tech-chip">MySQL 8</span>
   <span class="smartlive-tech-chip">Redis</span>
   <span class="smartlive-tech-chip">RabbitMQ</span>
   <span class="smartlive-tech-chip">Elasticsearch</span>
   <span class="smartlive-tech-chip">Milvus</span>
-  <span class="smartlive-tech-chip">Spring AI</span>
   <span class="smartlive-tech-chip">XXL-JOB</span>
-  <span class="smartlive-tech-chip">JDK 17+</span>
+  <span class="smartlive-tech-chip">Spring AI</span>
 </div>
 
 <nav class="smartlive-section-nav-bar">
