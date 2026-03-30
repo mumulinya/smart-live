@@ -65,7 +65,7 @@
   </a>
   <a href="#app-social-message" class="smartlive-gallery-quickjump-card">
     <strong>用户端 App</strong>
-    <span>社交关系与消息</span>
+<span>社交关系、用户偏好与消息</span>
   </a>
   <a href="#app-ai-capability" class="smartlive-gallery-quickjump-card">
     <strong>用户端 App</strong>
@@ -73,7 +73,7 @@
   </a>
   <a href="#app-profile-assets" class="smartlive-gallery-quickjump-card">
     <strong>用户端 App</strong>
-    <span>个人中心、收藏与安全设置</span>
+<span>个人中心、收藏与账号安全</span>
   </a>
   <a href="#merchant-dashboard" class="smartlive-gallery-quickjump-card">
     <strong>商家端 Web</strong>
@@ -161,7 +161,7 @@
         <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
       <tr>
-        <td><strong>社交关系与消息</strong></td>
+<td><strong>社交关系、用户偏好与消息</strong></td>
         <td>关注页、粉丝明细、会话列表、即时通讯、系统消息</td>
         <td><code>interaction / chat / im / user</code></td>
         <td>Feed 推送与互动同步、系统通知与 IM 推送</td>
@@ -206,7 +206,7 @@
 ### <a id="app-login-entry"></a>3.1 登录与进入
 
 <p align="center">
-  <img src="./screenshots/login-page.png" alt="登录页" width="260">
+<img src="./screenshots/login-page.png" alt="登录页" width="230">
 </p>
 
 登录页负责建立账号入口和用户登录态，是第一次进入 App 的起点。
@@ -225,7 +225,7 @@
 
 | 店铺分类列表 |
 |:---:|
-| <img src="./screenshots/shop-list.png" alt="店铺分类列表" width="260"> |
+| <img src="./screenshots/shop-list.png" alt="店铺分类列表" width="230"> |
 | 分类找店与按类浏览入口 |
 
 ### <a id="app-search-map"></a>3.3 搜索与 LBS 找店
@@ -237,7 +237,7 @@
 
 | 地图找店 |
 |:---:|
-| <img src="./screenshots/map-view.png" alt="地图找店" width="260"> |
+| <img src="./screenshots/map-view.png" alt="地图找店" width="230"> |
 | 地图模式承接附近找店和 LBS 分布查看 |
 
 ### <a id="app-shop-product"></a>3.4 店铺决策与商品详情
@@ -281,7 +281,7 @@
 
 | 签到与抽奖 |
 |:---:|
-| <img src="./screenshots/sign-in.png" alt="签到与抽奖" width="260"> |
+| <img src="./screenshots/sign-in.png" alt="签到与抽奖" width="230"> |
 | 连续签到、抽奖玩法与积分增长入口 |
 
 ### <a id="app-content-creation"></a>3.6 内容创作与评价互动
@@ -308,10 +308,10 @@
 
 | 草稿箱 |
 |:---:|
-| <img src="./screenshots/draft-box.png" alt="草稿箱" width="260"> |
+| <img src="./screenshots/draft-box.png" alt="草稿箱" width="230"> |
 | 未发布内容管理 |
 
-### <a id="app-social-message"></a>3.7 社交关系与消息
+### <a id="app-social-message"></a>3.7 社交关系、用户偏好与消息
 
 | 动态关注流 | 我的关注页 |
 |:---:|:---:|
@@ -320,13 +320,13 @@
 
 | 粉丝明细页 | 用户搜索 |
 |:---:|:---:|
-| <img src="./screenshots/app-user-list.png" alt="粉丝明细页" width="230"> | <img src="./screenshots/user-search.png" alt="用户搜索" width="230"> |
-| 个人主页下钻后的粉丝关系明细 | 找人入口与用户搜索 |
+| <img src="./screenshots/app-user-list.png" alt="粉丝明细页" width="230"> | <img src="./screenshots/user-search.png" alt="用户搜索" width="190"> |
+| 个人主页下钻后的粉丝关系明细 | 用户关注 / 收藏 / 点赞内容检索 |
 
 | 他人主页 | 添加朋友页 |
 |:---:|:---:|
 | <img src="./screenshots/app-other-profile.png" alt="他人主页" width="230"> | <img src="./screenshots/app-add-friend.png" alt="添加朋友页" width="230"> |
-| 用户访问他人主页视角 | 站内找人和加好友入口 |
+| 用户访问他人主页视角 | 个人中心点击“添加朋友”后的加好友入口 |
 
 | 消息会话列表 | 即时通讯聊天 |
 |:---:|:---:|
@@ -365,7 +365,7 @@
 | <img src="./screenshots/app-ai-blog-generate.png" alt="AI 博客生成" width="230"> | <img src="./screenshots/app-ai-review-generate.png" alt="AI 评价生成" width="230"> |
 | AIGC 探店内容 | AIGC 消费评价生成 |
 
-### <a id="app-profile-assets"></a>3.9 个人中心、收藏与安全设置
+### <a id="app-profile-assets"></a>3.9 个人中心、收藏与账号安全
 
 | 个人中心（含顶部搜索按钮） | 资料编辑页 |
 |:---:|:---:|

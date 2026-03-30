@@ -12,13 +12,11 @@ export default defineConfig({
   scrollOffset: 96,
   themeConfig: {
     nav: [
-      { text: '首页', link: '/' },
       { text: '3分钟评审', link: '/THREE_MINUTES' },
-      { text: '页面总览', link: '/PAGE_GALLERY' },
+      { text: '项目全貌', link: '/PROJECT_OVERVIEW' },
       { text: '业务走查', link: '/SHOWCASE' },
       { text: '核心链路', link: '/core-links/' },
-      { text: '开源接入', link: '/OPEN_SOURCE' },
-      { text: '部署说明', link: '/DEPLOYMENT_GUIDE' }
+      { text: '开源接入', link: '/OPEN_SOURCE' }
     ],
 
     sidebar: [

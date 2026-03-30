@@ -48,7 +48,7 @@
   </a>
   <a href="#chains-social" class="smartlive-showcase-goal-card">
     <strong>想看内容与社交</strong>
-    <span>先看社交页面，再看社交消息图组和热榜推荐图组。</span>
+    <span>先看关系、用户偏好和消息页面，再看社交消息图组和热榜推荐图组。</span>
   </a>
   <a href="#showcase-ai" class="smartlive-showcase-goal-card">
     <strong>想看 AI 与个人资产</strong>
@@ -74,7 +74,7 @@
   <a href="#showcase-overview" class="smartlive-showcase-quickjump-card"><strong>项目全景</strong><span>系统架构与全局认知</span></a>
   <a href="#showcase-discovery" class="smartlive-showcase-quickjump-card"><strong>发现与找店</strong><span>登录、首页、热榜、搜索、地图</span></a>
   <a href="#showcase-trade" class="smartlive-showcase-quickjump-card"><strong>交易与增长</strong><span>店铺、商品、秒杀、订单、钱包、积分</span></a>
-  <a href="#showcase-social" class="smartlive-showcase-quickjump-card"><strong>内容与社交</strong><span>发布、评价、Feed、IM、系统消息</span></a>
+  <a href="#showcase-social" class="smartlive-showcase-quickjump-card"><strong>内容与社交</strong><span>发布、评价、用户偏好、关系、IM、系统消息</span></a>
   <a href="#showcase-ai" class="smartlive-showcase-quickjump-card"><strong>AI 与个人资产</strong><span>AI 会话、AIGC、个人中心与安全</span></a>
   <a href="#showcase-merchant" class="smartlive-showcase-quickjump-card"><strong>商家端页面走查</strong><span>经营总览、履约、AI 经营助手</span></a>
   <a href="#showcase-admin" class="smartlive-showcase-quickjump-card"><strong>后台管理端走查</strong><span>审核中心、治理后台、系统权限</span></a>
@@ -231,7 +231,7 @@
 
 连续签到与抽奖是增长玩法入口。
 
-## <a id="showcase-social"></a>5. 内容创作、社交与消息
+## <a id="showcase-social"></a>5. 内容创作、社交关系、用户偏好与消息
 
 ### 5.1 发布与编辑
 
@@ -301,7 +301,16 @@
 
 独立收藏页承接店铺、笔记和商品三类收藏资产。
 
-### 5.8 粉丝明细页
+### 5.8 用户偏好搜索
+
+| 用户搜索 | 添加朋友页 |
+|:---:|:---:|
+| <img src="./screenshots/user-search.png" alt="user-search" width="230"> | <img src="./screenshots/app-add-friend.png" alt="app-add-friend" width="230"> |
+| 检索用户关注 / 收藏 / 点赞过的博客、店铺与商品 | 个人中心点击“添加朋友”后的加好友入口 |
+
+用户偏好搜索与添加朋友分别承接“兴趣检索”和“建立关系”两类入口。
+
+### 5.9 粉丝明细页
 
 <p align="center">
   <img src="./screenshots/app-user-list.png" alt="app-user-list" width="300">
@@ -309,7 +318,7 @@
 
 粉丝明细页承接个人主页下钻后的社交关系查看。
 
-### 5.9 会话列表
+### 5.10 会话列表
 
 <p align="center">
   <img src="./screenshots/app-chat-list.png" alt="app-chat-list" width="300">
@@ -317,7 +326,7 @@
 
 会话列表承接私聊入口与未读状态。
 
-### 5.10 系统通知
+### 5.11 系统通知
 
 <p align="center">
   <img src="./screenshots/app-system-notice.png" alt="app-system-notice" width="300">
@@ -325,7 +334,7 @@
 
 审核结果和系统提醒会通过站内通知下发。
 
-### 5.11 IM 私聊
+### 5.12 IM 私聊
 
 <p align="center">
   <img src="./screenshots/app-chat-detail.png" alt="app-chat-detail" width="300">

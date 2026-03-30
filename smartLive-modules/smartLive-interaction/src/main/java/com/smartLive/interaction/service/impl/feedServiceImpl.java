@@ -71,12 +71,13 @@ public class feedServiceImpl implements IFeedService {
             String[] parts = val.split(":");
             Long id = Long.valueOf(parts[parts.length - 1]);
             String type;
-            String action;
+            String action = "";
             Long shopId=null;
             switch (parts.length) {
                 case 2:
-                    // 格式异常或不支持，直接跳过
-                    continue;
+                    // 格式 blog:id
+                    type = parts[0];
+                    break;
                 case 3:
                     // 格式：new:product:id
                     action = parts[0];
@@ -102,6 +103,7 @@ public class feedServiceImpl implements IFeedService {
         }
         // 3. 聚合数据
         List<FeedVO> voList = Lists.newArrayList();
+        if (groupedMap.isEmpty()) return new ScrollResult();
         groupedMap.forEach((bizType, idActionMap) -> {
             // 1. 先收集所有非空的 shopId
             List<Long> shopIds = idActionMap.values().stream()
