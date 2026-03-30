@@ -30,8 +30,6 @@ public class CommentController extends BaseController
 {
     @Autowired
     private ICommentService commentService;
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
 
     /**
      * 查询评论列表（带权限控制）

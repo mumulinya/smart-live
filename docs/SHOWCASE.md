@@ -14,7 +14,7 @@
 
 <div class="smartlive-stats-grid">
   <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">85 张</div>
+    <div class="smartlive-stat-value">90 张</div>
     <div class="smartlive-stat-label">页面截图引用</div>
     <div class="smartlive-stat-desc">覆盖用户端、商家端、平台管理端与调度后台的页面视觉走查</div>
   </div>
@@ -66,25 +66,6 @@
     <strong>想看 Redis / 调度设计</strong>
     <span>直接看缓存性能专题，再看调度与定时任务总览。</span>
   </a>
-</div>
-
-## 1. 快速跳转
-
-<div class="smartlive-showcase-quickjump">
-  <a href="#showcase-overview" class="smartlive-showcase-quickjump-card"><strong>项目全景</strong><span>系统架构与全局认知</span></a>
-  <a href="#showcase-discovery" class="smartlive-showcase-quickjump-card"><strong>发现与找店</strong><span>登录、首页、热榜、搜索、地图</span></a>
-  <a href="#showcase-trade" class="smartlive-showcase-quickjump-card"><strong>交易与增长</strong><span>店铺、商品、秒杀、订单、钱包、积分</span></a>
-  <a href="#showcase-social" class="smartlive-showcase-quickjump-card"><strong>内容与社交</strong><span>发布、评价、用户偏好、关系、IM、系统消息</span></a>
-  <a href="#showcase-ai" class="smartlive-showcase-quickjump-card"><strong>AI 与个人资产</strong><span>AI 会话、AIGC、个人中心与安全</span></a>
-  <a href="#showcase-merchant" class="smartlive-showcase-quickjump-card"><strong>商家端页面走查</strong><span>经营总览、履约、AI 经营助手</span></a>
-  <a href="#showcase-admin" class="smartlive-showcase-quickjump-card"><strong>后台管理端走查</strong><span>审核中心、治理后台、系统权限</span></a>
-  <a href="#chains-trade" class="smartlive-showcase-quickjump-card"><strong>交易图组</strong><span>秒杀、订单、支付、退款补偿</span></a>
-  <a href="#chains-merchant" class="smartlive-showcase-quickjump-card"><strong>商家端链路图</strong><span>经营分析、核销、订单履约</span></a>
-  <a href="#chains-admin" class="smartlive-showcase-quickjump-card"><strong>后台治理图组</strong><span>审核中心、搜索同步、治理调度</span></a>
-  <a href="#chains-search" class="smartlive-showcase-quickjump-card"><strong>审核与搜索图组</strong><span>审核责任链、搜索、向量同步</span></a>
-  <a href="#chains-rank" class="smartlive-showcase-quickjump-card"><strong>热榜与推荐图组</strong><span>首页热门、算分维护、热榜重建</span></a>
-  <a href="#chains-cache" class="smartlive-showcase-quickjump-card"><strong>缓存专题</strong><span>Redis 分层缓存与读写链路</span></a>
-  <a href="#chains-schedule" class="smartlive-showcase-quickjump-card"><strong>调度专题</strong><span>XXL-JOB 总览与子链路</span></a>
 </div>
 
 <div class="smartlive-showcase-sections">
@@ -167,23 +148,9 @@
 
 ## <a id="showcase-trade"></a>4. 决策、交易与增长
 
-### 4.1 店铺详情
+这一组按真实用户决策链路展示：先看活动入口，再进入店铺与商品决策，随后承接订单、支付与资产增长。
 
-<p align="center">
-  <img src="./screenshots/shop-detail.png" alt="shop-detail" width="300">
-</p>
-
-店铺详情承接介绍、商品、评价和互动信息。
-
-### 4.2 商品详情
-
-<p align="center">
-  <img src="./screenshots/product-detail.png" alt="product-detail" width="300">
-</p>
-
-商品详情承接下单、收藏和评价入口。
-
-### 4.3 秒杀专区
+### 4.1 秒杀专区
 
 <p align="center">
   <img src="./screenshots/seckill-page.png" alt="seckill-page" width="300">
@@ -191,13 +158,29 @@
 
 秒杀专区对应 Redis Lua 和 MQ 异步削峰链路。
 
-### 4.4 优惠专区
+### 4.2 优惠专区
 
 <p align="center">
   <img src="./screenshots/discount-zone.png" alt="discount-zone" width="300">
 </p>
 
 优惠专区承接折扣商品、团购券和活动聚合入口。
+
+### 4.3 店铺详情
+
+<p align="center">
+  <img src="./screenshots/shop-detail.png" alt="shop-detail" width="300">
+</p>
+
+店铺详情承接介绍、商品、评价和互动信息。
+
+### 4.4 商品详情
+
+<p align="center">
+  <img src="./screenshots/product-detail.png" alt="product-detail" width="300">
+</p>
+
+商品详情承接下单、收藏和评价入口。
 
 ### 4.5 订单中心
 
@@ -207,7 +190,15 @@
 
 订单中心展示待支付、进行中和已完成订单。
 
-### 4.6 钱包中心
+### 4.6 订单待支付
+
+<p align="center">
+  <img src="./screenshots/app-order-pending.png" alt="app-order-pending" width="300">
+</p>
+
+待支付订单详情承接立即支付、取消订单和剩余支付时限展示。
+
+### 4.7 钱包中心
 
 <p align="center">
   <img src="./screenshots/wallet-page.png" alt="wallet-page" width="300">
@@ -215,7 +206,7 @@
 
 钱包中心承接余额、支付记录和资产入口。
 
-### 4.7 积分中心
+### 4.8 积分中心
 
 <p align="center">
   <img src="./screenshots/points-page.png" alt="points-page" width="300">
@@ -223,7 +214,7 @@
 
 积分中心承接签到、抽奖和成长体系。
 
-### 4.8 签到抽奖
+### 4.9 签到抽奖
 
 <p align="center">
   <img src="./screenshots/sign-in.png" alt="sign-in" width="300">
@@ -232,6 +223,8 @@
 连续签到与抽奖是增长玩法入口。
 
 ## <a id="showcase-social"></a>5. 内容创作、社交关系、用户偏好与消息
+
+这一组按“创作发布 -> 内容互动 -> 关系沉淀 -> 消息触达”的顺序组织，不再只是把社交页面平铺摆放。
 
 ### 5.1 发布与编辑
 
@@ -242,7 +235,16 @@
 
 发布与编辑页共同承接图文创作、改稿和草稿管理。
 
-### 5.2 评价互动
+### 5.2 我的发布与草稿箱
+
+| 我的发布 | 草稿箱 |
+|:---:|:---:|
+| <img src="./screenshots/user-posts.png" alt="user-posts" width="230"> | <img src="./screenshots/draft-box.png" alt="draft-box" width="230"> |
+| 个人主页查看已发布内容 | 草稿内容继续编辑与发布 |
+
+已发布内容和草稿箱共同构成创作后的内容管理入口。
+
+### 5.3 评价互动
 
 | 评价列表页 | 评价发布页 | 评价修改页 |
 |:---:|:---:|:---:|
@@ -261,23 +263,7 @@
 
 评价相关页面已经收拢为完整的评价链路分组。
 
-### 5.3 我的发布
-
-<p align="center">
-  <img src="./screenshots/user-posts.png" alt="user-posts" width="300">
-</p>
-
-个人主页可查看已发布内容。
-
-### 5.4 草稿箱
-
-<p align="center">
-  <img src="./screenshots/draft-box.png" alt="draft-box" width="300">
-</p>
-
-草稿箱承接未发布内容和二次编辑。
-
-### 5.5 动态流
+### 5.4 动态流
 
 <p align="center">
   <img src="./screenshots/feed-flow.png" alt="feed-flow" width="300">
@@ -285,7 +271,7 @@
 
 动态流展示关注内容与推荐内容混合分发。
 
-### 5.6 我的关注
+### 5.5 我的关注
 
 <p align="center">
   <img src="./screenshots/follow-list.png" alt="follow-list" width="300">
@@ -293,7 +279,7 @@
 
 独立关注页按用户、店铺、商品三类关系组织关注资产。
 
-### 5.7 我的收藏
+### 5.6 我的收藏
 
 <p align="center">
   <img src="./screenshots/user-favorites.png" alt="user-favorites" width="300">
@@ -301,7 +287,7 @@
 
 独立收藏页承接店铺、笔记和商品三类收藏资产。
 
-### 5.8 用户偏好搜索
+### 5.7 用户偏好搜索与添加朋友
 
 | 用户搜索 | 添加朋友页 |
 |:---:|:---:|
@@ -310,7 +296,7 @@
 
 用户偏好搜索与添加朋友分别承接“兴趣检索”和“建立关系”两类入口。
 
-### 5.9 粉丝明细页
+### 5.8 粉丝明细页
 
 <p align="center">
   <img src="./screenshots/app-user-list.png" alt="app-user-list" width="300">
@@ -318,7 +304,7 @@
 
 粉丝明细页承接个人主页下钻后的社交关系查看。
 
-### 5.10 会话列表
+### 5.9 会话列表
 
 <p align="center">
   <img src="./screenshots/app-chat-list.png" alt="app-chat-list" width="300">
@@ -326,7 +312,7 @@
 
 会话列表承接私聊入口与未读状态。
 
-### 5.11 系统通知
+### 5.10 系统通知
 
 <p align="center">
   <img src="./screenshots/app-system-notice.png" alt="app-system-notice" width="300">
@@ -334,7 +320,7 @@
 
 审核结果和系统提醒会通过站内通知下发。
 
-### 5.12 IM 私聊
+### 5.11 IM 私聊
 
 <p align="center">
   <img src="./screenshots/app-chat-detail.png" alt="app-chat-detail" width="300">
@@ -434,6 +420,8 @@ AIGC 可根据评分和消费体验生成评价草稿，减少手动输入成本
 
 ## <a id="showcase-merchant"></a>7. 商家端 Web 页面走查
 
+这一组按“登录进入 -> 看总览 -> 建店与上架 -> 履约处理 -> AI 辅助经营”的顺序组织，更贴近商家真实操作流。
+
 ### 7.1 登录入口
 
 <p align="center">
@@ -450,28 +438,28 @@ AIGC 可根据评分和消费体验生成评价草稿，减少手动输入成本
 
 经营总览负责承接店铺、订单、代金券、用户和评价的总体数据看板。
 
-### 7.3 店铺经营流程
+### 7.3 店铺建档与经营维护
 
 | 店铺列表页 | 新增店铺页 | 编辑店铺页 | 店铺详情页 |
 |:---:|:---:|:---:|:---:|
 | <img src="./screenshots/admin-shop-manage.png" alt="admin-shop-manage" width="180"> | <img src="./screenshots/merchant-shop-create.png" alt="merchant-shop-create" width="180"> | <img src="./screenshots/merchant-shop-edit.png" alt="merchant-shop-edit" width="180"> | <img src="./screenshots/merchant-shop-detail.png" alt="merchant-shop-detail" width="180"> |
 | 店铺列表与状态管理 | 创建店铺、基础信息与地图定位 | 维护店铺资料、图片与定位 | 查看审核状态、经营信息与相册 |
 
-### 7.4 商品经营流程
+### 7.4 商品配置与营销管理
 
 | 商品列表页 | 新建商品页 | 编辑商品页 | 商品详情页 |
 |:---:|:---:|:---:|:---:|
 | <img src="./screenshots/admin-product-manage.png" alt="admin-product-manage" width="180"> | <img src="./screenshots/merchant-product-create.png" alt="merchant-product-create" width="180"> | <img src="./screenshots/merchant-product-edit.png" alt="merchant-product-edit" width="180"> | <img src="./screenshots/merchant-product-detail.png" alt="merchant-product-detail" width="180"> |
 | 商品列表、上下架与活动筛选 | 配置价格、活动类型与使用规则 | 调整库存、有效期与营销字段 | 查看售价、库存与时间设置 |
 
-### 7.5 订单履约流程
+### 7.5 订单履约与核销处理
 
 | 订单管理 | 订单详情页 |
 |:---:|:---:|
 | <img src="./screenshots/admin-order-manage.png" alt="admin-order-manage" width="260"> | <img src="./screenshots/merchant-order-detail.png" alt="merchant-order-detail" width="260"> |
 | 订单状态筛选、核销流转与售后入口 | 订单进度、支付信息、商品信息与用户信息查看 |
 
-### 7.6 AI 经营助手流程
+### 7.6 AI 经营建议与商家助手
 
 <p align="center">
   <img src="./screenshots/admin-ai-assistant.png" alt="admin-ai-assistant" width="760">
@@ -486,14 +474,16 @@ AI 商家助手先承接统一会话入口，再按评价回复、经营分析�
 
 ## <a id="showcase-admin"></a>8. 平台管理端 Web 页面走查
 
-### 8.1 审核中心流程
+这一组按“审核受理 -> 内容治理 -> 用户运营 -> 权限审计 -> 调度运维”的顺序组织，更接近平台管理端的后台职责分工。
+
+### 8.1 审核受理与处理流
 
 | 审核中心 | 审核详情页 |
 |:---:|:---:|
 | <img src="./screenshots/admin-audit-center.png" alt="admin-audit-center" width="260"> | <img src="./screenshots/admin-audit-detail.png" alt="admin-audit-detail" width="260"> |
 | 待审内容汇总、状态筛选与进入审核动作 | 单条审核内容、附件、关联目标与通过 / 驳回动作 |
 
-### 8.2 内容治理流程
+### 8.2 内容发布与治理
 
 | 博客管理列表 | 博客详情页 | 评价管理列表 | 评价详情页 |
 |:---:|:---:|:---:|:---:|
@@ -512,7 +502,7 @@ AI 商家助手先承接统一会话入口，再按评价回复、经营分析�
 | <img src="./screenshots/admin-business-user.png" alt="admin-business-user" width="180"> | <img src="./screenshots/admin-business-user-detail.png" alt="admin-business-user-detail" width="180"> | <img src="./screenshots/admin-lottery-config.png" alt="admin-lottery-config" width="180"> | <img src="./screenshots/admin-points-records.png" alt="admin-points-records" width="180"> |
 | 业务用户列表与平台查看入口 | 用户资料、头像与基础信息查看 | 奖品配置、概率与上下架管理 | 积分变动流水与业务类型审计 |
 
-### 8.4 系统管理与权限审计
+### 8.4 系统权限与运行审计
 
 | 用户管理 | 角色管理 | 菜单权限 |
 |:---:|:---:|:---:|
@@ -524,12 +514,17 @@ AI 商家助手先承接统一会话入口，再按评价回复、经营分析�
 | <img src="./screenshots/admin-config.png" alt="admin-config" width="180"> | <img src="./screenshots/admin-online-monitor.png" alt="admin-online-monitor" width="180"> | <img src="./screenshots/admin-logininfor.png" alt="admin-logininfor" width="180"> | <img src="./screenshots/admin-operlog.png" alt="admin-operlog" width="180"> |
 | 系统参数与开关配置 | 在线用户与强退 | 登录审计与状态追踪 | 后台操作留痕与行为审计 |
 
-### 8.5 调度后台流程
+### 8.5 调度后台与执行器运维
 
 | 调度总览 | 任务管理 | 执行器管理 |
 |:---:|:---:|:---:|
 | <img src="./screenshots/admin-xxl-dashboard.png" alt="admin-xxl-dashboard" width="180"> | <img src="./screenshots/admin-xxl-job-manage.png" alt="admin-xxl-job-manage" width="180"> | <img src="./screenshots/admin-xxl-executors.png" alt="admin-xxl-executors" width="180"> |
 | 任务、执行器与运行状态总览 | 按执行器查看 JobHandler、CRON 和状态 | 执行器配置与在线节点查看 |
+
+| 店铺模块执行器 | 商品模块执行器 | 订单模块执行器 | 互动模块执行器 |
+|:---:|:---:|:---:|:---:|
+| <img src="./screenshots/admin-xxl-shop-executor.png" alt="admin-xxl-shop-executor" width="180"> | <img src="./screenshots/admin-xxl-product-executor.png" alt="admin-xxl-product-executor" width="180"> | <img src="./screenshots/admin-xxl-order-executor.png" alt="admin-xxl-order-executor" width="180"> | <img src="./screenshots/admin-xxl-interaction-executor.png" alt="admin-xxl-interaction-executor" width="180"> |
+| 店铺域执行器承接上架、审核与同步类任务 | 商品域执行器承接预热、库存与数据同步任务 | 订单域执行器承接到期、提醒与退款兜底任务 | 互动域执行器承接热榜重建、互动同步与广播任务 |
 
 ## <a id="showcase-chains"></a>9. 核心链路图集
 

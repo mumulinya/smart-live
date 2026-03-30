@@ -15,7 +15,7 @@
 
 <div class="smartlive-stats-grid">
   <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">63 张</div>
+    <div class="smartlive-stat-value">64 张</div>
     <div class="smartlive-stat-label">用户端页面截图</div>
     <div class="smartlive-stat-desc">覆盖登录、发现、交易、内容、社交、AI 与个人资产全链路页面</div>
   </div>
@@ -25,91 +25,18 @@
     <div class="smartlive-stat-desc">覆盖经营总览、店铺商品管理、订单履约与 AI 经营助手</div>
   </div>
   <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">22 张</div>
+    <div class="smartlive-stat-value">26 张</div>
     <div class="smartlive-stat-label">平台管理端截图</div>
     <div class="smartlive-stat-desc">覆盖审核中心、内容治理、业务用户、积分增长、系统权限与调度后台</div>
   </div>
   <div class="smartlive-stat-card">
-    <div class="smartlive-stat-value">102 张</div>
+    <div class="smartlive-stat-value">107 张</div>
     <div class="smartlive-stat-label">当前总引用截图</div>
     <div class="smartlive-stat-desc">当前页面导览里已经引用的全部真实截图资产，可直接用于项目展示和面试讲解</div>
   </div>
 </div>
 
-## 1. 快速跳转
-
-<div class="smartlive-gallery-quickjump">
-  <a href="#app-login-entry" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-    <span>登录与进入</span>
-  </a>
-  <a href="#app-discovery" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-    <span>发现入口与热榜</span>
-  </a>
-  <a href="#app-search-map" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-    <span>搜索与 LBS 找店</span>
-  </a>
-  <a href="#app-shop-product" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-    <span>店铺决策与商品详情</span>
-  </a>
-  <a href="#app-trade-assets" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-    <span>支付、订单、钱包与积分</span>
-  </a>
-  <a href="#app-content-creation" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-    <span>内容创作与评价互动</span>
-  </a>
-  <a href="#app-social-message" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-<span>社交关系、用户偏好与消息</span>
-  </a>
-  <a href="#app-ai-capability" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-    <span>AI 智能助手与 AIGC</span>
-  </a>
-  <a href="#app-profile-assets" class="smartlive-gallery-quickjump-card">
-    <strong>用户端 App</strong>
-<span>个人中心、收藏与账号安全</span>
-  </a>
-  <a href="#merchant-dashboard" class="smartlive-gallery-quickjump-card">
-    <strong>商家端 Web</strong>
-    <span>经营总览</span>
-  </a>
-  <a href="#merchant-business" class="smartlive-gallery-quickjump-card">
-    <strong>商家端 Web</strong>
-    <span>店铺与商品经营</span>
-  </a>
-  <a href="#merchant-growth" class="smartlive-gallery-quickjump-card">
-    <strong>商家端 Web</strong>
-<span>订单履约与详情</span>
-  </a>
-  <a href="#merchant-ai" class="smartlive-gallery-quickjump-card">
-    <strong>商家端 Web</strong>
-    <span>AI 经营助手</span>
-  </a>
-  <a href="#admin-governance" class="smartlive-gallery-quickjump-card">
-    <strong>平台管理端 Web</strong>
-    <span>内容审核与内容治理</span>
-  </a>
-  <a href="#admin-operations" class="smartlive-gallery-quickjump-card">
-    <strong>平台管理端 Web</strong>
-    <span>运营用户与积分增长</span>
-  </a>
-  <a href="#admin-system" class="smartlive-gallery-quickjump-card">
-    <strong>平台管理端 Web</strong>
-    <span>系统与权限后台</span>
-  </a>
-  <a href="#admin-scheduler" class="smartlive-gallery-quickjump-card">
-    <strong>调度后台</strong>
-    <span>XXL-JOB 调度后台</span>
-  </a>
-</div>
-
-## 2. 页面能力映射表
+## 1. 页面能力映射表
 
 这张表不是替代截图，而是把“页面入口、后端模块和对应链路”串起来，方便从页面快速跳到源码和链路文档。
 
@@ -259,10 +186,10 @@
 | <img src="./screenshots/app-pay-checkout.png" alt="支付收银台" width="230"> |
 | 支付收银与确认 |
 
-| 我的订单 | 订单详情页 |
-|:---:|:---:|
-| <img src="./screenshots/order-page.png" alt="我的订单" width="230"> | <img src="./screenshots/app-order-detail.png" alt="订单详情页" width="230"> |
-| 订单列表与履约状态 | 订单履约详情与支付入口 |
+| 我的订单 | 订单待支付页 | 订单详情页 |
+|:---:|:---:|:---:|
+| <img src="./screenshots/order-page.png" alt="我的订单" width="150"> | <img src="./screenshots/app-order-pending.png" alt="订单待支付页" width="150"> | <img src="./screenshots/app-order-detail.png" alt="订单详情页" width="150"> |
+| 订单列表与履约状态 | 待支付订单详情与立即支付入口 | 已支付订单详情与履约状态 |
 
 | 我的钱包 | 钱包充值页 |
 |:---:|:---:|
@@ -502,9 +429,19 @@
 | <img src="./screenshots/admin-xxl-dashboard.png" alt="XXL-JOB 调度总览" width="420"> | <img src="./screenshots/admin-xxl-job-manage.png" alt="XXL-JOB 任务管理" width="420"> |
 | 28 个任务、3 个在线执行器的运行总览 | 按执行器查看 JobHandler、CRON 和状态 |
 
-| 执行器管理 |
+| 执行器管理 | 店铺模块执行器 |
+|:---:|:---:|
+| <img src="./screenshots/admin-xxl-executors.png" alt="XXL-JOB 执行器管理" width="420"> | <img src="./screenshots/admin-xxl-shop-executor.png" alt="店铺模块执行器" width="420"> |
+| 6 个执行器配置与在线节点查看 | 店铺域执行器与 JobHandler 查看 |
+
+| 商品模块执行器 | 订单模块执行器 |
+|:---:|:---:|
+| <img src="./screenshots/admin-xxl-product-executor.png" alt="商品模块执行器" width="420"> | <img src="./screenshots/admin-xxl-order-executor.png" alt="订单模块执行器" width="420"> |
+| 商品域执行器、预热与同步任务查看 | 订单域执行器、过期与提醒任务查看 |
+
+| 互动模块执行器 |
 |:---:|
-| <img src="./screenshots/admin-xxl-executors.png" alt="XXL-JOB 执行器管理" width="420"> |
-| 6 个执行器配置与在线节点查看 |
+| <img src="./screenshots/admin-xxl-interaction-executor.png" alt="互动模块执行器" width="420"> |
+| 互动域执行器、热榜重建与同步任务查看 |
 
 </div>

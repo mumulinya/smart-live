@@ -275,6 +275,23 @@
   border-color: rgba(71, 85, 105, 0.9);
 }
 
+.dark .VPDocAsideOutline .VPDocOutlineItem.root > li > .outline-link:not(.active) {
+  background: rgba(15, 23, 42, 0.56);
+  border-color: rgba(51, 65, 85, 0.48);
+  color: #cbd5e1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.dark .VPDocAsideOutline .VPDocOutlineItem.root > li > .outline-link:not(.active) .smartlive-outline-prefix {
+  color: #94a3b8;
+}
+
+.dark .VPDocAsideOutline .VPDocOutlineItem.root > li > .outline-link:not(.active):hover {
+  background: rgba(30, 41, 59, 0.88);
+  border-color: rgba(71, 85, 105, 0.84);
+  color: #e2e8f0;
+}
+
 .dark .VPDocAsideOutline .outline-link.active {
   background: rgba(30, 64, 175, 0.22);
   color: #93c5fd !important;
@@ -361,8 +378,9 @@
 }
 
 .dark .VPDocAsideOutline .VPDocOutlineItem li.has-children:not(.is-children-collapsed) > .outline-link {
-  background: rgba(30, 41, 59, 0.86);
-  border-color: rgba(71, 85, 105, 0.9);
+  background: rgba(30, 41, 59, 0.88);
+  border-color: rgba(71, 85, 105, 0.84);
+  color: #e2e8f0;
 }
 
 .dark .VPDocAsideOutline .VPDocOutlineItem.nested {

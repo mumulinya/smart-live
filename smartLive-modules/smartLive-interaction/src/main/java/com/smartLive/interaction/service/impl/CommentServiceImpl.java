@@ -239,7 +239,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
             log.info("从数据库中获取评论数据");
             var q = query()
                     .eq("source_id", comment.getSourceId())
-                    .eq("status", 0)
+                    .eq("status", 1)
                     .eq("audit_status", AuditStatusEnum.PASS.getCode())
                     .eq("source_type", comment.getSourceType());
             if ("latest".equals(sort)) {

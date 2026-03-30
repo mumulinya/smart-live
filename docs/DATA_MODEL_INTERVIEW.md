@@ -135,10 +135,10 @@
 
 ## 6. 如果面试官继续深挖，你可以往哪几页接
 
-1. 继续看 [数据模型与核心表关系](/site-pages/DATA_MODEL)
-2. 接着讲 [系统架构与项目规模](/site-pages/SYSTEM_ARCHITECTURE)
-3. 再把表关系和 [核心链路总览](/core-links/) 对上
-4. 最后回到 [我的核心设计与实现](/site-pages/CONTRIBUTIONS)
+1. 先回到 [项目级能力亮点](/site-pages/CORE_HIGHLIGHTS)，把“这个项目为什么值得继续问”讲清楚。
+2. 再接 [我的核心设计与实现](/site-pages/CONTRIBUTIONS) 和 [性能指标与结果](/site-pages/PERFORMANCE)，把设计判断和工程表现讲出来。
+3. 如果面试官开始追问具体表关系，再继续展开 [数据模型与核心表关系](/site-pages/DATA_MODEL) 详细版。
+4. 最后把表关系和 [核心链路总览](/core-links/) 对上，说明订单、资产、互动和 AI 数据是怎么进入主链路的。
 
 ## 7. 推荐使用方式
 
