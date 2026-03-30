@@ -30,6 +30,8 @@
 | **smartLive-web** | 用户端 App（Vue 3 / H5 页面） | [GitHub](https://github.com/mumulinya/smartLive-web.git) |
 | **smartLive-admin** | 商家端与平台管理后台（Vue 2 + Element UI） | [GitHub](https://github.com/mumulinya/smartLive-admin.git) |
 
+> 说明：仓库名沿用 `smartLive-web / smartLive-admin`，在线文档中则按业务角色分别展示为“用户端 App”“商家端 Web”“平台管理端 Web”。
+
 ## 👀 第一次看这个仓库，建议先从这里进入
 
 这个 README 不只是“项目介绍”，更是你第一次阅读源码时的入口导航。  
@@ -144,6 +146,21 @@
 | 链路图 | 分开展示版 `SVG` 与详细版 `SVG` 两套数量，均以 `docs/diagrams` 当前可访问文件为准 |
 | XXL-JOB 任务 | 以调度后台当前可见任务数为准，和文档中的后台截图口径保持一致 |
 <!-- AUTO_SYNC:README_STATS_SCOPE:END -->
+
+### 🗓️ 项目开发时间线（6 个月）
+
+按当前仓库的 Git 提交记录粗粒度回看，这个项目大致经历了下面 6 个阶段：
+
+| 阶段 | 时间 | 主要完成内容 |
+|------|------|------|
+| 第 1 月 | 2025.10 | 搭起基础工程与用户主链路，完成登录、首页、地图、搜索、私信与 AI 评论 / 下单雏形 |
+| 第 2 月 | 2025.11 | 引入 RabbitMQ、死信队列、线程池与 ES 同步策略，补齐首页聚合与异步解耦能力 |
+| 第 3 月 | 2025.12 | 合并互动域，抽象点赞 / 收藏 / 评论 / 关注策略模式，升级到 Boot 3.2.2，并把 AI 工程并回主项目 |
+| 第 4 月 | 2026.01 | 重构为 Netty IM，完善代金券 / 订单 / 动态推送 / 审核中心等主业务骨架 |
+| 第 5 月 | 2026.02 | 深化 AI 会话与审核链路，重构缓存体系、评论评价系统、XXL-JOB 同步与热榜 / 搜索策略 |
+| 第 6 月 | 2026.03 | 完成订单过期与自动退款、MQ 幂等与重试补偿、商家 AI 助手，并沉淀完整文档站与链路图资产 |
+
+如果你准备从“项目是不是一步步做起来的”这个角度判断它，推荐直接看 [项目全貌与答辩说明](https://mumulinya.github.io/smartLive-Cloud/PROJECT_OVERVIEW) 里的时间线讲解版。
 
 ### <a id="个人贡献亮点"></a>👨‍💻 [个人贡献亮点（本项目核心设计与实现）](https://mumulinya.github.io/smartLive-Cloud/site-pages/CONTRIBUTIONS)
 
@@ -479,7 +496,7 @@ sql/                                 # 建库、业务库、配置库、调度�
 
 ## <a id="开源协议"></a>📄 开源协议
 
-本项目基于 [MIT License](LICENSE) 开源。
+本项目基于 [MIT License](LICENSE) 开源，可用于学习、参考、修改与二次开发；如基于本项目继续分发或演进，请保留原始版权声明与许可说明。
 
 
 ## <a id="联系我"></a>📞 联系我 - 找我聊技术

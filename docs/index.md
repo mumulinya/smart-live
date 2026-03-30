@@ -9,6 +9,9 @@ hero:
   text: 智评生活 · 本地生活微服务平台
   tagline: 覆盖发现、交易、履约、社交、热榜与 AI/RAG 的完整业务闭环落地
   actions:
+    - theme: brand
+      text: ⏱️ 3分钟快速评审
+      link: /THREE_MINUTES
     - theme: alt
       text: 💡 项目概览与导览
       link: /OPEN_SOURCE

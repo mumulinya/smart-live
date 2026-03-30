@@ -59,8 +59,10 @@ outline: 2
 | 仓库 | 角色定位 | 适合什么时候看 | 入口 |
 |:---|:---|:---|:---|
 | **smartLive-Cloud** | 后端微服务主仓库，承接交易、搜索、审核、AI、调度与基础设施协同 | 准备启动服务、看链路、看源码时先看它 | [GitHub](https://github.com/mumulinya/smartLive-Cloud.git) |
-| **smartLive-ui** | 商家端 Web 与平台管理后台，覆盖店铺、商品、订单、审核、运营、系统后台能力 | 想看后台页面、联调商家端或平台管理端时再看它 | [GitHub](https://github.com/mumulinya/smartLive-admin.git) |
-| **smart-live-app** | 用户端 App，覆盖登录、发现、下单、评价、社交消息与 AI 页面 | 想看用户端体验、截图与页面联调时再看它 | [GitHub](https://github.com/mumulinya/smartLive-web.git) |
+| **smartLive-admin** | 商家端 Web 与平台管理后台，覆盖店铺、商品、订单、审核、运营、系统后台能力 | 想看后台页面、联调商家端或平台管理端时再看它 | [GitHub](https://github.com/mumulinya/smartLive-admin.git) |
+| **smartLive-web** | 用户端 App，覆盖登录、发现、下单、评价、社交消息与 AI 页面 | 想看用户端体验、截图与页面联调时再看它 | [GitHub](https://github.com/mumulinya/smartLive-web.git) |
+
+> 说明：GitHub 仓库名沿用 `smartLive-admin / smartLive-web`；本地联调或 Docker 脚本中仍可能出现 `smartLive-ui / smart-live-app` 这类同级目录名，两者指向的是同一组前端工程。
 
 ## 5. 体验边界说明
 
@@ -238,7 +240,7 @@ outline: 2
 
 - `bin/` 目录目前只覆盖了 `auth / gateway / system / file / monitor` 的部分本地脚本，以及 `clean.bat`、`package.bat` 这类打包脚本。
 - `docker/` 目录中已经提供了 `docker-compose-infra.yml`、`docker-compose-java.yml`、`docker-compose.yml` 和 `copy.sh / deploy.sh`，更适合做整套环境演示与镜像打包。
-- `docker/copy.sh` 会尝试从同级目录的 `../smart-live-app/dist` 和 `../smartLive-ui/dist` 复制前端产物到 `docker/nginx/html/app` 与 `docker/nginx/html/admin`，如果你只启动后端仓库，这一步会被自动跳过。
+- `docker/copy.sh` 会尝试从同级目录的 `../smart-live-app/dist` 和 `../smartLive-ui/dist` 复制前端产物到 `docker/nginx/html/app` 与 `docker/nginx/html/admin`；这里用的是本地目录名，对应的 GitHub 仓库分别是 `smartLive-web` 和 `smartLive-admin`。如果你只启动后端仓库，这一步会被自动跳过。
 - 如果你是第一次本地联调，不建议把 `bin/run-*.bat` 当作“全模块标准启动入口”；更稳的方式仍然是先按最小链路在 IDE 中逐个启动，再按需补 `docker/` 里的整套编排。
 
 ### 10.2 Docker Compose 文件职责
@@ -316,14 +318,14 @@ outline: 2
 ### 这个仓库包含前端吗？前后端仓库分别是什么？
 当前仓库主要是 **后端微服务主仓库**，负责核心服务以及中间件编排和部署脚本。
 前端仓库已单独拆分：
-- `smartLive-ui`：后台管理端（Vue + Element UI）
-- `smart-live-app`：用户端 App（Vue 移动端 / H5 页面）
+- `smartLive-admin`：后台管理端（Vue + Element UI）
+- `smartLive-web`：用户端 App（Vue 移动端 / H5 页面）
 对应仓库入口可以直接查看上面第 4 节“项目入口与仓库矩阵”。
 
 ### 第一次本地启动，最小需要哪些中间件和模块？
 如果只是想先把系统跑起来并验证主链路，建议优先准备：
 - **基础中间件**：MySQL、Redis、Nacos、RabbitMQ
 - **核心服务**：Gateway、Auth、System、User、Shop
-- **前端**：按体验目标选择 `smartLive-ui` 或 `smart-live-app`
+- **前端**：按体验目标选择 `smartLive-admin` 或 `smartLive-web`
 
 如果你已经补齐 Elasticsearch，也可以把 `Search` 一起加进第一阶段；AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补。具体见上方第 6 节。

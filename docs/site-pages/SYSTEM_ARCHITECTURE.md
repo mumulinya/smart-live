@@ -187,6 +187,37 @@
 - 再看四个业务服务簇：基础服务、交易履约、内容社交、搜索智能治理。
 - 最后看底部基础设施：`MySQL / Redis / RabbitMQ / Elasticsearch / Milvus / MinIO / Nacos / XXL-JOB`，理解它们分别承接什么职责。
 
+### 3.4 Feign 调用拓扑图（按代码导入聚合）
+
+如果上一张图回答的是“系统整体怎么分层、怎么依赖基础设施”，这张图回答的就是更具体的问题：
+
+- **哪个服务 Feign 调了哪个服务**
+- **哪些服务是调用中心，哪些服务更多承担被依赖角色**
+- **FeignClient 的定义量和实际使用量是否匹配**
+
+这组数据是直接按 `smartLive-modules` 中 Java 代码对 `smartLive-api` 下 `Remote*Service` 的 import 聚合出来的，口径比只报 `18 个 FeignClient` 更具体。为了避免 `46` 条依赖边在节点图里交叉过重，这里改成了更适合阅读的**服务调用矩阵图**。
+
+| 维度 | 当前数据 | 说明 |
+|------|------|------|
+| FeignClient 契约定义 | **18 个** | 定义在 `smartLive-api`，按 AI、博客、聊天、互动、订单、积分、商品、店铺、系统、用户拆分 |
+| 实际调用方服务 | **15 个** | 当前 `ai / audit / blog / chat / im / index / interaction / order / points / product / search / shop / system / user / wallet` 都直接使用了 Feign |
+| 被调用服务 | **10 个** | 当前 Feign 目标覆盖 `ai / blog / chat / file / interaction / order / product / shop / system / user` |
+| 服务级聚合边 | **46 条** | 按“调用方服务 -> 被调用服务”去重后的依赖关系 |
+| 最常被调服务 | **interaction（8）** | 点赞、关注、评论、热榜、评价分析能力都被多条业务链路复用 |
+| 预留未直接使用的契约 | **3 个** | `RemoteLogService / RemotePointsService / RemoteSyncService` 当前仍在契约层保留 |
+
+<div align="center">
+  <img src="../diagrams/service-feign-topology.svg" alt="SmartLive Feign 调用拓扑图" width="100%">
+</div>
+
+**阅读建议：**
+
+- 先从左侧看 `ai / audit / order / shop / interaction` 这几个调用最密集的服务。
+- 再看右侧 `interaction / order / shop / system / user` 这些被调最频繁的协同中心。
+- 最后结合上一张总依赖图理解：**Gateway / Auth 负责入口治理，Feign 拓扑更多说明业务服务之间的同步协作密度。**
+
+> 这张图展示的是 **编译期契约依赖拓扑**，不是运行时完整链路追踪；MQ、调度和缓存侧的异步协作仍需要结合核心链路页一起看。
+
 ## 4. 服务职责矩阵
 
 这张表和上面的依赖图配合看会更清楚：依赖图负责先看“谁和谁相连”，职责矩阵负责再看“每个服务到底干什么”。

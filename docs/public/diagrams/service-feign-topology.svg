@@ -1,0 +1,309 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1260" viewBox="0 0 1600 1260" role="img" aria-labelledby="title desc">
+  <title id="title">SmartLive Feign 服务调用矩阵图</title>
+  <desc id="desc">基于 smartLive-modules 中实际导入的 Remote*Service，按调用方服务和被调用服务绘制 46 条聚合 Feign 依赖矩阵。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+    <linearGradient id="cardBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f0f7ff"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+    <linearGradient id="cardOrange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff7ed"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <linearGradient id="cardPurple" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#faf5ff"/>
+      <stop offset="100%" stop-color="#e9d5ff"/>
+    </linearGradient>
+    <style>
+      .panel { fill: url(#bg); stroke: #d5e3ff; stroke-width: 2; }
+      .title { font: 800 34px 'Segoe UI', 'PingFang SC', sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 16px 'Segoe UI', 'PingFang SC', sans-serif; fill: #334155; }
+      .metric { stroke-width: 2; rx: 26; ry: 26; }
+      .metric-value { font: 800 34px 'Segoe UI', 'PingFang SC', sans-serif; fill: #0f172a; }
+      .metric-title { font: 700 18px 'Segoe UI', 'PingFang SC', sans-serif; fill: #0f172a; }
+      .metric-desc { font: 400 14px 'Segoe UI', 'PingFang SC', sans-serif; fill: #475569; }
+      .section-label { font: 700 13px 'Segoe UI', 'PingFang SC', sans-serif; fill: #2563eb; letter-spacing: 0.08em; }
+      .section-title { font: 700 24px 'Segoe UI', 'PingFang SC', sans-serif; fill: #0f172a; }
+      .section-desc { font: 400 14px 'Segoe UI', 'PingFang SC', sans-serif; fill: #475569; }
+      .legend-title { font: 700 16px 'Segoe UI', 'PingFang SC', sans-serif; fill: #0f172a; }
+      .legend-text { font: 400 13px 'Segoe UI', 'PingFang SC', sans-serif; fill: #475569; }
+      .header-text { font: 700 12px 'Segoe UI', 'PingFang SC', sans-serif; fill: #0f172a; }
+      .header-count { font: 700 11px 'Segoe UI', 'PingFang SC', sans-serif; fill: #475569; }
+      .row-title { font: 700 15px 'Segoe UI', 'PingFang SC', sans-serif; fill: #0f172a; }
+      .row-sub { font: 400 12px 'Segoe UI', 'PingFang SC', sans-serif; fill: #64748b; }
+      .count-text { font: 700 13px 'Segoe UI', 'PingFang SC', sans-serif; fill: #1e3a8a; }
+      .note-text { font: 400 13px 'Segoe UI', 'PingFang SC', sans-serif; fill: #475569; }
+      .small-note { font: 400 12px 'Segoe UI', 'PingFang SC', sans-serif; fill: #64748b; }
+      .grid-border { fill: #ffffff; stroke: #d8e4f8; stroke-width: 1.8; }
+      .grid-line { stroke: #e2e8f0; stroke-width: 1; }
+      .grid-sep { stroke: #cbd5e1; stroke-width: 1.8; }
+      .chip-text { font: 700 12px 'Segoe UI', 'PingFang SC', sans-serif; fill: #0f172a; }
+    </style>
+  </defs>
+
+  <rect x="16" y="16" width="1568" height="1228" rx="30" ry="30" class="panel"/>
+
+  <text x="800" y="74" text-anchor="middle" class="title">SmartLive Feign 服务调用矩阵图</text>
+  <text x="800" y="104" text-anchor="middle" class="subtitle">把 46 条服务级依赖改成“行是调用方、列是被调用方”的矩阵，避免节点连线图在服务多时交叉过重</text>
+
+  <rect x="84" y="138" width="438" height="104" class="metric" fill="url(#cardBlue)" stroke="#93c5fd"/>
+  <text x="120" y="186" class="metric-value">18 个</text>
+  <text x="220" y="182" class="metric-title">FeignClient 契约定义</text>
+  <text x="220" y="210" class="metric-desc">定义在 smartLive-api，当前 15 个被业务模块直接引用，3 个属于预留契约</text>
+
+  <rect x="582" y="138" width="438" height="104" class="metric" fill="url(#cardOrange)" stroke="#fdba74"/>
+  <text x="618" y="186" class="metric-value">15 / 10</text>
+  <text x="754" y="182" class="metric-title">调用方服务 / 被调用服务</text>
+  <text x="754" y="210" class="metric-desc">调用方来自 ai、audit、order、shop、user 等 15 个服务，目标覆盖 10 个服务</text>
+
+  <rect x="1080" y="138" width="438" height="104" class="metric" fill="url(#cardPurple)" stroke="#c4b5fd"/>
+  <text x="1116" y="186" class="metric-value">46 条</text>
+  <text x="1218" y="182" class="metric-title">聚合调用边</text>
+  <text x="1218" y="210" class="metric-desc">interaction / order / shop / system / user 是 Feign 网络里最常被调用的协同中心</text>
+
+  <text x="94" y="300" class="section-label">MATRIX</text>
+  <text x="100" y="336" class="section-title">服务级 Feign 调用关系</text>
+  <text x="100" y="362" class="section-desc">行表示“哪个服务发起调用”，列表示“调到了哪个服务”；彩色块表示存在至少一个 Feign 契约依赖，右侧数字是该服务直接依赖了多少个目标服务。</text>
+
+  <rect x="92" y="382" width="112" height="26" rx="13" ry="13" fill="#f0f7ff" stroke="#93c5fd"/>
+  <text x="148" y="399" text-anchor="middle" class="chip-text">基础服务簇</text>
+  <rect x="216" y="382" width="112" height="26" rx="13" ry="13" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="272" y="399" text-anchor="middle" class="chip-text">交易履约簇</text>
+  <rect x="340" y="382" width="112" height="26" rx="13" ry="13" fill="#effcf6" stroke="#6ee7b7"/>
+  <text x="396" y="399" text-anchor="middle" class="chip-text">内容社交簇</text>
+  <rect x="464" y="382" width="128" height="26" rx="13" ry="13" fill="#faf5ff" stroke="#c4b5fd"/>
+  <text x="528" y="399" text-anchor="middle" class="chip-text">搜索 / AI / 治理簇</text>
+
+  <rect x="88" y="430" width="1424" height="742" rx="28" ry="28" class="grid-border"/>
+
+  <rect x="94" y="498" width="190" height="654" rx="22" ry="22" fill="#ffffff" stroke="#d8e4f8"/>
+  <rect x="300" y="498" width="944" height="654" rx="22" ry="22" fill="#ffffff" stroke="#d8e4f8"/>
+  <rect x="1260" y="498" width="144" height="654" rx="22" ry="22" fill="#ffffff" stroke="#d8e4f8"/>
+
+  <text x="132" y="474" class="section-label">CALLERS</text>
+  <text x="344" y="474" class="section-label">TARGETS</text>
+  <text x="1288" y="474" class="section-label">OUT DEGREE</text>
+
+  <!-- column headers -->
+  <g transform="translate(304,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#f0f7ff" stroke="#93c5fd"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">system</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 6 次</text>
+  </g>
+  <g transform="translate(398,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#f0f7ff" stroke="#93c5fd"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">user</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 6 次</text>
+  </g>
+  <g transform="translate(492,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#f0f7ff" stroke="#93c5fd"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">file</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 1 次</text>
+  </g>
+  <g transform="translate(586,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#fff7ed" stroke="#fdba74"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">order</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 6 次</text>
+  </g>
+  <g transform="translate(680,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#fff7ed" stroke="#fdba74"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">shop</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 6 次</text>
+  </g>
+  <g transform="translate(774,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#fff7ed" stroke="#fdba74"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">product</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 5 次</text>
+  </g>
+  <g transform="translate(868,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#effcf6" stroke="#6ee7b7"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">interaction</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 8 次</text>
+  </g>
+  <g transform="translate(962,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#effcf6" stroke="#6ee7b7"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">blog</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 5 次</text>
+  </g>
+  <g transform="translate(1056,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#effcf6" stroke="#6ee7b7"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">chat</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 1 次</text>
+  </g>
+  <g transform="translate(1150,442)">
+    <rect x="0" y="0" width="84" height="42" rx="16" ry="16" fill="#faf5ff" stroke="#c4b5fd"/>
+    <text x="42" y="18" text-anchor="middle" class="header-text">ai</text>
+    <text x="42" y="33" text-anchor="middle" class="header-count">被调 2 次</text>
+  </g>
+
+  <!-- grid lines -->
+  <line x1="394" y1="498" x2="394" y2="1152" class="grid-line"/>
+  <line x1="488" y1="498" x2="488" y2="1152" class="grid-line"/>
+  <line x1="582" y1="498" x2="582" y2="1152" class="grid-line"/>
+  <line x1="676" y1="498" x2="676" y2="1152" class="grid-line"/>
+  <line x1="770" y1="498" x2="770" y2="1152" class="grid-line"/>
+  <line x1="864" y1="498" x2="864" y2="1152" class="grid-line"/>
+  <line x1="958" y1="498" x2="958" y2="1152" class="grid-line"/>
+  <line x1="1052" y1="498" x2="1052" y2="1152" class="grid-line"/>
+  <line x1="1146" y1="498" x2="1146" y2="1152" class="grid-line"/>
+  <line x1="1240" y1="498" x2="1240" y2="1152" class="grid-line"/>
+
+  <line x1="300" y1="544" x2="1244" y2="544" class="grid-line"/>
+  <line x1="300" y1="590" x2="1244" y2="590" class="grid-line"/>
+  <line x1="300" y1="636" x2="1244" y2="636" class="grid-sep"/>
+  <line x1="300" y1="682" x2="1244" y2="682" class="grid-line"/>
+  <line x1="300" y1="728" x2="1244" y2="728" class="grid-line"/>
+  <line x1="300" y1="774" x2="1244" y2="774" class="grid-line"/>
+  <line x1="300" y1="820" x2="1244" y2="820" class="grid-line"/>
+  <line x1="300" y1="866" x2="1244" y2="866" class="grid-sep"/>
+  <line x1="300" y1="912" x2="1244" y2="912" class="grid-line"/>
+  <line x1="300" y1="958" x2="1244" y2="958" class="grid-line"/>
+  <line x1="300" y1="1004" x2="1244" y2="1004" class="grid-sep"/>
+  <line x1="300" y1="1050" x2="1244" y2="1050" class="grid-line"/>
+  <line x1="300" y1="1096" x2="1244" y2="1096" class="grid-line"/>
+
+  <!-- row labels -->
+  <g transform="translate(102,504)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#f0f7ff" stroke="#93c5fd"/><text x="14" y="21" class="row-title">system</text><text x="84" y="21" class="row-sub">资料/头像</text>
+  </g>
+  <g transform="translate(102,550)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#f0f7ff" stroke="#93c5fd"/><text x="14" y="21" class="row-title">user</text><text x="64" y="21" class="row-sub">主页/资产</text>
+  </g>
+  <g transform="translate(102,596)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#fff7ed" stroke="#fdba74"/><text x="14" y="21" class="row-title">wallet</text><text x="76" y="21" class="row-sub">余额支付</text>
+  </g>
+  <g transform="translate(102,642)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#fff7ed" stroke="#fdba74"/><text x="14" y="21" class="row-title">points</text><text x="74" y="21" class="row-sub">积分/抽奖</text>
+  </g>
+  <g transform="translate(102,688)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#fff7ed" stroke="#fdba74"/><text x="14" y="21" class="row-title">order</text><text x="66" y="21" class="row-sub">下单/退款</text>
+  </g>
+  <g transform="translate(102,734)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#fff7ed" stroke="#fdba74"/><text x="14" y="21" class="row-title">product</text><text x="83" y="21" class="row-sub">商品/库存</text>
+  </g>
+  <g transform="translate(102,780)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#fff7ed" stroke="#fdba74"/><text x="14" y="21" class="row-title">shop</text><text x="60" y="21" class="row-sub">店铺/经营</text>
+  </g>
+  <g transform="translate(102,826)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#effcf6" stroke="#6ee7b7"/><text x="14" y="21" class="row-title">blog</text><text x="58" y="21" class="row-sub">博客/同步</text>
+  </g>
+  <g transform="translate(102,872)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#effcf6" stroke="#6ee7b7"/><text x="14" y="21" class="row-title">interaction</text><text x="109" y="21" class="row-sub">互动中心</text>
+  </g>
+  <g transform="translate(102,918)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#effcf6" stroke="#6ee7b7"/><text x="14" y="21" class="row-title">chat</text><text x="60" y="21" class="row-sub">会话聚合</text>
+  </g>
+  <g transform="translate(102,964)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#effcf6" stroke="#6ee7b7"/><text x="14" y="21" class="row-title">im</text><text x="42" y="21" class="row-sub">Netty 推送</text>
+  </g>
+  <g transform="translate(102,1010)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#faf5ff" stroke="#c4b5fd"/><text x="14" y="21" class="row-title">search</text><text x="72" y="21" class="row-sub">搜索/LBS</text>
+  </g>
+  <g transform="translate(102,1056)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#faf5ff" stroke="#c4b5fd"/><text x="14" y="21" class="row-title">ai</text><text x="34" y="21" class="row-sub">RAG/AIGC</text>
+  </g>
+  <g transform="translate(102,1102)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#faf5ff" stroke="#c4b5fd"/><text x="14" y="21" class="row-title">audit</text><text x="57" y="21" class="row-sub">审核链</text>
+  </g>
+  <g transform="translate(102,1148)">
+    <rect x="0" y="0" width="174" height="34" rx="14" ry="14" fill="#faf5ff" stroke="#c4b5fd"/><text x="14" y="21" class="row-title">index</text><text x="58" y="21" class="row-sub">首页聚合</text>
+  </g>
+
+  <!-- row counts -->
+  <g transform="translate(1280,504)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">1 个依赖</text></g>
+  <g transform="translate(1280,550)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">2 个依赖</text></g>
+  <g transform="translate(1280,596)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">1 个依赖</text></g>
+  <g transform="translate(1280,642)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">1 个依赖</text></g>
+  <g transform="translate(1280,688)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">4 个依赖</text></g>
+  <g transform="translate(1280,734)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">3 个依赖</text></g>
+  <g transform="translate(1280,780)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">4 个依赖</text></g>
+  <g transform="translate(1280,826)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">3 个依赖</text></g>
+  <g transform="translate(1280,872)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">6 个依赖</text></g>
+  <g transform="translate(1280,918)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">1 个依赖</text></g>
+  <g transform="translate(1280,964)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">1 个依赖</text></g>
+  <g transform="translate(1280,1010)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">1 个依赖</text></g>
+  <g transform="translate(1280,1056)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">6 个依赖</text></g>
+  <g transform="translate(1280,1102)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">7 个依赖</text></g>
+  <g transform="translate(1280,1148)"><rect x="0" y="0" width="104" height="34" rx="14" ry="14" fill="#f8fbff" stroke="#d5e3ff"/><text x="52" y="22" text-anchor="middle" class="count-text">5 个依赖</text></g>
+
+  <!-- active cells -->
+  <!-- system -->
+  <rect x="506" y="511" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <!-- user -->
+  <rect x="883" y="557" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <rect x="977" y="557" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <!-- wallet -->
+  <rect x="600" y="603" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <!-- points -->
+  <rect x="412" y="649" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <!-- order -->
+  <rect x="318" y="695" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="412" y="695" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="694" y="695" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="788" y="695" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <!-- product -->
+  <rect x="318" y="741" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="600" y="741" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="882" y="741" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <!-- shop -->
+  <rect x="318" y="787" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="600" y="787" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="882" y="787" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <rect x="1164" y="787" width="56" height="20" rx="10" ry="10" fill="#ede9fe" stroke="#c4b5fd"/>
+  <!-- blog -->
+  <rect x="412" y="833" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="694" y="833" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="882" y="833" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <!-- interaction -->
+  <rect x="318" y="879" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="412" y="879" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="600" y="879" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="694" y="879" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="788" y="879" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="976" y="879" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <!-- chat -->
+  <rect x="412" y="925" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <!-- im -->
+  <rect x="1070" y="971" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <!-- search -->
+  <rect x="882" y="1017" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <!-- ai -->
+  <rect x="318" y="1063" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="600" y="1063" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="694" y="1063" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="788" y="1063" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="882" y="1063" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <rect x="976" y="1063" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <!-- audit -->
+  <rect x="318" y="1109" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="412" y="1109" width="56" height="20" rx="10" ry="10" fill="#dbeafe" stroke="#93c5fd"/>
+  <rect x="600" y="1109" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="694" y="1109" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="788" y="1109" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="882" y="1109" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <rect x="976" y="1109" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <rect x="1164" y="1109" width="56" height="20" rx="10" ry="10" fill="#ede9fe" stroke="#c4b5fd"/>
+  <!-- index -->
+  <rect x="600" y="1155" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="694" y="1155" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="788" y="1155" width="56" height="20" rx="10" ry="10" fill="#ffedd5" stroke="#fdba74"/>
+  <rect x="882" y="1155" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+  <rect x="976" y="1155" width="56" height="20" rx="10" ry="10" fill="#dcfce7" stroke="#86efac"/>
+
+  <!-- legend card -->
+  <rect x="1260" y="430" width="252" height="232" rx="24" ry="24" fill="#ffffff" stroke="#d7e3f7" stroke-width="2"/>
+  <text x="1284" y="462" class="legend-title">怎么读这张图</text>
+  <text x="1284" y="494" class="legend-text">1. 行是调用方服务，列是被调用服务。</text>
+  <text x="1284" y="522" class="legend-text">2. 彩色块表示存在至少一个 Feign 契约依赖。</text>
+  <text x="1284" y="550" class="legend-text">3. 同色表示同一服务簇，便于看“谁在跨簇协同”。</text>
+  <text x="1284" y="578" class="legend-text">4. interaction、order、shop、system、user 是最常被依赖的同步协作中心。</text>
+  <text x="1284" y="614" class="legend-text">这张图比节点连线图更适合回答：</text>
+  <text x="1284" y="640" class="legend-text">“哪个服务 Feign 调了谁、依赖密度是否合理？”</text>
+
+  <rect x="88" y="1188" width="1424" height="40" rx="20" ry="20" fill="#ffffff" stroke="#d5e3ff" stroke-width="2"/>
+  <text x="110" y="1213" class="note-text">备注：未直接出现在矩阵中的 `RemoteLogService / RemotePointsService / RemoteSyncService` 当前仍保留在契约层，更多作为预留能力或被 MQ / 调度链路替代。</text>
+</svg>

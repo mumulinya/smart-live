@@ -71,7 +71,8 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: '01 项目沉淀与学习复盘', link: '/site-pages/LEARNINGS' },
-          { text: '02 项目驱动学习复盘指南', link: '/core-links/SmartLive_Java_Internship_Review_Plan_Updated' }
+          { text: '02 开发历程与演进记录', link: '/site-pages/DEVELOPMENT_HISTORY' },
+          { text: '03 项目驱动学习复盘指南', link: '/core-links/SmartLive_Java_Internship_Review_Plan_Updated' }
         ]
       }
     ],
@@ -89,9 +90,5 @@ export default defineConfig({
       provider: 'local'
     },
 
-    footer: {
-      message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2026-present mumulinya'
-    }
   }
 })
