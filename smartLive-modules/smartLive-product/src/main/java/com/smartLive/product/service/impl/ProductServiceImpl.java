@@ -369,7 +369,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         PurchaseStrategy strategy = purchaseStrategyMap.get(strategyName);
         if (strategy == null) {
-             throw new RuntimeException("缂傚倸鍊风欢锟犲垂闂堟稓鏆﹂柣銏ゆ涧閸ㄦ繃绻涘顔荤凹闁绘挴鍋撻柣搴＄畭閸庡崬煤閵娾晛鍑犻柛宀€鍋為埛鎴︽煙缁嬫寧鎹ｉ柟鍐叉閵囧嫰寮村Ο琛″亾濠靛鏋佺€广儱鎷嬪鈺傘亜閹捐泛鏋庣紒鎲嬬畵濮婃椽鎮烽幍顔荤驳闂佺瀛╂繛濠傜暦閸濆嫮鏆嗛柍褜鍓熼崺鈧い鎺戝€归弳鈺呮煙閾忣偅灏甸柤娲憾瀵濡烽敃鈧崜顓㈡⒑閸涘﹥澶勯柛鐘崇墵瀵悂鎮╁ù瀣潔闂佸搫鍟犻崑鎾愁熆閻熺増顥㈤柟顔芥そ婵＄兘鍩￠崒姘偅?" + strategyName);
+             throw new RuntimeException("未找到对应的商品购买策略: " + strategyName);
         }
 
         return strategy.purchase(userId, product);
@@ -570,7 +570,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         int pageNo = current == null || current < 1 ? 1 : current;
         int pageSize = size == null || size < 1 ? 10 : size;
 
-        // 1. 闂傚倸鍊搁崐鎼佸疮椤栨縿浜归柛鎰典簷閻掑﹤霉閻樺樊鍎忕紒鐘冲灩閹插憡鎯旈敐鍌氫壕婵ǜ鍎遍埀顒佺箞閻涱喚鈧綆鍣弫鍌炲箹鏉堝墽鎮奸柣娑栧劦濮婃椽宕崟顓烆暤闂佺顑嗛幐鎼佲€﹂崸妤佸殝濞达絽鍟ˉ婵嬫偡濠婂嫬惟闁搞儜鍜佸斀闂備礁缍婇崑濠冪閻愬瓨浜ら柡鍐ㄧ墛閻?100 闂傚倷绀侀幉锟犳嚌閸撗呯煋閻犻缚銆€閺嬫棃鏌熺€电孝闁搞劍绻傝灃闁挎繂鎳庨弳濠囨煕鐎ｎ偅灏扮€垫澘瀚埀顒婄到閻忔岸姊煎鍫熲拺?
+        // 1. 分页参数校验：限制热门榜最多只能查询前100名的数据，防止深度分页
         if (pageNo * pageSize > 100) {
             return Collections.emptyList();
         }
@@ -872,15 +872,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
-     * 闂傚倷绀佺紞濠傤焽瑜忕槐鐐寸節閸パ囨７濠电偛妯婃禍婊堝础閹惰姤鍊垫繛鎴烆伆閹达附鍋傞柍褜鍓熷缁樻媴閸濄儲鐨戦梺绋款儐閹瑰洤顫?
+     * 批量更新商品销量
      *
-     * @param updateMap 闂傚倷绀侀幗婊堝窗鎼粹垾娑樜旈崨顓狀啇濡炪値浜滅划姘攽閻愭潙鐏﹂柟鍛婃倐閺屽﹪鏁愭径濠勫摋闂侀潧绻堥崐鏍偂閸岀偟鍙撻柛銉ｅ妽缁€鍐煟閿濆鎲鹃柡宀嬬節瀹曠喖顢橀悙鎰╁灲閺?
-     * @return 闂傚倷绀侀幖顐⒚洪妶澶嬪仱闁靛ň鏅涢拑鐔封攽閻樻彃顏痪鎯с偢閺岀喖骞嗚閸ょ喎霉?
-     */
-    /**
-     * 批量清理商品缓存
-     *
-     * @param productIds 商品ID集合
+     * @param updateMap 商品ID与增加的销量映射
+     * @return 成功与否
      */
     @Override
     public Boolean updateSoldBatch(Map<Long, Integer> updateMap) {
@@ -1048,18 +1043,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public boolean recoverRedisStockAndEligibility(Long productId, Long userId) {
         if (productId == null) return false;
         
-        // 1. 闂傚倷娴囬鏍储瑜版帒鍨傜憸鐗堝吹?Redis 婵犵妲呴崑鍛熆濡皷鍋撳鐓庡箺闁哄懎鐖煎畷銊︾節閸愩劌濡抽梻浣筋潐閸庡磭澹曢銏犵?
+        // 1. 恢复 Redis 中的商品库存缓存
         String stockKey = "seckill:stock:" + productId;
         redisService.incrementCacheValue(stockKey, 1);
         
-        // 2. 缂傚倸鍊风粈渚€藝椤栫偐鈧箑鐣￠幍铏€洪柟鍏肩暘閸斿秹宕戦妸鈺傜厪濠电姴绻掗悾閬嶆煟閹惧瓨绀嬫慨濠冩そ楠炴捇骞掗弬婵勫灪閵囧嫰鏁冮埀顒€顕ｉ崜浣虹煓濠㈣泛澶囬崑鎾绘晲鎼存繄鐩庣紓浣插亾閻庯綆鍠楅埛鎺楁煕閺囥劌澧┑顔兼喘閺屾盯鍩￠崒銈嗙暭闂佺懓鍢查澶婎嚕閸撲焦宕夐柕濠庣仢?(婵犵數濮烽。浠嬪焵椤掆偓閸熷潡鍩€椤掆偓缂嶅﹪骞冨Ο璇茬窞闁归偊鍓涢宀勬⒑瑜版帒浜板ù婊呭仦濞煎寮Λ?userId)
+        // 2. 清除 Redis 中该用户购买记录，恢复用户的购买资格（如果传入了userId）
         if (userId != null) {
             String orderKey = "seckill:order:" + productId;
             Long l = stringRedisTemplate.opsForSet().remove(orderKey, userId.toString());
-            log.info("闂佽姘﹂～澶愭偤閺囩姳鐒婃繛鍡楁捣閺勫倿姊婚崒姘偓鍝モ偓姘ュ姂瀹曟劕螖閸涱厽鐎梺闈涚墕椤︻垳绮婚敐澶嬬叄婵﹩鍓欓埀顒€顭烽幃鐑藉箻缂佹鍘卞┑掳鍊撻悞锔剧矆鐎ｎ偂绻嗛柣鎰靛墯閵囨繄鈧? productId={}, userId={}, result={}", productId, userId, l);
+            log.info("成功清理 Redis 缓存订单购买记录标记, productId={}, userId={}, result={}", productId, userId, l);
         }
         
-        log.info("闂佽娴烽幊鎾诲箟闄囬妵鎰板礃椤妞藉鍊燁檨闁?Redis 缂傚倸鍊风粈渚€藝閹殿喗鏆滄俊銈傚亾妞ゎ厼娲畷姗€顢欓崗鑲┾偓顒勬⒑缂佹﹩娈旈柣妤€妫涚划? productId={}, userId={}", productId, userId);
+        log.info("成功执行恢复 Redis 商品库存及购买资格逻辑, productId={}, userId={}", productId, userId);
         return true;
     }
 
