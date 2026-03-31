@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040" role="img" aria-labelledby="title desc">
+  <title id="title">SmartLive AI RAG 核心链路总图</title>
+  <desc id="desc">展示 SmartLive 中业务数据如何增量同步到 Milvus，以及用户问题如何通过 Agent、Tool 和 RagService 完成检索增强生成并通过 SSE 返回。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#eef4ff"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#315f9c"/>
+    </marker>
+    <style>
+      .title{font:700 34px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#18324f}
+      .subtitle{font:500 18px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#4d6784}
+      .section{font:700 24px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#214f87}
+      .label{font:700 20px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#17324c}
+      .text{font:500 15px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#415972}
+      .small{font:600 14px 'Microsoft YaHei','PingFang SC',sans-serif;fill:#305276}
+      .box{fill:#ffffff;stroke:#9db9dd;stroke-width:2;rx:22}
+      .box-green{fill:#f1fbf6;stroke:#9bcdb0;stroke-width:2;rx:22}
+      .box-orange{fill:#fff6ec;stroke:#efb175;stroke-width:2;rx:22}
+      .box-purple{fill:#f7f2ff;stroke:#c5b1ef;stroke-width:2;rx:22}
+      .box-blue{fill:#eef5ff;stroke:#8eb0df;stroke-width:2;rx:22}
+      .note{fill:#ffffff;stroke:#d7e3f2;stroke-width:1.5;rx:18}
+      .line{stroke:#315f9c;stroke-width:4;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#6c8dba;stroke-width:3;stroke-dasharray:8 8;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+
+  <rect width="1800" height="1040" fill="url(#bg)"/>
+  <rect x="32" y="32" width="1736" height="976" rx="28" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
+
+  <text class="title" x="74" y="94">SmartLive AI RAG 核心链路总图</text>
+  <text class="subtitle" x="74" y="128">把两条线放在一起看：上面是业务数据建库链路，下面是在线问答与 Agent/RAG 生成链路。</text>
+
+  <text class="section" x="74" y="190">A. 知识建库链路：业务数据增量同步到 Milvus</text>
+
+  <rect class="box" x="70" y="220" width="250" height="120"/>
+  <text class="label" x="195" y="266" text-anchor="middle">业务服务</text>
+  <text class="text" x="195" y="296" text-anchor="middle">Product / Shop / Review / Blog</text>
+  <text class="text" x="195" y="320" text-anchor="middle">在新增、更新、删除后发同步消息</text>
+
+  <rect class="box-orange" x="360" y="220" width="230" height="120"/>
+  <text class="label" x="475" y="266" text-anchor="middle">RabbitMQ</text>
+  <text class="text" x="475" y="296" text-anchor="middle">MILVUS_SYNC_EXCHANGE</text>
+  <text class="text" x="475" y="320" text-anchor="middle">单条 / 批量 / 删除 三类消息</text>
+
+  <rect class="box-blue" x="630" y="220" width="260" height="120"/>
+  <text class="label" x="760" y="266" text-anchor="middle">MilvusSyncListener</text>
+  <text class="text" x="760" y="296" text-anchor="middle">消费消息并做 Redis 幂等</text>
+  <text class="text" x="760" y="320" text-anchor="middle">失败走重试与死信兜底</text>
+
+  <rect class="box-purple" x="930" y="220" width="260" height="120"/>
+  <text class="label" x="1060" y="266" text-anchor="middle">MilvusSyncStrategy</text>
+  <text class="text" x="1060" y="296" text-anchor="middle">按领域路由到 Product / Shop</text>
+  <text class="text" x="1060" y="320" text-anchor="middle">Review / Blog 策略</text>
+
+  <rect class="box-green" x="1230" y="220" width="280" height="120"/>
+  <text class="label" x="1370" y="266" text-anchor="middle">Spring AI Document</text>
+  <text class="text" x="1370" y="296" text-anchor="middle">text 负责语义召回</text>
+  <text class="text" x="1370" y="320" text-anchor="middle">metadata 负责精确过滤</text>
+
+  <rect class="box-green" x="1550" y="220" width="200" height="120"/>
+  <text class="label" x="1650" y="266" text-anchor="middle">Milvus / VectorStore</text>
+  <text class="text" x="1650" y="296" text-anchor="middle">product / shop / review / blog</text>
+  <text class="text" x="1650" y="320" text-anchor="middle">四类集合</text>
+
+  <path class="line" d="M320 280 H348"/>
+  <path class="line" d="M590 280 H618"/>
+  <path class="line" d="M890 280 H918"/>
+  <path class="line" d="M1190 280 H1218"/>
+  <path class="line" d="M1510 280 H1538"/>
+
+  <rect class="note" x="1130" y="370" width="560" height="92"/>
+  <text class="label" x="1160" y="408">为什么这种入库方式适合业务 RAG</text>
+  <text class="text" x="1160" y="434">1. 用 text 做语义召回，避免只靠关键词匹配。</text>
+  <text class="text" x="1160" y="456">2. 用 metadata 做店铺、分类、评分、距离等业务过滤，检索结果更稳。</text>
+
+  <text class="section" x="74" y="538">B. 在线问答链路：Agent / Tool / RagService 组织生成结果</text>
+
+  <rect class="box" x="70" y="570" width="220" height="120"/>
+  <text class="label" x="180" y="616" text-anchor="middle">用户端 AI 页面</text>
+  <text class="text" x="180" y="646" text-anchor="middle">发送 message / region / sessionId</text>
+  <text class="text" x="180" y="670" text-anchor="middle">接收 SSE 流式结果</text>
+
+  <rect class="box" x="330" y="570" width="280" height="120"/>
+  <text class="label" x="470" y="616" text-anchor="middle">Controller + MessageService</text>
+  <text class="text" x="470" y="646" text-anchor="middle">保存消息、准备上下文</text>
+  <text class="text" x="470" y="670" text-anchor="middle">进入 AI 会话主流程</text>
+
+  <rect class="box-blue" x="650" y="570" width="260" height="120"/>
+  <text class="label" x="780" y="616" text-anchor="middle">ChatMemory + Context</text>
+  <text class="text" x="780" y="646" text-anchor="middle">回填历史会话</text>
+  <text class="text" x="780" y="670" text-anchor="middle">选择路由策略</text>
+
+  <rect class="box-purple" x="950" y="570" width="280" height="120"/>
+  <text class="label" x="1090" y="616" text-anchor="middle">ChatClient / Agent / Tool</text>
+  <text class="text" x="1090" y="646" text-anchor="middle">FrameworkRoutingStrategy</text>
+  <text class="text" x="1090" y="670" text-anchor="middle">ShopTools / ProductTools / ...</text>
+
+  <rect class="box-green" x="1270" y="570" width="280" height="120"/>
+  <text class="label" x="1410" y="616" text-anchor="middle">RagService</text>
+  <text class="text" x="1410" y="646" text-anchor="middle">SearchRequest(query, topK)</text>
+  <text class="text" x="1410" y="670" text-anchor="middle">+ filterExpression</text>
+
+  <rect class="box-orange" x="1590" y="570" width="160" height="120"/>
+  <text class="label" x="1670" y="616" text-anchor="middle">模型输出</text>
+  <text class="text" x="1670" y="646" text-anchor="middle">answer</text>
+  <text class="text" x="1670" y="670" text-anchor="middle">message / card_render</text>
+
+  <path class="line" d="M290 630 H318"/>
+  <path class="line" d="M610 630 H638"/>
+  <path class="line" d="M910 630 H938"/>
+  <path class="line" d="M1230 630 H1258"/>
+  <path class="line" d="M1550 630 H1578"/>
+
+  <path class="dash" d="M1650 340 V 520"/>
+  <text class="small" x="1666" y="438">相似度检索</text>
+  <text class="small" x="1666" y="458">来自 Milvus</text>
+
+  <rect class="note" x="1240" y="742" width="510" height="112"/>
+  <text class="label" x="1270" y="780">为什么这条链路和很多教程不一样</text>
+  <text class="text" x="1270" y="806">1. 不是把检索结果原样塞给模型，而是先转成 VO、摘要和复合业务上下文。</text>
+  <text class="text" x="1270" y="828">2. 不是单一聊天接口，而是 Tool + RagService + Agent 共同完成问答与推荐。</text>
+
+  <rect class="note" x="70" y="742" width="1110" height="112"/>
+  <text class="label" x="100" y="780">一句话理解</text>
+  <text class="text" x="100" y="806">上面那条线解决“私有业务知识从哪里来”，下面这条线解决“用户问题如何先检索、再生成、再流式返回”。</text>
+  <text class="text" x="100" y="828">因此 SmartLive 的 AI 本质上不是普通聊天插件，而是建立在业务知识底座上的决策增强入口。</text>
+
+  <rect class="note" x="70" y="896" width="1680" height="82"/>
+  <text class="label" x="100" y="932">核心判断</text>
+  <text class="text" x="100" y="958">只要回答前发生了“检索外部知识 -> 检索结果参与生成”，它就是 RAG。SmartLive 属于业务数据型、结构化、可执行的 RAG，不是非正规 RAG。</text>
+</svg>

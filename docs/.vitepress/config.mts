@@ -59,9 +59,10 @@ export default defineConfig({
           { text: '04 性能指标与结果', link: '/site-pages/PERFORMANCE' },
           { text: '05 数据建模与表关系怎么讲', link: '/DATA_MODEL_INTERVIEW' },
           { text: '06 技术选型理由', link: '/site-pages/TECH_SELECTION' },
-          { text: '07 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
-          { text: '08 未来规划 Roadmap', link: '/site-pages/ROADMAP' },
-          { text: '09 核心架构拷问 FAQ', link: '/site-pages/FAQ' }
+          { text: '07 Spring AI 与传统 RAG 对照', link: '/site-pages/SPRING_AI_RAG_COMPARISON' },
+          { text: '08 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
+          { text: '09 未来规划 Roadmap', link: '/site-pages/ROADMAP' },
+          { text: '10 核心架构拷问 FAQ', link: '/site-pages/FAQ' }
         ]
       },
       {
@@ -85,7 +86,30 @@ export default defineConfig({
     },
 
     search: {
-      provider: 'local'
+      provider: 'local',
+      options: {
+        translations: {
+          button: {
+            buttonText: '站内搜索',
+            buttonAriaLabel: '站内搜索'
+          },
+          modal: {
+            displayDetails: '显示详细结果',
+            resetButtonTitle: '清空搜索',
+            backButtonTitle: '关闭搜索',
+            noResultsText: '未找到与以下内容相关的结果',
+            footer: {
+              selectText: '打开结果',
+              selectKeyAriaLabel: '回车',
+              navigateText: '切换结果',
+              navigateUpKeyAriaLabel: '向上箭头',
+              navigateDownKeyAriaLabel: '向下箭头',
+              closeText: '关闭',
+              closeKeyAriaLabel: 'Esc'
+            }
+          }
+        }
+      }
     },
 
   }

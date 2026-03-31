@@ -46,6 +46,26 @@
 
 > SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端、商家端和平台管理端三类入口，把交易、搜索、社交、审核、IM、支付、积分、热榜和 AI/RAG 串成了同一套可运行、可追踪、可继续扩展的系统。
 
+## 0.5 如果你正好是因为 AI / RAG 点进来的
+
+如果你最关心的是“这个项目里的 Spring AI 和 RAG 到底是不是做实了”，最推荐先看下面这张总图，再决定要不要继续深入源码。
+
+<div class="smartlive-figure-frame" align="center">
+  <img src="./core-links/diagrams/ai-rag-business-core-chain.svg" alt="SmartLive AI RAG 核心链路总图" width="100%"/>
+</div>
+
+这张图把 SmartLive 里的 AI 主链路拆成了两条最关键的线：
+
+1. **知识建库链路**：商品、店铺、评价、博客等业务数据先通过 MQ 增量同步进 Milvus。
+2. **在线问答链路**：用户问题进入 Agent / Tool / RagService 后，再做向量检索和业务化生成，最后通过 SSE 把回答或卡片回给前端。
+
+所以这套实现并不是“普通聊天页 + 一点向量检索点缀”，而是更接近生产落地的**业务数据型 RAG**。
+
+如果你只想先看一页把这个问题讲清楚，可以直接跳到：
+
+- [AI Agent 策略路由与 RAG 多维增强生成链路](/core-links/8.%20AI%20Agent策略路由与RAG多维增强生成链路)
+- [Spring AI 与传统 RAG 对照](/site-pages/SPRING_AI_RAG_COMPARISON)
+
 ## 1. 项目定位
 
 **SmartLive（智评生活）** 是一个面向**本地生活服务场景**的微服务平台，覆盖用户发现、交易履约、内容互动、商家经营与平台治理。  

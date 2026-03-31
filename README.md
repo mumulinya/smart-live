@@ -57,6 +57,8 @@
 | AI 对话、推荐卡片与经营助手 | [`smartLive-modules/smartLive-ai`](./smartLive-modules/smartLive-ai) | Agent Router、意图识别、RAG 检索、商家助手与 AIGC |
 | 实时聊天、会话与通知 | [`smartLive-modules/smartLive-im`](./smartLive-modules/smartLive-im) · [`smartLive-modules/smartLive-chat`](./smartLive-modules/smartLive-chat) | Netty 长连接、消息持久化、会话聚合与系统通知 |
 
+> 如果你是因为 `Spring AI / RAG` 点进来的，建议先看 [AI Agent 策略路由与 RAG 多维增强生成链路](https://mumulinya.github.io/smartLive-Cloud/core-links/8.%20AI%20Agent策略路由与RAG多维增强生成链路)。这页现在单独补了“业务数据 -> MQ -> Milvus”与“用户问题 -> Agent / Tool / RAG / SSE”两条核心总图，先建立心智模型，再回头读 `smartLive-modules/smartLive-ai` 会顺很多。
+
 ## 🖼️ 页面导览入口
 
 | 分组 | 内容说明 | 入口 |

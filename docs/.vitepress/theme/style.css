@@ -81,17 +81,41 @@
   -webkit-text-fill-color: transparent;
 }
 
+.VPNavBarMenu {
+  gap: 10px;
+}
+
 .VPNavBarMenuLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.02);
   font-size: 15px;
   font-weight: 700;
   position: relative;
-  transition: color 0.25s ease;
+  overflow: hidden;
+  transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.VPNavBarMenuLink::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 42%, rgba(37, 99, 235, 0.06) 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
 }
 
 .VPNavBarMenuLink::after {
   content: '';
   position: absolute;
-  bottom: -2px;
+  bottom: 5px;
   left: 50%;
   width: 0;
   height: 2px;
@@ -102,12 +126,20 @@
 }
 
 .VPNavBarMenuLink:hover::after {
-  width: 80%;
-  left: 10%;
+  width: calc(100% - 28px);
+  left: 14px;
 }
 
 .VPNavBarMenuLink:hover {
   color: #2563eb !important;
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.2);
+  background: rgba(255, 255, 255, 0.56);
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.VPNavBarMenuLink:hover::before {
+  opacity: 1;
 }
 
 .dark .VPNavBarMenuLink::after {
@@ -115,17 +147,49 @@
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
 }
 
+.dark .VPNavBarMenuLink::before {
+  background: linear-gradient(120deg, rgba(148, 163, 184, 0.08), rgba(15, 23, 42, 0) 42%, rgba(56, 189, 248, 0.1) 100%);
+}
+
 .dark .VPNavBarMenuLink:hover {
   color: #38bdf8 !important;
+  border-color: rgba(56, 189, 248, 0.16);
+  background: rgba(30, 41, 59, 0.72);
+  box-shadow: 0 14px 26px rgba(2, 6, 23, 0.28), inset 0 1px 0 rgba(148, 163, 184, 0.1);
 }
 
 .VPNavBarMenuLink.active {
   color: var(--vp-c-brand-1);
+  border-color: rgba(59, 130, 246, 0.16);
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.82), rgba(236, 253, 245, 0.62));
+  box-shadow: 0 14px 24px rgba(37, 99, 235, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .VPNavBarMenuLink.active::after {
-  width: 80%;
-  left: 10%;
+  width: calc(100% - 28px);
+  left: 14px;
+}
+
+.VPNavBarMenuLink.active::before {
+  opacity: 1;
+}
+
+.dark .VPNavBarMenuLink.active {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.84));
+  border-color: rgba(56, 189, 248, 0.14);
+  box-shadow: 0 16px 30px rgba(2, 6, 23, 0.3), inset 0 1px 0 rgba(148, 163, 184, 0.12);
+}
+
+@media (max-width: 960px) {
+  .VPNavBarMenu {
+    gap: 6px;
+  }
+
+  .VPNavBarMenuLink {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
 }
 
 .smartlive-doc-outline-toggle {
@@ -400,14 +464,20 @@
 
 
 .VPSearch .DocSearch-Button {
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(248, 250, 252, 0.92);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.94)) padding-box,
+    linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(15, 118, 110, 0.12), rgba(245, 158, 11, 0.08)) border-box;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 
 .dark .VPSearch .DocSearch-Button {
-  border-color: rgba(148, 163, 184, 0.18);
-  background: rgba(30, 41, 59, 0.88);
+  border-color: transparent;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.96)) padding-box,
+    linear-gradient(135deg, rgba(56, 189, 248, 0.24), rgba(96, 165, 250, 0.16), rgba(45, 212, 191, 0.12)) border-box;
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.3), inset 0 1px 0 rgba(148, 163, 184, 0.14);
 }
 
 @keyframes smartliveHeroGlow {
@@ -828,39 +898,6 @@
   box-shadow: 0 26px 52px rgba(15, 118, 110, 0.6), 0 0 20px rgba(37, 99, 235, 0.5);
 }
 
-.smartlive-hero-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin: 6px auto 14px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(37, 99, 235, 0.14);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.94));
-  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.08);
-  color: #1e3a8a;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-}
-
-.smartlive-hero-kicker__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #2563eb, #38bdf8);
-  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.12);
-}
-
-.dark .smartlive-hero-kicker {
-  border-color: rgba(125, 211, 252, 0.16);
-  background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.9));
-  box-shadow: 0 18px 38px rgba(2, 6, 23, 0.36);
-  color: #dbeafe;
-}
-
 .smartlive-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -970,14 +1007,6 @@
   color: #cbd5e1;
 }
 
-.smartlive-home-nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin: 14px 0 28px;
-}
-
 @media (min-width: 960px) {
   .VPHome .VPHero .container {
     grid-template-columns: minmax(0, 1fr) minmax(380px, 580px);
@@ -1000,131 +1029,11 @@
     max-width: 580px;
   }
 
-  .smartlive-hero-kicker {
-    position: relative;
-    z-index: 1;
-    margin: -86px auto 14px;
-  }
-
   .smartlive-tech-strip {
     position: relative;
     z-index: 1;
     margin: 8px 0 12px;
   }
-
-  .smartlive-hero-metrics {
-    position: relative;
-    z-index: 1;
-    margin: 10px auto 14px;
-  }
-
-  .smartlive-home-nav {
-    position: relative;
-    z-index: 1;
-    margin: 10px 0 22px;
-  }
-}
-
-.smartlive-hero-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-  margin: 12px auto 18px;
-  max-width: 900px;
-}
-
-.smartlive-hero-metric {
-  padding: 14px 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.88));
-  backdrop-filter: blur(14px);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  animation: smartliveFloat 6s ease-in-out infinite;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
-}
-
-.smartlive-hero-metric::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.44), rgba(15, 118, 110, 0.2), rgba(37, 99, 235, 0.3));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  opacity: 0.54;
-  pointer-events: none;
-}
-
-.smartlive-hero-metric strong {
-  display: block;
-  font-size: 28px;
-  line-height: 1;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 8px;
-}
-
-.smartlive-hero-metric span {
-  display: block;
-  font-size: 13px;
-  line-height: 1.6;
-  font-weight: 700;
-  color: #475569;
-}
-
-.smartlive-hero-metric::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.52) 50%, transparent 80%);
-  transform: translateX(-130%);
-  animation: smartliveShimmer 8s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.smartlive-hero-metric:nth-child(2) {
-  animation-delay: 0.6s;
-}
-
-.smartlive-hero-metric:nth-child(3) {
-  animation-delay: 1.2s;
-}
-
-.smartlive-hero-metric:nth-child(4) {
-  animation-delay: 1.8s;
-}
-
-.smartlive-hero-metric:hover {
-  transform: translateY(-8px) scale(1.03);
-  border-color: rgba(37, 99, 235, 0.4);
-  box-shadow: 0 24px 44px rgba(37, 99, 235, 0.2), 0 0 16px rgba(15, 118, 110, 0.1) inset;
-}
-
-.dark .smartlive-hero-metric:hover {
-  box-shadow: 0 24px 48px rgba(2, 6, 23, 0.48);
-}
-
-.dark .smartlive-hero-metric {
-  border-color: rgba(148, 163, 184, 0.14);
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.88));
-  box-shadow: 0 16px 36px rgba(2, 6, 23, 0.34);
-}
-
-.dark .smartlive-hero-metric strong {
-  color: #f8fafc;
-}
-
-.dark .smartlive-hero-metric span {
-  color: #cbd5e1;
 }
 
 /* ===== LEFT-SIDE FIXED SECTION NAV ===== */
@@ -1513,27 +1422,6 @@
   color: #dbeafe;
 }
 
-.smartlive-home-nav-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
-  color: #334155;
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-}
-
-.smartlive-home-nav-pill:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 26px rgba(15, 118, 110, 0.1);
-  background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(240, 253, 250, 0.92));
-  color: #0f766e;
-}
-
 @media (max-width: 768px) {
   .smartlive-tech-strip {
     gap: 6px;
@@ -1542,10 +1430,6 @@
   .smartlive-tech-chip {
     padding: 6px 10px;
     font-size: 11px;
-  }
-  .smartlive-home-nav-pill {
-    padding: 8px 12px;
-    font-size: 12px;
   }
 }
 
@@ -1561,17 +1445,6 @@
   box-shadow:
     0 0 0 8px rgba(30, 64, 175, 0.12),
     0 0 18px rgba(56, 189, 248, 0.14);
-}
-
-.dark .smartlive-home-nav-pill {
-  border-color: rgba(125, 211, 252, 0.18);
-  background: rgba(15, 23, 42, 0.88);
-  color: #7dd3fc;
-}
-
-.dark .smartlive-home-nav-pill:hover {
-  background: rgba(30, 41, 59, 0.96);
-  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.36);
 }
 
 .smartlive-facts-grid,
@@ -2485,27 +2358,8 @@
     line-height: 1.65;
   }
 
-  .smartlive-home-nav {
-    justify-content: flex-start;
-  }
-
   .smartlive-tech-strip {
     justify-content: flex-start;
-  }
-
-  .smartlive-hero-kicker {
-    margin-top: 0;
-  }
-
-  .smartlive-hero-metrics {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .smartlive-hero-kicker {
-    margin-top: 0;
-    justify-content: center;
-    text-align: center;
-    letter-spacing: 0.08em;
   }
 
   .smartlive-stats-grid,
@@ -2846,33 +2700,130 @@
 /* 旧的 right aside 独立覆盖被废弃，统一迁移至文件末尾的 DOC ASIDE OUTLINE ENHANCEMENT 区域 */
 
 /* ===== SEARCH BUTTON ENHANCEMENT ===== */
+.VPNavBarSearch {
+  position: relative;
+}
+
 .VPNavBarSearch .DocSearch-Button,
 .VPNavBarSearch button {
-  border-radius: 14px !important;
-  border: 1px solid rgba(148, 163, 184, 0.2) !important;
-  background: rgba(248, 250, 252, 0.88) !important;
-  backdrop-filter: blur(10px);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+  min-width: 154px;
+  min-height: 46px;
+  padding: 0 14px 0 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid transparent !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.94)) padding-box,
+    linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(15, 118, 110, 0.12), rgba(245, 158, 11, 0.08)) border-box !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(14px) saturate(1.1);
+  transition:
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s ease,
+    background 0.28s ease !important;
+}
+
+.VPNavBarSearch .DocSearch-Button::before,
+.VPNavBarSearch button::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.12) 36%, rgba(37, 99, 235, 0.07) 70%, rgba(15, 118, 110, 0.08) 100%);
+  pointer-events: none;
+}
+
+.VPNavBarSearch .DocSearch-Button:focus-visible,
+.VPNavBarSearch button:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.16), 0 0 0 1px rgba(37, 99, 235, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+}
+
+.VPNavBarSearch .DocSearch-Button-Container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.VPNavBarSearch .DocSearch-Search-Icon {
+  width: 18px;
+  height: 18px;
+  padding: 7px;
+  box-sizing: content-box;
+  border-radius: 999px;
+  color: #2563eb;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.96), rgba(204, 251, 241, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86), 0 8px 16px rgba(37, 99, 235, 0.14);
+}
+
+.VPNavBarSearch .DocSearch-Button-Placeholder {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #0f172a !important;
+}
+
+.VPNavBarSearch .DocSearch-Button-Keys {
+  display: none !important;
 }
 
 .VPNavBarSearch .DocSearch-Button:hover,
 .VPNavBarSearch button:hover {
-  border-color: rgba(37, 99, 235, 0.3) !important;
-  box-shadow: 0 0 16px rgba(37, 99, 235, 0.12), 0 0 0 1px rgba(191, 219, 254, 0.4) !important;
-  background: rgba(239, 246, 255, 0.95) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 18px 38px rgba(37, 99, 235, 0.14), 0 0 0 1px rgba(191, 219, 254, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.84) !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.98)) padding-box,
+    linear-gradient(135deg, rgba(37, 99, 235, 0.24), rgba(14, 165, 233, 0.18), rgba(20, 184, 166, 0.14)) border-box !important;
 }
 
 .dark .VPNavBarSearch .DocSearch-Button,
 .dark .VPNavBarSearch button {
-  border-color: rgba(56, 189, 248, 0.18) !important;
-  background: rgba(30, 41, 59, 0.88) !important;
+  border-color: transparent !important;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.96)) padding-box,
+    linear-gradient(135deg, rgba(56, 189, 248, 0.24), rgba(96, 165, 250, 0.16), rgba(45, 212, 191, 0.12)) border-box !important;
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.32), inset 0 1px 0 rgba(148, 163, 184, 0.14) !important;
+}
+
+.dark .VPNavBarSearch .DocSearch-Button::before,
+.dark .VPNavBarSearch button::before {
+  background:
+    linear-gradient(120deg, rgba(148, 163, 184, 0.12) 0%, rgba(15, 23, 42, 0.04) 32%, rgba(56, 189, 248, 0.09) 72%, rgba(45, 212, 191, 0.1) 100%);
+}
+
+.dark .VPNavBarSearch .DocSearch-Search-Icon {
+  color: #7dd3fc;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.9));
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.18), 0 10px 18px rgba(56, 189, 248, 0.12);
+}
+
+.dark .VPNavBarSearch .DocSearch-Button-Placeholder {
+  color: #e2e8f0 !important;
 }
 
 .dark .VPNavBarSearch .DocSearch-Button:hover,
 .dark .VPNavBarSearch button:hover {
-  border-color: rgba(56, 189, 248, 0.35) !important;
-  box-shadow: 0 0 18px rgba(56, 189, 248, 0.15), 0 0 0 1px rgba(56, 189, 248, 0.2) !important;
-  background: rgba(30, 41, 59, 0.95) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 20px 40px rgba(2, 6, 23, 0.4), 0 0 0 1px rgba(56, 189, 248, 0.18), inset 0 1px 0 rgba(148, 163, 184, 0.18) !important;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98)) padding-box,
+    linear-gradient(135deg, rgba(56, 189, 248, 0.34), rgba(96, 165, 250, 0.22), rgba(45, 212, 191, 0.16)) border-box !important;
+}
+
+@media (max-width: 768px) {
+  .VPNavBarSearch .DocSearch-Button,
+  .VPNavBarSearch button {
+    min-width: 0;
+    min-height: 42px;
+    padding: 0 10px !important;
+  }
+
+  .VPNavBarSearch .DocSearch-Search-Icon {
+    padding: 6px;
+  }
 }
 
 /* ===== SCROLL REVEAL ANIMATIONS ===== */
@@ -3281,31 +3232,440 @@ html {
 }
 
 .DocSearch-Button-Key {
-  border-radius: 4px !important;
-  border: 1px solid rgba(148, 163, 184, 0.3) !important;
-  border-bottom-width: 3px !important;
-  background: linear-gradient(180deg, #ffffff, #f1f5f9) !important;
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0,0,0,0.05) !important;
-  color: #64748b !important;
-  font-family: inherit !important;
-  transition: all 0.15s ease !important;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-bottom-width: 1px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+  color: #475569 !important;
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+.DocSearch-Button-Key:first-child {
+  min-width: 36px;
+}
+
+.DocSearch-Button-KeySeparator {
+  display: none !important;
 }
 
 .DocSearch-Button:hover .DocSearch-Button-Key {
-  transform: translateY(2px);
-  border-bottom-width: 1px !important;
-  background: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+  color: #1e3a8a !important;
 }
 
 .dark .DocSearch-Button-Key {
-  background: linear-gradient(180deg, #334155, #1e293b) !important;
-  border-color: rgba(125, 211, 252, 0.2) !important;
-  border-bottom-color: rgba(15, 23, 42, 0.8) !important;
-  color: #94a3b8 !important;
+  background: rgba(30, 41, 59, 0.92) !important;
+  border-color: rgba(125, 211, 252, 0.14) !important;
+  border-bottom-color: rgba(15, 23, 42, 0.7) !important;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.1) !important;
+  color: #cbd5e1 !important;
 }
 
 .dark .DocSearch-Button:hover .DocSearch-Button-Key {
-  background: #1e293b !important;
+  background: rgba(15, 23, 42, 0.96) !important;
+  border-color: rgba(125, 211, 252, 0.2) !important;
+  color: #e0f2fe !important;
+}
+
+/* --- 1.5 Local Search Modal (站内搜索弹窗) --- */
+.VPLocalSearchBox {
+  backdrop-filter: blur(6px);
+}
+
+.VPLocalSearchBox .backdrop {
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.1), transparent 38%),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.84), rgba(241, 245, 249, 0.9)) !important;
+  backdrop-filter: blur(12px) saturate(1.05);
+}
+
+.dark .VPLocalSearchBox .backdrop {
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.14), transparent 38%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.74), rgba(15, 23, 42, 0.86)) !important;
+}
+
+.VPLocalSearchBox .shell {
+  position: relative;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 28px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94)) padding-box,
+    linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(15, 118, 110, 0.1), rgba(245, 158, 11, 0.08)) border-box;
+  box-shadow:
+    0 32px 80px rgba(15, 23, 42, 0.16),
+    0 8px 24px rgba(37, 99, 235, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(22px) saturate(1.08);
+  overflow: hidden;
+}
+
+.VPLocalSearchBox .shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(20, 184, 166, 0.06), transparent 28%);
+  pointer-events: none;
+}
+
+.dark .VPLocalSearchBox .shell {
+  border-color: rgba(71, 85, 105, 0.44);
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94)) padding-box,
+    linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.14), rgba(45, 212, 191, 0.12)) border-box;
+  box-shadow:
+    0 36px 92px rgba(2, 6, 23, 0.48),
+    0 10px 32px rgba(14, 165, 233, 0.08),
+    inset 0 1px 0 rgba(148, 163, 184, 0.14);
+}
+
+.dark .VPLocalSearchBox .shell::before {
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(45, 212, 191, 0.08), transparent 28%);
+}
+
+.VPLocalSearchBox .search-bar {
+  position: relative;
+  min-height: 64px;
+  padding: 8px 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.74),
+    0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.VPLocalSearchBox .search-bar:focus-within {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow:
+    0 16px 32px rgba(37, 99, 235, 0.12),
+    0 0 0 1px rgba(191, 219, 254, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.dark .VPLocalSearchBox .search-bar {
+  border-color: rgba(71, 85, 105, 0.44);
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(148, 163, 184, 0.1),
+    0 12px 28px rgba(2, 6, 23, 0.22);
+}
+
+.dark .VPLocalSearchBox .search-bar:focus-within {
+  border-color: rgba(56, 189, 248, 0.26);
+  box-shadow:
+    0 18px 34px rgba(2, 6, 23, 0.34),
+    0 0 0 1px rgba(56, 189, 248, 0.14),
+    inset 0 1px 0 rgba(148, 163, 184, 0.14);
+}
+
+.VPLocalSearchBox .search-icon {
+  margin: 0 10px 0 4px;
+  padding: 10px;
+  border-radius: 999px;
+  color: #2563eb;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.96), rgba(204, 251, 241, 0.74));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 10px 20px rgba(37, 99, 235, 0.12);
+}
+
+.dark .VPLocalSearchBox .search-icon {
+  color: #7dd3fc;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.92));
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.12), 0 12px 22px rgba(14, 116, 144, 0.14);
+}
+
+.VPLocalSearchBox .search-input {
+  padding: 12px 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.VPLocalSearchBox .search-input::placeholder {
+  color: #64748b;
+  opacity: 0.9;
+}
+
+.dark .VPLocalSearchBox .search-input {
+  color: #e2e8f0;
+}
+
+.dark .VPLocalSearchBox .search-input::placeholder {
+  color: #94a3b8;
+}
+
+.VPLocalSearchBox .search-actions {
+  gap: 8px;
+}
+
+.VPLocalSearchBox .search-actions button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, color 0.22s ease;
+}
+
+.VPLocalSearchBox .search-actions button:not([disabled]):hover {
+  transform: translateY(-1px);
+  color: #2563eb;
+  border-color: rgba(96, 165, 250, 0.28);
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.dark .VPLocalSearchBox .search-actions button {
+  border-color: rgba(71, 85, 105, 0.42);
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+.dark .VPLocalSearchBox .search-actions button:not([disabled]):hover {
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.22);
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.26), inset 0 1px 0 rgba(148, 163, 184, 0.12);
+}
+
+.VPLocalSearchBox .results {
+  position: relative;
+  padding: 4px 2px 2px;
+  gap: 10px;
+}
+
+.VPLocalSearchBox .result {
+  position: relative;
+  align-items: stretch;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(248, 250, 252, 0.9));
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
+
+.VPLocalSearchBox .result:hover,
+.VPLocalSearchBox .result.selected {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94));
+  box-shadow:
+    0 20px 34px rgba(37, 99, 235, 0.1),
+    0 0 0 1px rgba(191, 219, 254, 0.32);
+}
+
+.dark .VPLocalSearchBox .result {
+  border-color: rgba(71, 85, 105, 0.38);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.92));
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.22);
+}
+
+.dark .VPLocalSearchBox .result:hover,
+.dark .VPLocalSearchBox .result.selected {
+  border-color: rgba(56, 189, 248, 0.22);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  box-shadow:
+    0 22px 38px rgba(2, 6, 23, 0.34),
+    0 0 0 1px rgba(56, 189, 248, 0.12);
+}
+
+.VPLocalSearchBox .result > div {
+  margin: 14px 16px;
+}
+
+.VPLocalSearchBox .titles {
+  align-items: center;
+  gap: 6px;
+}
+
+.VPLocalSearchBox .title {
+  gap: 6px;
+  align-items: center;
+  color: #475569;
+}
+
+.VPLocalSearchBox .title:not(.main) {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(241, 245, 249, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.VPLocalSearchBox .title:not(.main) .text {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.VPLocalSearchBox .title.main {
+  color: #0f172a;
+  font-weight: 700;
+  min-width: 100%;
+  margin-top: 4px;
+}
+
+.VPLocalSearchBox .title.main .text {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.dark .VPLocalSearchBox .title {
+  color: #94a3b8;
+}
+
+.dark .VPLocalSearchBox .title:not(.main) {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(71, 85, 105, 0.34);
+}
+
+.dark .VPLocalSearchBox .title.main {
+  color: #e2e8f0;
+}
+
+.VPLocalSearchBox .title .local-search-icon {
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.VPLocalSearchBox .title.main .local-search-icon {
+  display: none;
+}
+
+.VPLocalSearchBox .title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 11px;
+}
+
+.dark .VPLocalSearchBox .title-icon {
+  background: rgba(56, 189, 248, 0.1);
+  color: #7dd3fc;
+}
+
+.VPLocalSearchBox .excerpt {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.22);
+  opacity: 0.72;
+}
+
+.dark .VPLocalSearchBox .excerpt {
+  border-top-color: rgba(71, 85, 105, 0.44);
+}
+
+.VPLocalSearchBox .titles mark,
+.VPLocalSearchBox .excerpt mark {
+  border-radius: 6px;
+  padding: 0 4px;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.96), rgba(204, 251, 241, 0.82)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  color: #1d4ed8 !important;
+}
+
+.dark .VPLocalSearchBox .titles mark,
+.dark .VPLocalSearchBox .excerpt mark {
+  border-color: rgba(56, 189, 248, 0.18);
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.32), rgba(13, 148, 136, 0.24)) !important;
+  box-shadow: inset 0 1px 0 rgba(125, 211, 252, 0.08);
+  color: #e0f2fe !important;
+}
+
+.VPLocalSearchBox .no-results {
+  margin: 6px 2px 2px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px dashed rgba(148, 163, 184, 0.24);
+  background: rgba(248, 250, 252, 0.82);
+  color: #475569;
+}
+
+.dark .VPLocalSearchBox .no-results {
+  border-color: rgba(71, 85, 105, 0.5);
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+}
+
+.VPLocalSearchBox .search-keyboard-shortcuts {
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(248, 250, 252, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  color: #64748b;
+}
+
+.VPLocalSearchBox .search-keyboard-shortcuts span {
+  gap: 6px;
+}
+
+.VPLocalSearchBox .search-keyboard-shortcuts kbd {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  color: #334155;
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+.dark .VPLocalSearchBox .search-keyboard-shortcuts {
+  border-color: rgba(71, 85, 105, 0.42);
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
+.dark .VPLocalSearchBox .search-keyboard-shortcuts kbd {
+  border-color: rgba(71, 85, 105, 0.42);
+  background: rgba(30, 41, 59, 0.94);
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.1);
+  color: #e2e8f0;
+}
+
+@media (max-width: 767px) {
+  .VPLocalSearchBox .shell {
+    padding: 14px;
+    border-radius: 0;
+  }
+
+  .VPLocalSearchBox .search-bar {
+    min-height: 58px;
+    padding: 8px 10px;
+    border-radius: 18px;
+  }
+
+  .VPLocalSearchBox .result {
+    border-radius: 18px;
+  }
+
+  .VPLocalSearchBox .result > div {
+    margin: 12px 14px;
+  }
 }
 
 /* --- 2. Spotlight Feature Cards (首页特性卡片流光) --- */
