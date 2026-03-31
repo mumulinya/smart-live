@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -53,49 +55,50 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
         String chatId = resolveChatId(request);
         AgentRoutingDecision decision = agentRouter.routeDecision(request.getMessage());
         String enrichedMessage = buildEnrichedMessage(request);
+        Map<String, Object> toolContext = buildToolContext(request, chatId);
 
         if (!decision.isCollaborative()) {
-            return streamSingleAgent(decision.getPrimaryAgent(), enrichedMessage, chatId);
+            return streamSingleAgent(decision.getPrimaryAgent(), enrichedMessage, chatId, toolContext);
         }
 
         log.info("Routing chat request: chatId={}, mode=collaborative, primaryAgent={}, executionOrder={}",
                 chatId, decision.getPrimaryAgent(), decision.getExecutionOrder());
 
-        return collaborativeCall(decision, enrichedMessage, chatId)
+        return collaborativeCall(decision, enrichedMessage, chatId, toolContext)
                 .flatMapMany(Flux::just)
-                .onErrorResume(ex -> fallbackToGeneral(decision.getPrimaryAgent(), enrichedMessage, chatId, ex));
+                .onErrorResume(ex -> fallbackToGeneral(decision.getPrimaryAgent(), enrichedMessage, chatId, toolContext, ex));
     }
 
     /**
      * 返回字符串数据流。
      */
-    private Flux<String> streamSingleAgent(AgentType agentType, String userMessage, String chatId) {
+    private Flux<String> streamSingleAgent(AgentType agentType, String userMessage, String chatId, Map<String, Object> toolContext) {
         ChatClient selectedClient = selectChatClient(agentType);
         log.info("Routing chat request: chatId={}, mode=single, agentType={}", chatId, agentType);
 
-        return streamWithRetryInternal(selectedClient, userMessage, chatId)
-                .onErrorResume(primaryEx -> fallbackToGeneral(agentType, userMessage, chatId, primaryEx));
+        return streamWithRetryInternal(selectedClient, userMessage, chatId, toolContext)
+                .onErrorResume(primaryEx -> fallbackToGeneral(agentType, userMessage, chatId, toolContext, primaryEx));
     }
 
     /**
      * 返回字符串数据流。
      */
-    private Mono<String> collaborativeCall(AgentRoutingDecision decision, String userMessage, String chatId) {
+    private Mono<String> collaborativeCall(AgentRoutingDecision decision, String userMessage, String chatId, Map<String, Object> toolContext) {
         return Flux.fromIterable(decision.getExecutionOrder())
-                .concatMap(agentType -> callSpecialist(agentType, userMessage, chatId)
+                .concatMap(agentType -> callSpecialist(agentType, userMessage, chatId, toolContext)
                         .map(content -> new AgentAnswer(agentType, content))
                         .onErrorResume(ex -> {
                             log.warn("Collaborative specialist failed: agentType={}, chatId={}", agentType, chatId, ex);
                             return Mono.empty();
                         }))
                 .collectList()
-                .flatMap(answers -> synthesizeCollaborativeAnswer(decision, userMessage, chatId, answers));
+                .flatMap(answers -> synthesizeCollaborativeAnswer(decision, userMessage, chatId, toolContext, answers));
     }
 
     /**
      * 返回字符串数据流。
      */
-    private Mono<String> callSpecialist(AgentType agentType, String userMessage, String chatId) {
+    private Mono<String> callSpecialist(AgentType agentType, String userMessage, String chatId, Map<String, Object> toolContext) {
         ChatClient chatClient = selectChatClient(agentType);
         String prompt = """
                 Multi-agent collaboration task.
@@ -105,7 +108,7 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
                 %s
                 """.formatted(agentType.name(), userMessage);
 
-        return callAsMono(chatClient, prompt, chatId);
+        return callAsMono(chatClient, prompt, chatId, toolContext);
     }
 
     /**
@@ -115,6 +118,7 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
             AgentRoutingDecision decision,
             String userMessage,
             String chatId,
+            Map<String, Object> toolContext,
             List<AgentAnswer> answers
     ) {
         if (answers.isEmpty()) {
@@ -126,7 +130,7 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
         }
 
         String synthesisPrompt = buildSynthesisPrompt(decision, userMessage, answers);
-        return callAsMono(generalChatClient, synthesisPrompt, chatId);
+        return callAsMono(generalChatClient, synthesisPrompt, chatId, toolContext);
     }
 
     /**
@@ -158,8 +162,8 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
     /**
      * 返回字符串数据流。
      */
-    private Mono<String> callAsMono(ChatClient chatClient, String prompt, String chatId) {
-        return streamWithRetryInternal(chatClient, prompt, chatId)
+    private Mono<String> callAsMono(ChatClient chatClient, String prompt, String chatId, Map<String, Object> toolContext) {
+        return streamWithRetryInternal(chatClient, prompt, chatId, toolContext)
                 .collectList()
                 .map(this::joinChunks)
                 .flatMap(content -> {
@@ -186,14 +190,14 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
     /**
      * 返回字符串数据流。
      */
-    private Flux<String> fallbackToGeneral(AgentType agentType, String userMessage, String chatId, Throwable primaryEx) {
+    private Flux<String> fallbackToGeneral(AgentType agentType, String userMessage, String chatId, Map<String, Object> toolContext, Throwable primaryEx) {
         if (agentType == AgentType.GENERAL) {
             log.error("General agent failed: chatId={}", chatId, primaryEx);
             return Flux.just(FALLBACK_MESSAGE);
         }
 
         log.warn("Agent {} failed, falling back to general agent: chatId={}", agentType, chatId, primaryEx);
-        return streamWithRetryInternal(generalChatClient, userMessage, chatId)
+        return streamWithRetryInternal(generalChatClient, userMessage, chatId, toolContext)
                 .onErrorResume(generalEx -> {
                     log.error("General fallback failed: chatId={}", chatId, generalEx);
                     return Flux.just(FALLBACK_MESSAGE);
@@ -203,22 +207,22 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
     /**
      * 返回字符串数据流。
      */
-    private Flux<String> streamWithRetryInternal(ChatClient chatClient, String userMessage, String chatId) {
-        return streamCallWithEmptyDetection(chatClient, userMessage, chatId)
+    private Flux<String> streamWithRetryInternal(ChatClient chatClient, String userMessage, String chatId, Map<String, Object> toolContext) {
+        return streamCallWithEmptyDetection(chatClient, userMessage, chatId, toolContext)
                 .onErrorResume(firstEx -> {
                     log.warn("Stream call failed or returned empty content, retrying once: chatId={}", chatId, firstEx);
-                    return streamCallWithEmptyDetection(chatClient, userMessage, chatId)
-                            .onErrorResume(secondEx -> nonStreamCall(chatClient, userMessage, chatId, secondEx));
+                    return streamCallWithEmptyDetection(chatClient, userMessage, chatId, toolContext)
+                            .onErrorResume(secondEx -> nonStreamCall(chatClient, userMessage, chatId, toolContext, secondEx));
                 });
     }
 
     /**
      * 返回字符串数据流。
      */
-    private Flux<String> streamCallWithEmptyDetection(ChatClient chatClient, String userMessage, String chatId) {
+    private Flux<String> streamCallWithEmptyDetection(ChatClient chatClient, String userMessage, String chatId, Map<String, Object> toolContext) {
         AtomicBoolean hasContent = new AtomicBoolean(false);
 
-        return streamCall(chatClient, userMessage, chatId)
+        return streamCall(chatClient, userMessage, chatId, toolContext)
                 .doOnNext(chunk -> {
                     if (chunk != null && !chunk.isBlank()) {
                         hasContent.set(true);
@@ -232,10 +236,11 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
     /**
      * 返回字符串数据流。
      */
-    private Flux<String> streamCall(ChatClient chatClient, String userMessage, String chatId) {
+    private Flux<String> streamCall(ChatClient chatClient, String userMessage, String chatId, Map<String, Object> toolContext) {
         return Flux.defer(() -> chatClient.prompt()
                 .user(userMessage)
                 .advisors(a -> a.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId))
+                .toolContext(toolContext)
                 .stream()
                 .content());
     }
@@ -243,12 +248,13 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
     /**
      * 返回字符串数据流。
      */
-    private Flux<String> nonStreamCall(ChatClient chatClient, String userMessage, String chatId, Throwable streamEx) {
+    private Flux<String> nonStreamCall(ChatClient chatClient, String userMessage, String chatId, Map<String, Object> toolContext, Throwable streamEx) {
         log.error("Stream call failed, falling back to non-stream call: chatId={}", chatId, streamEx);
 
         return Mono.fromCallable(() -> chatClient.prompt()
                         .user(userMessage)
                         .advisors(a -> a.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId))
+                        .toolContext(toolContext)
                         .call()
                         .content())
                 .flatMapMany(content -> {
@@ -269,6 +275,18 @@ public class DirectRoutingStrategy implements AgentChatStrategy {
             case REVIEW -> reviewAgentChatClient;
             case GENERAL -> generalChatClient;
         };
+    }
+
+    /**
+     * 构建工具上下文。
+     */
+    private Map<String, Object> buildToolContext(AIChatRequest request, String chatId) {
+        Map<String, Object> toolContext = new HashMap<>();
+        if (request != null && request.getContext() != null) {
+            toolContext.putAll(request.getContext());
+        }
+        toolContext.putIfAbsent("conversationId", chatId);
+        return toolContext;
     }
 
     /**

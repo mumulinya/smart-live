@@ -44,7 +44,7 @@ export default defineConfig({
           { text: '05 RabbitMQ 可靠性', link: '/core-links/RabbitMQ消息可靠性全链路详解' },
           { text: '06 审核链与搜索双写', link: '/core-links/5. 审核中心责任链 + 发布审核与搜索 向量同步链路' },
           { text: '07 Feed 与互动同步', link: '/core-links/4. Feed 推送与滚动读取 + 互动双轨同步链路' },
-          { text: '08 AI 路由与 RAG', link: '/core-links/8. AI Agent策略路由与RAG多维增强生成链路' },
+          { text: '08 AI 路由、RAG 与结构化响应', link: '/core-links/8. AI Agent策略路由与RAG多维增强生成链路' },
           { text: '09 LBS 搜索与热词', link: '/core-links/6. 搜索读链路 + 热词沉淀链路' },
           { text: '10 热榜洗牌与重建', link: '/core-links/7. 热榜增量洗牌与全量重建链路' }
         ]

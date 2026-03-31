@@ -3,6 +3,7 @@ package com.smartLive.ai.tools;
 import com.smartLive.ai.service.rag.IReviewRagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,8 @@ public class ReviewTools {
             @ToolParam(description = "Maximum score.", required = false)
             Integer maxScore,
             @ToolParam(description = "Original user message.", required = false)
-            String userMessage
+            String userMessage,
+            ToolContext toolContext
     ) {
         log.info("Calling getReviewSummary | sourceType={}, sourceId={}, minScore={}, maxScore={}",
                 sourceType, sourceId, minScore, maxScore);

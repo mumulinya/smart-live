@@ -4,9 +4,11 @@ import com.smartLive.ai.entity.vo.ShopVO;
 import com.smartLive.ai.service.rag.IBlogRagService;
 import com.smartLive.ai.service.rag.IReviewRagService;
 import com.smartLive.ai.service.rag.IShopRagService;
+import com.smartLive.ai.service.user.support.StructuredToolCaptureRegistry;
 import com.smartLive.common.core.constant.ResourceTypeConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -26,12 +28,13 @@ public class ShopTools {
     private final IShopRagService shopRagService;
     private final IReviewRagService reviewRagService;
     private final IBlogRagService blogRagService;
+    private final StructuredToolCaptureRegistry structuredToolCaptureRegistry;
 
     @Tool(description = "Search shops by category, user intent and optional location filters.")
     public List<ShopVO> searchShopsByCategory(
             @ToolParam(description = "Original user message.", required = false)
             String userMessage,
-            @ToolParam(description = "Shop category id.", required = true)
+            @ToolParam(description = "Shop category id. Use this mapping exactly: 1=美食, 2=KTV, 3=丽人·美发, 4=健身运动, 5=按摩足疗, 6=美容SPA, 7=亲子游乐, 8=酒吧, 9=轰趴馆, 10=美睫·美甲.", required = true)
             Long typeId,
             @ToolParam(description = "Area name.", required = false)
             String area,
@@ -42,7 +45,8 @@ public class ShopTools {
             @ToolParam(description = "Longitude.", required = false)
             Double x,
             @ToolParam(description = "Latitude.", required = false)
-            Double y
+            Double y,
+            ToolContext toolContext
     ) {
         log.info("Calling searchShopsByCategory | category={}, area={}, userMessage={}, district={}, x={}, y={}",
                 typeId, area, userMessage, district, x, y);
@@ -54,7 +58,9 @@ public class ShopTools {
         shopQuery.setDistrict(district);
         shopQuery.setX(x);
         shopQuery.setY(y);
-        return shopRagService.getShopList(shopQuery, userMessage);
+        List<ShopVO> results = shopRagService.getShopList(shopQuery, userMessage);
+        structuredToolCaptureRegistry.recordShopResults(toolContext, results);
+        return results;
     }
 
     @Tool(name = "getShopDetails", description = "Get detailed information for a shop by id or name.")
@@ -72,7 +78,8 @@ public class ShopTools {
             @ToolParam(description = "Latitude.", required = false)
             Double y,
             @ToolParam(description = "Original user message.", required = false)
-            String userMessage
+            String userMessage,
+            ToolContext toolContext
     ) throws ExecutionException, InterruptedException, TimeoutException {
         log.info("Calling getShopDetails | id={}, name={}, x={}, y={}", id, name, x, y);
 
@@ -82,7 +89,9 @@ public class ShopTools {
         shopVO.setDistrict(district);
         shopVO.setX(x);
         shopVO.setY(y);
-        return shopRagService.getShopDetails(shopVO, userMessage);
+        ShopVO result = shopRagService.getShopDetails(shopVO, userMessage);
+        structuredToolCaptureRegistry.recordShopResults(toolContext, result == null ? List.of() : List.of(result));
+        return result;
     }
 
     @Tool(name = "getShopInsight", description = "Get a combined shop insight with shop details, review summary and blog summary.")
@@ -98,7 +107,8 @@ public class ShopTools {
             @ToolParam(description = "Latitude.", required = false)
             Double y,
             @ToolParam(description = "Original user message.", required = false)
-            String userMessage
+            String userMessage,
+            ToolContext toolContext
     ) {
         log.info("Calling getShopInsight | id={}, name={}", id, name);
 
@@ -114,6 +124,7 @@ public class ShopTools {
         query.setY(y);
 
         ShopVO shop = shopRagService.getShopDetails(query, safeUserMessage);
+        structuredToolCaptureRegistry.recordShopResults(toolContext, shop == null ? List.of() : List.of(shop));
         if (shop == null) {
             return "Shop not found.";
         }

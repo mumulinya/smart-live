@@ -6,6 +6,7 @@ import com.alibaba.cloud.ai.graph.agent.flow.agent.LlmRoutingAgent;
 import com.alibaba.cloud.ai.graph.serializer.plain_text.jackson.SpringAIJacksonStateSerializer;
 import com.smartLive.ai.config.prompt.AgentPromptCatalog;
 import com.smartLive.ai.entity.request.AIChatRequest;
+import com.smartLive.ai.service.user.support.StructuredToolCaptureRegistry;
 import com.smartLive.ai.strategy.user.AgentChatStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -35,6 +36,7 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
     private final Agent generalAgent;
     private final ChatMemory chatMemory;
     private final SpringAIJacksonStateSerializer stateSerializer;
+    private final StructuredToolCaptureRegistry captureRegistry;
 
     private volatile LlmRoutingAgent routingAgent;
 
@@ -47,7 +49,8 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
             @Qualifier("productAgent") Agent productAgent,
             @Qualifier("reviewAgent") Agent reviewAgent,
             @Qualifier("generalAgent") Agent generalAgent,
-            ChatMemory chatMemory
+            ChatMemory chatMemory,
+            StructuredToolCaptureRegistry captureRegistry
     ) {
         this.frameworkChatModel = frameworkChatModel;
         this.shopAgent = shopAgent;
@@ -56,6 +59,7 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
         this.generalAgent = generalAgent;
         this.chatMemory = chatMemory;
         this.stateSerializer = new SpringAIJacksonStateSerializer(OverAllState::new);
+        this.captureRegistry = captureRegistry;
     }
 
     /**
@@ -70,6 +74,7 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
 
         String chatId = resolveChatId(chatRequest);
         String enrichedMessage = buildEnrichedMessage(chatRequest);
+        String captureId = resolveCaptureId(chatRequest);
 
         // 从 ChatMemory 读取历史对话，拼接到当前消息前面。
         // 阿里框架的 LlmRoutingAgent 不支持 Spring AI 的 ChatClient advisors，
@@ -77,7 +82,7 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
         String contextPrefix = buildContextPrefix(chatId);
         String fullMessage = contextPrefix + enrichedMessage;
 
-        return Flux.defer(() -> streamFrameworkMessages(agent, chatId, fullMessage))
+        return Flux.defer(() -> streamFrameworkMessages(agent, chatId, fullMessage, captureId))
                 .switchIfEmpty(Flux.defer(() -> {
                     log.warn("Framework routing returned empty result, trigger fallback...");
                     return Flux.error(new IllegalStateException("Framework routing returned empty result"));
@@ -114,7 +119,7 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
         return sb.toString();
     }
 
-    private Flux<String> streamFrameworkMessages(LlmRoutingAgent agent, String chatId, String userMessage) {
+    private Flux<String> streamFrameworkMessages(LlmRoutingAgent agent, String chatId, String userMessage, String captureId) {
         return Flux.defer(() -> {
             try {
                 // 每次请求使用独立 UUID 作为 threadId。
@@ -127,6 +132,9 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
                         .threadId(requestId)
                         .build();
                 log.info("[FrameworkRouting] invoke 开始调用, chatId={}, requestId={}", chatId, requestId);
+                if (captureId != null) {
+                    captureRegistry.activateCapture(captureId);
+                }
 
                 // 直接使用 invoke() 获取原生 OverAllState。
                 // 注意：不用 invokeAndGetOutput()，因为它返回 NodeOutput 对象，
@@ -151,8 +159,21 @@ public class FrameworkRoutingStrategy implements AgentChatStrategy {
             } catch (Exception ex) {
                 log.error("[FrameworkRouting] 执行异常", ex);
                 return Flux.error(ex);
+            } finally {
+                captureRegistry.clearActiveCapture();
             }
         }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
+    }
+
+    /**
+     * 获取结构化工具结果捕获 id。
+     */
+    private String resolveCaptureId(AIChatRequest chatRequest) {
+        if (chatRequest == null || chatRequest.getContext() == null) {
+            return null;
+        }
+        Object requestId = chatRequest.getContext().get(StructuredToolCaptureRegistry.REQUEST_ID_KEY);
+        return requestId == null ? null : String.valueOf(requestId);
     }
 
     /**

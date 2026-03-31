@@ -137,6 +137,17 @@ public class CommonConfiguration {
     }
 
     /**
+     * 用户侧结构化 JSON 修复客户端，不挂记忆与工具，避免修复过程引入额外副作用。
+     */
+    @Bean("structuredRetryChatClient")
+    public ChatClient structuredRetryChatClient(@Qualifier("frameworkChatModel") ChatModel chatModel) {
+        return ChatClient.builder(chatModel)
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .defaultSystem(AgentPromptCatalog.STRUCTURED_JSON_RETRY_SYSTEM_PROMPT)
+                .build();
+    }
+
+    /**
      * 构建带记忆与工具能力的 ChatClient。
      */
     private ChatClient buildChatClient(ChatModel model, ChatMemory chatMemory, String systemPrompt, Object... tools) {

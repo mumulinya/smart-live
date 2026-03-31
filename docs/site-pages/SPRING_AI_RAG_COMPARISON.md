@@ -151,6 +151,24 @@ SmartLive 的 AI 主链路更适合用下面这句话概括：
 
 **你把 Spring AI 用成了一套更贴近生产业务的 AI 服务底座。**
 
+### 5.3 再往前一步：结构化卡片不是让模型直接拼最终 JSON
+
+这也是 SmartLive 和很多 Demo 最不一样、但很容易被忽略的一点：
+
+- 模型不直接生成最终给前端渲染的完整业务 JSON
+- 模型更像是在输出一个控制 JSON：`type + selectedIds + replyText`
+- 后端再根据 Tool / RAG 返回的真实结果，回填最终 `recommendations / orderId` 等字段
+
+如果你想看这条链路的细图，可以直接看下面这张图：
+
+<a href="/core-links/8.%20AI%20Agent策略路由与RAG多维增强生成链路#6-结构化响应链路模型输出控制-json后端回填真实数据">
+  <img src="../core-links/diagrams/ai-structured-control-json-chain.svg" alt="AI 结构化响应控制 JSON 回填链路" width="100%">
+</a>
+
+更完整的说明在：
+
+- [AI Agent策略路由与RAG多维增强生成链路](/core-links/8.%20AI%20Agent策略路由与RAG多维增强生成链路#6-结构化响应链路模型输出控制-json后端回填真实数据)
+
 ---
 
 ## 6. “把本地数据库写入向量库”为什么仍然是正规的 RAG
