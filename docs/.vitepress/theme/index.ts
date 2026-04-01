@@ -6,13 +6,15 @@ import ImageLightbox from './ImageLightbox.vue'
 import HomeSectionNavSpy from './HomeSectionNavSpy.vue'
 import ScrollReveal from './ScrollReveal.vue'
 import CardGlow from './CardGlow.vue'
+import SiteAnalyticsBar from './SiteAnalyticsBar.vue'
 
 export default {
   extends: DefaultTheme,
   Layout: () =>
     h(Fragment, [
       h(DefaultTheme.Layout, null, {
-        'aside-outline-before': () => h(DocOutlineToggle)
+        'aside-outline-before': () => h(DocOutlineToggle),
+        'layout-bottom': () => h(SiteAnalyticsBar)
       }),
       h(ImageLightbox),
       h(HomeSectionNavSpy),
