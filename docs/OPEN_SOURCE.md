@@ -8,14 +8,14 @@ outline: 2
 
 **文档导航：** [网站首页](/) · [视觉导览](./SHOWCASE) · [页面导览](./PAGE_GALLERY)
 
-这份文档聚焦“开源接入与启动视角”。它承接 [网站首页](/) 的主入口，帮助第一次接触 SmartLive 的人快速明确应该先看什么、最小要起哪些依赖、完整体验还差哪些配置。
+这份文档聚焦“开源接入与启动视角”。它承接 [网站首页](/) 的主入口，帮助首次接触 SmartLive 的读者快速明确阅读起点、最小依赖范围，以及完整体验仍需补充的配置。
 
-1. 第一次接入这个仓库，应该先看什么。
-2. 想把服务跑起来，最小链路需要哪些中间件和模块。
-3. 想体验完整能力或做部署演示，下一步应该补哪些依赖。
+1. 首次接入仓库时的推荐阅读起点。
+2. 服务运行所需的最小链路、中间件与模块。
+3. 完整体验或部署演示时建议继续补充的依赖。
 
-- 这页偏“接入与启动视角”，适合先解决“怎么开始、怎么跑起来”的问题。
-- 如果你想先看页面长什么样，可以跳去 [页面导览](./PAGE_GALLERY)；如果想先看系统全景和关键链路，可以跳去 [视觉导览](./SHOWCASE)。
+- 这页偏“接入与启动视角”，适合优先解决“如何开始、如何跑起来”的问题。
+- 如需先了解页面形态，可以跳转到 [页面导览](./PAGE_GALLERY)；如需先看系统全景和关键链路，可以跳转到 [视觉导览](./SHOWCASE)。
 
 <div align="center">
   <img src="./diagrams/open-source-reading-path.svg" alt="SmartLive 开源文档阅读路径" width="100%">
@@ -41,20 +41,20 @@ outline: 2
 
 ## 2. 按目标阅读更高效
 
-- **第一次认识项目**：先看 [网站首页](/)，再看 `smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop`；如果已经补齐 Elasticsearch，再把 `smartLive-search` 接进来
+- **首次了解项目**：先看 [网站首页](/)，再看 `smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop`；如果已经补齐 Elasticsearch，再把 `smartLive-search` 接进来
 - **想看交易闭环**：优先读 `smartLive-product -> smartLive-order -> smartLive-wallet -> smartLive-points`，再结合 README 里的交易链路图
 - **想看社交与推荐**：优先读 `smartLive-blog -> smartLive-interaction -> smartLive-index -> smartLive-search`，再结合 [SHOWCASE](./SHOWCASE) 里的 Feed / 热榜图
 - **想看 AI 与治理链路**：优先读 `smartLive-ai -> smartLive-audit -> smartLive-chat -> smartLive-im`，再补向量检索、审核责任链和通知推送链路
 
 ## 3. 第一次接入建议
 
-- 优先走本地开发模式，不要一开始就把 `docker/` 目录当作唯一事实来源。
-- 先跑“最小可运行链路”，确认登录、店铺和后台管理可用后，再补搜索、AI、审核、积分、支付等扩展能力。
+- 建议优先采用本地开发模式，避免在一开始就把 `docker/` 目录当作唯一事实来源。
+- 建议先运行“最小可运行链路”，确认登录、店铺和后台管理可用后，再补搜索、AI、审核、积分、支付等扩展能力。
 - `docker/` 下仍保留部分历史模块命名与复制脚本，使用前要和当前 Maven 模块、当前端口、当前 JAR 名称逐项核对。
 
 ## 4. 项目入口与仓库矩阵
 
-如果你是第一次接这个项目，建议把“仓库入口”也放在启动视角里一起看。先明确后端主仓库、管理端仓库和用户端仓库分别在哪，再决定你这次是只跑后端、只看后台，还是要把 App 也一起联起来。
+首次接入本项目时，建议把“仓库入口”也纳入启动视角一并查看。可先明确后端主仓库、管理端仓库和用户端仓库分别对应的位置，再决定本次是仅运行后端、仅查看后台，还是同时联调 App。
 
 | 仓库 | 角色定位 | 适合什么时候看 | 入口 |
 |:---|:---|:---|:---|
@@ -164,7 +164,7 @@ outline: 2
 - **只依赖公共配置的服务**：`auth / gateway / system / user / search / blog / audit / chat / file / points / wallet / ai / index / im / monitor`
 - **额外显式引入 `rabbitmq-common.yml + xxl-job-common.yml` 的服务**：`shop / product / order / interaction`
 
-如果你只是跑最小链路，至少要保证：
+若仅运行最小链路，至少需要保证：
 
 1. `application-dev.yml`
 2. `smartLive-auth-dev.yml`
@@ -240,8 +240,8 @@ outline: 2
 
 - `bin/` 目录目前只覆盖了 `auth / gateway / system / file / monitor` 的部分本地脚本，以及 `clean.bat`、`package.bat` 这类打包脚本。
 - `docker/` 目录中已经提供了 `docker-compose-infra.yml`、`docker-compose-java.yml`、`docker-compose.yml` 和 `copy.sh / deploy.sh`，更适合做整套环境演示与镜像打包。
-- `docker/copy.sh` 会尝试从同级目录的 `../smart-live-app/dist` 和 `../smartLive-ui/dist` 复制前端产物到 `docker/nginx/html/app` 与 `docker/nginx/html/admin`；这里用的是本地目录名，对应的 GitHub 仓库分别是 `smartLive-web` 和 `smartLive-admin`。如果你只启动后端仓库，这一步会被自动跳过。
-- 如果你是第一次本地联调，不建议把 `bin/run-*.bat` 当作“全模块标准启动入口”；更稳的方式仍然是先按最小链路在 IDE 中逐个启动，再按需补 `docker/` 里的整套编排。
+- `docker/copy.sh` 会尝试从同级目录的 `../smart-live-app/dist` 和 `../smartLive-ui/dist` 复制前端产物到 `docker/nginx/html/app` 与 `docker/nginx/html/admin`；这里用的是本地目录名，对应的 GitHub 仓库分别是 `smartLive-web` 和 `smartLive-admin`。若仅启动后端仓库，这一步会被自动跳过。
+- 首次进行本地联调时，不建议把 `bin/run-*.bat` 当作“全模块标准启动入口”；更稳的方式仍然是先按最小链路在 IDE 中逐个启动，再按需补 `docker/` 里的整套编排。
 
 ### 10.2 Docker Compose 文件职责
 
@@ -262,7 +262,7 @@ outline: 2
 ## 11. 第一天建议验证什么
 
 - 网关可访问，登录鉴权可用。
-- 用户、店铺两类基础接口可正常返回；如果你额外补了 Elasticsearch，再验证搜索链路。
+- 用户、店铺两类基础接口可正常返回；如已额外补齐 Elasticsearch，再验证搜索链路。
 - Nacos 中 `application-dev.yml` 与 `smartLive-*-dev.yml` 已导入。
 - RabbitMQ、Redis、MySQL 连接日志正常，没有残留 `127.0.0.1` 的错误配置。
 - 如果补了搜索或 AI，确认 Elasticsearch、Milvus 相关连接正常。
@@ -287,17 +287,17 @@ outline: 2
 
 - `bin/run-*.bat` 仍保留旧的 `ruoyi-*` 路径，当前不应作为对外主推荐启动方式。
 - `docker/copy.sh`、`docker/deploy.sh` 和 `docker-compose.yml` 中仍有 `marketing`、`map` 等历史命名，使用前请先校对。
-- 如果你修改了端口、模块名、依赖或启动顺序，请同时更新 `README.md`、`docs/OPEN_SOURCE.md` 和 `docs/SHOWCASE.md`。
+- 如修改了端口、模块名、依赖或启动顺序，请同时更新 `README.md`、`docs/OPEN_SOURCE.md` 和 `docs/SHOWCASE.md`。
 
 ## 14. 工程阅读与使用提示
 
-如果你准备进一步阅读源码，而不是只把服务跑起来，建议先抓住下面这 5 个重点：
+如需进一步阅读源码，而不只是将服务运行起来，建议优先抓住下面这 5 个重点：
 
 - **先理解缓存分层，再看具体业务读链路**：项目里大量列表场景走 `ZSet`，详情走 `String`，计数走独立键；先建立这个心智模型，再看评论、博客、商品、店铺这些模块会轻松很多。
 - **先理解“主库是真实源”，再看 ES / Milvus / Redis 副本**：搜索、热榜、向量检索都不是主事务里强一致写入，而是通过 MQ、幂等消费和调度补偿逐步收敛。
 - **先看模式，再看实现**：互动模块的策略/工厂、审核中心的责任链、缓存层的模板化封装，都是仓库里最值得优先阅读的设计点。
 - **AI、支付、对象存储都要带着“环境边界”去看**：这几类能力依赖外部服务和敏感配置，本地没配齐时更适合先理解链路和接口，再补全密钥与中间件。
-- **先从最小链路读起，不要一上来全模块联调**：推荐先看 `auth -> gateway -> user -> shop -> search`，稳定后再补 `order / interaction / ai / audit / wallet / points`。
+- **先从最小链路读起，避免首次阅读时直接全模块联调**：推荐先看 `auth -> gateway -> user -> shop -> search`，稳定后再补 `order / interaction / ai / audit / wallet / points`。
 
 ### 14.1 重点设计模式落点
 
@@ -323,9 +323,9 @@ outline: 2
 对应仓库入口可以直接查看上面第 4 节“项目入口与仓库矩阵”。
 
 ### 第一次本地启动，最小需要哪些中间件和模块？
-如果只是想先把系统跑起来并验证主链路，建议优先准备：
+若仅需先将系统运行起来并验证主链路，建议优先准备：
 - **基础中间件**：MySQL、Redis、Nacos、RabbitMQ
 - **核心服务**：Gateway、Auth、System、User、Shop
 - **前端**：按体验目标选择 `smartLive-admin` 或 `smartLive-web`
 
-如果你已经补齐 Elasticsearch，也可以把 `Search` 一起加进第一阶段；AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补。具体见上方第 6 节。
+如已补齐 Elasticsearch，也可以把 `Search` 一起加进第一阶段；AI、Milvus、支付、IM、审核中心等能力可以放到第二阶段再补。具体见上方第 6 节。

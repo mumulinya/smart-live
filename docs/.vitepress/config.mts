@@ -13,7 +13,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '3分钟评审', link: '/THREE_MINUTES' },
-      { text: '项目全貌', link: '/PROJECT_OVERVIEW' },
+      { text: '系统架构', link: '/site-pages/SYSTEM_ARCHITECTURE' },
       { text: '业务走查', link: '/SHOWCASE' },
       { text: '核心链路', link: '/core-links/' },
       { text: '开源接入', link: '/OPEN_SOURCE' }

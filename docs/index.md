@@ -142,9 +142,9 @@ hero:
   </a>
 </div>
 
-## <a id="home-read-path"></a>🧭 第一次看项目怎么读
+## <a id="home-read-path"></a>🧭 首次浏览推荐路径
 
-如果你是第一次进入 SmartLive，建议不要一上来就试图把所有模块、页面和中间件一次性看完。更顺的阅读方式是：
+首次浏览 SmartLive 时，建议不要在一开始同时展开所有模块、页面和中间件。更顺畅的阅读路径如下：
 
 1. 先看 [开源启动与接入](/OPEN_SOURCE)，建立项目边界、依赖矩阵和启动顺序的整体认知。
 2. 再看 [页面效果图导览](/PAGE_GALLERY)，快速知道用户端 App、商家端 Web 和平台管理端 Web 分别覆盖了哪些真实业务页面。
@@ -153,28 +153,28 @@ hero:
 
 ## <a id="home-start-path"></a>🚀 最小体验路径
 
-如果你想先快速感受项目，而不是立刻把全部依赖跑齐，推荐先按下面这条路径体验：
+如需先快速感受项目，而不立即补齐全部依赖，推荐按以下路径体验：
 
 <div class="smartlive-path-grid">
   <div class="smartlive-path-card">
     <div class="smartlive-path-no">01</div>
-    <strong>先看页面和图</strong>
-    <span>先看 <a href="./PAGE_GALLERY.html">页面效果图导览</a> 和 <a href="./SHOWCASE.html">业务链路视觉走查</a>，建立直观印象。</span>
+    <strong>页面与链路预览</strong>
+    <span>可先阅读 <a href="./PAGE_GALLERY.html">页面效果图导览</a> 和 <a href="./SHOWCASE.html">业务链路视觉走查</a>，建立直观印象。</span>
   </div>
   <div class="smartlive-path-card">
     <div class="smartlive-path-no">02</div>
-    <strong>先理解模块边界</strong>
-    <span>先看 <a href="./OPEN_SOURCE.html">开源启动与接入</a> 和 <a href="./PROJECT_OVERVIEW.html">项目全貌与答辩说明</a>，建立服务边界认知。</span>
+    <strong>模块边界理解</strong>
+    <span>可先阅读 <a href="./OPEN_SOURCE.html">开源启动与接入</a> 和 <a href="./PROJECT_OVERVIEW.html">项目全貌与答辩说明</a>，建立服务边界认知。</span>
   </div>
   <div class="smartlive-path-card">
     <div class="smartlive-path-no">03</div>
-    <strong>先跑最小链路</strong>
-    <span>先起 `auth -> gateway -> system -> user -> shop -> search`，再补齐更重的中间件和业务能力。</span>
+    <strong>最小链路启动</strong>
+    <span>建议先启动 `auth -> gateway -> system -> user -> shop -> search`，再按需补齐更重的中间件和业务能力。</span>
   </div>
   <div class="smartlive-path-card">
     <div class="smartlive-path-no">04</div>
-    <strong>再深挖强链路</strong>
-    <span>优先看 <a href="./core-links/秒杀抢购全链路详解.html">秒杀</a>、<a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付</a>、<a href="./core-links/Redis分层缓存链路详解.html">Redis 缓存</a>。</span>
+    <strong>强链路深入</strong>
+    <span>建议优先阅读 <a href="./core-links/秒杀抢购全链路详解.html">秒杀</a>、<a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付</a>、<a href="./core-links/Redis分层缓存链路详解.html">Redis 缓存</a>。</span>
   </div>
 </div>
 
@@ -184,7 +184,7 @@ hero:
   <img src="./diagrams/interview-pitch-path.svg" alt="SmartLive 面试讲解路径" width="100%">
 </div>
 
-如果你准备拿这个项目做面试讲解，最顺的讲法不是把所有模块都过一遍，而是按“全局 -> 页面 -> 强链路 -> 设计判断”来展开：
+用于面试讲解时，推荐不要平均展开所有模块，而是按“全局 -> 页面 -> 强链路 -> 设计判断”的顺序组织内容：
 
 1. 先讲 [系统架构与项目规模](/site-pages/SYSTEM_ARCHITECTURE)，快速建立“16 个模块、19 个服务、双端覆盖、多中间件协同”的整体认知。
 2. 再讲 [页面效果图导览](/PAGE_GALLERY) 和 [业务链路视觉走查](/SHOWCASE)，让面试官先看到真实页面和用户闭环，而不是只听抽象名词。
@@ -194,13 +194,13 @@ hero:
 
 ## <a id="home-quickstart"></a>🚀 极速启动与本地体验
 
-如果你想立刻开始，本页就先给你两样最有用的内容：仓库入口和可直接复制的 `git clone` 命令。后端主仓库负责服务与中间件协同，管理端和用户端仓库按你的联调目标再补即可。
+如需立即开始本地体验，本节提供两项最常用信息：仓库入口与可直接复制的 `git clone` 命令。后端主仓库负责服务与中间件协同，管理端与用户端仓库可按联调目标补充。
 
 <div class="smartlive-link-grid">
   <a href="https://github.com/mumulinya/smartLive-Cloud.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
     <span class="smartlive-link-tag">BACKEND</span>
     <strong>smartLive-Cloud</strong>
-    <span>后端微服务主仓库，先看它就能建立服务结构、链路和启动顺序的整体认知。</span>
+    <span>后端微服务主仓库，可用于建立服务结构、链路和启动顺序的整体认知。</span>
   </a>
   <a href="https://github.com/mumulinya/smartLive-admin.git" class="smartlive-link-card" target="_blank" rel="noreferrer">
     <span class="smartlive-link-tag">ADMIN</span>
@@ -214,7 +214,7 @@ hero:
   </a>
 </div>
 
-先克隆你需要的仓库，再决定这次是只跑后端，还是把后台和 App 一起带起来：
+可先克隆所需仓库，再决定本次是仅运行后端，还是同时联调后台与 App：
 
 ```bash
 # 1. 获取后端源码

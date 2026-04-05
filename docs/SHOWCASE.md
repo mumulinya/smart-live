@@ -1,14 +1,14 @@
 ﻿# SmartLive 视觉导览
 
-这份文档聚焦“项目全景与关键链路怎么串起来”。它承接 [网站首页](/) 的核心入口，帮助第一次看到 SmartLive 的人，在几分钟内看清项目全景、核心页面和关键链路。
+这份文档聚焦“项目全景与关键链路怎么串起来”。它承接 [网站首页](/) 的核心入口，帮助首次浏览 SmartLive 的读者，在几分钟内看清项目全景、核心页面和关键链路。
 
 **文档导航：** [网站首页](/) · [页面导览](./PAGE_GALLERY.html) · [开源接入](./OPEN_SOURCE.html)
 
-**第一次建议先看：** [项目全景](#showcase-overview) -> [用户进入、发现与找店](#showcase-discovery) -> [决策、交易与增长](#showcase-trade)
+**首次浏览推荐顺序：** [项目全景](#showcase-overview) -> [用户进入、发现与找店](#showcase-discovery) -> [决策、交易与增长](#showcase-trade)
 
 - 网站首页只保留精选入口，这页继续承接“全景 + 页面 + 链路”的完整视觉走查。
-- 这页偏“系统与链路视角”，适合先建立整体认知；如果想逐页细看产品页面，可以跳去 [页面导览](./PAGE_GALLERY.html)。
-- 如果你想看得更快：用户端建议从 `3 -> 6` 顺读，商家端建议从 `7.1 -> 7.6` 顺读，后台治理建议从 `8.1 -> 8.5` 顺读，链路图建议从 `9.1 -> 9.12` 选读。
+- 这页偏“系统与链路视角”，适合优先建立整体认知；如需逐页细看产品页面，可以跳转到 [页面导览](./PAGE_GALLERY.html)。
+- 如需更快浏览：用户端建议按 [3. 用户进入、发现与找店](#showcase-discovery) -> [4. 决策、交易与增长](#showcase-trade) -> [5. 内容创作、社交关系、用户偏好与消息](#showcase-social) -> [6. AI 与个人资产](#showcase-ai) 的顺序浏览，商家端建议从 [7. 商家端 Web 页面走查](#showcase-merchant) 顺读，后台治理建议从 [8. 平台管理端 Web 页面走查](#showcase-admin) 顺读，链路图建议从 [交易与履约](#chains-trade)、[内容审核与搜索](#chains-search)、[社交与消息](#chains-social)、[排行、热度与推荐](#chains-rank)、[AI 与经营](#chains-ai)、[缓存与性能专题](#chains-cache) 和 [调度与定时任务](#chains-schedule) 这几组按主题选读。
 
 ## 视觉总览数据
 
@@ -39,8 +39,8 @@
 
 <div class="smartlive-showcase-goals">
   <a href="#showcase-overview" class="smartlive-showcase-goal-card">
-    <strong>第一次认识项目</strong>
-    <span>先看项目全景，再顺着发现与交易主路径往下读。</span>
+    <strong>首次了解项目</strong>
+    <span>建议先看项目全景，再顺着发现与交易主路径往下阅读。</span>
   </a>
   <a href="#chains-trade" class="smartlive-showcase-goal-card">
     <strong>想看交易闭环</strong>
@@ -48,11 +48,11 @@
   </a>
   <a href="#chains-social" class="smartlive-showcase-goal-card">
     <strong>想看内容与社交</strong>
-    <span>先看关系、用户偏好和消息页面，再看社交消息图组和热榜推荐图组。</span>
+    <span>建议先看关系、用户偏好和消息页面，再看社交消息图组和热榜推荐图组。</span>
   </a>
   <a href="#showcase-ai" class="smartlive-showcase-goal-card">
     <strong>想看 AI 与个人资产</strong>
-    <span>先看 AI 页面，再进入审核搜索和 AI 经营图组。</span>
+    <span>建议先看 AI 页面，再进入审核搜索和 AI 经营图组。</span>
   </a>
   <a href="#chains-merchant" class="smartlive-showcase-goal-card">
     <strong>想看商家端经营链路</strong>

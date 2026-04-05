@@ -1,6 +1,6 @@
 ﻿# 系统架构与项目规模
 
-> 这页不是单纯报数字，而是先回答一个问题：SmartLive 到底是一个什么样的项目，它的规模、协同密度和系统边界够不够支撑“完整平台”这个定位。
+> 本页不是单纯罗列数字，而是先回答一个问题：SmartLive 到底是一个什么样的项目，它的规模、协同密度和系统边界是否足以支撑“完整平台”这一定位。
 
 SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 App、商家端 Web、平台管理端 Web 三类入口，把交易、内容、社交、搜索、审核、支付、IM、积分和 AI 串成同一套可运行系统。
 
@@ -68,7 +68,7 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 
 ## 2.5 从代码里还能补出的工程密度
 
-如果你希望这页不仅能讲“架构分层”，也能讲“工程体量”，下面这组数据最适合补充到口头介绍或答辩里。
+如需让本页同时承担“架构分层”和“工程体量”的说明作用，下面这组数据最适合补充到口头介绍或答辩中。
 
 | 维度 | 当前数据 | 能说明什么 |
 |------|------|------|
@@ -82,7 +82,7 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 
 ## 2.6 怎么把这些数据讲成一套完整口径
 
-如果你后面要把这页内容用于简历、面试或项目答辩，最推荐的讲法不是把所有数字一股脑念出来，而是分成下面 3 层：
+用于简历、面试或项目答辩时，最推荐的表达方式不是把所有数字一次性罗列出来，而是分成下面 3 层：
 
 ### 第一层：先讲项目规模
 
@@ -127,7 +127,7 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 
 ## 2.7 这页最值得主动讲的 3 组数据
 
-如果你只有 30 秒介绍系统架构与规模，最推荐主动讲这 3 组：
+若仅有 30 秒用于介绍系统架构与规模，最推荐主动讲这 3 组：
 
 1. **16 个业务模块 + 19 个服务应用**
    - 先证明项目足够完整，覆盖用户端、商家端、平台管理端三类入口。
@@ -138,7 +138,7 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 
 ## 3. 系统架构
 
-这张图不是为了讲单条时序链路，而是为了先把 **入口、治理、业务服务簇、基础设施** 四层关系放在一张图里，帮助你快速建立全局心智模型。
+这张图不是为了讲单条时序链路，而是为了先把 **入口、治理、业务服务簇、基础设施** 四层关系放在一张图里，帮助快速建立全局心智模型。
 
 ### 3.1 怎么看这张图
 
@@ -170,7 +170,7 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 <div class="smartlive-arch-focus-grid">
   <div class="smartlive-arch-focus-card">
     <strong>统一入口在哪里</strong>
-    <span>先回答“用户请求从哪进来”，避免一上来就迷失在 19 个服务应用里。</span>
+  <span>先回答“用户请求从哪进来”，避免首次阅读时直接迷失在 19 个服务应用里。</span>
   </div>
   <div class="smartlive-arch-focus-card">
     <strong>治理能力放在哪里</strong>
@@ -187,7 +187,7 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 - 哪些服务是统一入口、统一治理，哪些才是真正承接业务闭环的核心服务。
 - 交易、社交、搜索、AI 为什么拆成独立服务簇，而不是堆进一个“大业务服务”。
 - Redis、RabbitMQ、Elasticsearch、Milvus、MinIO、XXL-JOB 分别在系统里承担什么角色。
-- 当你顺着一条链路往下看时，应该从哪个服务开始找 controller、service、listener 和 job。
+- 沿单条链路继续下钻时，应该从哪个服务开始查找 controller、service、listener 和 job。
 
 ### 3.3 服务依赖关系总览
 
@@ -260,11 +260,11 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 | `smartLive-index` | 首页聚合、统计读取与热门面板承接 | MySQL、Redis | shop、product、blog、interaction |
 | `smartLive-monitor` | 服务监控与运维入口 | Nacos、监控采集组件 | system、gateway、全部服务 |
 
-> 阅读建议：如果你第一次读这个仓库，可以先挑 `gateway / auth / user / shop / search` 这五个服务看，再回来看交易、社交和 AI 模块会顺很多。
+> 阅读建议：首次阅读本仓库时，可先挑 `gateway / auth / user / shop / search` 这五个服务查看，再回看交易、社交和 AI 模块会更顺畅。
 
 ## 5. 项目结构
 
-如果你看完这页后，想继续从“服务边界”往下钻到“数据边界”，推荐接着看：
+阅读完本页后，如需继续从“服务边界”下钻到“数据边界”，推荐接着看：
 
 - [数据模型与核心表关系概览](/site-pages/DATA_MODEL)
 
@@ -336,7 +336,7 @@ smart-live-Cloud
 
 **推荐阅读顺序：**
 
-- **第一次认识项目**：`smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop -> smartLive-search`
+- **首次了解项目**：`smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop -> smartLive-search`
 - **想看交易闭环**：`smartLive-product -> smartLive-order -> smartLive-wallet -> smartLive-points`
 - **想看社交与推荐**：`smartLive-blog -> smartLive-interaction -> smartLive-index -> smartLive-search`
 - **想看 AI 与治理链路**：`smartLive-ai -> smartLive-audit -> smartLive-chat -> smartLive-im`

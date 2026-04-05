@@ -1,15 +1,15 @@
 ﻿# SmartLive 页面导览
 
-这份文档聚焦“页面本身怎么呈现”。它承接 [网站首页](/) 的效果预览，按真实使用路径把用户端 App、商家端 Web 和平台管理端 Web 的核心页面一次看顺。
+这份文档聚焦“页面本身怎么呈现”。它承接 [网站首页](/) 的效果预览，按真实使用路径梳理用户端 App、商家端 Web 和平台管理端 Web 的核心页面。
 
 **文档导航：** [网站首页](/) · [视觉导览](./SHOWCASE.html) · [开源接入](./OPEN_SOURCE.html)
 
-**第一次建议先看：** [登录与进入](#app-login-entry) -> [发现入口与热榜](#app-discovery) -> [店铺决策与商品详情](#app-shop-product) -> [支付、订单、钱包与积分](#app-trade-assets) -> [AI 智能助手与 AIGC](#app-ai-capability)
+**首次浏览推荐顺序：** [登录与进入](#app-login-entry) -> [发现入口与热榜](#app-discovery) -> [店铺决策与商品详情](#app-shop-product) -> [支付、订单、钱包与积分](#app-trade-assets) -> [AI 智能助手与 AIGC](#app-ai-capability)
 
-- 网站首页只保留最主要的页面入口，方便第一次进项目的人先快速建立印象。
-- 这页偏“页面视角”，适合先看产品长什么样；如果想继续看系统全景和关键链路，可以跳去 [视觉导览](./SHOWCASE.html)。
+- 网站首页只保留最主要的页面入口，便于首次浏览时快速建立整体印象。
+- 这页偏“页面视角”，适合先看产品呈现；如需继续查看系统全景和关键链路，可以跳转到 [视觉导览](./SHOWCASE.html)。
 - 推荐按“进入 -> 发现 -> 决策 -> 交易 -> 内容 -> 社交 -> AI -> 个人资产”的顺序往下读。
-- 如果你想看得更快：用户端建议从 `3.1 -> 3.9` 顺读，商家端建议从 `4.1 -> 4.4` 顺读，后台治理建议从 `5.1 -> 5.4` 顺读。
+- 如需更快浏览：用户端建议从 [3.1 登录与进入](#app-login-entry) -> [3.9 个人中心、收藏与账号安全](#app-profile-assets) 顺读，商家端建议从 [4.1 登录与经营总览](#merchant-dashboard) -> [4.4 AI 经营助手](#merchant-ai) 顺读，后台治理建议从 [5.1 内容审核与内容治理](#admin-governance) -> [5.4 XXL-JOB 调度后台](#admin-scheduler) 顺读。
 
 ## 页面总览数据
 
@@ -56,70 +56,70 @@
         <td><strong>首页发现与热门面板</strong></td>
         <td>首页入口、热门内容流、本地必吃榜、抢手好券榜</td>
         <td><code>shop / product / blog / index / interaction</code></td>
-        <td>首页热门面板读取链路、热榜维护链路</td>
+        <td><a href="./SHOWCASE.html#chains-rank">首页热门面板读取链路</a>、<a href="./core-links/7.%20热榜增量洗牌与全量重建链路.html">热榜维护链路</a></td>
         <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
       <tr>
         <td><strong>搜索与地图找店</strong></td>
         <td>搜索入口页、搜索结果页、地图找店</td>
         <td><code>search / shop / product / interaction</code></td>
-        <td>LBS 搜索与热词链路</td>
+        <td><a href="./core-links/6.%20搜索读链路%20+%20热词沉淀链路.html">LBS 搜索与热词链路</a></td>
         <td><a href="./core-links/index.html">核心链路总览</a></td>
       </tr>
       <tr>
         <td><strong>店铺决策与商品详情</strong></td>
         <td>店铺详情页、商品详情页、秒杀专区</td>
         <td><code>shop / product / order / interaction</code></td>
-        <td>订单支付退款链路、秒杀抢购链路</td>
+        <td><a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付退款链路</a>、<a href="./core-links/秒杀抢购全链路详解.html">秒杀抢购链路</a></td>
         <td><a href="./core-links/index.html">核心链路总览</a></td>
       </tr>
       <tr>
         <td><strong>支付、订单、钱包与积分</strong></td>
         <td>收银台、订单详情、钱包、积分中心</td>
         <td><code>order / wallet / points / product</code></td>
-        <td>订单支付退款链路、订单超时取消链路</td>
+        <td><a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付退款链路</a>、<a href="./SHOWCASE.html#chains-schedule">订单超时取消链路</a></td>
         <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
       <tr>
         <td><strong>内容创作与评价</strong></td>
         <td>发布页、博客详情、评论区、我的评价、草稿箱</td>
         <td><code>blog / interaction / audit / ai</code></td>
-        <td>审核责任链与搜索双写、Feed 推送链路</td>
+        <td><a href="./core-links/5.%20审核中心责任链%20+%20发布审核与搜索%20向量同步链路.html">审核责任链与搜索双写</a>、<a href="./core-links/4.%20Feed%20推送与滚动读取%20+%20互动双轨同步链路.html">Feed 推送链路</a></td>
         <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
       <tr>
 <td><strong>社交关系、用户偏好与消息</strong></td>
         <td>关注页、粉丝明细、会话列表、即时通讯、系统消息</td>
         <td><code>interaction / chat / im / user</code></td>
-        <td>Feed 推送与互动同步、系统通知与 IM 推送</td>
+        <td><a href="./core-links/4.%20Feed%20推送与滚动读取%20+%20互动双轨同步链路.html">Feed 推送与互动同步</a>、<a href="./SHOWCASE.html#chains-social">系统通知与 IM 推送</a></td>
         <td><a href="./core-links/index.html">核心链路总览</a></td>
       </tr>
       <tr>
         <td><strong>AI 智能助手与 AIGC</strong></td>
         <td>AI 会话、快捷提问、店铺推荐、商品推荐、下单卡片、博客生成、评价生成</td>
         <td><code>ai / search / shop / product / blog / interaction</code></td>
-        <td>AI 路由策略与 RAG 生成链路</td>
+        <td><a href="./core-links/8.%20AI%20Agent策略路由与RAG多维增强生成链路.html">AI 路由策略与 RAG 生成链路</a></td>
         <td><a href="./core-links/index.html">核心链路总览</a></td>
       </tr>
       <tr>
         <td><strong>商家端经营后台</strong></td>
         <td>经营总览、店铺管理、商品管理、订单管理、AI 经营助手</td>
         <td><code>shop / product / order / ai</code></td>
-        <td>订单支付退款链路、AI 路由与经营分析</td>
+        <td><a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付退款链路</a>、<a href="./SHOWCASE.html#chains-merchant">AI 路由与经营分析</a></td>
         <td><a href="./OPEN_SOURCE.html">开源接入说明</a></td>
       </tr>
       <tr>
         <td><strong>平台管理端治理后台</strong></td>
         <td>审核中心、博客管理、评论评价、抽奖配置、积分记录、角色权限、日志与监控</td>
         <td><code>system / audit / blog / user / points / monitor</code></td>
-        <td>审核责任链、调度与治理链路</td>
+        <td><a href="./core-links/5.%20审核中心责任链%20+%20发布审核与搜索%20向量同步链路.html">审核责任链</a>、<a href="./SHOWCASE.html#chains-admin">调度与治理链路</a></td>
         <td><a href="./OPEN_SOURCE.html">开源接入说明</a></td>
       </tr>
       <tr>
         <td><strong>XXL-JOB 调度后台</strong></td>
         <td>调度总览、任务管理、执行器管理</td>
         <td><code>common-xxl / product / order / interaction</code></td>
-        <td>热榜重建、订单兜底、秒杀预热链路</td>
+        <td><a href="./core-links/7.%20热榜增量洗牌与全量重建链路.html">热榜重建</a>、<a href="./SHOWCASE.html#chains-schedule">订单兜底、秒杀预热链路</a></td>
         <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
     </tbody>
