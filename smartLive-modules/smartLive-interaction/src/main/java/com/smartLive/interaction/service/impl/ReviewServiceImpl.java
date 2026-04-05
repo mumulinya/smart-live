@@ -18,7 +18,10 @@ import com.smartLive.common.core.enums.ContentStatusEnum;
 import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.common.RankRedisEnum;
+import com.smartLive.common.core.enums.interaction.CommentTypeEnum;
+import com.smartLive.common.core.enums.interaction.LikeTypeEnum;
 import com.smartLive.common.core.enums.interaction.ReviewTypeEnum;
+import com.smartLive.common.core.enums.interaction.StarTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
@@ -129,12 +132,18 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @param review Review实体
      * @return ReviewVO对象
      */
-    private ReviewVO convertToReviewVO(Review review) {
+    private ReviewVO toReviewVO(Review review) {
         if (review == null) {
             return null;
         }
         ReviewVO reviewVO = new ReviewVO();
         BeanUtils.copyProperties(review, reviewVO);
+        return reviewVO;
+    }
+
+    private ReviewVO convertToReviewVO(Review review) {
+        ReviewVO reviewVO = toReviewVO(review);
+        fillReviewDynamicStats(Collections.singletonList(reviewVO));
         return reviewVO;
     }
 
@@ -147,9 +156,93 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (CollUtil.isEmpty(reviewList)) {
             return new ArrayList<>();
         }
-        return reviewList.stream()
-                .map(this::convertToReviewVO)
+        List<ReviewVO> reviewVOList = reviewList.stream()
+                .map(this::toReviewVO)
                 .collect(Collectors.toList());
+        fillReviewDynamicStats(reviewVOList);
+        return reviewVOList;
+    }
+
+    private void fillReviewDynamicStats(List<ReviewVO> reviewVOList) {
+        if (CollUtil.isEmpty(reviewVOList)) {
+            return;
+        }
+        List<ReviewVO> validReviewVOList = reviewVOList.stream()
+                .filter(reviewVO -> reviewVO != null && reviewVO.getId() != null)
+                .toList();
+        if (CollUtil.isEmpty(validReviewVOList)) {
+            return;
+        }
+        List<Long> reviewIds = validReviewVOList.stream()
+                .map(ReviewVO::getId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        String likeKeyPrefix = LikeTypeEnum.REVIEW_LIKE.getLikedCountKeyPrefix();
+        String starKeyPrefix = StarTypeEnum.REVIEW_STAR.getStarCountKeyPrefix();
+        String commentKeyPrefix = CommentTypeEnum.REVIEW_COMMENT.getCommentCountKeyPrefix();
+
+        List<Integer> likedValues = redisService.getMultiCacheObject(reviewIds.stream().map(id -> likeKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> staredValues = redisService.getMultiCacheObject(reviewIds.stream().map(id -> starKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> replyValues = redisService.getMultiCacheObject(reviewIds.stream().map(id -> commentKeyPrefix + id).collect(Collectors.toList()));
+
+        Map<Long, Integer> likedMap = new HashMap<>(reviewIds.size());
+        Map<Long, Integer> staredMap = new HashMap<>(reviewIds.size());
+        Map<Long, Integer> replyMap = new HashMap<>(reviewIds.size());
+        Set<Long> missingIds = new HashSet<>();
+        fillCounterMapFromRedis(reviewIds, likedValues, likedMap, missingIds);
+        fillCounterMapFromRedis(reviewIds, staredValues, staredMap, missingIds);
+        fillCounterMapFromRedis(reviewIds, replyValues, replyMap, missingIds);
+
+        if (CollUtil.isNotEmpty(missingIds)) {
+            Map<Long, Review> fallbackReviewMap = query()
+                    .select("id", "liked", "stared", "reply_count")
+                    .in("id", missingIds)
+                    .list()
+                    .stream()
+                    .filter(review -> review != null && review.getId() != null)
+                    .collect(Collectors.toMap(Review::getId, Function.identity(), (left, right) -> left));
+            Map<String, Integer> cacheMap = new HashMap<>(missingIds.size() * 3);
+            for (Long reviewId : missingIds) {
+                Review fallbackReview = fallbackReviewMap.get(reviewId);
+                if (!likedMap.containsKey(reviewId)) {
+                    Integer liked = fallbackReview != null && fallbackReview.getLiked() != null ? fallbackReview.getLiked() : 0;
+                    likedMap.put(reviewId, liked);
+                    cacheMap.put(likeKeyPrefix + reviewId, liked);
+                }
+                if (!staredMap.containsKey(reviewId)) {
+                    Integer stared = fallbackReview != null && fallbackReview.getStared() != null ? fallbackReview.getStared() : 0;
+                    staredMap.put(reviewId, stared);
+                    cacheMap.put(starKeyPrefix + reviewId, stared);
+                }
+                if (!replyMap.containsKey(reviewId)) {
+                    Integer replyCount = fallbackReview != null && fallbackReview.getReplyCount() != null ? fallbackReview.getReplyCount() : 0;
+                    replyMap.put(reviewId, replyCount);
+                    cacheMap.put(commentKeyPrefix + reviewId, replyCount);
+                }
+            }
+            if (CollUtil.isNotEmpty(cacheMap)) {
+                redisService.setMultiCacheObject(cacheMap);
+            }
+        }
+
+        validReviewVOList.forEach(reviewVO -> {
+            Long reviewId = reviewVO.getId();
+            reviewVO.setLiked(likedMap.getOrDefault(reviewId, 0));
+            reviewVO.setStared(staredMap.getOrDefault(reviewId, 0));
+            reviewVO.setReplyCount(replyMap.getOrDefault(reviewId, 0));
+        });
+    }
+
+    private void fillCounterMapFromRedis(List<Long> ids, List<Integer> values, Map<Long, Integer> counterMap, Set<Long> missingIds) {
+        for (int i = 0; i < ids.size(); i++) {
+            Integer value = values != null && values.size() > i ? values.get(i) : null;
+            if (value != null) {
+                counterMap.put(ids.get(i), value);
+            } else {
+                missingIds.add(ids.get(i));
+            }
+        }
     }
 
     /**
@@ -871,7 +964,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     /**
      * 批量同步落库方法（被 XXL-JOB 调度任务回调使用）：
-     * 批量更新点赞数后，必须清除对应的详情缓存，避免出现前台展示脏读。
+     * 批量更新点赞数，详情与列表读取时会再用 Redis 独立计数器覆盖统计值。
      *
      * @param updateMap K:评价ID, V:最新点赞数
      * @return 是否处理成功
@@ -893,7 +986,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         } else {
             baseMapper.updateLikeCountBatch(updateMap);
         }
-        clearReviewCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -921,7 +1013,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         } else {
             baseMapper.updateCommentCountBatch(updateMap);
         }
-        clearReviewCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -949,7 +1040,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         } else {
             baseMapper.updateStarCountBatch(updateMap);
         }
-        clearReviewCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -961,8 +1051,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public Integer getReviewLikeCount(Long sourceId) {
-        Review review = getById(sourceId);
-        return review.getLiked();
+        ReviewVO reviewVO = convertToReviewVO(getById(sourceId));
+        return reviewVO != null && reviewVO.getLiked() != null ? reviewVO.getLiked() : 0;
     }
 
     /**
@@ -1040,13 +1130,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public Integer getReviewStarCount(Long sourceId) {
-        Review review = getById(sourceId);
-        return review.getStared();
+        ReviewVO reviewVO = convertToReviewVO(getById(sourceId));
+        return reviewVO != null && reviewVO.getStared() != null ? reviewVO.getStared() : 0;
     }
 
     /**
      * 清理单条评价详情缓存
-     * 任何涉及到评价内容或互动数据更新的操作，均需调用此方法以确保后续读取的数据新鲜度。
+     * 仅在评价主体内容发生变化时调用，互动统计由独立计数器读取。
      *
      * @param reviewId 评价主键
      */
@@ -1059,7 +1149,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     /**
      * 批量清理评价详情缓存
-     * 涓昏鐢ㄤ簬鏁版嵁鎵归噺鍚屾钀藉簱鍚庣殑绾ц仈娓呯悊鍔ㄤ綔銆?
+     * 仅在批量变更评价主体内容时使用。
      *
      * @param reviewIds 评价主键集合
      */

@@ -13,6 +13,7 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.interaction.CommentTypeEnum;
+import com.smartLive.common.core.enums.interaction.LikeTypeEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.common.RankRedisEnum;
 import com.smartLive.common.core.utils.DateUtils;
@@ -97,12 +98,18 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
     /**
      * 将Comment实体转换为CommentVO
      */
-    private CommentVO convertToCommentVO(Comment comment) {
+    private CommentVO toCommentVO(Comment comment) {
         if (comment == null) {
             return null;
         }
         CommentVO commentVO = new CommentVO();
         BeanUtils.copyProperties(comment, commentVO);
+        return commentVO;
+    }
+
+    private CommentVO convertToCommentVO(Comment comment) {
+        CommentVO commentVO = toCommentVO(comment);
+        fillCommentDynamicStats(Collections.singletonList(commentVO));
         return commentVO;
     }
 
@@ -113,9 +120,83 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
         if (CollUtil.isEmpty(commentList)) {
             return new ArrayList<>();
         }
-        return commentList.stream()
-                .map(this::convertToCommentVO)
+        List<CommentVO> commentVOList = commentList.stream()
+                .map(this::toCommentVO)
                 .collect(Collectors.toList());
+        fillCommentDynamicStats(commentVOList);
+        return commentVOList;
+    }
+
+    private void fillCommentDynamicStats(List<CommentVO> commentVOList) {
+        if (CollUtil.isEmpty(commentVOList)) {
+            return;
+        }
+        List<CommentVO> validCommentVOList = commentVOList.stream()
+                .filter(commentVO -> commentVO != null && commentVO.getId() != null)
+                .toList();
+        if (CollUtil.isEmpty(validCommentVOList)) {
+            return;
+        }
+        List<Long> commentIds = validCommentVOList.stream()
+                .map(CommentVO::getId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        String likeKeyPrefix = LikeTypeEnum.COMMENT_LIKE.getLikedCountKeyPrefix();
+        String replyKeyPrefix = CommentTypeEnum.COMMENT_COMMENT.getCommentCountKeyPrefix();
+
+        List<Integer> likedValues = redisService.getMultiCacheObject(commentIds.stream().map(id -> likeKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> replyValues = redisService.getMultiCacheObject(commentIds.stream().map(id -> replyKeyPrefix + id).collect(Collectors.toList()));
+
+        Map<Long, Integer> likedMap = new HashMap<>(commentIds.size());
+        Map<Long, Integer> replyMap = new HashMap<>(commentIds.size());
+        Set<Long> missingIds = new HashSet<>();
+        fillCounterMapFromRedis(commentIds, likedValues, likedMap, missingIds);
+        fillCounterMapFromRedis(commentIds, replyValues, replyMap, missingIds);
+
+        if (CollUtil.isNotEmpty(missingIds)) {
+            Map<Long, Comment> fallbackCommentMap = query()
+                    .select("id", "liked", "reply_count")
+                    .in("id", missingIds)
+                    .list()
+                    .stream()
+                    .filter(comment -> comment != null && comment.getId() != null)
+                    .collect(Collectors.toMap(Comment::getId, Function.identity(), (left, right) -> left));
+            Map<String, Integer> cacheMap = new HashMap<>(missingIds.size() * 2);
+            for (Long commentId : missingIds) {
+                Comment fallbackComment = fallbackCommentMap.get(commentId);
+                if (!likedMap.containsKey(commentId)) {
+                    Integer liked = fallbackComment != null && fallbackComment.getLiked() != null ? fallbackComment.getLiked() : 0;
+                    likedMap.put(commentId, liked);
+                    cacheMap.put(likeKeyPrefix + commentId, liked);
+                }
+                if (!replyMap.containsKey(commentId)) {
+                    Integer replyCount = fallbackComment != null && fallbackComment.getReplyCount() != null ? fallbackComment.getReplyCount() : 0;
+                    replyMap.put(commentId, replyCount);
+                    cacheMap.put(replyKeyPrefix + commentId, replyCount);
+                }
+            }
+            if (CollUtil.isNotEmpty(cacheMap)) {
+                redisService.setMultiCacheObject(cacheMap);
+            }
+        }
+
+        validCommentVOList.forEach(commentVO -> {
+            Long commentId = commentVO.getId();
+            commentVO.setLiked(likedMap.getOrDefault(commentId, 0));
+            commentVO.setReplyCount(replyMap.getOrDefault(commentId, 0));
+        });
+    }
+
+    private void fillCounterMapFromRedis(List<Long> ids, List<Integer> values, Map<Long, Integer> counterMap, Set<Long> missingIds) {
+        for (int i = 0; i < ids.size(); i++) {
+            Integer value = values != null && values.size() > i ? values.get(i) : null;
+            if (value != null) {
+                counterMap.put(ids.get(i), value);
+            } else {
+                missingIds.add(ids.get(i));
+            }
+        }
     }
 
     /**
@@ -638,7 +719,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
         for (Long id : sourceIdList) {
             Comment comment = commentMap.get(id);
             if (comment != null && Objects.equals(comment.getStatus(), 0) && Objects.equals(comment.getAuditStatus(), AuditStatusEnum.PASS.getCode())) {
-                CommentVO vo = convertToCommentVO(comment);
+                CommentVO vo = toCommentVO(comment);
                 ResourceStrategy strategy = resourceStrategyFactory.getStrategy(comment.getSourceType());
                 if (strategy != null) {
                     HashMap<String, String> content = strategy.getResourceContentById(comment.getSourceId());
@@ -649,6 +730,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
                 orderedList.add(vo);
             }
         }
+        fillCommentDynamicStats(orderedList);
         queryCommentListIsLike(orderedList);
         queryCommentListUserMessage(orderedList);
         return orderedList;
@@ -776,8 +858,8 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
      */
     @Override
     public Integer getCommentLikeCount(Long sourceId) {
-        Comment comment = getById(sourceId);
-        return comment.getLiked();
+        CommentVO commentVO = convertToCommentVO(getById(sourceId));
+        return commentVO != null && commentVO.getLiked() != null ? commentVO.getLiked() : 0;
     }
 
     /**

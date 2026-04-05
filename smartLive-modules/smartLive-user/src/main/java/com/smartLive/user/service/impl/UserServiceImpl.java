@@ -29,6 +29,8 @@ import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.interaction.FollowTypeEnum;
+import com.smartLive.common.core.enums.interaction.LikeTypeEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
@@ -106,6 +108,89 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return userList.stream()
                 .map(this::convertToUserVO)
                 .collect(Collectors.toList());
+    }
+
+    private void fillUserDynamicStats(UserVO userVO) {
+        fillUserDynamicStats(Collections.singletonList(userVO));
+    }
+
+    private void fillUserDynamicStats(List<UserVO> userVOList) {
+        if (CollUtil.isEmpty(userVOList)) {
+            return;
+        }
+        List<UserVO> validUserVOList = userVOList.stream()
+                .filter(userVO -> userVO != null && userVO.getId() != null)
+                .toList();
+        if (CollUtil.isEmpty(validUserVOList)) {
+            return;
+        }
+        List<Long> userIds = validUserVOList.stream()
+                .map(UserVO::getId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        String followKeyPrefix = FollowTypeEnum.USER_IDENTITY.getFollowCountKeyPrefix();
+        String fansKeyPrefix = FollowTypeEnum.USER_IDENTITY.getFansCountKeyPrefix();
+        String likedKeyPrefix = LikeTypeEnum.USER_LIKE.getLikedCountKeyPrefix();
+
+        List<Integer> followValues = redisService.getMultiCacheObject(userIds.stream().map(id -> followKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> fansValues = redisService.getMultiCacheObject(userIds.stream().map(id -> fansKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> likedValues = redisService.getMultiCacheObject(userIds.stream().map(id -> likedKeyPrefix + id).collect(Collectors.toList()));
+
+        Map<Long, Integer> followMap = new HashMap<>(userIds.size());
+        Map<Long, Integer> fansMap = new HashMap<>(userIds.size());
+        Map<Long, Integer> likedMap = new HashMap<>(userIds.size());
+        Set<Long> missingIds = new HashSet<>();
+        fillCounterMapFromRedis(userIds, followValues, followMap, missingIds);
+        fillCounterMapFromRedis(userIds, fansValues, fansMap, missingIds);
+        fillCounterMapFromRedis(userIds, likedValues, likedMap, missingIds);
+
+        if (CollUtil.isNotEmpty(missingIds)) {
+            Map<Long, UserInfoVO> fallbackUserInfoMap = userInfoService.listByUserIds(new ArrayList<>(missingIds))
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(UserInfoVO::getUserId, java.util.function.Function.identity(), (left, right) -> left));
+            Map<String, Integer> cacheMap = new HashMap<>(missingIds.size() * 3);
+            for (Long userId : missingIds) {
+                UserInfoVO userInfo = fallbackUserInfoMap.get(userId);
+                if (!followMap.containsKey(userId)) {
+                    Integer followee = userInfo != null && userInfo.getFollowee() != null ? userInfo.getFollowee() : 0;
+                    followMap.put(userId, followee);
+                    cacheMap.put(followKeyPrefix + userId, followee);
+                }
+                if (!fansMap.containsKey(userId)) {
+                    Integer fans = userInfo != null && userInfo.getFans() != null ? userInfo.getFans() : 0;
+                    fansMap.put(userId, fans);
+                    cacheMap.put(fansKeyPrefix + userId, fans);
+                }
+                if (!likedMap.containsKey(userId)) {
+                    Integer liked = userInfo != null && userInfo.getLiked() != null ? userInfo.getLiked() : 0;
+                    likedMap.put(userId, liked);
+                    cacheMap.put(likedKeyPrefix + userId, liked);
+                }
+            }
+            if (!cacheMap.isEmpty()) {
+                redisService.setMultiCacheObject(cacheMap);
+            }
+        }
+
+        validUserVOList.forEach(userVO -> {
+            Long userId = userVO.getId();
+            userVO.setFollowee(followMap.getOrDefault(userId, 0));
+            userVO.setFans(fansMap.getOrDefault(userId, 0));
+            userVO.setLiked(likedMap.getOrDefault(userId, 0));
+        });
+    }
+
+    private void fillCounterMapFromRedis(List<Long> ids, List<Integer> values, Map<Long, Integer> counterMap, Set<Long> missingIds) {
+        for (int i = 0; i < ids.size(); i++) {
+            Integer value = values != null && values.size() > i ? values.get(i) : null;
+            if (value != null) {
+                counterMap.put(ids.get(i), value);
+            } else {
+                missingIds.add(ids.get(i));
+            }
+        }
     }
     /**
      * 根据ID查询用户信息
@@ -289,6 +374,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         // 2. Populate dynamic info (isFollow) which depends on current user context
         if (CollUtil.isNotEmpty(userVOList)) {
+            fillUserDynamicStats(userVOList);
             for (UserVO userVO : userVOList) {
                if (userVO != null) {
                    isFollow(userVO);
@@ -313,6 +399,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 TimeUnit.MINUTES
         );
         if(userVO != null){
+            fillUserDynamicStats(userVO);
             isFollow(userVO);
         }
         return userVO;
@@ -377,8 +464,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             userVO.setIntroduce(userInfo.getIntroduce());
             userVO.setBackgroundImage(userInfo.getBackgroundImage());
             userVO.setCity(userInfo.getCity());
-            userVO.setFans(userInfo.getFans());
-            userVO.setFollowee(userInfo.getFollowee());
         }
         return userVO;
     }
@@ -411,7 +496,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public UserVO getUserById(Long userId) {
         User userById = selectUserById(userId);
         if (userById != null) {
-            return convertToUserVO(userById);
+            UserVO userVO = convertToUserVO(userById);
+            fillUserDynamicStats(userVO);
+            return userVO;
         }
         return null;
     }
@@ -513,7 +600,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public UserVO queryUserInfoById(Long id) {
-        return cacheClient.queryWithLogicalExpireAndPassThrough(
+        UserVO userVO = cacheClient.queryWithLogicalExpireAndPassThrough(
                 RedisConstants.CACHE_USER_KEY,
                 RedisConstants.LOCK_USER_KEY,
                 id,
@@ -522,6 +609,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 RedisConstants.CACHE_USER_TTL,
                 TimeUnit.MINUTES
         );
+        fillUserDynamicStats(userVO);
+        return userVO;
     }
 
     /**

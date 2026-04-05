@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.domain.R;
+import com.smartLive.common.core.enums.interaction.StarTypeEnum;
+import com.smartLive.common.core.enums.product.SalesTypeEnum;
 import com.smartLive.common.core.utils.poi.ExcelUtil;
 import com.smartLive.common.core.web.controller.BaseController;
 import com.smartLive.common.core.web.domain.AjaxResult;
@@ -11,6 +13,7 @@ import com.smartLive.common.core.web.domain.Result;
 import com.smartLive.common.core.web.page.TableDataInfo;
 import com.smartLive.common.log.annotation.Log;
 import com.smartLive.common.log.enums.BusinessType;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.security.annotation.RequiresPermissions;
 import com.smartLive.shop.domain.Shop;
 import com.smartLive.shop.domain.VO.ShopVO;
@@ -30,6 +33,8 @@ import java.util.Map;
 public class ShopInnerController extends BaseController {
     @Autowired
     private IShopService shopService;
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 根据店铺名称查询店铺。
@@ -97,6 +102,25 @@ public class ShopInnerController extends BaseController {
     }
 
     /**
+     * 获取店铺收藏数。
+     */
+    @GetMapping("/getStarCount/{sourceId}")
+    public Integer getStarCount(@PathVariable("sourceId") Long sourceId) {
+        if (sourceId == null) {
+            return 0;
+        }
+        String starCountKey = StarTypeEnum.SHOP_STAR.getStarCountKeyPrefix() + sourceId;
+        Integer starCount = redisService.getCacheObject(starCountKey);
+        if (starCount != null) {
+            return starCount;
+        }
+        Shop shop = shopService.getById(sourceId);
+        starCount = shop != null && shop.getStared() != null ? shop.getStared() : 0;
+        redisService.setCacheObject(starCountKey, starCount);
+        return starCount;
+    }
+
+    /**
      * 更新店铺状态。
      */
     @PostMapping("/updateShopStatus")
@@ -127,7 +151,17 @@ public class ShopInnerController extends BaseController {
      */
     @GetMapping("/getSold/{id}")
     public Integer getSold(@PathVariable("id") Long id){
+        if (id == null) {
+            return 0;
+        }
+        String soldCountKey = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix() + id;
+        Integer sold = redisService.getCacheObject(soldCountKey);
+        if (sold != null) {
+            return sold;
+        }
         Shop shop = shopService.getById(id);
-        return shop != null ? shop.getSold() : 0;
+        sold = shop != null && shop.getSold() != null ? shop.getSold() : 0;
+        redisService.setCacheObject(soldCountKey, sold);
+        return sold;
     }
 }

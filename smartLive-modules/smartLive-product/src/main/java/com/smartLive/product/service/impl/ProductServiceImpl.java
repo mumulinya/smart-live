@@ -17,6 +17,9 @@ import com.smartLive.common.core.constant.*;
 import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.interaction.FeedTypeEnum;
+import com.smartLive.common.core.enums.interaction.FollowTypeEnum;
+import com.smartLive.common.core.enums.interaction.ReviewTypeEnum;
+import com.smartLive.common.core.enums.interaction.StarTypeEnum;
 import com.smartLive.common.core.enums.product.ItemActionType;
 import com.smartLive.common.core.enums.product.ProductEnum;
 import com.smartLive.common.core.enums.product.ProductStatusEnum;
@@ -65,6 +68,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements IProductService
 {
+    private static final class ProductDynamicStats {
+        private Integer sold;
+        private Integer reviews;
+        private Integer fans;
+        private Integer stars;
+    }
+
     @Autowired
     private ProductMapper productMapper;
     @Autowired
@@ -115,6 +125,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public Product selectProductEntityById(Long id)
     {
         Product product = productMapper.selectProductById(id);
+        fillProductDynamicStats(Collections.singletonList(product));
         return product;
     }
 
@@ -429,12 +440,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * @param product 实体
      * @return VO
      */
-    private ProductVO convertToProductVO(Product product) {
+    private ProductVO toProductVO(Product product) {
         if (product == null) {
             return null;
         }
         ProductVO productVO = new ProductVO();
         BeanUtils.copyProperties(product, productVO);
+        return productVO;
+    }
+
+    private ProductVO convertToProductVO(Product product) {
+        ProductVO productVO = toProductVO(product);
+        fillProductVODynamicStats(Collections.singletonList(productVO));
         return productVO;
     }
 
@@ -450,9 +467,142 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         List<ProductVO> voList = new ArrayList<>(productList.size());
         for (Product product : productList) {
-            voList.add(convertToProductVO(product));
+            voList.add(toProductVO(product));
         }
+        fillProductVODynamicStats(voList);
         return voList;
+    }
+
+    private void fillProductDynamicStats(List<Product> productList) {
+        if (CollUtil.isEmpty(productList)) {
+            return;
+        }
+        Map<Long, ProductDynamicStats> statsMap = loadProductDynamicStats(productList.stream()
+                .filter(product -> product != null && product.getId() != null)
+                .map(Product::getId)
+                .distinct()
+                .collect(Collectors.toList()));
+        productList.forEach(product -> applyProductDynamicStats(product, statsMap.get(product == null ? null : product.getId())));
+    }
+
+    private void fillProductVODynamicStats(List<ProductVO> productVOList) {
+        if (CollUtil.isEmpty(productVOList)) {
+            return;
+        }
+        Map<Long, ProductDynamicStats> statsMap = loadProductDynamicStats(productVOList.stream()
+                .filter(productVO -> productVO != null && productVO.getId() != null)
+                .map(ProductVO::getId)
+                .distinct()
+                .collect(Collectors.toList()));
+        productVOList.forEach(productVO -> applyProductDynamicStats(productVO, statsMap.get(productVO == null ? null : productVO.getId())));
+    }
+
+    private Map<Long, ProductDynamicStats> loadProductDynamicStats(List<Long> productIds) {
+        if (CollUtil.isEmpty(productIds)) {
+            return Collections.emptyMap();
+        }
+        String starKeyPrefix = StarTypeEnum.PRODUCT_STAR.getStarCountKeyPrefix();
+        String fansKeyPrefix = FollowTypeEnum.PRODUCT_IDENTITY.getFansCountKeyPrefix();
+        String reviewKeyPrefix = ReviewTypeEnum.PRODUCT_REVIEW.getReviewCountKeyPrefix();
+        String soldKeyPrefix = SalesTypeEnum.PRODUCT_SALES.getCountKeyPrefix();
+
+        List<Integer> starValues = redisService.getMultiCacheObject(productIds.stream().map(id -> starKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> fansValues = redisService.getMultiCacheObject(productIds.stream().map(id -> fansKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> reviewValues = redisService.getMultiCacheObject(productIds.stream().map(id -> reviewKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> soldValues = redisService.getMultiCacheObject(productIds.stream().map(id -> soldKeyPrefix + id).collect(Collectors.toList()));
+
+        Map<Long, ProductDynamicStats> statsMap = new HashMap<>(productIds.size());
+        Set<Long> missingIds = new HashSet<>();
+        fillProductCounterMapFromRedis(productIds, starValues, statsMap, missingIds, (stats, value) -> stats.stars = value);
+        fillProductCounterMapFromRedis(productIds, fansValues, statsMap, missingIds, (stats, value) -> stats.fans = value);
+        fillProductCounterMapFromRedis(productIds, reviewValues, statsMap, missingIds, (stats, value) -> stats.reviews = value);
+        fillProductCounterMapFromRedis(productIds, soldValues, statsMap, missingIds, (stats, value) -> stats.sold = value);
+
+        if (CollUtil.isNotEmpty(missingIds)) {
+            Map<Long, Product> fallbackProductMap = lambdaQuery()
+                    .select(Product::getId, Product::getStars, Product::getFans, Product::getReviews, Product::getSold)
+                    .in(Product::getId, missingIds)
+                    .list()
+                    .stream()
+                    .filter(product -> product != null && product.getId() != null)
+                    .collect(Collectors.toMap(Product::getId, product -> product, (left, right) -> left));
+            Map<String, Integer> cacheMap = new HashMap<>(missingIds.size() * 4);
+            for (Long productId : missingIds) {
+                ProductDynamicStats stats = statsMap.computeIfAbsent(productId, key -> new ProductDynamicStats());
+                Product fallbackProduct = fallbackProductMap.get(productId);
+                if (stats.stars == null) {
+                    stats.stars = fallbackProduct != null && fallbackProduct.getStars() != null ? fallbackProduct.getStars() : 0;
+                    cacheMap.put(starKeyPrefix + productId, stats.stars);
+                }
+                if (stats.fans == null) {
+                    stats.fans = fallbackProduct != null && fallbackProduct.getFans() != null ? fallbackProduct.getFans() : 0;
+                    cacheMap.put(fansKeyPrefix + productId, stats.fans);
+                }
+                if (stats.reviews == null) {
+                    stats.reviews = fallbackProduct != null && fallbackProduct.getReviews() != null ? fallbackProduct.getReviews() : 0;
+                    cacheMap.put(reviewKeyPrefix + productId, stats.reviews);
+                }
+                if (stats.sold == null) {
+                    stats.sold = fallbackProduct != null && fallbackProduct.getSold() != null ? fallbackProduct.getSold() : 0;
+                    cacheMap.put(soldKeyPrefix + productId, stats.sold);
+                }
+            }
+            if (CollUtil.isNotEmpty(cacheMap)) {
+                redisService.setMultiCacheObject(cacheMap);
+            }
+        }
+
+        productIds.forEach(productId -> {
+            ProductDynamicStats stats = statsMap.computeIfAbsent(productId, key -> new ProductDynamicStats());
+            if (stats.stars == null) {
+                stats.stars = 0;
+            }
+            if (stats.fans == null) {
+                stats.fans = 0;
+            }
+            if (stats.reviews == null) {
+                stats.reviews = 0;
+            }
+            if (stats.sold == null) {
+                stats.sold = 0;
+            }
+        });
+        return statsMap;
+    }
+
+    private void fillProductCounterMapFromRedis(List<Long> ids,
+                                                List<Integer> values,
+                                                Map<Long, ProductDynamicStats> statsMap,
+                                                Set<Long> missingIds,
+                                                java.util.function.BiConsumer<ProductDynamicStats, Integer> valueSetter) {
+        for (int i = 0; i < ids.size(); i++) {
+            Integer value = values != null && values.size() > i ? values.get(i) : null;
+            if (value != null) {
+                valueSetter.accept(statsMap.computeIfAbsent(ids.get(i), key -> new ProductDynamicStats()), value);
+            } else {
+                missingIds.add(ids.get(i));
+            }
+        }
+    }
+
+    private void applyProductDynamicStats(Product product, ProductDynamicStats stats) {
+        if (product == null || stats == null) {
+            return;
+        }
+        product.setStars(stats.stars);
+        product.setFans(stats.fans);
+        product.setReviews(stats.reviews);
+        product.setSold(stats.sold);
+    }
+
+    private void applyProductDynamicStats(ProductVO productVO, ProductDynamicStats stats) {
+        if (productVO == null || stats == null) {
+            return;
+        }
+        productVO.setStars(stats.stars);
+        productVO.setFans(stats.fans);
+        productVO.setReviews(stats.reviews);
+        productVO.setSold(stats.sold);
     }
 
     /**
@@ -490,6 +640,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (CollUtil.isEmpty(productList)) {
             return Collections.emptyList();
         }
+        fillProductDynamicStats(productList);
         return productList.stream()
                 .filter(product -> product != null
                         && Objects.equals(product.getStatus(), ProductStatusEnum.ON_SHELF.getCode())
@@ -816,7 +967,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         } else {
             productMapper.updateReviewCountBatch(updateMap);
         }
-        clearProductCacheBatch(updateMap.keySet());
         return true;
     }
     /**
@@ -841,7 +991,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         } else {
             productMapper.updateStarCountBatch(updateMap);
         }
-        clearProductCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -867,7 +1016,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         } else {
             productMapper.updateFansCountBatch(updateMap);
         }
-        clearProductCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -896,7 +1044,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             productMapper.updateSoldBatch(updateMap);
         }
         // 执行业务功能联动及状态补偿保障机制
-        clearProductCacheBatch(updateMap.keySet());
         return true;
     }
 
@@ -944,11 +1091,21 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public Integer getProductStarCount(Long sourceId) {
+        if (sourceId == null) {
+            return 0;
+        }
+        String starCountKey = StarTypeEnum.PRODUCT_STAR.getStarCountKeyPrefix() + sourceId;
+        Integer starCount = redisService.getCacheObject(starCountKey);
+        if (starCount != null) {
+            return starCount;
+        }
         Product product = lambdaQuery()
                 .select(Product::getStars)
                 .eq(Product::getId, sourceId)
                 .one();
-        return product != null ? product.getStars() : 0;
+        starCount = product != null && product.getStars() != null ? product.getStars() : 0;
+        redisService.setCacheObject(starCountKey, starCount);
+        return starCount;
     }
     /**
      * 发送新商品Feed流消息到MQ

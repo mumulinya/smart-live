@@ -1,6 +1,8 @@
 package com.smartLive.product.controller;
 
+import com.smartLive.common.core.enums.product.SalesTypeEnum;
 import com.smartLive.common.core.web.controller.BaseController;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.product.domain.Product;
 import com.smartLive.product.service.IProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,8 @@ public class ProductInnerController extends BaseController {
 
     @Autowired
     private IProductService productService;
+    @Autowired
+    private RedisService redisService;
 
     @GetMapping("/{id}")
     public Product getProductEntityById(@PathVariable("id") Long productId) {
@@ -100,8 +104,18 @@ public class ProductInnerController extends BaseController {
 
     @GetMapping("/getSold/{id}")
     public Integer getSold(@PathVariable("id") Long id) {
+        if (id == null) {
+            return 0;
+        }
+        String soldCountKey = SalesTypeEnum.PRODUCT_SALES.getCountKeyPrefix() + id;
+        Integer sold = redisService.getCacheObject(soldCountKey);
+        if (sold != null) {
+            return sold;
+        }
         Product product = productService.selectProductEntityById(id);
-        return product != null ? product.getSold() : 0;
+        sold = product != null && product.getSold() != null ? product.getSold() : 0;
+        redisService.setCacheObject(soldCountKey, sold);
+        return sold;
     }
 
     @GetMapping("/getAllProductIds")

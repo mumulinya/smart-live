@@ -8,8 +8,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
+import com.smartLive.common.core.enums.interaction.LikeTypeEnum;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.user.DTO.UserInfoDTO;
 import com.smartLive.user.domain.User;
 import com.smartLive.user.domain.UserInfo;
@@ -41,6 +43,8 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
     
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
+    @Autowired
+    private RedisService redisService;
 
     //使用懒加载，避免循环引用
     public UserInfoServiceImpl(@Lazy IUserService userService) {
@@ -306,7 +310,6 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
             return false;
         }
         batchUpdate(updateMap, "fans");
-        updateMap.keySet().forEach(userService::clearUserCache);
         return true;
     }
 
@@ -316,7 +319,6 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
             return false;
         }
         batchUpdate(updateMap, "followee");
-        updateMap.keySet().forEach(userService::clearUserCache);
         return true;
     }
 
@@ -326,14 +328,23 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
             return false;
         }
         batchUpdate(updateMap, "liked");
-        updateMap.keySet().forEach(userService::clearUserCache);
         return true;
     }
 
     @Override
     public Integer getUserLikedCount(Long userId) {
+        if (userId == null) {
+            return 0;
+        }
+        String likedCountKey = LikeTypeEnum.USER_LIKE.getLikedCountKeyPrefix() + userId;
+        Integer likedCount = redisService.getCacheObject(likedCountKey);
+        if (likedCount != null) {
+            return likedCount;
+        }
         UserInfoVO userInfo = getByUserId(userId);
-        return userInfo != null && userInfo.getLiked() != null ? userInfo.getLiked() : 0;
+        likedCount = userInfo != null && userInfo.getLiked() != null ? userInfo.getLiked() : 0;
+        redisService.setCacheObject(likedCountKey, likedCount);
+        return likedCount;
     }
 
     private void batchUpdate(Map<Long, Integer> updateMap, String type) {

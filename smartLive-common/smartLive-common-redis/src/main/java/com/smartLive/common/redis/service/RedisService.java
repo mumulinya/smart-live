@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import cn.hutool.core.collection.CollUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.redis.connection.RedisGeoCommands;
@@ -387,9 +388,9 @@ public class RedisService
      * @param score 分数 (通常是时间戳)
      */
     public void setCacheZSetBatch(final Collection<String> keys, final String value, final double score) {
-        redisTemplate.executePipelined(new org.springframework.data.redis.core.SessionCallback<Object>() {
+        redisTemplate.executePipelined(new SessionCallback<Object>() {
             @Override
-            public Object execute(org.springframework.data.redis.core.RedisOperations operations) throws org.springframework.dao.DataAccessException {
+            public Object execute(RedisOperations operations) throws DataAccessException {
                 for (String key : keys) {
                     operations.opsForZSet().add(key, value, score);
                 }

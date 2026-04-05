@@ -357,11 +357,11 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             log.error("推送数据给粉丝失败，未知的关注类型");
             return;
         }
+        //推送数据给所有粉丝
         String fansKey = followType.getFansKeyPrefix() + feedEventMessage.getSourceId();
         Set<String> userIdSet= redisService.getCacheZSetRange(fansKey, 0, -1);
         List<Long> userIdList = userIdSet.stream().map(Long::valueOf).collect(Collectors.toList());
-        //推送笔记id给所有粉丝
-        // 查询笔记作者下的所有粉丝
+        // 从数据库查询当前源目标下的所有粉丝
         if(userIdList.isEmpty()){
             userIdList = query().select("user_id").eq("source_type", feedEventMessage.getSourceType()).eq("source_id", feedEventMessage.getSourceId()).list().stream().map(Follow::getUserId).collect(Collectors.toList());
         }
@@ -391,7 +391,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
             allFeedKeys.add(FeedTypeEnum.ALL_FEED.getFeedKeyPrefix() + userId);
             
             if(isSendSystemNotice){
-                // 发送系统通知（当前设计为RPC，可进一步考虑发MQ或本地事件机制）
+                // 发送系统通知(发mq消息)
                 createSystemNotice(userId, feedEventMessage);
             }
         }

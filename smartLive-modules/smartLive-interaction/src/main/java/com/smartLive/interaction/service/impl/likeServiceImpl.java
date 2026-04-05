@@ -209,9 +209,30 @@ public class likeServiceImpl extends ServiceImpl<LikeMapper, Like> implements IL
 
     @Override
     public Integer getUserLikeCount(Like like) {
-        return query().eq("source_type", like.getSourceType())
+        if (like == null || like.getUserId() == null || like.getSourceType() == null) {
+            return 0;
+        }
+        LikeTypeEnum likeTypeEnum = LikeTypeEnum.getByCode(like.getSourceType());
+        if (likeTypeEnum == null || likeTypeEnum.getUserLikedKeyPrefix() == null) {
+            return query().eq("source_type", like.getSourceType())
+                    .eq("user_id", like.getUserId())
+                    .count().intValue();
+        }
+        String userLikedKey = likeTypeEnum.getUserLikedKeyPrefix() + like.getUserId();
+        if (Boolean.TRUE.equals(redisService.hasKey(userLikedKey))) {
+            Long size = redisService.getCacheZSetSize(userLikedKey);
+            return size == null ? 0 : size.intValue();
+        }
+        List<Like> likeList = query()
+                .eq("source_type", like.getSourceType())
                 .eq("user_id", like.getUserId())
-                .count().intValue();
+                .orderByDesc("create_time")
+                .list();
+        if (likeList == null || likeList.isEmpty()) {
+            return 0;
+        }
+        zSetIdManager.saveToZSet(userLikedKey, likeList, Like::getSourceId, Like::getCreateTime);
+        return likeList.size();
     }
 
     @Override

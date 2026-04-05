@@ -2,6 +2,9 @@ package com.smartLive.shop.service.impl;
 import com.smartLive.common.core.constant.mq.SearchMqConstants;
 import com.smartLive.common.core.constant.mq.AiAuditMqConstants;
 
+import com.smartLive.common.core.enums.interaction.FollowTypeEnum;
+import com.smartLive.common.core.enums.interaction.ReviewTypeEnum;
+import com.smartLive.common.core.enums.interaction.StarTypeEnum;
 import com.smartLive.common.core.enums.product.SalesTypeEnum;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -98,12 +101,18 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     /**
      * 将店铺实体转换为店铺视图对象。
      */
-    private ShopVO convertToShopVO(Shop shop) {
+    private ShopVO toShopVO(Shop shop) {
         if (shop == null) {
             return null;
         }
         ShopVO shopVO = new ShopVO();
         BeanUtils.copyProperties(shop, shopVO);
+        return shopVO;
+    }
+
+    private ShopVO convertToShopVO(Shop shop) {
+        ShopVO shopVO = toShopVO(shop);
+        fillShopDynamicStats(Collections.singletonList(shopVO));
         return shopVO;
     }
 
@@ -132,9 +141,103 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         if (CollUtil.isEmpty(shopList)) {
             return new ArrayList<>();
         }
-        return shopList.stream()
-                .map(this::convertToShopVO)
+        List<ShopVO> shopVOList = shopList.stream()
+                .map(this::toShopVO)
                 .collect(Collectors.toList());
+        fillShopDynamicStats(shopVOList);
+        return shopVOList;
+    }
+
+    private void fillShopDynamicStats(List<ShopVO> shopVOList) {
+        if (CollUtil.isEmpty(shopVOList)) {
+            return;
+        }
+        List<ShopVO> validShopVOList = shopVOList.stream()
+                .filter(shopVO -> shopVO != null && shopVO.getId() != null)
+                .toList();
+        if (CollUtil.isEmpty(validShopVOList)) {
+            return;
+        }
+        List<Long> shopIds = validShopVOList.stream()
+                .map(ShopVO::getId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        String starKeyPrefix = StarTypeEnum.SHOP_STAR.getStarCountKeyPrefix();
+        String fansKeyPrefix = FollowTypeEnum.SHOP_IDENTITY.getFansCountKeyPrefix();
+        String reviewKeyPrefix = ReviewTypeEnum.SHOP_REVIEW.getReviewCountKeyPrefix();
+        String soldKeyPrefix = SalesTypeEnum.SHOP_SALES.getCountKeyPrefix();
+
+        List<Integer> staredValues = redisService.getMultiCacheObject(shopIds.stream().map(id -> starKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> fansValues = redisService.getMultiCacheObject(shopIds.stream().map(id -> fansKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> reviewValues = redisService.getMultiCacheObject(shopIds.stream().map(id -> reviewKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> soldValues = redisService.getMultiCacheObject(shopIds.stream().map(id -> soldKeyPrefix + id).collect(Collectors.toList()));
+
+        Map<Long, Integer> staredMap = new HashMap<>(shopIds.size());
+        Map<Long, Integer> fansMap = new HashMap<>(shopIds.size());
+        Map<Long, Integer> reviewMap = new HashMap<>(shopIds.size());
+        Map<Long, Integer> soldMap = new HashMap<>(shopIds.size());
+        Set<Long> missingIds = new HashSet<>();
+        fillCounterMapFromRedis(shopIds, staredValues, staredMap, missingIds);
+        fillCounterMapFromRedis(shopIds, fansValues, fansMap, missingIds);
+        fillCounterMapFromRedis(shopIds, reviewValues, reviewMap, missingIds);
+        fillCounterMapFromRedis(shopIds, soldValues, soldMap, missingIds);
+
+        if (CollUtil.isNotEmpty(missingIds)) {
+            Map<Long, Shop> fallbackShopMap = query()
+                    .select("id", "stared", "fans", "reviews", "sold")
+                    .in("id", missingIds)
+                    .list()
+                    .stream()
+                    .filter(shop -> shop != null && shop.getId() != null)
+                    .collect(Collectors.toMap(Shop::getId, java.util.function.Function.identity(), (left, right) -> left));
+            Map<String, Integer> cacheMap = new HashMap<>(missingIds.size() * 4);
+            for (Long shopId : missingIds) {
+                Shop fallbackShop = fallbackShopMap.get(shopId);
+                if (!staredMap.containsKey(shopId)) {
+                    Integer stared = fallbackShop != null && fallbackShop.getStared() != null ? fallbackShop.getStared() : 0;
+                    staredMap.put(shopId, stared);
+                    cacheMap.put(starKeyPrefix + shopId, stared);
+                }
+                if (!fansMap.containsKey(shopId)) {
+                    Integer fans = fallbackShop != null && fallbackShop.getFans() != null ? fallbackShop.getFans() : 0;
+                    fansMap.put(shopId, fans);
+                    cacheMap.put(fansKeyPrefix + shopId, fans);
+                }
+                if (!reviewMap.containsKey(shopId)) {
+                    Integer reviews = fallbackShop != null && fallbackShop.getReviews() != null ? fallbackShop.getReviews() : 0;
+                    reviewMap.put(shopId, reviews);
+                    cacheMap.put(reviewKeyPrefix + shopId, reviews);
+                }
+                if (!soldMap.containsKey(shopId)) {
+                    Integer sold = fallbackShop != null && fallbackShop.getSold() != null ? fallbackShop.getSold() : 0;
+                    soldMap.put(shopId, sold);
+                    cacheMap.put(soldKeyPrefix + shopId, sold);
+                }
+            }
+            if (CollUtil.isNotEmpty(cacheMap)) {
+                redisService.setMultiCacheObject(cacheMap);
+            }
+        }
+
+        validShopVOList.forEach(shopVO -> {
+            Long shopId = shopVO.getId();
+            shopVO.setStared(staredMap.getOrDefault(shopId, 0));
+            shopVO.setFans(fansMap.getOrDefault(shopId, 0));
+            shopVO.setReviews(reviewMap.getOrDefault(shopId, 0));
+            shopVO.setSold(soldMap.getOrDefault(shopId, 0));
+        });
+    }
+
+    private void fillCounterMapFromRedis(List<Long> ids, List<Integer> values, Map<Long, Integer> counterMap, Set<Long> missingIds) {
+        for (int i = 0; i < ids.size(); i++) {
+            Integer value = values != null && values.size() > i ? values.get(i) : null;
+            if (value != null) {
+                counterMap.put(ids.get(i), value);
+            } else {
+                missingIds.add(ids.get(i));
+            }
+        }
     }
     /**
      * 根据ID查询店铺实体。
@@ -553,6 +656,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         if (CollUtil.isEmpty(shopList)) {
             return Collections.emptyList();
         }
+        fillShopDynamicStats(shopList);
         return shopList.stream()
                 .filter(this::isVisibleShop)
                 .collect(Collectors.toList());
@@ -738,8 +842,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         } else {
             baseMapper.updateStarCountBatch(updateMap);
         }
-        updateMap.keySet().forEach(this::flashShopRedisCache);
-        flushCache();
         return true;
     }
 
@@ -764,8 +866,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         } else {
             baseMapper.updateFansCountBatch(updateMap);
         }
-        updateMap.keySet().forEach(this::flashShopRedisCache);
-        flushCache();
         return true;
     }
     /**
@@ -788,8 +888,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         } else {
             baseMapper.updateSoldBatch(updateMap);
         }
-        updateMap.keySet().forEach(this::flashShopRedisCache);
-        flushCache();
         return true;
     }
 
@@ -845,8 +943,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         } else {
             baseMapper.updateReviewCountBatch(updateMap);
         }
-        updateMap.keySet().forEach(this::flashShopRedisCache);
-        flushCache();
         return true;
     }
 

@@ -289,7 +289,28 @@ public class StarServiceImpl extends ServiceImpl<StarMapper, Star> implements IS
 
     @Override
     public Integer getUserStarCount(Star star) {
-        return query().eq("user_id", star.getUserId()).eq("source_type", star.getSourceType()).count().intValue();
+        if (star == null || star.getUserId() == null || star.getSourceType() == null) {
+            return 0;
+        }
+        StarTypeEnum starTypeEnum = StarTypeEnum.getByCode(star.getSourceType());
+        if (starTypeEnum == null || starTypeEnum.getStarKeyPrefix() == null) {
+            return query().eq("user_id", star.getUserId()).eq("source_type", star.getSourceType()).count().intValue();
+        }
+        String userStarKey = starTypeEnum.getStarKeyPrefix() + star.getUserId();
+        if (Boolean.TRUE.equals(redisService.hasKey(userStarKey))) {
+            Long size = redisService.getCacheZSetSize(userStarKey);
+            return size == null ? 0 : size.intValue();
+        }
+        List<Star> starList = query()
+                .eq("user_id", star.getUserId())
+                .eq("source_type", star.getSourceType())
+                .orderByDesc("create_time")
+                .list();
+        if (starList == null || starList.isEmpty()) {
+            return 0;
+        }
+        zSetIdManager.saveToZSet(userStarKey, starList, Star::getSourceId, Star::getCreateTime);
+        return starList.size();
     }
 
     @Override

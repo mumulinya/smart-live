@@ -21,6 +21,9 @@ import com.smartLive.common.core.context.UserContextHolder;
 import com.smartLive.common.core.enums.ContentStatusEnum;
 import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.interaction.FeedTypeEnum;
+import com.smartLive.common.core.enums.interaction.LikeTypeEnum;
+import com.smartLive.common.core.enums.interaction.StarTypeEnum;
+import com.smartLive.common.core.enums.interaction.CommentTypeEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.DateUtils;
@@ -88,12 +91,18 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param blog 博客信息
      * @return 博客视图对象
      */
-    private BlogVO convertToBlogVO(Blog blog) {
+    private BlogVO toBlogVO(Blog blog) {
         if (blog == null) {
             return null;
         }
         BlogVO blogVO = new BlogVO();
         BeanUtils.copyProperties(blog, blogVO);
+        return blogVO;
+    }
+
+    private BlogVO convertToBlogVO(Blog blog) {
+        BlogVO blogVO = toBlogVO(blog);
+        fillBlogDynamicStats(Collections.singletonList(blogVO));
         return blogVO;
     }
 
@@ -107,9 +116,93 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (CollUtil.isEmpty(blogList)) {
             return new ArrayList<>();
         }
-        return blogList.stream()
-                .map(this::convertToBlogVO)
+        List<BlogVO> blogVOList = blogList.stream()
+                .map(this::toBlogVO)
                 .collect(Collectors.toList());
+        fillBlogDynamicStats(blogVOList);
+        return blogVOList;
+    }
+
+    private void fillBlogDynamicStats(List<BlogVO> blogVOList) {
+        if (CollUtil.isEmpty(blogVOList)) {
+            return;
+        }
+        List<BlogVO> validBlogVOList = blogVOList.stream()
+                .filter(blogVO -> blogVO != null && blogVO.getId() != null)
+                .toList();
+        if (CollUtil.isEmpty(validBlogVOList)) {
+            return;
+        }
+        List<Long> blogIds = validBlogVOList.stream()
+                .map(BlogVO::getId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        String likeKeyPrefix = LikeTypeEnum.BLOG_LIKE.getLikedCountKeyPrefix();
+        String starKeyPrefix = StarTypeEnum.BLOG_STAR.getStarCountKeyPrefix();
+        String commentKeyPrefix = CommentTypeEnum.BLOG_COMMENT.getCommentCountKeyPrefix();
+
+        List<Integer> likedValues = redisService.getMultiCacheObject(blogIds.stream().map(id -> likeKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> staredValues = redisService.getMultiCacheObject(blogIds.stream().map(id -> starKeyPrefix + id).collect(Collectors.toList()));
+        List<Integer> commentValues = redisService.getMultiCacheObject(blogIds.stream().map(id -> commentKeyPrefix + id).collect(Collectors.toList()));
+
+        Map<Long, Integer> likedMap = new HashMap<>(blogIds.size());
+        Map<Long, Integer> staredMap = new HashMap<>(blogIds.size());
+        Map<Long, Integer> commentMap = new HashMap<>(blogIds.size());
+        Set<Long> missingIds = new HashSet<>();
+        fillCounterMapFromRedis(blogIds, likedValues, likedMap, missingIds);
+        fillCounterMapFromRedis(blogIds, staredValues, staredMap, missingIds);
+        fillCounterMapFromRedis(blogIds, commentValues, commentMap, missingIds);
+
+        if (CollUtil.isNotEmpty(missingIds)) {
+            Map<Long, Blog> fallbackBlogMap = query()
+                    .select("id", "liked", "stared", "comments")
+                    .in("id", missingIds)
+                    .list()
+                    .stream()
+                    .filter(blog -> blog != null && blog.getId() != null)
+                    .collect(Collectors.toMap(Blog::getId, Function.identity(), (left, right) -> left));
+            Map<String, Integer> cacheMap = new HashMap<>(missingIds.size() * 3);
+            for (Long blogId : missingIds) {
+                Blog fallbackBlog = fallbackBlogMap.get(blogId);
+                if (!likedMap.containsKey(blogId)) {
+                    Integer liked = fallbackBlog != null && fallbackBlog.getLiked() != null ? fallbackBlog.getLiked() : 0;
+                    likedMap.put(blogId, liked);
+                    cacheMap.put(likeKeyPrefix + blogId, liked);
+                }
+                if (!staredMap.containsKey(blogId)) {
+                    Integer stared = fallbackBlog != null && fallbackBlog.getStared() != null ? fallbackBlog.getStared() : 0;
+                    staredMap.put(blogId, stared);
+                    cacheMap.put(starKeyPrefix + blogId, stared);
+                }
+                if (!commentMap.containsKey(blogId)) {
+                    Integer comments = fallbackBlog != null && fallbackBlog.getComments() != null ? fallbackBlog.getComments() : 0;
+                    commentMap.put(blogId, comments);
+                    cacheMap.put(commentKeyPrefix + blogId, comments);
+                }
+            }
+            if (CollUtil.isNotEmpty(cacheMap)) {
+                redisService.setMultiCacheObject(cacheMap);
+            }
+        }
+
+        validBlogVOList.forEach(blogVO -> {
+            Long blogId = blogVO.getId();
+            blogVO.setLiked(likedMap.getOrDefault(blogId, 0));
+            blogVO.setStared(staredMap.getOrDefault(blogId, 0));
+            blogVO.setComments(commentMap.getOrDefault(blogId, 0));
+        });
+    }
+
+    private void fillCounterMapFromRedis(List<Long> ids, List<Integer> values, Map<Long, Integer> counterMap, Set<Long> missingIds) {
+        for (int i = 0; i < ids.size(); i++) {
+            Integer value = values != null && values.size() > i ? values.get(i) : null;
+            if (value != null) {
+                counterMap.put(ids.get(i), value);
+            } else {
+                missingIds.add(ids.get(i));
+            }
+        }
     }
 
     /**
@@ -726,7 +819,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         } else {
             baseMapper.updateLikeCountBatch(updateMap);
         }
-        flashCache();
         return true;
     }
 
@@ -754,7 +846,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         } else {
             baseMapper.updateCommentCountBatch(updateMap);
         }
-        flashCache();
         return true;
     }
 
@@ -782,7 +873,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         } else {
             baseMapper.updateStarCountBatch(updateMap);
         }
-        flashCache();
         return true;
     }
 
@@ -815,8 +905,40 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Integer getLikeCount(Long userId) {
-        List<Blog> blogList = query().eq("user_id", userId).list();
-        return blogList.stream().mapToInt(Blog::getLiked).sum();
+        if (userId == null) {
+            return 0;
+        }
+        List<Blog> blogList = query()
+                .select("id", "liked")
+                .eq("user_id", userId)
+                .list();
+        if (CollUtil.isEmpty(blogList)) {
+            return 0;
+        }
+        List<Long> blogIds = blogList.stream()
+                .map(Blog::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(blogIds)) {
+            return 0;
+        }
+        String likeKeyPrefix = LikeTypeEnum.BLOG_LIKE.getLikedCountKeyPrefix();
+        List<Integer> likedValues = redisService.getMultiCacheObject(blogIds.stream().map(id -> likeKeyPrefix + id).collect(Collectors.toList()));
+        Map<String, Integer> cacheMap = new HashMap<>();
+        int total = 0;
+        for (int i = 0; i < blogIds.size(); i++) {
+            Integer liked = likedValues != null && likedValues.size() > i ? likedValues.get(i) : null;
+            if (liked == null) {
+                Blog blog = blogList.get(i);
+                liked = blog.getLiked() == null ? 0 : blog.getLiked();
+                cacheMap.put(likeKeyPrefix + blogIds.get(i), liked);
+            }
+            total += liked;
+        }
+        if (CollUtil.isNotEmpty(cacheMap)) {
+            redisService.setMultiCacheObject(cacheMap);
+        }
+        return total;
     }
 
     /**
@@ -827,10 +949,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Integer getBlogLikeCount(Long sourceId) {
-        return query()
-                .select("liked")
-                .eq("id", sourceId).one()
-                .getLiked();
+        return getBlogCounter(sourceId, LikeTypeEnum.BLOG_LIKE.getLikedCountKeyPrefix(), "liked");
     }
 
     /**
@@ -841,11 +960,35 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Integer getBlogStarCount(Long sourceId) {
-        return query()
-                .select("stared")
+        return getBlogCounter(sourceId, StarTypeEnum.BLOG_STAR.getStarCountKeyPrefix(), "stared");
+    }
+
+    private Integer getBlogCounter(Long sourceId, String keyPrefix, String fieldName) {
+        if (sourceId == null) {
+            return 0;
+        }
+        String countKey = keyPrefix + sourceId;
+        Integer count = redisService.getCacheObject(countKey);
+        if (count != null) {
+            return count;
+        }
+        Blog blog = query()
+                .select("id", fieldName)
                 .eq("id", sourceId)
-                .one()
-                .getStared();
+                .one();
+        if (blog == null) {
+            return 0;
+        }
+        if ("liked".equals(fieldName)) {
+            count = blog.getLiked();
+        } else if ("stared".equals(fieldName)) {
+            count = blog.getStared();
+        } else {
+            count = blog.getComments();
+        }
+        count = count == null ? 0 : count;
+        redisService.setCacheObject(countKey, count);
+        return count;
     }
 
     /**
