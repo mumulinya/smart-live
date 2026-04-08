@@ -56,13 +56,13 @@ export default defineConfig({
           { text: '01 项目全貌与答辩说明', link: '/PROJECT_OVERVIEW' },
           { text: '02 核心亮点与项目价值', link: '/site-pages/CORE_HIGHLIGHTS' },
           { text: '03 我的核心设计与实现', link: '/site-pages/CONTRIBUTIONS' },
-          { text: '04 性能指标与结果', link: '/site-pages/PERFORMANCE' },
-          { text: '05 数据建模与表关系怎么讲', link: '/DATA_MODEL_INTERVIEW' },
-          { text: '06 技术选型理由', link: '/site-pages/TECH_SELECTION' },
-          { text: '07 Spring AI 与传统 RAG 对照', link: '/site-pages/SPRING_AI_RAG_COMPARISON' },
-          { text: '08 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
-          { text: '09 未来规划 Roadmap', link: '/site-pages/ROADMAP' },
-          { text: '10 核心架构拷问 FAQ', link: '/site-pages/FAQ' }
+          { text: '04 数据建模与表关系怎么讲', link: '/DATA_MODEL_INTERVIEW' },
+          { text: '05 技术选型理由', link: '/site-pages/TECH_SELECTION' },
+          { text: '06 性能指标与结果', link: '/site-pages/PERFORMANCE' },
+          { text: '07 难点踩坑与解决方案', link: '/site-pages/PITFALLS' },
+          { text: '08 核心架构拷问 FAQ', link: '/site-pages/FAQ' },
+          { text: '09 Spring AI 与传统 RAG 对照', link: '/site-pages/SPRING_AI_RAG_COMPARISON' },
+          { text: '10 未来规划 Roadmap', link: '/site-pages/ROADMAP' }
         ]
       },
       {

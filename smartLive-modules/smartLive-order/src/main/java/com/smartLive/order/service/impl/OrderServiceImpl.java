@@ -6,12 +6,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.SystemConstants;
 import com.smartLive.common.core.enums.product.ProductStatusEnum;
 import com.smartLive.common.core.exception.BusinessException;
+import com.smartLive.common.core.exception.ServiceException;
 import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -390,14 +392,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Order order = getById(id);
         if(order==null){
 
-            throw new BusinessException("order not found");
+            throw new BusinessException("订单不存在");
+        }
+        if (Objects.equals(order.getStatus(), OrderStatusConstants.PAID)) {
+            return 1;
+        }
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.UNPAID)) {
+            throw new BusinessException("当前订单状态不可支付");
         }
         order.setPayTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.PAID);
         order.setPayType(PayTypeConstants.BALANCE);
         updateExpireTimeAfterPayment(order);
+        int updated = updateOrderStatusIfCurrentIs(order, OrderStatusConstants.UNPAID);
+        if (updated <= 0) {
+            throw new BusinessException("订单状态已变更，请刷新后重试");
+        }
         incrementSales(order);
-        return updateOrder(order);
+        return updated;
     }
 
     /**
@@ -411,17 +423,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer paySuccess(Long orderId, Integer payType) {
         Order order = getById(orderId);
         if (order == null) {
-            throw new BusinessException("order not found");
+            throw new ServiceException("订单不存在");
         }
-        if (order.getStatus() == OrderStatusConstants.PAID) {
+        if (Objects.equals(order.getStatus(), OrderStatusConstants.PAID)) {
             return 1;
+        }
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.UNPAID)) {
+            throw new ServiceException("订单状态已变更，无法确认支付");
         }
         order.setPayTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.PAID);
         order.setPayType(payType);
         updateExpireTimeAfterPayment(order);
+        int updated = updateOrderStatusIfCurrentIs(order, OrderStatusConstants.UNPAID);
+        if (updated <= 0) {
+            throw new ServiceException("订单状态已变更，无法确认支付");
+        }
         incrementSales(order);
-        return updateOrder(order);
+        return updated;
     }
 
     /**
@@ -452,6 +471,42 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
+     * 条件更新订单状态，只有数据库中的当前状态命中允许集合时才会真正更新。
+     * 这层 SQL 约束用来兜住并发请求、重复回调和定时任务抢占带来的状态覆盖问题。
+     */
+    private int updateOrderStatusIfCurrentIs(Order order, Integer allowedCurrentStatus) {
+        Date now = DateUtils.getNowDate();
+        order.setUpdateTime(now);
+        LambdaUpdateWrapper<Order> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(Order::getId, order.getId())
+                .eq(Order::getStatus, allowedCurrentStatus)
+                .set(Order::getStatus, order.getStatus())
+                .set(Order::getUpdateTime, now);
+        if (order.getPayType() != null) {
+            wrapper.set(Order::getPayType, order.getPayType());
+        }
+        if (order.getPayTime() != null) {
+            wrapper.set(Order::getPayTime, order.getPayTime());
+        }
+        if (order.getUseTime() != null) {
+            wrapper.set(Order::getUseTime, order.getUseTime());
+        }
+        if (order.getVerifyShopId() != null) {
+            wrapper.set(Order::getVerifyShopId, order.getVerifyShopId());
+        }
+        if (order.getRefundTime() != null) {
+            wrapper.set(Order::getRefundTime, order.getRefundTime());
+        }
+        if (order.getValidStartTime() != null) {
+            wrapper.set(Order::getValidStartTime, order.getValidStartTime());
+        }
+        if (order.getExpireTime() != null) {
+            wrapper.set(Order::getExpireTime, order.getExpireTime());
+        }
+        return orderMapper.update(null, wrapper);
+    }
+
+    /**
      * 取消订单并处理库存与退款逻辑。
      *
      * @param id 订单ID
@@ -461,20 +516,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer cancel(Long id) {
         Order order = getById(id);
         if(order==null){
-            throw new BusinessException("order not found");
+            throw new BusinessException("订单不存在");
         }
-        Integer oldStatus = order.getStatus();
+        if (Objects.equals(order.getStatus(), OrderStatusConstants.CANCELLED)) {
+            return 1;
+        }
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.UNPAID)) {
+            throw new BusinessException("当前订单状态不可取消");
+        }
         order.setStatus(OrderStatusConstants.CANCELLED);
-        int i = updateOrder(order);
+        int i = updateOrderStatusIfCurrentIs(order, OrderStatusConstants.UNPAID);
+        if (i <= 0) {
+            throw new BusinessException("订单状态已变更，请刷新后重试");
+        }
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
             if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
                 log.info("cancel order recovers stock for product activity");
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
-            }
-            if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
-                decrementSales(order, false);
-                sendRefundMessage(order);
             }
         }
         return i;
@@ -490,23 +549,31 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer refund(Long id) {
         Order order = getById(id);
         if(order==null){
-            throw new BusinessException("order not found");
+            throw new BusinessException("订单不存在");
         }
-        Integer oldStatus = order.getStatus();
+        if (Objects.equals(order.getStatus(), OrderStatusConstants.REFUNDED)) {
+            return 1;
+        }
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.PAID)) {
+            if (Objects.equals(order.getStatus(), OrderStatusConstants.VERIFIED)) {
+                throw new BusinessException("订单已核销，不能退款");
+            }
+            throw new BusinessException("当前订单状态不可退款");
+        }
         order.setRefundTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.REFUNDED);
-        int i = updateOrder(order);
+        int i = updateOrderStatusIfCurrentIs(order, OrderStatusConstants.PAID);
+        if (i <= 0) {
+            throw new BusinessException("订单状态已变更，请刷新后重试");
+        }
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
             if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
                 log.info("refund order recovers stock for product activity");
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
-            if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
-                boolean wasVerified = (oldStatus == OrderStatusConstants.VERIFIED);
-                decrementSales(order, wasVerified);
-                sendRefundMessage(order);
-            }
+            decrementSales(order, false);
+            sendRefundMessage(order);
         }
         return i;
     }
@@ -541,10 +608,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer use(Long id, Long verifyShopId) {
         Order order = getById(id);
         if(order==null){
-            throw new BusinessException("order not found");
+            throw new BusinessException("订单不存在");
         }
         if (verifyShopId == null) {
-            throw new BusinessException("verify shop id is required");
+            throw new BusinessException("核销门店不能为空");
+        }
+        if (Objects.equals(order.getStatus(), OrderStatusConstants.VERIFIED)) {
+            if (Objects.equals(order.getVerifyShopId(), verifyShopId)) {
+                return 1;
+            }
+            throw new BusinessException("订单已核销，不能重复使用");
+        }
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.PAID)) {
+            if (Objects.equals(order.getStatus(), OrderStatusConstants.UNPAID)) {
+                throw new BusinessException("订单未支付，不能核销");
+            }
+            throw new BusinessException("当前订单状态不可核销");
         }
         String availableShopIds = order.getShopId();
         if (availableShopIds != null && !availableShopIds.isEmpty()) {
@@ -556,13 +635,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 }
             }
             if (!matched) {
-                throw new BusinessException("verify shop is not allowed for this order");
+                throw new BusinessException("当前门店无权核销该订单");
             }
         }
         order.setUseTime(DateUtils.getNowDate());
         order.setStatus(OrderStatusConstants.VERIFIED);
         order.setVerifyShopId(verifyShopId);
-        int i = updateOrder(order);
+        int i = updateOrderStatusIfCurrentIs(order, OrderStatusConstants.PAID);
+        if (i <= 0) {
+            throw new BusinessException("订单状态已变更，请刷新后重试");
+        }
         if (i > 0) {
             incrementShopSales(order);
             if (order.getPayAmount() != null && order.getPayAmount().intValue() > 0) {
@@ -768,17 +850,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      */
     private java.time.LocalDateTime[] parseBusinessTimeRange(String startTime, String endTime) {
         if (startTime == null || endTime == null || startTime.isBlank() || endTime.isBlank()) {
-            throw new BusinessException("startTime and endTime are required");
+            throw new ServiceException("开始时间和结束时间不能为空");
         }
         try {
             java.time.LocalDateTime start = java.time.LocalDateTime.parse(startTime, BUSINESS_TIME_FORMATTER);
             java.time.LocalDateTime end = java.time.LocalDateTime.parse(endTime, BUSINESS_TIME_FORMATTER);
             if (end.isBefore(start)) {
-                throw new BusinessException("endTime must be greater than or equal to startTime");
+                throw new ServiceException("结束时间不能早于开始时间");
             }
             return new java.time.LocalDateTime[]{start, end};
         } catch (java.time.format.DateTimeParseException ex) {
-            throw new BusinessException("invalid time range format");
+            throw new ServiceException("时间范围格式错误");
         }
     }
 
@@ -795,7 +877,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             case "month" -> new java.time.LocalDateTime[]{now.withDayOfMonth(1).toLocalDate().atStartOfDay(), now};
             case "quarter" -> new java.time.LocalDateTime[]{now.minusDays(90), now};
             case "week" -> new java.time.LocalDateTime[]{now.toLocalDate().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).atStartOfDay(), now};
-            default -> throw new BusinessException("unsupported timeRange");
+            default -> throw new ServiceException("不支持的时间范围");
         };
     }
 
@@ -1013,21 +1095,27 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Integer expired(Long id) {
         Order order = getById(id);
         if(order==null){
-            throw new BusinessException("order not found");
+            throw new BusinessException("订单不存在");
         }
-        Integer oldStatus = order.getStatus();
+        if (Objects.equals(order.getStatus(), OrderStatusConstants.EXPIRED)) {
+            return 1;
+        }
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.PAID)) {
+            throw new BusinessException("订单状态已变更，无需过期处理");
+        }
         order.setStatus(OrderStatusConstants.EXPIRED);
-        int i = updateOrder(order);
+        int i = updateOrderStatusIfCurrentIs(order, OrderStatusConstants.PAID);
+        if (i <= 0) {
+            throw new BusinessException("订单状态已变更，无需过期处理");
+        }
         if(i>0){
             ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
             if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
                 log.info("expired order recovers stock for product activity");
                 remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
             }
-            if (oldStatus != null && oldStatus >= OrderStatusConstants.PAID) {
-                decrementSales(order, false);
-                sendRefundMessage(order);
-            }
+            decrementSales(order, false);
+            sendRefundMessage(order);
         }
         return i;
     }
