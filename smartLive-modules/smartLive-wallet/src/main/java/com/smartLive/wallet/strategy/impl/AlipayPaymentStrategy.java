@@ -8,6 +8,7 @@ import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradePrecreateRequest;
 import com.alipay.api.request.AlipayTradeWapPayRequest;
 import com.alipay.api.response.AlipayTradePrecreateResponse;
+import com.smartLive.common.core.constant.PaymentStatusConstants;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.wallet.config.AlipayProperties;
 import com.smartLive.wallet.domain.PaymentRecord;
@@ -143,7 +144,7 @@ public class AlipayPaymentStrategy implements PaymentStrategy {
     public PayStatusVO queryPayStatus(PaymentRecord record) {
         PayStatusVO vo = new PayStatusVO();
         // 如果已经是终态，直接返回
-        if (record.getStatus() != null && record.getStatus() != 0) {
+        if (record.getStatus() != null && record.getStatus() != PaymentStatusConstants.PENDING) {
             vo.setStatus(record.getStatus());
             return vo;
         }
@@ -161,12 +162,12 @@ public class AlipayPaymentStrategy implements PaymentStrategy {
                     String tradeStatus = response.getTradeStatus();
                     log.info("支付宝主动查询, paySn={}, tradeStatus={}", record.getPaySn(), tradeStatus);
                     if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
-                        vo.setStatus(1); // 支付成功
+                        vo.setStatus(PaymentStatusConstants.SUCCESS);
                         vo.setTransactionId(response.getTradeNo());
                     } else if ("TRADE_CLOSED".equals(tradeStatus)) {
-                        vo.setStatus(3); // 支付取消/关闭
+                        vo.setStatus(PaymentStatusConstants.CANCELED);
                     } else {
-                        vo.setStatus(0); // 待支付 (WAIT_BUYER_PAY)
+                        vo.setStatus(PaymentStatusConstants.PENDING);
                     }
                 } else {
                     log.warn("支付宝查询失败, paySn={}, subMsg={}", record.getPaySn(), response.getSubMsg());

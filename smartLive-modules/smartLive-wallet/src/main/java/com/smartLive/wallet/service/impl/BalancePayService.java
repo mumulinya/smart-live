@@ -1,22 +1,15 @@
 package com.smartLive.wallet.service.impl;
 
-import com.smartLive.common.core.constant.PayTypeConstants;
-import com.smartLive.common.core.exception.BusinessException;
+import com.smartLive.common.core.constant.mq.OrderMqConstants;
+import com.smartLive.common.rabbitmq.domain.OrderPaidStatsMessage;
+import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.order.api.DTO.OrderDTO;
 import com.smartLive.order.api.RemoteOrderService;
-import com.smartLive.wallet.domain.PaymentRecord;
+import com.smartLive.wallet.domain.dto.PaymentBusinessResult;
 import com.smartLive.wallet.domain.dto.UnifiedPayDTO;
-import com.smartLive.wallet.mapper.PaymentRecordMapper;
-import com.smartLive.wallet.service.IWalletService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.UUID;
 
 /**
  * 站内余额支付专用服务
@@ -30,13 +23,13 @@ import java.util.UUID;
 public class BalancePayService {
 
     @Autowired
-    private PaymentRecordMapper paymentRecordMapper;
-
-    @Autowired
-    private IWalletService walletService;
+    private WalletPaymentTxService walletPaymentTxService;
 
     @Autowired
     private RemoteOrderService remoteOrderService;
+
+    @Autowired
+    private MqMessageSendUtils mqMessageSendUtils;
 
     /**
      * 执行余额支付逻辑
@@ -47,64 +40,59 @@ public class BalancePayService {
      * @param userId 支付用户 ID
      * @param dto 支付请求参数
      */
-    @Transactional(rollbackFor = Exception.class)
     public void pay(Long userId, UnifiedPayDTO dto) {
-        if (!"order".equals(dto.getBizType())) {
-            throw new BusinessException("余额支付目前仅支持商品/订单支付");
+        PaymentBusinessResult result = walletPaymentTxService.payOrderByBalance(userId, dto);
+        publishOrderPaidStatsIfNecessary(result);
+    }
+
+    /**
+     * 在余额支付主事务成功后发送销量统计消息。
+     * 这一步不纳入 Seata，只承担最终一致性的缓存统计职责。
+     *
+     * @param result 支付主事务执行结果
+     */
+    private void publishOrderPaidStatsIfNecessary(PaymentBusinessResult result) {
+        if (result == null || !result.shouldPublishOrderPaidStats()) {
+            return;
         }
-        if (dto.getAmount() == null || dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("支付金额不合法");
-        }
 
-        // 1. 生成支付流水号
-        String paySn = generatePaySn();
-
-        // 2. 创建支付流水记录
-        PaymentRecord record = new PaymentRecord();
-        record.setPaySn(paySn);
-        record.setUserId(userId);
-        record.setBizType(dto.getBizType());
-        record.setBizId(dto.getBizId());
-        record.setAmount(dto.getAmount());
-        record.setPayMethod("balance");
-        record.setStatus(1); // 余额扣减成功即视为支付成功
-        record.setPayTime(new Date());
-        record.setCreateTime(new Date());
-        record.setUpdateTime(new Date());
-        paymentRecordMapper.insert(record);
-
-        // 3. 执行资产扣减 + 动账存证
         try {
-            BigDecimal newBalance = walletService.consume(userId, dto.getAmount(), dto.getBizId());
-            log.info("余额扣除成功: userId={}, amount={}, 剩余余额={}", userId, dto.getAmount(), newBalance);
-        } catch (Exception e) {
-            log.error("余额扣除操作异常: userId={}, amount={}", userId, dto.getAmount(), e);
-            throw new BusinessException("账户余额不足或扣费异常");
-        }
-
-        // 4. Feign RPC 同步修改订单状态
-        try {
-            Long orderId = Long.parseLong(dto.getBizId());
-            Integer result = remoteOrderService.paySuccess(orderId, PayTypeConstants.BALANCE);
-            if (result == null || result <= 0) {
-                log.error("RPC 标记订单支付成功失败, orderId={}", orderId);
-                throw new BusinessException("支付业务同步失败（订单状态更新异常）");
+            OrderDTO orderDTO = remoteOrderService.getOrderById(result.getOrderId());
+            OrderPaidStatsMessage message = new OrderPaidStatsMessage();
+            message.setOrderId(result.getOrderId());
+            message.setUserId(result.getUserId());
+            message.setPayType(result.getPayType());
+            message.setMessageKey(buildMessageKey(result.getOrderId(), result.getPayType()));
+            if (orderDTO != null) {
+                message.setSourceId(orderDTO.getSourceId());
+                message.setVerifyShopId(orderDTO.getVerifyShopId());
+                message.setAmount(orderDTO.getAmount());
+                if (message.getUserId() == null) {
+                    message.setUserId(orderDTO.getUserId());
+                }
+            } else {
+                log.warn("余额支付成功后未取到订单详情，按最小消息发送统计事件, orderId={}", result.getOrderId());
             }
-            log.info("订单业务支付状态更新完成, orderId={}", orderId);
-        } catch (NumberFormatException e) {
-            log.error("业务单号解析错误, bizId={}", dto.getBizId(), e);
-            throw new BusinessException("系统业务单号格式非法");
-        } catch (BusinessException e) {
-            throw e;
+
+            mqMessageSendUtils.sendMqMessage(
+                    OrderMqConstants.ORDER_PAID_STATS_EXCHANGE,
+                    OrderMqConstants.ORDER_PAID_STATS_ROUTING_KEY,
+                    message
+            );
+            log.info("余额支付后已发送订单支付统计消息, orderId={}, payType={}", result.getOrderId(), result.getPayType());
         } catch (Exception e) {
-            log.error("订单状态同步流程异常", e);
-            throw new BusinessException("支付环节系统繁忙，请确认订单状态");
+            log.error("余额支付后的统计消息发送失败，主交易已提交, orderId={}", result.getOrderId(), e);
         }
     }
 
-    private String generatePaySn() {
-        String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String random = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-        return "P" + date + random;
+    /**
+     * 构造订单支付统计消息的业务幂等 Key。
+     *
+     * @param orderId 订单ID
+     * @param payType 支付方式
+     * @return 幂等 Key
+     */
+    private String buildMessageKey(Long orderId, Integer payType) {
+        return  OrderMqConstants.ORDER_PAID_STATS_ROUTING_KEY+":" + orderId + ":" + payType;
     }
 }

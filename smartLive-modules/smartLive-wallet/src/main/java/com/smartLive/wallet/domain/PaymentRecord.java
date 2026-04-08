@@ -3,6 +3,7 @@ package com.smartLive.wallet.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.smartLive.common.core.constant.PaymentStatusConstants;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -43,7 +44,13 @@ public class PaymentRecord implements Serializable {
     /** 支付方式: wechat/alipay */
     private String payMethod;
 
-    /** 状态 0:待支付 1:支付成功 2:支付失败 3:已取消/已过期 */
+    /**
+     * 支付状态
+     * {@link PaymentStatusConstants#PENDING} 待支付
+     * {@link PaymentStatusConstants#SUCCESS} 支付成功
+     * {@link PaymentStatusConstants#FAILED} 支付失败
+     * {@link PaymentStatusConstants#CANCELED} 已取消/已关闭
+     */
     private Integer status;
 
     /** 第三方支付单号 */

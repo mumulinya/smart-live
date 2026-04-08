@@ -1,6 +1,7 @@
 package com.smartLive.order.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.smartLive.order.api.DTO.OrderDTO;
 import com.smartLive.order.domain.Order;
 import com.smartLive.order.domain.VO.OrderVO;
 import com.smartLive.order.domain.VO.ProductSalesVO;
@@ -89,6 +90,10 @@ public interface IOrderService extends IService<Order> {
      */
 
     OrderVO getOrderById(Long id);
+    /**
+     * 根据ID获取订单内部DTO对象
+     */
+    OrderDTO getOrderDTOById(Long id);
     /**
      * 更新订单评价状态
      */

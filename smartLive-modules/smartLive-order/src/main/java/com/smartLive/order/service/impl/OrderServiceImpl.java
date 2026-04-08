@@ -1,9 +1,12 @@
 package com.smartLive.order.service.impl;
+import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
+import com.smartLive.order.api.DTO.OrderDTO;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -45,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import com.smartLive.order.mapper.OrderMapper;
 import com.smartLive.order.domain.Order;
@@ -64,6 +68,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 {
     private static final DateTimeFormatter BUSINESS_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final List<Integer> BUSINESS_ORDER_STATUSES = List.of(OrderStatusConstants.PAID, OrderStatusConstants.VERIFIED);
+    private static final long PAID_STATS_MARKER_TTL_DAYS = 365L;
     @Autowired
     private OrderMapper orderMapper;
 
@@ -303,7 +308,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @param decrementShop 是否同步回滚店铺销量
      */
     private void decrementSales(Order order, boolean decrementShop) {
-        if (order == null || order.getSourceId() == null) {
+        if (order == null || order.getId() == null || order.getSourceId() == null) {
+            return;
+        }
+        if (!hasPaidStatsApplied(order.getId())) {
+            log.info("订单销量尚未累计，无需回滚统计, orderId={}", order.getId());
             return;
         }
         long amount = order.getAmount() != null ? order.getAmount() : 1;
@@ -322,6 +331,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 redisService.setCacheSet(SalesTypeEnum.SHOP_SALES.getDirtyKey(), shopId.toString());
             }
         }
+        clearPaidStatsMarker(order.getId());
     }
 
     /**
@@ -420,6 +430,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @return 影响行数
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Integer paySuccess(Long orderId, Integer payType) {
         Order order = getById(orderId);
         if (order == null) {
@@ -439,7 +450,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (updated <= 0) {
             throw new ServiceException("订单状态已变更，无法确认支付");
         }
-        incrementSales(order);
         return updated;
     }
 
@@ -707,6 +717,103 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return orderVO;
         }
         return null;
+    }
+
+    /**
+     * 根据订单ID获取内部传输 DTO。
+     * 供支付成功后的 MQ 生产端补齐统计字段时使用。
+     *
+     * @param id 订单ID
+     * @return 订单DTO
+     */
+    @Override
+    public OrderDTO getOrderDTOById(Long id) {
+        Order order = selectOrderById(id);
+        if (order == null) {
+            return null;
+        }
+        OrderDTO orderDTO = new OrderDTO();
+        BeanUtils.copyProperties(order, orderDTO);
+        return orderDTO;
+    }
+
+    /**
+     * 支付成功统计消息消费入口。
+     *
+     * @param orderId 订单ID
+     */
+    public void handleOrderPaidStats(Long orderId) {
+        if (orderId == null) {
+            return;
+        }
+        Order order = getById(orderId);
+        if (order == null) {
+            log.warn("订单支付统计时未找到订单, orderId={}", orderId);
+            return;
+        }
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.PAID)
+                && !Objects.equals(order.getStatus(), OrderStatusConstants.VERIFIED)) {
+            log.info("订单当前状态无需累计销量, orderId={}, status={}", orderId, order.getStatus());
+            return;
+        }
+        if (!markPaidStatsApplied(orderId)) {
+            log.info("订单销量已累计，跳过重复处理, orderId={}", orderId);
+            return;
+        }
+
+        try {
+            incrementSales(order);
+        } catch (Exception e) {
+            clearPaidStatsMarker(orderId);
+            throw e;
+        }
+    }
+
+    /**
+     * 标记订单的支付销量统计已执行。
+     * 用于兜住重复消息和重复回调下的重复累计问题。
+     *
+     * @param orderId 订单ID
+     * @return true=首次标记成功；false=已存在
+     */
+    private boolean markPaidStatsApplied(Long orderId) {
+        String markerKey = buildPaidStatsMarkerKey(orderId);
+        return redisService.setCacheObjectIfAbsent(markerKey, "1", PAID_STATS_MARKER_TTL_DAYS, TimeUnit.DAYS);
+    }
+
+    /**
+     * 判断订单是否已经执行过支付销量累计。
+     *
+     * @param orderId 订单ID
+     * @return true=已累计；false=未累计
+     */
+    private boolean hasPaidStatsApplied(Long orderId) {
+        if (orderId == null) {
+            return false;
+        }
+        return Boolean.TRUE.equals(redisService.hasKey(buildPaidStatsMarkerKey(orderId)));
+    }
+
+    /**
+     * 清理订单支付销量累计标记。
+     * 供退款、过期或统计消费失败时撤销幂等标记。
+     *
+     * @param orderId 订单ID
+     */
+    private void clearPaidStatsMarker(Long orderId) {
+        if (orderId != null) {
+            redisService.deleteObject(buildPaidStatsMarkerKey(orderId));
+        }
+    }
+
+    /**
+     * 构造订单支付销量累计标记 Key。
+     *
+     * @param orderId 订单ID
+     * @return Redis Key
+     */
+    private String buildPaidStatsMarkerKey(Long orderId) {
+        return RedisMqIdempotentConstants.ORDER_PREFIX + "paid-stats:applied:" + orderId;
     }
 
     /**

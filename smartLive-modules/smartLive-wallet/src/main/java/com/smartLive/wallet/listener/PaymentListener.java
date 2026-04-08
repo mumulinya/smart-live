@@ -1,4 +1,5 @@
 package com.smartLive.wallet.listener;
+import com.smartLive.common.core.constant.PaymentStatusConstants;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
 import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
 
@@ -75,14 +76,14 @@ public class PaymentListener {
                 return;
             }
 
-            // 只有待支付状态(0)才需要取消
-            if (record.getStatus() != null && record.getStatus() == 0) {
+            // 只有待支付状态才需要取消
+            if (record.getStatus() != null && record.getStatus() == PaymentStatusConstants.PENDING) {
                 log.info("支付超时，自动取消, paySn={}, recordId={}", record.getPaySn(), recordId);
 
                 LambdaUpdateWrapper<PaymentRecord> update = new LambdaUpdateWrapper<>();
                 update.eq(PaymentRecord::getId, recordId)
-                        .eq(PaymentRecord::getStatus, 0) // 乐观锁: 确保还是待支付
-                        .set(PaymentRecord::getStatus, 3) // 3: 已取消/已过期
+                        .eq(PaymentRecord::getStatus, PaymentStatusConstants.PENDING) // 乐观锁: 确保还是待支付
+                        .set(PaymentRecord::getStatus, PaymentStatusConstants.CANCELED)
                         .set(PaymentRecord::getUpdateTime, LocalDateTime.now());
                 int rows = paymentRecordMapper.update(null, update);
 

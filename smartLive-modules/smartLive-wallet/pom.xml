@@ -83,6 +83,12 @@
             <artifactId>smartLive-common-rabbitmq</artifactId>
         </dependency>
 
+        <!-- smartLive Common Seata -->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-seata</artifactId>
+        </dependency>
+
         <!-- smartLive API Order (Feign) -->
         <dependency>
             <groupId>com.smartLive</groupId>

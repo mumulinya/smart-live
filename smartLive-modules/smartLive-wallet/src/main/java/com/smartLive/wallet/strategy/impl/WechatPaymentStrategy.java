@@ -38,9 +38,6 @@ public class WechatPaymentStrategy implements PaymentStrategy {
     @Autowired
     private WechatPayProperties wechatPayProperties;
 
-    @Autowired
-    private PaymentRecordMapper paymentRecordMapper;
-
     @Autowired(required = false)
     private H5Service h5Service;
 

@@ -1,6 +1,7 @@
 package com.smartLive.order.api;
 
 import com.smartLive.common.core.constant.ServiceNameConstants;
+import com.smartLive.order.api.DTO.OrderDTO;
 import com.smartLive.order.api.DTO.ProductSoldDTO;
 import com.smartLive.order.api.DTO.ShopOrderAnalysisDTO;
 import com.smartLive.order.api.DTO.ShopOrderSuggestDTO;
@@ -31,6 +32,9 @@ public interface RemoteOrderService {
 
     @PutMapping("/inner/order/paySuccess/{orderId}/{payType}")
     Integer paySuccess(@PathVariable("orderId") Long orderId, @PathVariable("payType") Integer payType);
+
+    @GetMapping("/inner/order/getOrderById/{orderId}")
+    OrderDTO getOrderById(@PathVariable("orderId") Long orderId);
 
     @GetMapping("/inner/order/count/product/sold")
     List<ProductSoldDTO> countProductSold();

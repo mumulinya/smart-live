@@ -1,6 +1,7 @@
 package com.smartLive.order.controller;
 
 import com.smartLive.common.core.web.controller.BaseController;
+import com.smartLive.order.api.DTO.OrderDTO;
 import com.smartLive.order.domain.VO.ProductSoldVO;
 import com.smartLive.order.domain.VO.ShopOrderAnalysisVO;
 import com.smartLive.order.domain.VO.ShopOrderSuggestVO;
@@ -70,6 +71,17 @@ public class InnerOrderController extends BaseController {
     @PutMapping("/paySuccess/{orderId}/{payType}")
     Integer paySuccess(@PathVariable("orderId") Long orderId, @PathVariable("payType") Integer payType) {
         return orderService.paySuccess(orderId, payType);
+    }
+
+    /**
+     * 查询订单内部 DTO，供支付成功后的统计消息补全使用。
+     *
+     * @param orderId 订单ID
+     * @return 订单DTO
+     */
+    @GetMapping("/getOrderById/{orderId}")
+    public OrderDTO getOrderById(@PathVariable("orderId") Long orderId) {
+        return orderService.getOrderDTOById(orderId);
     }
 
     /**

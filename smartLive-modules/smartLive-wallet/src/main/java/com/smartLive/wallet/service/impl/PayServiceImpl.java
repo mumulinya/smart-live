@@ -1,24 +1,24 @@
 package com.smartLive.wallet.service.impl;
-import com.smartLive.common.core.constant.mq.OrderMqConstants;
 
-import com.alipay.api.AlipayConstants;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.smartLive.common.core.constant.mq.OrderMqConstants;
+import com.smartLive.common.core.constant.PaymentStatusConstants;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.StringUtils;
-import com.smartLive.common.core.constant.PayTypeConstants;
+import com.smartLive.common.rabbitmq.domain.OrderPaidStatsMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
+import com.smartLive.order.api.DTO.OrderDTO;
 import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.wallet.config.AlipayProperties;
-import com.smartLive.wallet.config.WechatPayProperties;
 import com.smartLive.wallet.domain.PaymentRecord;
+import com.smartLive.wallet.domain.dto.PaymentBusinessResult;
 import com.smartLive.wallet.domain.dto.UnifiedPayDTO;
 import com.smartLive.wallet.domain.vo.PayStatusVO;
 import com.smartLive.wallet.domain.vo.UnifiedPayVO;
 import com.smartLive.wallet.mapper.PaymentRecordMapper;
 import com.smartLive.wallet.service.IPayService;
-import com.smartLive.wallet.service.IWalletService;
 import com.smartLive.wallet.strategy.PaymentStrategy;
 import com.smartLive.wallet.strategy.PaymentStrategyFactory;
 import com.wechat.pay.java.core.notification.NotificationParser;
@@ -52,14 +52,6 @@ import java.util.UUID;
 @Slf4j
 @Service
 public class PayServiceImpl implements IPayService {
-
-    /** 支付状态常量 */
-    private static final int PAY_STATUS_PENDING = 0;
-    private static final int PAY_STATUS_SUCCESS = 1;
-    private static final int PAY_STATUS_FAILED = 2;
-    private static final int PAY_STATUS_CANCELED = 3;
-
-    /** 业务类型常量 */
     private static final String BIZ_TYPE_RECHARGE = "recharge";
     private static final String BIZ_TYPE_ORDER = "order";
 
@@ -67,62 +59,37 @@ public class PayServiceImpl implements IPayService {
     private PaymentRecordMapper paymentRecordMapper;
 
     @Autowired
-    private IWalletService walletService;
-
-    @Autowired
     private PaymentStrategyFactory paymentStrategyFactory;
 
-    @Autowired
-    private WechatPayProperties wechatPayProperties;
-    
     @Autowired
     private AlipayProperties alipayProperties;
 
     @Autowired(required = false)
     private NotificationParser notificationParser;
 
-    
     @Autowired
     private MqMessageSendUtils mqMessageSendUtils;
 
     @Autowired
+    private WalletPaymentTxService walletPaymentTxService;
+
+    @Autowired
     private RemoteOrderService remoteOrderService;
 
-    // ==========================================
-    // 1. 统一下单
-    // ==========================================
-
-    /**
-     * 统一下单入口
-     * 1. 自动根据业务类型解析金额
-     * 2. 检查幂等性，对于同一业务单据复用支付流水
-     * 3. 落地本地流水表并发送延迟取消消息
-     * 4. 路由至具体的支付策略（微信/支付宝/余额）进行网络下单
-     * 
-     * @param userId 操作用户
-     * @param dto 下单参数
-     * @return 支付指令响应
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UnifiedPayVO unifiedOrder(Long userId, UnifiedPayDTO dto) {
-        // 1. 参数校验
         validatePayRequest(dto);
 
-        // 2. 校验业务单据，获取金额
         BigDecimal payAmount = resolvePayAmount(userId, dto);
-
-        // 3. 检查是否存在未支付的同业务单
         PaymentRecord existingRecord = findPendingRecord(dto.getBizType(), dto.getBizId());
         if (existingRecord != null) {
             log.info("存在未支付的支付记录, paySn={}, bizType={}, bizId={}",
                     existingRecord.getPaySn(), dto.getBizType(), dto.getBizId());
-            // 复用已有的支付记录, 调用策略
             PaymentStrategy strategy = paymentStrategyFactory.getStrategy(existingRecord.getPayMethod());
             return strategy.unifiedOrder(existingRecord, dto);
         }
 
-        // 4. 生成支付流水号并落库
         String paySn = generatePaySn();
         PaymentRecord record = new PaymentRecord();
         record.setPaySn(paySn);
@@ -131,7 +98,7 @@ public class PayServiceImpl implements IPayService {
         record.setBizId(dto.getBizId());
         record.setAmount(payAmount);
         record.setPayMethod(StringUtils.isEmpty(dto.getPayMethod()) ? "wechat" : dto.getPayMethod());
-        record.setStatus(PAY_STATUS_PENDING);
+        record.setStatus(PaymentStatusConstants.PENDING);
         record.setCreateTime(new Date());
         record.setUpdateTime(new Date());
         paymentRecordMapper.insert(record);
@@ -139,7 +106,6 @@ public class PayServiceImpl implements IPayService {
         log.info("创建支付记录成功, paySn={}, userId={}, bizType={}, bizId={}, amount={}, method={}",
                 paySn, userId, dto.getBizType(), dto.getBizId(), payAmount, record.getPayMethod());
 
-        // 5. 发送延迟消息，超时自动取消支付
         mqMessageSendUtils.sendMqMessage(
                 OrderMqConstants.PAY_DELAY_EXCHANGE,
                 OrderMqConstants.PAY_DELAY_ROUTING_KEY,
@@ -147,21 +113,18 @@ public class PayServiceImpl implements IPayService {
                 OrderMqConstants.PAY_DELAY_TIME);
         log.info("已发送支付超时延迟消息, paySn={}, recordId={}, delay={}ms", paySn, record.getId(), OrderMqConstants.PAY_DELAY_TIME);
 
-        // 6. 调用策略下单
         PaymentStrategy strategy = paymentStrategyFactory.getStrategy(record.getPayMethod());
         return strategy.unifiedOrder(record, dto);
     }
 
-    // ==========================================
-    // 2. 查询支付状态
-    // ==========================================
-
     /**
-     * 主动向第三方通道同步支付结果
+     * 主动向第三方通道同步支付结果。
      * 解决前端轮询时数据库尚未收到异步回调的问题。
+     *
+     * @param paySn 支付流水号
+     * @return 支付状态响应
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public PayStatusVO queryPayStatus(String paySn) {
         if (StringUtils.isEmpty(paySn)) {
             throw new BusinessException("支付流水号不能为空");
@@ -171,32 +134,36 @@ public class PayServiceImpl implements IPayService {
             throw new BusinessException("支付记录不存在");
         }
 
-        // 如果已经是终态 (成功/失败)，直接返回数据库状态
-        if (record.getStatus() != null && record.getStatus() != 0) {
+        if (record.getStatus() != null && record.getStatus() != PaymentStatusConstants.PENDING) {
             PayStatusVO vo = new PayStatusVO();
             vo.setStatus(record.getStatus());
             return vo;
         }
 
-        // 待支付状态 → 主动查询第三方支付平台
         PaymentStrategy strategy = paymentStrategyFactory.getStrategy(record.getPayMethod());
         PayStatusVO vo = strategy.queryPayStatus(record);
 
-        // 如果查询结果为已支付，更新数据库并触发业务
-        if (vo.getStatus() != null && vo.getStatus() == PAY_STATUS_SUCCESS) {
+        if (vo.getStatus() != null && vo.getStatus() == PaymentStatusConstants.SUCCESS) {
             log.info("主动查询确认支付成功, paySn={}, transactionId={}", paySn, vo.getTransactionId());
             try {
-                processCallback(paySn, vo.getTransactionId(), record.getAmount(), true);
-                log.info("充值业务处理完成, paySn={}", paySn);
+                PaymentBusinessResult result = walletPaymentTxService.confirmPaymentSuccess(paySn, vo.getTransactionId(), record.getAmount());
+                publishOrderPaidStatsIfNecessary(result);
+                log.info("主动查询支付确认完成, paySn={}, processed={}", paySn, result.isProcessed());
             } catch (Exception e) {
                 log.error("主动查询后处理回调异常, paySn={}", paySn, e);
-                // 即使处理失败也返回支付成功状态，下次轮询会再尝试
             }
         }
 
         return vo;
     }
 
+    /**
+     * 用户主动取消待支付流水。
+     * 只有待支付状态才允许取消，避免覆盖终态记录。
+     *
+     * @param userId 当前用户ID
+     * @param paySn 支付流水号
+     */
     @Override
     public void cancelPay(Long userId, String paySn) {
         if (StringUtils.isEmpty(paySn)) {
@@ -206,19 +173,17 @@ public class PayServiceImpl implements IPayService {
         if (record == null) {
             throw new BusinessException("支付记录不存在");
         }
-        // 校验是否是当前用户的支付记录
         if (!record.getUserId().equals(userId)) {
             throw new BusinessException("无权操作此支付记录");
         }
-        // 只有待支付状态才能取消
-        if (record.getStatus() == null || record.getStatus() != PAY_STATUS_PENDING) {
+        if (record.getStatus() == null || record.getStatus() != PaymentStatusConstants.PENDING) {
             throw new BusinessException("当前状态不可取消");
         }
 
         LambdaUpdateWrapper<PaymentRecord> update = new LambdaUpdateWrapper<>();
         update.eq(PaymentRecord::getId, record.getId())
-                .eq(PaymentRecord::getStatus, PAY_STATUS_PENDING)
-                .set(PaymentRecord::getStatus, PAY_STATUS_CANCELED)
+                .eq(PaymentRecord::getStatus, PaymentStatusConstants.PENDING)
+                .set(PaymentRecord::getStatus, PaymentStatusConstants.CANCELED)
                 .set(PaymentRecord::getUpdateTime, LocalDateTime.now());
         int rows = paymentRecordMapper.update(null, update);
         if (rows > 0) {
@@ -228,19 +193,19 @@ public class PayServiceImpl implements IPayService {
         }
     }
 
-    // ==========================================
-    // 3. 微信回调处理
-    // ==========================================
-
+    /**
+     * 微信支付回调处理。
+     * 负责验签、解析回调并在支付成功时委托 Seata 主事务完成后续业务。
+     *
+     * @param request 微信回调请求
+     * @param response 微信回调响应
+     */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void handleWechatCallback(HttpServletRequest request, HttpServletResponse response) {
         try {
-            // 1. 读取请求体
             String body = readRequestBody(request);
             log.info("收到微信支付回调");
 
-            // 2. 构造验签参数
             RequestParam requestParam = new RequestParam.Builder()
                     .serialNumber(request.getHeader("Wechatpay-Serial"))
                     .nonce(request.getHeader("Wechatpay-Nonce"))
@@ -249,7 +214,6 @@ public class PayServiceImpl implements IPayService {
                     .body(body)
                     .build();
 
-            // 3. 验签并解析
             if (notificationParser == null) {
                 log.error("微信支付 SDK 未初始化");
                 writeCallbackResponse(response, 500, "微信支付未配置");
@@ -257,25 +221,30 @@ public class PayServiceImpl implements IPayService {
             }
             Transaction transaction = notificationParser.parse(requestParam, Transaction.class);
 
-            // 4. 获取支付流水号
             String paySn = transaction.getOutTradeNo();
-            processCallback(paySn, transaction.getTransactionId(), 
-                    new BigDecimal(transaction.getAmount().getTotal()).divide(new BigDecimal("100")), 
-                    transaction.getTradeState() == Transaction.TradeStateEnum.SUCCESS);
+            BigDecimal callbackAmount = new BigDecimal(transaction.getAmount().getTotal()).divide(new BigDecimal("100"));
+            if (transaction.getTradeState() == Transaction.TradeStateEnum.SUCCESS) {
+                PaymentBusinessResult result = walletPaymentTxService.confirmPaymentSuccess(paySn, transaction.getTransactionId(), callbackAmount);
+                publishOrderPaidStatsIfNecessary(result);
+            } else {
+                walletPaymentTxService.markPaymentFailed(paySn);
+            }
 
             writeCallbackResponse(response, 200, "SUCCESS");
-
         } catch (Exception e) {
             log.error("处理微信支付回调异常: {}", e.getMessage(), e);
             writeCallbackResponse(response, 500, "FAIL");
         }
     }
 
-    // ==========================================
-    // 4. 支付宝回调处理
-    // ==========================================
-
-    @Transactional(rollbackFor = Exception.class)
+    /**
+     * 支付宝支付回调处理。
+     * 负责验签、识别交易状态并驱动后续支付确认流程。
+     *
+     * @param request 支付宝回调请求
+     * @return success/fail
+     */
+    @Override
     public String handleAlipayCallback(HttpServletRequest request) {
         log.info("收到支付宝回调");
         Map<String, String> params = new HashMap<>();
@@ -290,10 +259,9 @@ public class PayServiceImpl implements IPayService {
         }
 
         try {
-            // 1. 验签
-            boolean signVerified = AlipaySignature.rsaCheckV1(params, 
-                    alipayProperties.getPublicKey(), 
-                    alipayProperties.getCharset(), 
+            boolean signVerified = AlipaySignature.rsaCheckV1(params,
+                    alipayProperties.getPublicKey(),
+                    alipayProperties.getCharset(),
                     alipayProperties.getSignType());
 
             if (!signVerified) {
@@ -301,15 +269,16 @@ public class PayServiceImpl implements IPayService {
                 return "fail";
             }
 
-            // 2. 获取参数
             String paySn = params.get("out_trade_no");
             String tradeNo = params.get("trade_no");
             String tradeStatus = params.get("trade_status");
             String totalAmount = params.get("total_amount");
 
-            // 3. 处理业务
             if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
-                processCallback(paySn, tradeNo, new BigDecimal(totalAmount), true);
+                PaymentBusinessResult result = walletPaymentTxService.confirmPaymentSuccess(paySn, tradeNo, new BigDecimal(totalAmount));
+                publishOrderPaidStatsIfNecessary(result);
+            } else {
+                walletPaymentTxService.markPaymentFailed(paySn);
             }
 
             return "success";
@@ -319,48 +288,10 @@ public class PayServiceImpl implements IPayService {
         }
     }
 
-    // ==========================================
-    // 私有通用方法
-    // ==========================================
-
     /**
-     * 核心业务处理逻辑：
-     * 1. 校验单据存在性与金额一致性
-     * 2. 更新本地支付流水状态（成功/失败）
-     * 3. 根据业务类型 (充值/订单支付) 分发后续逻辑
-     */
-    private void processCallback(String paySn, String transactionId, BigDecimal callbackAmount, boolean isSuccess) {
-        PaymentRecord record = findByPaySn(paySn);
-        if (record == null) {
-            log.error("回调中支付记录不存在, paySn={}", paySn);
-            throw new BusinessException("支付记录不存在");
-        }
-
-        // 幂等检查
-        if (record.getStatus() == PAY_STATUS_SUCCESS || record.getStatus() == PAY_STATUS_CANCELED) {
-            log.info("支付已处理, paySn={}, status={}", paySn, record.getStatus());
-            return;
-        }
-
-        if (isSuccess) {
-            // 金额校验
-            if (record.getAmount().compareTo(callbackAmount) != 0) {
-                log.error("金额不一致, paySn={}, callback={}, record={}", paySn, callbackAmount, record.getAmount());
-                throw new BusinessException("金额不一致");
-            }
-
-            // 更新支付记录
-            updateRecordSuccess(record.getId(), transactionId);
-
-            // 业务分发
-            dispatchBusiness(record);
-        } else {
-            updateRecordFailed(record.getId());
-        }
-    }
-
-    /**
-     * 参数校验
+     * 参数校验。
+     *
+     * @param dto 支付请求参数
      */
     private void validatePayRequest(UnifiedPayDTO dto) {
         if (dto == null) {
@@ -378,7 +309,11 @@ public class PayServiceImpl implements IPayService {
     }
 
     /**
-     * 根据业务类型解析实际支付金额
+     * 根据业务类型解析实际支付金额。
+     *
+     * @param userId 当前用户ID
+     * @param dto 支付请求参数
+     * @return 标准化后的支付金额
      */
     private BigDecimal resolvePayAmount(Long userId, UnifiedPayDTO dto) {
         if (BIZ_TYPE_RECHARGE.equals(dto.getBizType())) {
@@ -400,119 +335,113 @@ public class PayServiceImpl implements IPayService {
     }
 
     /**
-     * 业务逻辑分发器
-     * 处理充值入账或订单状态变更。
+     * 根据支付流水号查询支付记录。
+     *
+     * @param paySn 支付流水号
+     * @return 支付记录
      */
-    private void dispatchBusiness(PaymentRecord record) {
-        String bizType = record.getBizType();
-        log.info("业务分发, bizType={}, bizId={}, amount={}", bizType, record.getBizId(), record.getAmount());
-
-        if (BIZ_TYPE_RECHARGE.equals(bizType)) {
-            try {
-                // 1. 钱包充值入账
-                walletService.recharge(record.getUserId(), record.getAmount());
-                log.info("充值成功, userId={}, amount={}", record.getUserId(), record.getAmount());
-            } catch (Exception e) {
-                log.error("充值回调处理失败, paySn={}: {}", record.getPaySn(), e.getMessage(), e);
-                throw new BusinessException("充值回调处理失败");
-            }
-        } else if (BIZ_TYPE_ORDER.equals(bizType)) {
-            try {
-                // 1. 记录账单明细
-                walletService.recordOrderPayment(
-                        record.getUserId(),
-                        record.getAmount(),
-                        record.getBizId(),
-                        record.getPayMethod()
-                );
-
-                // 2. 映射支付方式映射
-                int payType = mapPayType(record.getPayMethod());
-
-                // 3. RPC通知订单中心更新状态
-                Long orderId = Long.parseLong(record.getBizId());
-                Integer result = remoteOrderService.paySuccess(orderId, payType);
-                if (result == null || result <= 0) {
-                    log.error("Feign调用订单模块失败, orderId={}", orderId);
-                    throw new BusinessException("更新订单状态失败");
-                }
-                log.info("订单支付成功, orderId={}, payType={}", orderId, payType);
-            } catch (NumberFormatException e) {
-                log.error("订单ID格式错误, bizId={}: {}", record.getBizId(), e.getMessage(), e);
-                throw new BusinessException("订单ID格式错误");
-            } catch (Exception e) {
-                log.error("订单支付回调处理失败, paySn={}: {}", record.getPaySn(), e.getMessage(), e);
-                throw new BusinessException("订单支付回调处理失败");
-            }
-        }
-    }
-
-    /**
-     * 映射支付方式字符串到PayTypeConstants
-     */
-    private int mapPayType(String payMethod) {
-        if ("alipay".equals(payMethod)) {
-            return PayTypeConstants.ALIPAY;
-        } else if ("wechat".equals(payMethod)) {
-            return PayTypeConstants.WECHAT;
-        } else if ("balance".equals(payMethod)) {
-            return PayTypeConstants.BALANCE;
-        }
-        return PayTypeConstants.ALIPAY; // 默认支付宝
-    }
-
-    /**
-     * 更新支付记录为成功
-     */
-    private void updateRecordSuccess(Long recordId, String transactionId) {
-        LambdaUpdateWrapper<PaymentRecord> update = new LambdaUpdateWrapper<>();
-        update.eq(PaymentRecord::getId, recordId)
-                .set(PaymentRecord::getStatus, PAY_STATUS_SUCCESS)
-                .set(PaymentRecord::getTransactionId, transactionId)
-                .set(PaymentRecord::getPayTime, LocalDateTime.now())
-                .set(PaymentRecord::getUpdateTime, LocalDateTime.now());
-        paymentRecordMapper.update(null, update);
-    }
-
-    /**
-     * 更新支付记录为失败
-     */
-    private void updateRecordFailed(Long recordId) {
-        LambdaUpdateWrapper<PaymentRecord> update = new LambdaUpdateWrapper<>();
-        update.eq(PaymentRecord::getId, recordId)
-                .set(PaymentRecord::getStatus, PAY_STATUS_FAILED)
-                .set(PaymentRecord::getUpdateTime, LocalDateTime.now());
-        paymentRecordMapper.update(null, update);
-    }
-
     private PaymentRecord findByPaySn(String paySn) {
         LambdaQueryWrapper<PaymentRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PaymentRecord::getPaySn, paySn);
         return paymentRecordMapper.selectOne(wrapper);
     }
 
+    /**
+     * 查询同一业务单据下仍处于待支付状态的支付记录。
+     *
+     * @param bizType 业务类型
+     * @param bizId 业务ID
+     * @return 待支付记录
+     */
     private PaymentRecord findPendingRecord(String bizType, String bizId) {
         LambdaQueryWrapper<PaymentRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PaymentRecord::getBizType, bizType)
                 .eq(PaymentRecord::getBizId, bizId)
-                .eq(PaymentRecord::getStatus, PAY_STATUS_PENDING)
+                .eq(PaymentRecord::getStatus, PaymentStatusConstants.PENDING)
                 .orderByDesc(PaymentRecord::getCreateTime)
                 .last("LIMIT 1");
         return paymentRecordMapper.selectOne(wrapper);
     }
 
+    /**
+     * 生成统一支付流水号。
+     *
+     * @return 支付流水号
+     */
     private String generatePaySn() {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String random = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
         return "P" + date + random;
     }
 
+    /**
+     * 生成充值业务单号。
+     *
+     * @return 充值业务单号
+     */
     private String generateRechargeBizId() {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String random = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase();
         return "R" + date + random;
     }
 
+    /**
+     * 在支付主事务成功后发送销量统计消息。
+     * 这一步属于缓存/统计链路，失败不回滚主交易。
+     *
+     * @param result 支付业务执行结果
+     */
+    private void publishOrderPaidStatsIfNecessary(PaymentBusinessResult result) {
+        if (result == null || !result.shouldPublishOrderPaidStats()) {
+            return;
+        }
+
+        try {
+            OrderDTO orderDTO = remoteOrderService.getOrderById(result.getOrderId());
+            OrderPaidStatsMessage message = new OrderPaidStatsMessage();
+            message.setOrderId(result.getOrderId());
+            message.setUserId(result.getUserId());
+            message.setPayType(result.getPayType());
+            message.setMessageKey(buildMessageKey(result.getOrderId(), result.getPayType()));
+            if (orderDTO != null) {
+                message.setSourceId(orderDTO.getSourceId());
+                message.setVerifyShopId(orderDTO.getVerifyShopId());
+                message.setAmount(orderDTO.getAmount());
+                if (message.getUserId() == null) {
+                    message.setUserId(orderDTO.getUserId());
+                }
+            } else {
+                log.warn("支付成功后未取到订单详情，按最小消息发送统计事件, orderId={}", result.getOrderId());
+            }
+
+            mqMessageSendUtils.sendMqMessage(
+                    OrderMqConstants.ORDER_PAID_STATS_EXCHANGE,
+                    OrderMqConstants.ORDER_PAID_STATS_ROUTING_KEY,
+                    message
+            );
+            log.info("已发送订单支付统计消息, orderId={}, payType={}", result.getOrderId(), result.getPayType());
+        } catch (Exception e) {
+            log.error("订单支付统计消息发送失败，主交易已提交, orderId={}", result.getOrderId(), e);
+        }
+    }
+
+    /**
+     * 构造订单支付统计消息的业务幂等 Key。
+     *
+     * @param orderId 订单ID
+     * @param payType 支付方式
+     * @return 幂等 Key
+     */
+    private String buildMessageKey(Long orderId, Integer payType) {
+        return "order-paid-stats:" + orderId + ":" + payType;
+    }
+
+    /**
+     * 读取 HTTP 请求体内容。
+     *
+     * @param request HTTP 请求
+     * @return 请求体字符串
+     */
     private String readRequestBody(HttpServletRequest request) {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = request.getReader()) {
@@ -526,6 +455,13 @@ public class PayServiceImpl implements IPayService {
         return sb.toString();
     }
 
+    /**
+     * 返回支付回调响应。
+     *
+     * @param response 响应对象
+     * @param statusCode HTTP 状态码
+     * @param message 返回消息
+     */
     private void writeCallbackResponse(HttpServletResponse response, int statusCode, String message) {
         try {
             response.setStatus(statusCode);
@@ -537,6 +473,15 @@ public class PayServiceImpl implements IPayService {
         }
     }
 
+    /**
+     * 分页查询当前用户的支付流水列表。
+     *
+     * @param userId 用户ID
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @param status 支付状态
+     * @return 分页结果
+     */
     @Override
     public com.baomidou.mybatisplus.extension.plugins.pagination.Page<PaymentRecord> getPayList(Long userId, Integer page, Integer pageSize, Integer status) {
         if (page == null || page < 1) page = 1;

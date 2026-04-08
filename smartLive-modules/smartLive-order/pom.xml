@@ -69,6 +69,10 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-seata</artifactId>
+        </dependency>
         <!--RabbitMQ-->
         <dependency>
             <groupId>com.smartLive</groupId>
@@ -110,6 +114,10 @@
         <dependency>
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-api-chat</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-api-order</artifactId>
         </dependency>
 
 

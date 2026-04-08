@@ -40,4 +40,9 @@ public interface OrderMqConstants {
     String ORDER_REFUND_EXCHANGE = "order.refund.direct.exchange";
     String ORDER_REFUND_QUEUE = "order.refund.queue";
     String ORDER_REFUND_ROUTING_KEY = "order.refund";
+
+    // 订单支付成功后异步统计销量
+    String ORDER_PAID_STATS_EXCHANGE = "order.paid.stats.direct.exchange";
+    String ORDER_PAID_STATS_QUEUE = "order.paid.stats.queue";
+    String ORDER_PAID_STATS_ROUTING_KEY = "order.paid.stats";
 }

@@ -1,5 +1,6 @@
 package com.smartLive.order.api.factory;
 
+import com.smartLive.order.api.DTO.OrderDTO;
 import com.smartLive.order.api.DTO.ProductSoldDTO;
 import com.smartLive.order.api.DTO.ShopOrderAnalysisDTO;
 import com.smartLive.order.api.DTO.ShopOrderSuggestDTO;
@@ -41,6 +42,12 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
             public Integer paySuccess(Long orderId, Integer payType) {
                 log.error("pay success callback failed: {}", cause.getMessage());
                 return 0;
+            }
+
+            @Override
+            public OrderDTO getOrderById(Long orderId) {
+                log.error("get order by id failed: {}", cause.getMessage());
+                return null;
             }
 
             @Override
