@@ -127,7 +127,7 @@ outline: 2
 | 登录鉴权 | MySQL、Redis、Nacos | auth + gateway |
 | 店铺/商品/订单基础链路 | MySQL、Redis、RabbitMQ、Nacos | 常规业务必需 |
 | 搜索 | Elasticsearch、Redis、RabbitMQ、Nacos | search 模块 |
-| 支付强事务演示 | Seata Server、Nacos | `wallet + order` 的支付成功主数据链路依赖 Seata XA |
+| 支付强事务演示 | Seata Server、Nacos | `wallet + order` 的支付成功主数据链路依赖 Seata AT |
 | AI 对话 / RAG | Milvus、Elasticsearch、RabbitMQ、Nacos | 还需要单独配置模型 API key |
 | 文件服务 | MinIO、Nacos | 本地文件路径也要配置 |
 | 定时任务 | XXL-JOB、Nacos | 依赖 `xxl-job-common.yml` |
@@ -210,6 +210,8 @@ outline: 2
 4. 支付强事务（按需）
    - `smartLive-seata-server/seata/script/server/db/mysql.sql`
    - 用于初始化 Seata Server 的 `global_table / branch_table / lock_table / distributed_lock`
+   - `smart-live_seata.sql` 中的 `undo_log`
+   - 参与支付强事务的业务库至少需要在 `smart-live_wallet`、`smart-live_order` 中建好 `undo_log`
 
 补充说明：
 

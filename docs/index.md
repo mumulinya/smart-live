@@ -86,7 +86,7 @@ hero:
 <!-- AUTO_SYNC:DOCS_HOME_STATS_CARDS:END -->
 </div>
 
-这套项目不是单个功能样例，而是一整套从用户发现、下单支付、履约评价到社交互动、热榜维护与平台治理的完整业务系统；其中 `wallet + order` 的支付成功主数据已经收口到 `Seata XA`，而退款、积分、销量统计等外围动作继续保持最终一致。更多统计口径和服务边界可以继续看 [系统架构与项目规模](/site-pages/SYSTEM_ARCHITECTURE)。
+这套项目不是单个功能样例，而是一整套从用户发现、下单支付、履约评价到社交互动、热榜维护与平台治理的完整业务系统；其中 `wallet + order` 的支付成功主数据已经收口到 `Seata AT`，而退款、积分、销量统计等外围动作继续保持最终一致。更多统计口径和服务边界可以继续看 [系统架构与项目规模](/site-pages/SYSTEM_ARCHITECTURE)。
 
 ## <a id="home-architecture"></a>🏗️ 系统全景架构
 

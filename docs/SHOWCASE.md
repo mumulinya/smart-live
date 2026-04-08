@@ -79,7 +79,7 @@
 - 用户端 App、商家端 Web、平台管理端 Web 通过网关统一进入微服务体系。
 - 中间层覆盖用户、店铺、商品、订单、互动、AI、IM、审核、积分、钱包等业务域。
 - 基础设施层包含 Redis、RabbitMQ、Elasticsearch、Milvus、MinIO、XXL-JOB 等中间件。
-- 交易一致性上，`wallet + order` 的支付成功主数据已经用 `Seata XA` 收口，而退款、积分、销量统计和搜索同步等外围副作用继续走 `MQ + 幂等 + 补偿` 的最终一致性。
+- 交易一致性上，`wallet + order` 的支付成功主数据已经用 `Seata AT` 收口，而退款、积分、销量统计和搜索同步等外围副作用继续走 `MQ + 幂等 + 补偿` 的最终一致性。
 
 ## <a id="showcase-discovery"></a>3. 用户进入、发现与找店
 
@@ -537,7 +537,7 @@ AI 商家助手先承接统一会话入口，再按评价回复、经营分析�
 |:---|:---|:---|:---|
 | 秒杀抢购全链路 | Redis Lua 防超卖、RabbitMQ 异步落单、延迟队列兜底 | <a href="./diagrams/seckill-flow.svg" target="_blank" rel="noreferrer"><img src="./diagrams/seckill-flow.svg" alt="秒杀抢购全链路" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/seckill-flow-detailed.svg) |
 | 普通下单：订单创建与状态流转 | 下单创建、异步落单、支付生效后的状态流转 | <a href="./diagrams/normal-order-sequence.svg" target="_blank" rel="noreferrer"><img src="./diagrams/normal-order-sequence.svg" alt="普通下单：订单创建与状态流转" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/normal-order-sequence-detailed.svg) |
-| 统一支付：支付受理、回调与账务分发 | 支付受理、回调分发、`payment_record + wallet + order` 的 `Seata XA` 强一致，以及事务提交后的销量统计消息 | <a href="./diagrams/unified-pay-sequence.svg" target="_blank" rel="noreferrer"><img src="./diagrams/unified-pay-sequence.svg" alt="统一支付：支付受理、回调与账务分发" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/unified-pay-sequence-detailed.svg) |
+| 统一支付：支付受理、回调与账务分发 | 支付受理、回调分发、`payment_record + wallet + order` 的 `Seata AT` 强一致，以及事务提交后的销量统计消息 | <a href="./diagrams/unified-pay-sequence.svg" target="_blank" rel="noreferrer"><img src="./diagrams/unified-pay-sequence.svg" alt="统一支付：支付受理、回调与账务分发" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/unified-pay-sequence-detailed.svg) |
 | 订单超时取消与库存回滚 | 下单后发送延迟消息、超时未支付自动取消、库存与资格回滚 | <a href="./diagrams/order-timeout-cancel-stock-rollback-chain.svg" target="_blank" rel="noreferrer"><img src="./diagrams/order-timeout-cancel-stock-rollback-chain.svg" alt="订单超时取消与库存回滚" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/order-timeout-cancel-stock-rollback-chain-detailed.svg) |
 | 主动取消 / 退款与钱包补偿 | 用户主动取消或退款后的库存回滚、退款 MQ 与钱包流水，默认按异步补偿模型最终收敛 | <a href="./diagrams/order-refund-wallet-compensation-chain.svg" target="_blank" rel="noreferrer"><img src="./diagrams/order-refund-wallet-compensation-chain.svg" alt="主动取消 / 退款与钱包补偿" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/order-refund-wallet-compensation-chain-detailed.svg) |
 | 订单核销、店铺销量与积分奖励 | verifyShopId 校验、订单本地事务核销、店铺销量同步增长、消费积分异步发放，不把核销副作用强收口到 Seata | <a href="./diagrams/order-verification-points-reward-chain.svg" target="_blank" rel="noreferrer"><img src="./diagrams/order-verification-points-reward-chain.svg" alt="订单核销、店铺销量与积分奖励" width="260"></a> | [查看详细 SVG](./diagrams/detail-src/order-verification-points-reward-chain-detailed.svg) |

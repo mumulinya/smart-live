@@ -160,7 +160,7 @@
   <rect class="note" x="830" y="1166" width="700" height="230"/>
   <text class="note-title" x="862" y="1210">边界 B：只有订单支付主数据进入 Seata，Redis 统计不进入</text>
   <text class="note-text" x="862" y="1246">- recharge：留在 Wallet 单服务本地事务里。</text>
-  <text class="note-text" x="862" y="1274">- order：`payment_record + wallet + order` 进入同一个 Seata XA 主事务。</text>
+  <text class="note-text" x="862" y="1274">- order：`payment_record + wallet + order` 进入同一个 Seata AT 主事务。</text>
   <text class="note-text" x="862" y="1302">- 商品销量统计在事务提交后发 `OrderPaidStatsMessage`，避免 Redis 脏数据。</text>
 
   <rect class="note" x="1590" y="1166" width="660" height="230"/>

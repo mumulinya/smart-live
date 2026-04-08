@@ -70,7 +70,7 @@ MQ 解决“事件驱动”，XXL-JOB 解决“定时调度与补偿兜底”。
 
 这个项目当前不是“只有一种一致性方案”，而是分层治理：
 
-- **支付成功主数据**：已经落地 `Seata XA`，覆盖 `payment_record + 钱包资金 / 账单 + order.paySuccess`
+- **支付成功主数据**：已经落地 `Seata AT`，覆盖 `payment_record + 钱包资金 / 账单 + order.paySuccess`
 - **高并发或衍生副作用链路**：继续采用 `RabbitMQ 消息可靠投递 + Redis 幂等 + ACK/NACK + 延迟 / 死信队列 + XXL-JOB` 的最终一致性方案
 
 适用场景包括：
