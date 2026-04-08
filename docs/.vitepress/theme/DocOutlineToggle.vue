@@ -152,7 +152,8 @@ function updateActiveHash() {
 function scrollActiveItemIntoView() {
   nextTick(() => {
     const content = outlineNavRef.value?.querySelector('.content') as HTMLElement | null
-    const activeItem = content?.querySelector('.outline-link.active') as HTMLElement | null
+    const activeItems = content?.querySelectorAll('.outline-link.active')
+    const activeItem = activeItems && activeItems.length > 0 ? activeItems[activeItems.length - 1] as HTMLElement | null : null
 
     if (!content || !activeItem) return
 

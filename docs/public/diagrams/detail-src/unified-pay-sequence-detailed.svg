@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2360" height="1660" viewBox="0 0 2360 1660" role="img" aria-labelledby="title desc">
   <title id="title">统一支付：支付受理、回调与账务分发（详细版）</title>
-  <desc id="desc">展示统一支付下单、PaymentRecord 落库、延迟关闭、第三方回调/主动查单、充值与订单支付两条业务分发，以及余额支付的特殊路径。</desc>
+  <desc id="desc">展示统一支付下单、PaymentRecord 落库、延迟关闭、第三方回调/主动查单、充值与订单支付两条业务分发、余额支付的 Seata 主事务路径，以及事务提交后的销量统计异步派发。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#fbfcff"/>
@@ -32,7 +32,7 @@
   <rect x="28" y="28" width="2304" height="1604" rx="30" fill="#ffffff" stroke="#d9e6f5" stroke-width="2"/>
 
   <text class="title" x="70" y="92">统一支付：支付受理、回调与账务分发（详细版）</text>
-  <text class="subtitle" x="70" y="128">对应代码：PayController + PayServiceImpl.unifiedOrder / queryPayStatus / processCallback + PaymentListener.handlePayTimeout + BalancePayService.pay</text>
+  <text class="subtitle" x="70" y="128">对应代码：PayController + PayServiceImpl.unifiedOrder / queryPayStatus / handle*Callback + WalletPaymentTxService + PaymentListener.handlePayTimeout + BalancePayService.pay</text>
 
   <text class="section" x="70" y="182">1. 统一下单：同一套入口承接充值与订单支付，并复用待支付流水</text>
 
@@ -77,7 +77,7 @@
   <path class="line" d="M1890 310 H1948"/>
   <text class="step" x="1919" y="292" text-anchor="middle">5. 选支付策略</text>
 
-  <text class="section" x="70" y="480">2. 第三方回调与主动查单都汇总到 processCallback，再按业务类型分发</text>
+  <text class="section" x="70" y="480">2. 第三方回调与主动查单统一收口，再进入 WalletPaymentTxService</text>
 
   <rect class="node" x="70" y="520" width="320" height="190"/>
   <text class="node-title" x="230" y="586" text-anchor="middle">微信 / 支付宝回调</text>
@@ -90,17 +90,17 @@
   <text class="node-text" x="630" y="648" text-anchor="middle">第三方状态同步回本地</text>
 
   <rect class="decision" x="870" y="520" width="360" height="190"/>
-  <text class="node-title" x="1050" y="586" text-anchor="middle">processCallback</text>
-  <text class="node-text" x="1050" y="622" text-anchor="middle">幂等：SUCCESS / CANCELED 直接返回</text>
-  <text class="node-text" x="1050" y="648" text-anchor="middle">金额校验后更新支付流水终态</text>
+  <text class="node-title" x="1050" y="586" text-anchor="middle">PayServiceImpl</text>
+  <text class="node-text" x="1050" y="622" text-anchor="middle">统一收口回调 / 查单结果</text>
+  <text class="node-text" x="1050" y="648" text-anchor="middle">委托 confirmPaymentSuccess</text>
 
   <rect class="store" x="1310" y="520" width="340" height="190"/>
-  <text class="node-title" x="1480" y="586" text-anchor="middle">dispatchBusiness</text>
-  <text class="node-text" x="1480" y="622" text-anchor="middle">bizType = recharge</text>
-  <text class="node-text" x="1480" y="648" text-anchor="middle">bizType = order</text>
+  <text class="node-title" x="1480" y="586" text-anchor="middle">WalletPaymentTxService</text>
+  <text class="node-text" x="1480" y="622" text-anchor="middle">PENDING -&gt; SUCCESS 条件更新</text>
+  <text class="node-text" x="1480" y="648" text-anchor="middle">按 bizType 分发主数据动作</text>
 
   <rect class="node" x="1730" y="520" width="520" height="190"/>
-  <text class="node-title" x="1990" y="586" text-anchor="middle">业务落地</text>
+  <text class="node-title" x="1990" y="586" text-anchor="middle">wallet + order 主数据</text>
   <text class="node-text" x="1990" y="622" text-anchor="middle">充值：walletService.recharge</text>
   <text class="node-text" x="1990" y="648" text-anchor="middle">订单：recordOrderPayment + remoteOrderService.paySuccess</text>
 
@@ -109,11 +109,11 @@
   <path class="dash" d="M790 615 H858"/>
   <text class="step" x="824" y="598" text-anchor="middle">7. 轮询查单</text>
   <path class="line" d="M1230 615 H1298"/>
-  <text class="step" x="1264" y="598" text-anchor="middle">8. 统一处理回调</text>
+  <text class="step" x="1264" y="598" text-anchor="middle">8. 进入 Seata 主事务</text>
   <path class="line" d="M1650 615 H1718"/>
-  <text class="step" x="1684" y="598" text-anchor="middle">9. 业务分发</text>
+  <text class="step" x="1684" y="598" text-anchor="middle">9. 提交支付主数据</text>
 
-  <text class="section" x="70" y="802">3. 支付超时兜底与余额支付特殊路径</text>
+  <text class="section" x="70" y="802">3. 支付超时兜底、余额支付特殊路径与事务后统计</text>
 
   <rect class="mq" x="70" y="844" width="340" height="190"/>
   <text class="node-title" x="240" y="910" text-anchor="middle">PaymentListener.handlePayTimeout</text>
@@ -127,8 +127,8 @@
 
   <rect class="node" x="910" y="844" width="360" height="190"/>
   <text class="node-title" x="1090" y="910" text-anchor="middle">BalancePayService.pay</text>
-  <text class="node-text" x="1090" y="946" text-anchor="middle">直接创建 status=SUCCESS 的流水</text>
-  <text class="node-text" x="1090" y="972" text-anchor="middle">walletService.consume 原子扣余额</text>
+  <text class="node-text" x="1090" y="946" text-anchor="middle">委托 payOrderByBalance</text>
+  <text class="node-text" x="1090" y="972" text-anchor="middle">事务成功后再发统计 MQ</text>
 
   <rect class="store" x="1350" y="844" width="340" height="190"/>
   <text class="node-title" x="1520" y="910" text-anchor="middle">余额动账</text>
@@ -138,7 +138,7 @@
   <rect class="node" x="1770" y="844" width="480" height="190"/>
   <text class="node-title" x="2010" y="910" text-anchor="middle">订单模块生效</text>
   <text class="node-text" x="2010" y="946" text-anchor="middle">paySuccess(orderId, payType)</text>
-  <text class="node-text" x="2010" y="972" text-anchor="middle">status=PAID / payType / 有效期 / 销量</text>
+  <text class="node-text" x="2010" y="972" text-anchor="middle">status=PAID / payType / 有效期，销量改走 MQ</text>
 
   <path class="line" d="M410 939 H478"/>
   <text class="step" x="444" y="922" text-anchor="middle">10. 超时取消支付单</text>
@@ -152,21 +152,21 @@
   <text class="section" x="70" y="1124">4. 这张图补充了统一支付里最容易被漏掉的三个点</text>
 
   <rect class="note" x="70" y="1166" width="700" height="230"/>
-  <text class="note-title" x="102" y="1210">边界 A：回调和主动查单走的是同一套 processCallback</text>
-  <text class="note-text" x="102" y="1246">- 微信/支付宝异步通知会进 processCallback。</text>
+  <text class="note-title" x="102" y="1210">边界 A：回调和主动查单走的是同一套支付确认入口</text>
+  <text class="note-text" x="102" y="1246">- 微信/支付宝异步通知会统一收口到 PayServiceImpl 的支付确认流程。</text>
   <text class="note-text" x="102" y="1274">- 前端轮询 queryPayStatus 发现第三方已支付，也会回到同一套处理流程。</text>
   <text class="note-text" x="102" y="1302">- 这样回调迟到、轮询先到的情况也能落进统一幂等语义里。</text>
 
   <rect class="note" x="830" y="1166" width="700" height="230"/>
-  <text class="note-title" x="862" y="1210">边界 B：充值与订单支付共用支付中枢，但最终落点不同</text>
-  <text class="note-text" x="862" y="1246">- recharge：直接给钱包入账。</text>
-  <text class="note-text" x="862" y="1274">- order：先记支付流水，再 RPC 通知订单模块 paySuccess。</text>
-  <text class="note-text" x="862" y="1302">- 文档里如果只写“统一支付”，很容易把这两条业务分叉讲丢。</text>
+  <text class="note-title" x="862" y="1210">边界 B：只有订单支付主数据进入 Seata，Redis 统计不进入</text>
+  <text class="note-text" x="862" y="1246">- recharge：留在 Wallet 单服务本地事务里。</text>
+  <text class="note-text" x="862" y="1274">- order：`payment_record + wallet + order` 进入同一个 Seata XA 主事务。</text>
+  <text class="note-text" x="862" y="1302">- 商品销量统计在事务提交后发 `OrderPaidStatsMessage`，避免 Redis 脏数据。</text>
 
   <rect class="note" x="1590" y="1166" width="660" height="230"/>
   <text class="note-title" x="1622" y="1210">代码锚点</text>
   <text class="note-text" x="1622" y="1246">- unifiedOrder：校验、复用 pending 流水、落库、发送 PAY_DELAY。</text>
-  <text class="note-text" x="1622" y="1274">- processCallback：幂等、金额校验、状态更新、dispatchBusiness。</text>
+  <text class="note-text" x="1622" y="1274">- WalletPaymentTxService：幂等、金额校验、状态更新和主数据分发。</text>
   <text class="note-text" x="1622" y="1302">- PaymentListener：支付单超时自动取消。</text>
-  <text class="note-text" x="1622" y="1330">- BalancePayService：站内余额支付直接落成功流水并同步订单状态。</text>
+  <text class="note-text" x="1622" y="1330">- PayServiceImpl / BalancePayService：事务成功后补发销量统计 MQ。</text>
 </svg>

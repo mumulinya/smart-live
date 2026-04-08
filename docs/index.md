@@ -5,9 +5,9 @@ title: SmartLive 智评生活
 titleTemplate: 开源本地生活微服务平台
 
 hero:
-  name: SmartLive
-  text: 智评生活 · 本地生活微服务平台
-  tagline: 覆盖发现、交易、履约、社交、热榜等核心场景的完整业务闭环落地
+  name: SmartLive 智评生活
+  text: 本地生活微服务平台
+  tagline: 覆盖发现、交易、履约、社交、热榜等核心场景，并明确区分支付强一致与外围最终一致的完整业务闭环
   actions:
     - theme: brand
       text: 💡 项目概览与导览
@@ -86,7 +86,7 @@ hero:
 <!-- AUTO_SYNC:DOCS_HOME_STATS_CARDS:END -->
 </div>
 
-这套项目不是单个功能样例，而是一整套从用户发现、下单支付、履约评价到社交互动、热榜维护与平台治理的完整业务系统。更多统计口径和服务边界可以继续看 [系统架构与项目规模](/site-pages/SYSTEM_ARCHITECTURE)。
+这套项目不是单个功能样例，而是一整套从用户发现、下单支付、履约评价到社交互动、热榜维护与平台治理的完整业务系统；其中 `wallet + order` 的支付成功主数据已经收口到 `Seata XA`，而退款、积分、销量统计等外围动作继续保持最终一致。更多统计口径和服务边界可以继续看 [系统架构与项目规模](/site-pages/SYSTEM_ARCHITECTURE)。
 
 ## <a id="home-architecture"></a>🏗️ 系统全景架构
 
@@ -101,11 +101,11 @@ hero:
 <div class="smartlive-feature-grid">
   <div class="smartlive-feature-card">
     <strong>⚡ 极致性能与交易引擎</strong>
-    <span>结合 Redis 分层缓存、ZSet 滚动分页与 Lua 脚本防超卖，保障高并发下的并发安全与关键状态收敛。</span>
+    <span>结合 Redis 分层缓存、ZSet 滚动分页、Lua 脚本防超卖和 `wallet + order` 支付主数据强一致，兼顾高并发吞吐与交易正确性。</span>
   </div>
   <div class="smartlive-feature-card">
     <strong>🔧 多能力协同与扩展性</strong>
-    <span>搜索、审核、调度、社交与经营辅助等能力沿着统一服务边界扩展，便于展示模块拆分和工程化协同思路。</span>
+    <span>搜索、审核、调度、社交与经营辅助等能力沿着统一服务边界扩展，外围副作用默认走 `MQ + 幂等 + 补偿`，便于展示强一致与最终一致的分层治理。</span>
   </div>
   <div class="smartlive-feature-card">
     <strong>🛡️ 企业级边界防线与治理</strong>
@@ -174,7 +174,7 @@ hero:
   <div class="smartlive-path-card">
     <div class="smartlive-path-no">04</div>
     <strong>强链路深入</strong>
-    <span>建议优先阅读 <a href="./core-links/秒杀抢购全链路详解.html">秒杀</a>、<a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付</a>、<a href="./core-links/Redis分层缓存链路详解.html">Redis 缓存</a>。</span>
+    <span>建议优先阅读 <a href="./core-links/秒杀抢购全链路详解.html">秒杀</a>、<a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付</a>、<a href="./core-links/Redis分层缓存链路详解.html">Redis 缓存</a>，优先建立“支付主数据强一致、外围副作用最终一致”的整体认知。</span>
   </div>
 </div>
 

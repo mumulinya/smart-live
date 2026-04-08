@@ -69,7 +69,7 @@ outline: 2
 | 类型 | 当前状态 | 说明 |
 |:---|:---|:---|
 | 可直接体验 | 登录鉴权、首页热榜、店铺详情、搜索基础链路、后台管理 | 补齐 MySQL、Redis、Nacos、RabbitMQ 后，先跑最小链路即可完成主要演示 |
-| 需要额外配置 | Elasticsearch、Milvus、MinIO、XXL-JOB、模型 API Key、支付相关配置 | 搜索、AI/RAG、对象存储、调度后台、支付回调等能力依赖额外中间件或密钥 |
+| 需要额外配置 | Elasticsearch、Milvus、MinIO、XXL-JOB、模型 API Key、支付相关配置、Seata Server | 搜索、AI/RAG、对象存储、调度后台、支付回调和支付强事务演示都依赖额外中间件或密钥 |
 | 更适合先读源码 | 死信补偿扩展、更多外部平台接入、完整线上观测与告警闭环 | 这些能力在仓库里已经有接口和骨架，更适合作为源码阅读和后续扩展点理解 |
 
 ## 6. 两条启动路径
@@ -87,9 +87,9 @@ outline: 2
 
 适合验证 AI、搜索、文件、定时任务、积分和支付等完整能力。
 
-- 额外中间件：Elasticsearch、Milvus、MinIO、XXL-JOB、Sentinel
+- 额外中间件：Elasticsearch、Milvus、MinIO、XXL-JOB、Sentinel、Seata Server
 - 额外模块：`smartLive-product`、`smartLive-order`、`smartLive-interaction`、`smartLive-chat`、`smartLive-im`、`smartLive-ai`、`smartLive-wallet`、`smartLive-points`、`smartLive-blog`、`smartLive-audit`、`smartLive-file`
-- 如果要体验 RAG、向量检索、异步审核、积分抽奖、消息通知或延迟队列链路，必须补齐这些依赖
+- 如果要体验 RAG、向量检索、异步审核、积分抽奖、消息通知、支付强事务或延迟队列链路，必须补齐这些依赖
 
 ## 7. 推荐启动顺序
 
@@ -114,10 +114,11 @@ outline: 2
 6. `smartLive-blog`
 7. `smartLive-audit`
 8. `smartLive-ai`
-9. `smartLive-wallet`
-10. `smartLive-points`
-11. `smartLive-file`
-12. `smartLive-index`
+9. `smartLive-seata-server`
+10. `smartLive-wallet`
+11. `smartLive-points`
+12. `smartLive-file`
+13. `smartLive-index`
 
 ## 8. 依赖矩阵
 
@@ -126,6 +127,7 @@ outline: 2
 | 登录鉴权 | MySQL、Redis、Nacos | auth + gateway |
 | 店铺/商品/订单基础链路 | MySQL、Redis、RabbitMQ、Nacos | 常规业务必需 |
 | 搜索 | Elasticsearch、Redis、RabbitMQ、Nacos | search 模块 |
+| 支付强事务演示 | Seata Server、Nacos | `wallet + order` 的支付成功主数据链路依赖 Seata XA |
 | AI 对话 / RAG | Milvus、Elasticsearch、RabbitMQ、Nacos | 还需要单独配置模型 API key |
 | 文件服务 | MinIO、Nacos | 本地文件路径也要配置 |
 | 定时任务 | XXL-JOB、Nacos | 依赖 `xxl-job-common.yml` |
@@ -138,7 +140,8 @@ outline: 2
 | 登录与个人中心 | `smartLive-auth`、`smartLive-gateway`、`smartLive-system`、`smartLive-user` | MySQL、Redis、Nacos | 先验证登录、用户信息、后台基础菜单是否可用 |
 | 商家后台与店铺基础能力 | 在上一条基础上加 `smartLive-shop` | MySQL、Redis、Nacos | 可体验店铺列表、详情和后台店铺管理 |
 | 搜索与附近找店 | 在上一条基础上加 `smartLive-search` | MySQL、Redis、Nacos、Elasticsearch | 热词、搜索和 LBS 找店依赖 ES |
-| 下单、支付与积分 | `smartLive-product`、`smartLive-order`、`smartLive-wallet`、`smartLive-points` | MySQL、Redis、Nacos、RabbitMQ | 订单、支付、积分变动和补偿链路都依赖 MQ |
+| 下单、退款与积分 | `smartLive-product`、`smartLive-order`、`smartLive-wallet`、`smartLive-points` | MySQL、Redis、Nacos、RabbitMQ | 下单、退款补偿、积分发放和库存释放主打 MQ 最终一致 |
+| 支付强事务演示 | `smartLive-order`、`smartLive-wallet`、`smartLive-seata-server` | MySQL、Redis、Nacos、RabbitMQ、Seata Server | 仅支付成功主数据进入 Seata，销量统计仍在事务提交后走 MQ |
 | AI 对话与 RAG | `smartLive-ai`、`smartLive-search`、`smartLive-shop`、`smartLive-product`、`smartLive-blog`、`smartLive-interaction` | MySQL、Redis、Nacos、RabbitMQ、Elasticsearch、Milvus、MinIO | 还需要模型 API Key、向量库和对象存储配置完整可用 |
 
 ## 9. 配置来源
@@ -146,6 +149,7 @@ outline: 2
 - 本地端口、基础应用名、部分默认连接参数位于各模块的 `bootstrap.yml`。
 - 共享配置和业务配置主要通过 Nacos 提供，初始化数据建议从 `sql/smart-live_create_all_databases.sql`、`sql/smart-live_config.sql` 和 `sql/xxl_job.sql` 入手。
 - `order`、`product`、`interaction` 等模块还依赖 `xxl-job-common.yml`；如果缺少这个 dataId，定时任务相关能力无法正常运行。
+- 如需演示支付强事务，还需要同步准备 Seata Server 元数据表和 `smart-live_config.sql` 中的 Seata 相关配置。
 - Docker 相关构建与复制逻辑位于 `docker/` 目录，但其中存在历史脚本，请在使用前自行核对。
 
 ### 9.1 Nacos dataId 清单
@@ -203,11 +207,15 @@ outline: 2
 3. 配置与调度
    - `smart-live_config.sql`
    - `xxl_job.sql`
+4. 支付强事务（按需）
+   - `smartLive-seata-server/seata/script/server/db/mysql.sql`
+   - 用于初始化 Seata Server 的 `global_table / branch_table / lock_table / distributed_lock`
 
 补充说明：
 
 - `sql/test_data/` 下面那一组更适合作为联调或演示测试数据，不建议第一次接入时直接全量导入。
 - 搜索、Milvus、RabbitMQ 交换机/队列这类能力不靠 `sql/` 单独建库完成，还要结合对应中间件配置和服务启动时的自动初始化。
+- 支付强事务不是启动 `wallet`、`order` 就会自动生效；如果缺少 Seata Server、Nacos 中的 Seata 配置或 Server 元数据表，这条链路会退化为普通远程调用。
 
 ## 10. 实际服务端口
 

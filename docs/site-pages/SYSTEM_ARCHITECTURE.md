@@ -149,7 +149,7 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
   </div>
   <div class="smartlive-arch-reading-card">
     <strong>2. 再看治理层</strong>
-    <span>Auth、Nacos、Sentinel、Seata 这层不直接承接业务页面，但决定了鉴权、注册配置、限流熔断和分布式事务怎么统一治理。</span>
+    <span>Auth、Nacos、Sentinel、Seata 这层不直接承接业务页面，但决定了鉴权、注册配置、限流熔断和分布式事务怎么统一治理；其中 Seata 当前主要兜住 wallet / order 的支付主数据强一致。</span>
   </div>
   <div class="smartlive-arch-reading-card">
     <strong>3. 再看业务服务簇</strong>
@@ -188,6 +188,11 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 - 交易、社交、搜索、AI 为什么拆成独立服务簇，而不是堆进一个“大业务服务”。
 - Redis、RabbitMQ、Elasticsearch、Milvus、MinIO、XXL-JOB 分别在系统里承担什么角色。
 - 沿单条链路继续下钻时，应该从哪个服务开始查找 controller、service、listener 和 job。
+
+当前交易一致性也建议按两层来理解：
+
+- `wallet + order` 的支付成功主数据，已经收口到 `Seata XA`
+- 库存扣减、退款补偿、积分发放、销量统计、搜索 / 审核同步等外围动作，仍然主要依赖 `RabbitMQ + 幂等 + 调度补偿`
 
 ### 3.3 服务依赖关系总览
 
@@ -246,8 +251,8 @@ SmartLive 是一个面向本地生活场景的微服务平台，覆盖用户端 
 | `smartLive-user` | 用户资料、主页能力、审核消息与 ES 同步投递 | MySQL、Redis、RabbitMQ | auth、shop、search、audit |
 | `smartLive-shop` | 店铺资料、店铺详情、经营分析与热榜读取 | MySQL、Redis、RabbitMQ | user、search、ai、order |
 | `smartLive-product` | 商品、团购、好券、秒杀与库存管理 | MySQL、Redis、RabbitMQ、XXL-JOB | order、shop、points |
-| `smartLive-order` | 下单、支付状态流转、超时取消、退款补偿 | MySQL、Redis、RabbitMQ、XXL-JOB | product、wallet、points |
-| `smartLive-wallet` | 充值、支付记录、退款入账与钱包流水 | MySQL、RabbitMQ | order、points |
+| `smartLive-order` | 下单、支付状态流转、超时取消、退款补偿、支付统计消息消费 | MySQL、Redis、RabbitMQ、XXL-JOB | product、wallet、points |
+| `smartLive-wallet` | 充值、支付记录、支付成功 Seata 主事务、退款入账与钱包流水 | MySQL、RabbitMQ、Seata | order、points |
 | `smartLive-points` | 积分、签到、抽奖与积分流水 | MySQL、Redis、RabbitMQ | order、product、wallet |
 | `smartLive-blog` | 博客发布、详情读取、内容投递与 Feed 事件 | MySQL、Redis、RabbitMQ | interaction、search、ai |
 | `smartLive-interaction` | 点赞、收藏、评论、关注、Feed、热榜与互动回刷 | MySQL、Redis、RabbitMQ、XXL-JOB | blog、shop、product、chat |
@@ -296,7 +301,7 @@ smart-live-Cloud
 │   ├── smartLive-common-log                       // 日志记录
 │   ├── smartLive-common-rabbitmq                  // MQ 封装
 │   ├── smartLive-common-redis                     // Redis 封装
-│   ├── smartLive-common-seata                     // 分布式事务
+│   ├── smartLive-common-seata                     // 支付主数据分布式事务基座
 │   ├── smartLive-common-security                  // 安全认证
 │   ├── smartLive-common-sensitive                 // 敏感词 / 脱敏能力
 │   ├── smartLive-common-swagger                   // API 文档
@@ -321,7 +326,7 @@ smart-live-Cloud
 ├── smartLive-visual               // 图形化管理
 │   └── smartLive-monitor                          // 监控中心目录（artifact: smartLive-visual-monitor）[9100]
 ├── smartLive-sentinel             // Sentinel 控制台 [8718]
-├── smartLive-seata-server         // Seata Server [7091]
+├── smartLive-seata-server         // Seata Server，当前主要承接支付强事务 [7091]
 ├── arthas                         // Arthas 诊断工具与脚本
 ├── bin                            // 本地启动 / 部署脚本
 ├── docker                         // Docker 编排与镜像脚本

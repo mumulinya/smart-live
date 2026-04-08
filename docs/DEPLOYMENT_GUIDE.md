@@ -29,6 +29,7 @@
 - 先起 `MySQL / Redis / Nacos / RabbitMQ`。
 - 再按最小链路启动：`auth -> gateway -> system -> user -> shop -> search`。
 - 需要 AI、文件、定时任务、支付、积分能力时，再补 `Elasticsearch / Milvus / MinIO / XXL-JOB / Sentinel`。
+- 如果要演示 `wallet + order` 的支付强事务，再额外补 `Seata Server` 与 Seata 相关 Nacos 配置。
 
 ### 路径二：服务器部署 / 联调演示
 
@@ -73,6 +74,7 @@
 - AI / RAG：Milvus、MinIO、模型 API Key
 - 定时任务：XXL-JOB
 - 流量治理：Sentinel
+- 支付强事务：Seata Server、Seata Server 元数据表、Nacos 中的 Seata 配置
 
 ## 4. 部署前先核对什么
 
@@ -83,8 +85,16 @@
 - `application-dev.yml`
 - `smartLive-*-dev.yml`
 - `xxl-job-common.yml`
+- 如需演示支付强事务，再确认 Seata 相关 dataId 与 `tx-service-group / vgroup-mapping / data-source-proxy-mode`
 
 已经导入 Nacos，且和当前环境的数据库、中间件地址一致。
+
+如需演示支付强事务，还要额外确认：
+
+- `smart-live_config.sql` 中的 Seata 配置已经导入 Nacos
+- `smartLive-seata-server` 对应的 Seata Server 已正常启动
+- `wallet`、`order` 两个服务都能读到同一套 Seata 配置
+- Seata Server 的 `global_table / branch_table / lock_table / distributed_lock` 已初始化
 
 ### 4.2 环境变量 / 敏感配置
 
@@ -137,6 +147,13 @@
 3. **再看网关与认证**：先确认 `gateway` 和 `auth` 正常，再看业务服务。
 4. **最后看增强能力**：AI、搜索、文件、调度、支付这类增强链路不要和最小链路混着排。
 
+如果只有支付强事务不生效，再单独补这 4 个排查点：
+
+1. `Seata Server` 是否已启动，且注册 / 配置中心地址正确
+2. `wallet`、`order` 启动日志里是否成功拿到 Seata 配置
+3. `tx-service-group`、`vgroup-mapping`、`data-source-proxy-mode` 是否一致
+4. Seata Server 元数据表是否已经初始化
+
 ## 6. 部署演示建议
 
 用于项目演示或联调时，建议先保证下面这 4 条链路正常：
@@ -152,6 +169,11 @@
 - AI / RAG
 - XXL-JOB
 - 文件与对象存储
+
+如果演示里要突出一致性治理，推荐把支付相关演示拆成两段：
+
+1. 先演示下单、退款、积分这些 MQ 最终一致链路
+2. 再单独演示 `wallet + order` 的支付成功 Seata 强事务
 
 ## 7. 继续阅读
 

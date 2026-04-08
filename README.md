@@ -181,7 +181,7 @@
 <!-- AUTO_SYNC:README_CONTRIBUTION_SCALE:END -->
 
 - **Redis 分层缓存架构**：把列表、详情、计数三类读链拆成不同缓存结构，首页、博客、商品、店铺等高频场景整体提速约 `20-40 倍`。
-- **微服务拆分与跨服务协同**：独立完成 `16` 个业务模块与 `19` 个服务应用的边界设计，落地 Feign、RabbitMQ 的跨服务协同闭环，并预留 Seata 强一致治理基础设施。
+- **微服务拆分与跨服务协同**：独立完成 `16` 个业务模块与 `19` 个服务应用的边界设计，落地 Feign、RabbitMQ 的跨服务协同闭环，并把 `wallet + order` 的支付成功主数据落到了 Seata XA 强一致链路上。
 - **高并发交易链路优化**：秒杀链路采用 `Lua + MQ + 延迟补偿`，在 `5000` 并发线程下把 QPS 稳定在 `3200+`。
 - **热榜评分与异步洗牌**：抽象 5 类业务热榜策略，结合时间衰减、互动权重、增量重算与凌晨全量重建解决冷启动和长期霸榜。
 - **消息可靠投递与幂等消费**：统一封装发送端 Confirm / Return、消费端 Redis 幂等和手动 ACK/NACK，把重复消费和补偿边界收口。
@@ -196,7 +196,7 @@
 首页先看这 3 组项目卖点：
 
 - **AI 增强与智能中枢**：用户端 AI 对话、RAG 检索、推荐卡片、博客/评价生成与商家经营分析落在同一套 Spring AI + Milvus 底座上。
-- **高性能交易与推荐闭环**：秒杀、订单、支付、热榜、Feed、搜索读链路都围绕 `Redis + MQ + 调度补偿` 做了工程化优化。
+- **高性能交易与推荐闭环**：秒杀、订单、热榜、Feed、搜索读链路都围绕 `Redis + MQ + 调度补偿` 做了工程化优化；支付成功主数据则单独使用 `Seata XA` 保证强一致。
 - **企业级治理与边界防护**：Gateway 鉴权与过滤、Netty IM、责任链审核、分布式锁、跨库副本收敛共同构成完整的基础设施能力。
 
 ## <a id="5分钟读懂项目"></a>🧭 5 分钟读懂项目
@@ -299,7 +299,7 @@ README 首页只保留最小可运行链路，完整启动顺序、端口表、�
 ### 最小环境
 
 - 必需：`JDK 17+`、`Maven 3.8+`、`MySQL 8+`、`Redis 6+`、`Nacos 2.x`、`RabbitMQ 3.12+`
-- 按需补：`Elasticsearch`、`Milvus`、`MinIO`、`XXL-JOB`、`Sentinel`、`Node.js`、`Docker / Compose`
+- 按需补：`Elasticsearch`、`Milvus`、`MinIO`、`XXL-JOB`、`Sentinel`、`Seata Server`、`Node.js`、`Docker / Compose`
 
 ### 首页版最小依赖矩阵
 
@@ -307,7 +307,8 @@ README 首页只保留最小可运行链路，完整启动顺序、端口表、�
 |:---|:---|:---|
 | 登录与后台基础能力 | `auth`、`gateway`、`system`、`user`、`shop` | MySQL、Redis、Nacos |
 | 搜索与附近找店 | 在上一条基础上加 `search` | MySQL、Redis、Nacos、Elasticsearch |
-| 下单、支付与积分 | `product`、`order`、`wallet`、`points` | MySQL、Redis、Nacos、RabbitMQ |
+| 下单、退款与积分 | `product`、`order`、`wallet`、`points` | MySQL、Redis、Nacos、RabbitMQ |
+| 支付强事务演示 | `order`、`wallet`、`smartLive-seata-server` | MySQL、Redis、Nacos、RabbitMQ、Seata Server |
 | AI 对话与 RAG | `ai`、`search`、`shop`、`product`、`blog`、`interaction` | MySQL、Redis、Nacos、RabbitMQ、Elasticsearch、Milvus、MinIO |
 
 ### 首页版启动顺序
@@ -317,6 +318,7 @@ README 首页只保留最小可运行链路，完整启动顺序、端口表、�
 3. 执行 `mvn clean install -DskipTests`
 4. 优先启动 `smartLive-auth -> smartLive-gateway -> smartLive-system -> smartLive-user -> smartLive-shop -> smartLive-search`
 5. 验证登录、店铺列表、搜索接口可用后，再补 `product / order / interaction / ai / wallet / points`
+6. 如需演示支付强事务，再额外启动 `smartLive-seata-server` 并确认 Nacos 中的 Seata 配置已导入
 
 ### 更多启动与部署方式
 
@@ -391,7 +393,7 @@ sql/                                 # 建库、业务库、配置库、调度�
 首页只保留 5 个判断，详细对比在网站详细版里。
 
 1. `Spring Boot + Spring Cloud Alibaba`：单服务开发底座和微服务治理分层清楚，适合当前 `19` 个服务应用规模。
-2. `Nacos + Gateway + Sentinel + Seata`：注册、配置、统一入口与限流熔断能力已经接齐，`Seata` 作为强一致链路的基础设施预留，后续主要用于余额支付、退款与券状态流转等场景。
+2. `Nacos + Gateway + Sentinel + Seata`：注册、配置、统一入口与限流熔断能力已经接齐，`Seata` 已经落到 `wallet + order` 的支付成功主数据链路上，后续再按需扩展到券状态、额度占用等低并发核心场景。
 3. `Redis + Elasticsearch + Milvus + MinIO`：分别承接缓存、搜索、副本检索和对象存储，不强行让一种技术做所有事情。
 4. `RabbitMQ + XXL-JOB`：MQ 负责事件异步，XXL-JOB 负责定时扫描、补偿兜底和批量重建。
 5. `Spring AI + Netty + MyBatis Plus`：分别对应 AI 编排、IM 长连接和可控的数据访问层。
@@ -426,7 +428,7 @@ sql/                                 # 建库、业务库、配置库、调度�
 - 先跑最小链路，不要一上来把 AI、支付、审核、IM 一次性全开。
 - 先理解 `MySQL 是真实源，ES / Milvus / Redis 是查询副本`，再去看搜索、热榜和向量检索。
 - 先抓住缓存分层、策略工厂、责任链、MQ + 调度补偿这几个核心设计点，再读具体模块。
-- AI、对象存储、支付、向量检索都依赖外部配置，第一次阅读更适合先看链路和接口，再补齐环境。
+- AI、对象存储、支付、向量检索都依赖外部配置，第一次阅读更适合先看链路和接口，再补齐环境；如果只想体验支付强事务，记得额外准备 Seata Server 和对应 Nacos 配置。
 
 完整接入说明见 [开源接入说明](https://mumulinya.github.io/smartLive-Cloud/OPEN_SOURCE)，安全边界见 [SECURITY.md](SECURITY.md)。
 
@@ -480,7 +482,7 @@ sql/                                 # 建库、业务库、配置库、调度�
 
 - [ ] **可观测性闭环**：补齐 Prometheus + Grafana + 告警与排障链路。
 - [ ] **CI / CD 与质量保障**：把测试、构建、镜像与部署流程进一步标准化。
-- [ ] **强一致链路深化**：未来在余额支付、退款与券状态流转等强一致业务上引入更严格的一致性治理。
+- [ ] **强一致链路深化**：在现有支付成功 Seata 主事务基础上，继续评估券状态、额度占用等低并发核心链路是否值得提升到更严格的一致性治理。
 
 
 ## <a id="参与贡献"></a>🤝 参与贡献

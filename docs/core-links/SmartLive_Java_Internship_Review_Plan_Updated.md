@@ -179,7 +179,7 @@
 | 项目链路 | 优先补的八股 | 为什么值得先打透 |
 |:---|:---|:---|
 | 秒杀抢购全链路 | Redis、Lua、RabbitMQ、幂等、延迟队列、最终一致性 | 这是你最强的高并发交易链路，能同时覆盖缓存、消息和补偿 |
-| 下单 / 统一支付 / 退款补偿 | MySQL 事务、状态流转、幂等、补偿、回调处理 | 适合讲完整业务闭环，也最容易被追问支付状态边界 |
+| 下单 / 统一支付 / 退款补偿 | MySQL 事务、Seata XA、状态流转、幂等、补偿、回调处理 | 适合讲完整业务闭环，也最容易被追问支付强一致与退款补偿边界 |
 | Redis 分层缓存链路 | Redis 数据结构、缓存穿透/击穿/雪崩、逻辑过期、分布式锁、Pipeline | 这是你项目里最能体现“性能优化能力”的部分 |
 | Feed 推送与互动同步 | Redis ZSet、滚动分页、批量回刷、CompletableFuture、线程池 | 这是和普通 CRUD 项目拉开差距的社交读写链路，尤其适合讲六路并发同步 |
 | 审核责任链与搜索双写 | 责任链模式、MQ 异步解耦、ES / Milvus 最终一致性 | 适合讲工程化治理，而不是单纯写接口 |
@@ -196,7 +196,7 @@
 | 链路 | 第一批先看的源码入口 | 建议的阅读顺序 |
 |:---|:---|:---|
 | 秒杀抢购全链路 | `ProductController`、`SeckillPurchaseStrategy`、`OrderServiceImpl`、`ProductListener`、`ProductSeckillJobHandler` | 先看秒杀入口，再看 Lua 预扣与落单，再看 MQ 扣库和定时预热/回收 |
-| 下单 / 支付 / 退款补偿 | `OrderController`、`OrderServiceImpl`、`PayServiceImpl`、`PaymentListener`、`OrderListener` | 先看下单，再看支付受理与回调，最后看超时取消和退款补偿 |
+| 下单 / 支付 / 退款补偿 | `OrderController`、`OrderServiceImpl`、`BalancePayService`、`PayServiceImpl`、`WalletPaymentTxService`、`OrderRefundListener` | 先看下单，再看支付受理与 Seata 支付确认，最后看超时取消和退款补偿 |
 | Feed / 互动 / 热榜 | `BlogServiceImpl`、`FollowServiceImpl`、`SyncDataServiceImpl`、`HotRankJobHandler`、`FullRebuildJobHandler` | 先看发布/关注触发，再看六路并发回刷与落库，最后看热榜增量与全量重建 |
 | 审核 / 搜索 / 向量同步 | `AuditServiceImpl`、`SearchController`、`SearchServiceImpl`、`MilvusSyncListener` | 先看审核任务如何流转，再看搜索读取，最后看 ES / Milvus 副本收敛 |
 | AI 路由与 RAG | `UserAiChatController`、`UserAiMessageServiceImpl`、`AgentRouter`、`LlmIntentClassifier`、`ShopRagService` | 先看对话入口，再看意图路由和工具调用，最后看向量检索与 SSE 输出 |
@@ -285,7 +285,7 @@
 - Gateway 过滤器
 - Nacos 配置与注册发现
 - Sentinel 限流
-- Seata 基本思想
+- Seata XA 在支付主数据上的落点与边界
 
 为什么优先：  
 这是你项目的基座，面试不会不问。
@@ -414,13 +414,14 @@
 
 要讲清：
 - 下单和支付如何分层
-- 支付回调如何更新状态
+- 支付回调 / 主动查单如何统一收口
 - 超时未支付如何取消
 - 主动取消 / 退款后如何补偿
-- 钱包流水如何保证正确
+- 为什么支付成功主数据要强一致，而退款和销量统计继续最终一致
 
 对应八股：
 - MySQL 事务
+- Seata XA
 - MQ 可靠性
 - 幂等
 - 状态机
@@ -582,12 +583,12 @@
 
 可以这样开场：
 
-> 这条链路主要解决订单创建、支付状态流转、超时取消和退款补偿的一致性问题。我的设计是把下单、支付、退款拆成不同阶段：订单服务负责状态流转，支付服务负责受理和回调，钱包服务只负责账务变更；中间通过 MQ 做异步解耦，再通过幂等校验和补偿任务保证最终收敛。
+> 这条链路主要解决订单创建、支付状态流转、超时取消和退款补偿的一致性问题。我的设计是把下单、支付、退款拆成不同阶段：订单服务负责状态流转，支付服务负责受理和回调，钱包服务负责账务变更；其中 `payment_record + 钱包资金 / 账单 + 订单状态` 这组支付成功主数据已经收口到 `Seata XA`，而退款、销量统计这些外围副作用继续通过 MQ 做异步补偿和最终收敛。
 
 面试时记得补这 3 个追问点：
 - 支付回调重复通知怎么防重
 - 未支付取消和主动退款的边界怎么区分
-- 钱包流水为什么不能和订单状态写成一个同步事务
+- 为什么支付成功主数据要用 Seata，而退款和销量统计继续走 MQ
 
 ### 3. Redis 分层缓存设计
 
@@ -789,7 +790,7 @@
 | 天数 | 主链路 | 主补八股 | 当天输出 |
 |:---|:---|:---|:---|
 | Day 1 | 秒杀抢购全链路 | Redis Lua、RabbitMQ、延迟队列、幂等 | 讲清“为什么不会超卖” |
-| Day 2 | 下单 / 支付 / 退款补偿 | MySQL 事务、状态流转、幂等、补偿 | 讲清“支付成功后怎么落单和退款” |
+| Day 2 | 下单 / 支付 / 退款补偿 | MySQL 事务、Seata XA、状态流转、幂等、补偿 | 讲清“支付成功为什么强一致、退款为什么异步补偿” |
 | Day 3 | Redis 分层缓存链路 | ZSet、逻辑过期、空值缓存、分布式锁、Pipeline | 讲清“为什么缓存要分层设计” |
 | Day 4 | Feed 推送与互动同步 | ZSet、滚动分页、批量回刷、线程池 | 讲清“为什么不用传统分页、为什么热数据先落 Redis” |
 | Day 5 | 审核责任链与搜索双写 | 责任链、MQ、ES / Milvus 最终一致性 | 讲清“为什么审核和搜索同步不能放在主事务里” |

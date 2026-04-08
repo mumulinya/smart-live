@@ -24,7 +24,7 @@
 
 - ✅ **职责边界清楚**：Spring Boot 负责单服务开发底座，Spring Cloud Alibaba 负责注册发现、配置管理、网关入口与治理协同
 - ✅ **更贴当前项目规模**：项目已经拆到 `19 个`服务应用、`16 个`业务模块，只靠 Spring Boot 已经不足以覆盖服务编排和配置治理
-- ✅ **和当前技术栈贴合**：Nacos、Gateway、Sentinel、Seata 预留、Spring AI、MyBatis Plus 都能自然接入
+- ✅ **和当前技术栈贴合**：Nacos、Gateway、Sentinel、Seata、Spring AI、MyBatis Plus 都能自然接入
 - ✅ **统一 starter 体系**：公共能力被沉淀到了 `smartLive-common-*` 这组模块里，服务推进更稳定
 - ❌ **不走传统 SSM**：样板代码更多，服务治理和环境管理能力也更弱
 - ❌ **只用 Spring Boot 不选原因**：适合单体或少量服务，不适合当前这种多服务协作场景
@@ -35,7 +35,7 @@
 
 - ✅ **注册 + 配置一体化**：同一套组件同时解决服务发现和配置管理，减少组件碎片化
 - ✅ **更贴当前工程结构**：当前服务数量已经不少，各模块都依赖统一配置，Nacos 更容易做环境隔离和集中维护
-- ✅ **与 Spring Cloud Alibaba 集成顺滑**：和 Gateway、Sentinel、Seata 预留一起接入更自然
+- ✅ **与 Spring Cloud Alibaba 集成顺滑**：和 Gateway、Sentinel、Seata 一起接入更自然
 - ❌ **Eureka 不选原因**：更偏传统注册中心，只解决发现问题，配置中心还要额外引入
 - ❌ **Consul 暂不选原因**：能力并不差，但在当前 Java 微服务语境下，资料沉淀和接入习惯不如 Nacos 顺手
 

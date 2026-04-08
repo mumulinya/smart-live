@@ -77,7 +77,7 @@
         <td><strong>支付、订单、钱包与积分</strong></td>
         <td>收银台、订单详情、钱包、积分中心</td>
         <td><code>order / wallet / points / product</code></td>
-        <td><a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付退款链路</a>、<a href="./SHOWCASE.html#chains-schedule">订单超时取消链路</a></td>
+        <td><a href="./core-links/2.%20下单_统一支付_退款补偿链路.html">订单支付退款链路</a>、<a href="./SHOWCASE.html#chains-schedule">订单超时取消链路</a><br><span><code>wallet + order</code> 支付主数据强一致，退款 / 积分 / 统计继续最终一致</span></td>
         <td><a href="./SHOWCASE.html">业务链路视觉走查</a></td>
       </tr>
       <tr>
@@ -180,6 +180,8 @@
 | 秒杀活动入口与限时抢购承接页 | 优惠商品入口与专区聚合页 |
 
 ### <a id="app-trade-assets"></a>3.5 支付、订单、钱包与积分
+
+这一组页面承接的是交易闭环里最核心的资产链路。页面上看到的是收银台、订单详情、钱包和积分入口，后端边界上则是 `wallet + order` 的支付成功主数据用 `Seata XA` 保证强一致，而退款、积分发放、销量统计等外围副作用继续通过 `MQ + 幂等 + 补偿` 做最终一致收敛。
 
 | 支付收银台 |
 |:---:|
