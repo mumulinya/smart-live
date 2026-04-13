@@ -27,6 +27,7 @@ import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
+import com.smartLive.common.rabbitmq.domain.MqSendMode;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.CacheClient;
@@ -331,6 +332,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 影响行数
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateReview(Review review) {
         review.setUpdateTime(DateUtils.getNowDate());
         review.setAuditStatus(AuditStatusEnum.WAITING.getCode());
@@ -338,7 +340,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         int i = reviewMapper.updateReview(review);
         // 评价被修改后统一回到待审核态，并重新触发审核流
         if (i > 0 && !Objects.equals(review.getStatus(), ContentStatusEnum.DRAFT.getCode())) {
-            sendAuditMessage(review);
+            sendAuditMessage(review, MqSendMode.SYNC_RETRY_THROW);
         }
         // 数据变更，必须清除详情缓存保证数据一致性
         if (i > 0) {
@@ -507,7 +509,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 return i;
             }
             // 1. 发送给审核中心
-            sendAuditMessage(review);
+            sendAuditMessage(review, MqSendMode.SYNC_RETRY_THROW);
 
             // 2. 更新订单维度的评价状态
             Long orderId = review.getOrderId();
@@ -558,6 +560,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @param review 待审核的评价实体
      */
     private void sendAuditMessage(Review review) {
+        sendAuditMessage(review, MqSendMode.ASYNC_RETRY);
+    }
+
+    private void sendAuditMessage(Review review, MqSendMode sendMode) {
         ResourceStrategy resourceType = resourceStrategyFactory.getStrategy(review.getSourceType());
         HashMap<String, String> content = resourceType.getResourceContentById(review.getSourceId());
         AuditReviewBO auditReviewBO = new AuditReviewBO();
@@ -571,7 +577,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 .auditContent(BeanUtil.beanToMap(auditReviewBO))
                 .createTime(review.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage(
+                AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,
+                AiAuditMqConstants.AUDIT_ROUTING_KEY,
+                auditMessage,
+                sendMode
+        );
     }
 
     /**

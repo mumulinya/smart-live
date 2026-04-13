@@ -33,6 +33,9 @@ public interface RemoteOrderService {
     @PutMapping("/inner/order/paySuccess/{orderId}/{payType}")
     Integer paySuccess(@PathVariable("orderId") Long orderId, @PathVariable("payType") Integer payType);
 
+    @PutMapping("/inner/order/confirmRefundSuccess/{orderId}")
+    Integer confirmRefundSuccess(@PathVariable("orderId") Long orderId);
+
     @GetMapping("/inner/order/getOrderById/{orderId}")
     OrderDTO getOrderById(@PathVariable("orderId") Long orderId);
 

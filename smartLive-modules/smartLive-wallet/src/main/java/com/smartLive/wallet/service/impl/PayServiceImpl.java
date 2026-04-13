@@ -7,6 +7,7 @@ import com.smartLive.common.core.constant.mq.OrderMqConstants;
 import com.smartLive.common.core.constant.PaymentStatusConstants;
 import com.smartLive.common.core.exception.BusinessException;
 import com.smartLive.common.core.utils.StringUtils;
+import com.smartLive.common.rabbitmq.domain.MqSendMode;
 import com.smartLive.common.rabbitmq.domain.OrderPaidStatsMessage;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.order.api.DTO.OrderDTO;
@@ -110,7 +111,8 @@ public class PayServiceImpl implements IPayService {
                 OrderMqConstants.PAY_DELAY_EXCHANGE,
                 OrderMqConstants.PAY_DELAY_ROUTING_KEY,
                 record.getId(),
-                OrderMqConstants.PAY_DELAY_TIME);
+                OrderMqConstants.PAY_DELAY_TIME,
+                MqSendMode.SYNC_RETRY_THROW);
         log.info("已发送支付超时延迟消息, paySn={}, recordId={}, delay={}ms", paySn, record.getId(), OrderMqConstants.PAY_DELAY_TIME);
 
         PaymentStrategy strategy = paymentStrategyFactory.getStrategy(record.getPayMethod());

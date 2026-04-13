@@ -107,6 +107,15 @@ public class BlogController extends BaseController
     public Result saveBlog(@RequestBody Blog blog ) {
         return Result.ok(blogService.saveBlog(blog));
     }
+    /**
+     * 修改博客信息
+     */
+    @Log(title = "blog", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public Result edit(@RequestBody Blog blog)
+    {
+        return Result.ok(blogService.updateBlog(blog));
+    }
 
     /**
      * 查询当前用户的博客列表。

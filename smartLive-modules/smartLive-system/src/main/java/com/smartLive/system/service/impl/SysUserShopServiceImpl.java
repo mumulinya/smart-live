@@ -5,6 +5,7 @@ import com.smartLive.system.mapper.SysUserShopMapper;
 import com.smartLive.system.service.ISysUserShopService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +20,7 @@ public class SysUserShopServiceImpl implements ISysUserShopService
     private SysUserShopMapper sysUserShopMapper;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean addUserShopRelation(Long userId, Long shopId)
     {
         if (userId == null || shopId == null)
@@ -33,6 +35,7 @@ public class SysUserShopServiceImpl implements ISysUserShopService
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteUserShopRelationByShopId(Long shopId)
     {
         if (shopId == null)
@@ -44,6 +47,7 @@ public class SysUserShopServiceImpl implements ISysUserShopService
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteUserShopRelationByShopIds(Long[] shopIds)
     {
         if (shopIds == null || shopIds.length == 0)

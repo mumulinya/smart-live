@@ -1,6 +1,5 @@
 package com.smartLive.common.rabbitmq.domain;
 
-import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import lombok.Data;
 
@@ -21,7 +20,7 @@ public class RetryCorrelationData extends CorrelationData {
     // 重试次数
     private int retryCount = 0;
     // 最大重试次数
-    private int maxRetries = 3;
+    private int maxRetries;
 
     /**
      * 普通交换机构造方法

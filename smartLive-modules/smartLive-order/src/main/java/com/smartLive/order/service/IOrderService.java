@@ -70,6 +70,11 @@ public interface IOrderService extends IService<Order> {
      */
 
     Integer refund(Long id);
+
+    /**
+     * 第三方退款成功后的内部确认。
+     */
+    Integer confirmRefundSuccess(Long orderId);
     /**
      * 订单核销/使用
      */

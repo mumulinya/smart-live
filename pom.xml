@@ -248,6 +248,11 @@
             </dependency>
             <dependency>
                 <groupId>com.smartLive</groupId>
+                <artifactId>smartLive-api-wallet</artifactId>
+                <version>${smartLive.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.smartLive</groupId>
                 <artifactId>smartLive-api-points</artifactId>
                 <version>${smartLive.version}</version>
             </dependency>

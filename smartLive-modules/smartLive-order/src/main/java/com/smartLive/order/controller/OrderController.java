@@ -1,7 +1,9 @@
 package com.smartLive.order.controller;
 
 import java.util.List;
+import java.util.Objects;
 
+import com.smartLive.common.core.constant.OrderStatusConstants;
 import com.smartLive.order.domain.VO.OrderVO;
 import jakarta.servlet.http.HttpServletResponse;
 import com.smartLive.common.core.context.UserContextHolder;
@@ -172,8 +174,11 @@ public class OrderController extends BaseController
     @PostMapping("/refund/{id}")
     public Result refund(@PathVariable("id") Long id) {
         Integer refund = orderService.refund(id);
-        if(refund>0){
+        if (Objects.equals(refund, OrderStatusConstants.REFUNDED)) {
             return Result.ok("退款成功");
+        }
+        if (Objects.equals(refund, OrderStatusConstants.REFUNDING)) {
+            return Result.ok("退款申请已提交，请等待处理");
         }
         return Result.fail("退款失败");
     }

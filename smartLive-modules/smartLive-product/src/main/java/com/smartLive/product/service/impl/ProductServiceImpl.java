@@ -28,6 +28,7 @@ import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.FeedEventMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
+import com.smartLive.common.rabbitmq.domain.MqSendMode;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
@@ -187,7 +188,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         int i = productMapper.insertProduct(product);
         if(i > 0){
             // 同步执行下游链路数据补偿保障
-            sendAuditMessage(product);
+            sendAuditMessage(product, MqSendMode.SYNC_RETRY_THROW);
         }
         return i;
     }
@@ -247,13 +248,15 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * @return 影响行数
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateProduct(Product product)
     {
         product.setUpdateTime(DateUtils.getNowDate());
+        product.setAuditStatus(AuditStatusEnum.WAITING.getCode());
         int i = productMapper.updateProduct(product);
         if(i > 0){
             // 同步执行下游链路数据补偿保障
-            sendAuditMessage(product);
+            sendAuditMessage(product, MqSendMode.SYNC_RETRY_THROW);
 
             // 插入商品记录及执行落库操作
             if(product.getActivityType() != null && product.getActivityType() == 1){
@@ -406,14 +409,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         return convertToProductVOList(products);
     }
-
-
     /**
-     * 发送商品审核消息
+     * 发送商品审核消息到MQ
      *
-     * @param product 商品信息
+     * @param product 商品
+     * @param sendMode MQ发送模式
      */
-    private void sendAuditMessage(Product product) {
+    private void sendAuditMessage(Product product, MqSendMode sendMode) {
         AuditMessage auditMessage = AuditMessage.builder()
                 .bizId(product.getId())
                 .bizType(GlobalBizTypeEnum.PRODUCT.getCode()) // KEEP VOUCHER
@@ -421,7 +423,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .auditContent(BeanUtil.beanToMap(product))
                 .createTime(product.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage(
+                AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,
+                AiAuditMqConstants.AUDIT_ROUTING_KEY,
+                auditMessage,
+                sendMode
+        );
     }
 
     /**

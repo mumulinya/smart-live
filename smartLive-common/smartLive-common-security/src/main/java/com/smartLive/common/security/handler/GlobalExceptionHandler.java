@@ -108,10 +108,20 @@ public class GlobalExceptionHandler
      * 拦截未知的运行时异常
      */
     @ExceptionHandler(RuntimeException.class)
-    public AjaxResult handleRuntimeException(RuntimeException e, HttpServletRequest request)
+    public Object handleRuntimeException(RuntimeException e, HttpServletRequest request)
     {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生未知异常.", requestURI, e);
+        BusinessException businessException = findCause(e, BusinessException.class);
+        if (businessException != null)
+        {
+            return handleBusinessException(businessException);
+        }
+        ServiceException serviceException = findCause(e, ServiceException.class);
+        if (serviceException != null)
+        {
+            return handleServiceException(serviceException, request);
+        }
         return AjaxResult.error(e.getMessage());
     }
 
@@ -119,10 +129,20 @@ public class GlobalExceptionHandler
      * 系统异常
      */
     @ExceptionHandler(Exception.class)
-    public AjaxResult handleException(Exception e, HttpServletRequest request)
+    public Object handleException(Exception e, HttpServletRequest request)
     {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生系统异常.", requestURI, e);
+        BusinessException businessException = findCause(e, BusinessException.class);
+        if (businessException != null)
+        {
+            return handleBusinessException(businessException);
+        }
+        ServiceException serviceException = findCause(e, ServiceException.class);
+        if (serviceException != null)
+        {
+            return handleServiceException(serviceException, request);
+        }
         return AjaxResult.error(e.getMessage());
     }
 
@@ -172,5 +192,23 @@ public class GlobalExceptionHandler
     public Result handleBusinessException(BusinessException e)
     {
         return Result.fail(e.getMessage());
+    }
+
+    /**
+     * 递归查找嵌套异常中的目标异常类型。
+     * 用于解开 Seata / Feign 包装后的业务异常，避免前端直接看到框架异常信息。
+     */
+    private <T extends Throwable> T findCause(Throwable throwable, Class<T> targetType)
+    {
+        Throwable current = throwable;
+        while (current != null)
+        {
+            if (targetType.isInstance(current))
+            {
+                return targetType.cast(current);
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 }

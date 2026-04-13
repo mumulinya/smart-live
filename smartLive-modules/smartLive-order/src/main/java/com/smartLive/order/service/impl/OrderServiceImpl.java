@@ -1,6 +1,7 @@
 package com.smartLive.order.service.impl;
 import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
+import com.smartLive.common.rabbitmq.domain.MqSendMode;
 import com.smartLive.order.api.DTO.OrderDTO;
 
 import java.time.LocalDateTime;
@@ -39,6 +40,8 @@ import com.smartLive.shop.api.RemoteShopService;
 import com.smartLive.user.api.RemoteAppUserService;
 import com.smartLive.user.api.domain.UserDTO;
 import com.smartLive.system.api.RemoteUserService;
+import com.smartLive.wallet.api.RemoteWalletService;
+import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -86,6 +89,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Autowired
     private RemoteAppUserService remoteAppUserService;
+
+    @Autowired
+    private RemoteWalletService remoteWalletService;
 
     @Resource
     private RedissonClient redissonClient;
@@ -553,39 +559,43 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * 订单退款处理。
      *
      * @param id 订单ID
-     * @return 影响行数
+     * @return 退款状态（REFUNDED / REFUNDING）
      */
     @Override
+    @GlobalTransactional(name = "order-refund", rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public Integer refund(Long id) {
         Order order = getById(id);
-        if(order==null){
-            throw new BusinessException("订单不存在");
+        validateRefundableOrder(order);
+        if (Objects.equals(order.getPayType(), PayTypeConstants.BALANCE)) {
+            return refundByBalance(order);
+        }
+        if (Objects.equals(order.getPayType(), PayTypeConstants.ALIPAY)
+                || Objects.equals(order.getPayType(), PayTypeConstants.WECHAT)) {
+            return refundByThirdParty(order);
+        }
+        throw new BusinessException("当前订单支付方式不支持退款");
+    }
+
+    /**
+     * 第三方退款成功后的内部确认。
+     * 只有确认成功后才会把订单真正置为已退款。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Integer confirmRefundSuccess(Long orderId) {
+        Order order = getById(orderId);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
         }
         if (Objects.equals(order.getStatus(), OrderStatusConstants.REFUNDED)) {
             return 1;
         }
-        if (!Objects.equals(order.getStatus(), OrderStatusConstants.PAID)) {
-            if (Objects.equals(order.getStatus(), OrderStatusConstants.VERIFIED)) {
-                throw new BusinessException("订单已核销，不能退款");
-            }
-            throw new BusinessException("当前订单状态不可退款");
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.REFUNDING)) {
+            throw new ServiceException("当前订单状态不可确认退款");
         }
-        order.setRefundTime(DateUtils.getNowDate());
-        order.setStatus(OrderStatusConstants.REFUNDED);
-        int i = updateOrderStatusIfCurrentIs(order, OrderStatusConstants.PAID);
-        if (i <= 0) {
-            throw new BusinessException("订单状态已变更，请刷新后重试");
-        }
-        if(i>0){
-            ProductDTO vo = remoteProductService.getProductById(order.getSourceId());
-            if (vo != null && vo.getActivityType() != null && vo.getActivityType() == 1&&vo.getStatus().equals(ProductStatusEnum.ON_SHELF.getCode())){
-                log.info("refund order recovers stock for product activity");
-                remoteProductService.recoverStock(order.getSourceId(),order.getUserId());
-            }
-            decrementSales(order, false);
-            sendRefundMessage(order);
-        }
-        return i;
+        completeRefund(order, OrderStatusConstants.REFUNDING);
+        return 1;
     }
 
     /**
@@ -594,17 +604,125 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @param order 订单信息
      */
     private void sendRefundMessage(Order order) {
+        sendRefundMessage(order, MqSendMode.ASYNC_RETRY);
+    }
+
+    /**
+     * 发送退款消息到 MQ。
+     * 第三方退款场景会使用同步发送，确保退款请求真正投递后再提交本地事务。
+     */
+    private void sendRefundMessage(Order order, com.smartLive.common.rabbitmq.domain.MqSendMode sendMode) {
         OrderRefundMessage msg = new OrderRefundMessage();
         msg.setOrderId(order.getId());
         msg.setUserId(order.getUserId());
         msg.setAmount(order.getPayAmount());
         msg.setPayType(order.getPayType());
         mqMessageSendUtils.sendMqMessage(
-                OrderMqConstants.ORDER_REFUND_EXCHANGE,
-                OrderMqConstants.ORDER_REFUND_ROUTING_KEY,
-                msg
-        );
-        log.info("refund message sent, orderId={}, userId={}, amount={}", order.getId(), order.getUserId(), order.getPayAmount());
+                  OrderMqConstants.ORDER_REFUND_EXCHANGE,
+                  OrderMqConstants.ORDER_REFUND_ROUTING_KEY,
+                  msg,
+                  sendMode
+          );
+          log.info("refund message sent, orderId={}, userId={}, amount={}", order.getId(), order.getUserId(), order.getPayAmount());
+      }
+
+    /**
+     * 退款前统一校验订单是否允许进入退款流程。
+     */
+    private void validateRefundableOrder(Order order) {
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        if (Objects.equals(order.getStatus(), OrderStatusConstants.REFUNDED)) {
+            throw new BusinessException("订单已退款");
+        }
+        if (Objects.equals(order.getStatus(), OrderStatusConstants.REFUNDING)) {
+            throw new BusinessException("订单退款处理中，请稍后查看结果");
+        }
+        if (!Objects.equals(order.getStatus(), OrderStatusConstants.PAID)) {
+            if (Objects.equals(order.getStatus(), OrderStatusConstants.VERIFIED)) {
+                throw new BusinessException("订单已核销，不能退款");
+            }
+            throw new BusinessException("当前订单状态不可退款");
+        }
+    }
+
+    /**
+     * 余额退款走同步 RPC。
+     * 钱包退款成功后，再把订单状态置为已退款。
+     */
+    private Integer refundByBalance(Order order) {
+        try {
+            Boolean refunded = remoteWalletService.refundOrderBalance(order.getId(), order.getUserId(), order.getPayAmount());
+            if (!Boolean.TRUE.equals(refunded)) {
+                throw new BusinessException("余额退款失败，请稍后重试");
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            // 统一把 RPC/Seata 包装异常转换成业务异常，避免前端直接看到底层框架报错。
+            log.error("余额退款失败, orderId={}, userId={}, amount={}",
+                    order.getId(), order.getUserId(), order.getPayAmount(), e);
+            throw new BusinessException("余额退款失败，请稍后重试");
+        }
+        completeRefund(order, OrderStatusConstants.PAID);
+        return OrderStatusConstants.REFUNDED;
+    }
+
+    /**
+     * 第三方退款先进入退款中状态，再异步交给支付模块处理。
+     * 真实环境中应由支付模块调用支付宝/微信退款接口并在成功后回调订单确认。
+     */
+    private Integer refundByThirdParty(Order order) {
+        Order refundingOrder = new Order();
+        refundingOrder.setId(order.getId());
+        refundingOrder.setStatus(OrderStatusConstants.REFUNDING);
+        int updated = updateOrderStatusIfCurrentIs(refundingOrder, OrderStatusConstants.PAID);
+        if (updated <= 0) {
+            throw new BusinessException("订单状态已变更，请刷新后重试");
+        }
+        sendRefundMessage(order, com.smartLive.common.rabbitmq.domain.MqSendMode.SYNC_RETRY_THROW);
+        log.info("第三方退款申请已提交, orderId={}, payType={}", order.getId(), order.getPayType());
+        return OrderStatusConstants.REFUNDING;
+    }
+
+    /**
+     * 将订单推进到已退款终态。
+     * 钱包/第三方退款结果确认成功后，再统一执行本地状态收口。
+     */
+    private void completeRefund(Order order, Integer currentStatus) {
+        order.setRefundTime(DateUtils.getNowDate());
+        order.setStatus(OrderStatusConstants.REFUNDED);
+        int updated = updateOrderStatusIfCurrentIs(order, currentStatus);
+        if (updated <= 0) {
+            throw new ServiceException("订单状态已变更，退款确认失败");
+        }
+        handleRefundSideEffects(order);
+    }
+
+    /**
+     * 退款完成后的副作用统一收口。
+     * 这部分不属于核心资金事务，失败时只记录日志，后续可通过补偿任务兜底。
+     */
+    private void handleRefundSideEffects(Order order) {
+        try {
+            decrementSales(order, false);
+        } catch (Exception e) {
+            log.error("退款后回滚销量失败, orderId={}", order.getId(), e);
+        }
+
+        try {
+            ProductDTO product = remoteProductService.getProductById(order.getSourceId());
+            if (product != null
+                    && product.getActivityType() != null
+                    && product.getActivityType() == 1
+                    && Objects.equals(product.getStatus(), ProductStatusEnum.ON_SHELF.getCode())) {
+                log.info("refund order recovers stock for product activity");
+                remoteProductService.recoverStock(order.getSourceId(), order.getUserId());
+            }
+        } catch (Exception e) {
+            log.error("退款后恢复库存失败, orderId={}, productId={}", order.getId(), order.getSourceId(), e);
+        }
     }
 
     /**

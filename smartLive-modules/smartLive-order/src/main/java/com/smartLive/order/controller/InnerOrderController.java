@@ -74,6 +74,17 @@ public class InnerOrderController extends BaseController {
     }
 
     /**
+     * 第三方退款成功后的内部确认。
+     *
+     * @param orderId 订单ID
+     * @return 影响结果
+     */
+    @PutMapping("/confirmRefundSuccess/{orderId}")
+    Integer confirmRefundSuccess(@PathVariable("orderId") Long orderId) {
+        return orderService.confirmRefundSuccess(orderId);
+    }
+
+    /**
      * 查询订单内部 DTO，供支付成功后的统计消息补全使用。
      *
      * @param orderId 订单ID

@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.smartLive.common.core.domain.AppLoginUser;
 import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
@@ -28,6 +29,8 @@ import com.smartLive.common.core.utils.bean.BeanUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
+import com.smartLive.common.rabbitmq.domain.MqSendMode;
+import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.interaction.FollowTypeEnum;
 import com.smartLive.common.core.enums.interaction.LikeTypeEnum;
@@ -50,6 +53,7 @@ import com.smartLive.user.service.IUserInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.smartLive.user.mapper.UserMapper;
 import com.smartLive.user.domain.User;
 import com.smartLive.user.service.IUserService;
@@ -224,17 +228,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateUser(User user)
     {
         user.setUpdateTime(DateUtils.getNowDate());
         int i = userMapper.updateUser(user);
         if(i>0){
-            clearUserCache(user.getId());
+            User latestUser = getById(user.getId());
+            if (latestUser == null) {
+                throw new BusinessException("用户不存在");
+            }
+            userInfoService.update(new UpdateWrapper<UserInfo>()
+                    .eq("user_id", user.getId())
+                    .set("audit_status", AuditStatusEnum.WAITING.getCode()));
+            sendAuditMessage(latestUser, MqSendMode.SYNC_RETRY_THROW);
             AppLoginUser dto = UserContextHolder.getUser();
             if(dto!=null){
                 String tokenKey = dto.getToken();
-                User userById = getById(user.getId());
-                UserDTO userDTO= BeanUtil.copyProperties(userById, UserDTO.class);
+                UserDTO userDTO= BeanUtil.copyProperties(latestUser, UserDTO.class);
                 Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
                         CopyOptions.create()
                                 .setIgnoreNullValue(true)
@@ -243,8 +254,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 redisService.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
                 UserContextHolder.removeUser();
             }
+            clearUserCache(user.getId());
             publish(new String[]{user.getId().toString()});
-            sendAuditMessage(user);
         }
         return i;
     }
@@ -252,6 +263,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 发送用户审核MQ消息
      */
     private void sendAuditMessage(User user) {
+        sendAuditMessage(user, MqSendMode.ASYNC_RETRY);
+    }
+
+    private void sendAuditMessage(User user, MqSendMode sendMode) {
         UserInfoVO userInfo = userInfoService.getByUserId(user.getId());
         UserVO userVO = convertToUserVO(user);
         userVO.setIntroduce(userInfo.getIntroduce());
@@ -265,7 +280,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .auditContent(BeanUtil.beanToMap(userVO))
                 .createTime(user.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage(
+                AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,
+                AiAuditMqConstants.AUDIT_ROUTING_KEY,
+                auditMessage,
+                sendMode
+        );
     }
     /**
      * 批量删除用户

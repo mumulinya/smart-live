@@ -45,6 +45,12 @@ public class RemoteOrderFallbackFactory implements FallbackFactory<RemoteOrderSe
             }
 
             @Override
+            public Integer confirmRefundSuccess(Long orderId) {
+                log.error("confirm refund success failed: {}", cause.getMessage());
+                return 0;
+            }
+
+            @Override
             public OrderDTO getOrderById(Long orderId) {
                 log.error("get order by id failed: {}", cause.getMessage());
                 return null;

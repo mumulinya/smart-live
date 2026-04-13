@@ -41,6 +41,7 @@ import com.smartLive.user.api.RemoteAppUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import cn.hutool.core.util.StrUtil;
 import java.util.concurrent.CountDownLatch;
@@ -287,14 +288,17 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return 影响行数
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateBlog(Blog blog)
     {
         blog.setUpdateTime(DateUtils.getNowDate());
+        blog.setAuditStatus((short) AuditStatusEnum.WAITING.getCode());
+        blog.setRejectReason(null);
         int i = blogMapper.updateBlog(blog);
         if(i > 0){
+            blog = getById(blog.getId());
+            sendAuditMessage(blog, MqSendMode.SYNC_RETRY_THROW);
             publish(new String[]{blog.getId().toString()});
-            blog=getById(blog.getId());
-            sendAuditMessage(blog);
             flashRedisBlogCache(blog.getId());
             flashRedisBlogListCache();
         }
@@ -437,6 +441,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @return 博客ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long saveBlog(Blog blog) {
         blog.setUserId(UserContextHolder.getUser().getId());
         blog.setCreateTime(DateUtils.getNowDate());
@@ -455,6 +460,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (blog.getStatus() != null && blog.getStatus().intValue() == ContentStatusEnum.DRAFT.getCode()) {
             return blog.getId();
         }
+        sendAuditMessage(blog, MqSendMode.SYNC_RETRY_THROW);
         FeedEventMessage feedEventMessage = FeedEventMessage.builder()
                 .feedType(FeedTypeEnum.USER_FEED.getCode())
                 .sourceType(GlobalBizTypeEnum.USER.getCode())
@@ -466,7 +472,6 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         mqMessageSendUtils.sendMqMessage(InteractionMqConstants.INTERACT_FEED_EXCHANGE, InteractionMqConstants.INTERACT_FEED_ROUTING_KEY, feedEventMessage);
         publish(new String[]{blog.getId().toString()});
         String actionType=UserResourceActionTypeConstants.USER_RESOURCE_ACTION_PUBLISH;
-        sendAuditMessage(blog);
         String  id = blog.getUserId()+"_"+actionType+"_"+GlobalBizTypeEnum.BLOG.getBizDomain()+"_"+blog.getId().toString();
         UserResourceMessage userResourceMessage = UserResourceMessage.builder()
                 .indexName(EsIndexNameConstants.USER_RESOURCE_INDEX_NAME)
@@ -488,6 +493,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      * @param blog 博客信息
      */
     private void sendAuditMessage(Blog blog) {
+        sendAuditMessage(blog, MqSendMode.ASYNC_RETRY);
+    }
+
+    private void sendAuditMessage(Blog blog, MqSendMode sendMode) {
         AuditMessage auditMessage = AuditMessage.builder()
                 .bizId(blog.getId())
                 .bizType(GlobalBizTypeEnum.BLOG.getCode())
@@ -495,7 +504,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .auditContent(BeanUtil.beanToMap(blog))
                 .createTime(blog.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage(
+                AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,
+                AiAuditMqConstants.AUDIT_ROUTING_KEY,
+                auditMessage,
+                sendMode
+        );
     }
 
     /**

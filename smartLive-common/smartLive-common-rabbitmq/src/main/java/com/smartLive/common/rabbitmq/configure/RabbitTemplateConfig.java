@@ -16,8 +16,10 @@ public class RabbitTemplateConfig {
      */
     @PostConstruct
     public void init() {
+        rabbitTemplate.setMandatory(true);
         rabbitTemplate.setReturnsCallback(returns -> {
             log.error("监听到了消息return callback");
+            log.error("messageId:{}", returns.getMessage().getMessageProperties().getMessageId());
             log.error("exchange:{}", returns.getExchange());
             log.error("replyCode:{}", returns.getReplyCode());
             log.error("replyText:{}", returns.getReplyText());

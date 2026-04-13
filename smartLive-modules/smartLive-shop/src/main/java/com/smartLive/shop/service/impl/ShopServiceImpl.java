@@ -32,6 +32,7 @@ import com.smartLive.common.security.utils.SecurityUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
 import com.smartLive.common.rabbitmq.domain.ContentBatchSyncMessage;
 import com.smartLive.common.rabbitmq.domain.ContentSyncMessage;
+import com.smartLive.common.rabbitmq.domain.MqSendMode;
 import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.exception.BusinessException;
@@ -56,6 +57,7 @@ import com.smartLive.shop.domain.ShopType;
 import com.smartLive.shop.service.IShopTypeService;
 import com.smartLive.common.redis.util.CacheClient;
 import com.smartLive.common.redis.util.ZSetIdManager;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.lucene.util.SloppyMath;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -266,6 +268,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * 新增店铺。
      */
     @Override
+    @GlobalTransactional(name = "shop-insert-with-user-relation", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
     public int insertShop(Shop shop) {
         shop.setCreateTime(DateUtils.getNowDate());
@@ -282,8 +285,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             if (!Boolean.TRUE.equals(relationSaved)) {
                 throw new BusinessException("failed to save user-shop relation");
             }
+            sendAuditMessage(shop, MqSendMode.SYNC_RETRY_THROW);
             flashShopListRedisCache(shop.getTypeId());
-            sendAuditMessage(shop);
         }
         return i;
     }
@@ -292,11 +295,15 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * 更新店铺。
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateShop(Shop shop) {
         Shop oldShop = shop.getId() == null ? null : shopMapper.selectById(shop.getId());
         shop.setUpdateTime(DateUtils.getNowDate());
+        shop.setAuditStatus(AuditStatusEnum.WAITING.getCode());
+        shop.setRejectReason(null);
         int i = shopMapper.updateShop(shop);
         if(i > 0){
+            sendAuditMessage(shop, MqSendMode.SYNC_RETRY_THROW);
             Long shopId = shop.getId();
             flashShopRedisCache(shopId);
             if (oldShop != null && oldShop.getTypeId() != null) {
@@ -306,7 +313,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 flashShopListRedisCache(shop.getTypeId());
             }
             publish(new String[]{shopId.toString()});
-            sendAuditMessage(shop);
         }
         return i;
     }
@@ -315,6 +321,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * 批量删除店铺。
      */
     @Override
+    @GlobalTransactional(name = "shop-delete-batch-with-user-relation", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
     public int deleteShopByIds(Long[] ids) {
         if (ids == null || ids.length == 0) {
@@ -372,6 +379,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * 根据ID删除店铺。
      */
     @Override
+    @GlobalTransactional(name = "shop-delete-with-user-relation", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
     public int deleteShopById(Long id) {
         Shop shop = shopMapper.selectShopById(id);
@@ -721,6 +729,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * 发送店铺审核消息。
      */
     private void sendAuditMessage(Shop shop) {
+        sendAuditMessage(shop, MqSendMode.ASYNC_RETRY);
+    }
+
+    private void sendAuditMessage(Shop shop, MqSendMode sendMode) {
         AuditMessage auditMessage = AuditMessage.builder()
                 .bizId(shop.getId())
                 .bizType(GlobalBizTypeEnum.SHOP.getCode())
@@ -728,7 +740,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 .auditContent(BeanUtil.beanToMap(shop))
                 .createTime(shop.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage(
+                AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,
+                AiAuditMqConstants.AUDIT_ROUTING_KEY,
+                auditMessage,
+                sendMode
+        );
     }
     /**
      * 刷新店铺列表缓存。

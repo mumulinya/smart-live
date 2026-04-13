@@ -18,6 +18,7 @@ import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.common.RankRedisEnum;
 import com.smartLive.common.core.utils.DateUtils;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
+import com.smartLive.common.rabbitmq.domain.MqSendMode;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.common.redis.util.RedisMultiCacheManager;
@@ -403,6 +404,7 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
                 log.error("commentType is null, sourceType={}", comment.getSourceType());
                 return i;
             }
+            sendAuditMessage(comment, MqSendMode.SYNC_RETRY_THROW);
             String commentCountKeyPrefix = commentType.getCommentCountKeyPrefix() + comment.getSourceId();
             String commentSyncKey = commentType.getCommentSyncKey();
             String userCommentKey = userCommentKey(commentType, comment.getUserId());
@@ -428,9 +430,6 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
             if (hotRankRedisEnum != null) {
                 redisService.setCacheSet(hotRankRedisEnum.getCalcQueueKey(), comment.getId().toString());
             }
-
-            // 6. 发送审核消息队列
-            sendAuditMessage(comment);
         }
         return i;
     }
@@ -441,6 +440,10 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
      * @param comment 待审核的评论
      */
     private void sendAuditMessage(Comment comment) {
+        sendAuditMessage(comment, MqSendMode.ASYNC_RETRY);
+    }
+
+    private void sendAuditMessage(Comment comment, MqSendMode sendMode) {
         ResourceStrategy resourceType = resourceStrategyFactory.getStrategy(comment.getSourceType());
         HashMap<String, String> content = resourceType.getResourceContentById(comment.getSourceId());
         AuditCommentBO auditCommentBO = new AuditCommentBO();
@@ -454,7 +457,12 @@ class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements 
                 .auditContent(BeanUtil.beanToMap(auditCommentBO))
                 .createTime(comment.getCreateTime())
                 .build();
-        mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE, AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+        mqMessageSendUtils.sendMqMessage(
+                AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,
+                AiAuditMqConstants.AUDIT_ROUTING_KEY,
+                auditMessage,
+                sendMode
+        );
     }
 
     /**

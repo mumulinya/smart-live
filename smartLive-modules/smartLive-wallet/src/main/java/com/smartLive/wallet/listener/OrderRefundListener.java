@@ -1,9 +1,12 @@
 package com.smartLive.wallet.listener;
 
+import com.smartLive.common.core.constant.PayTypeConstants;
 import com.smartLive.common.core.constant.RedisMqIdempotentConstants;
 import com.smartLive.common.core.constant.mq.OrderMqConstants;
+import com.smartLive.common.core.exception.ServiceException;
 import com.smartLive.common.rabbitmq.domain.OrderRefundMessage;
 import com.smartLive.common.redis.service.RedisService;
+import com.smartLive.order.api.RemoteOrderService;
 import com.smartLive.wallet.service.IWalletService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +32,12 @@ public class OrderRefundListener {
     @Autowired
     private RedisService redisService;
 
+    @Autowired
+    private RemoteOrderService remoteOrderService;
+
     /**
-     * 监听订单退款消息，恢复用户余额
+     * 监听订单退款消息。
+     * 余额退款默认走 RPC，这里主要承接第三方退款的异步确认链路。
      */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(name = OrderMqConstants.ORDER_REFUND_QUEUE, declare = "true",
@@ -68,13 +75,36 @@ public class OrderRefundListener {
             }
             log.info("[MQ幂等] 首次消费退款消息，key={}, orderId={}", idempotentKey, message.getOrderId());
 
-            walletService.refundOrder(message.getUserId(), message.getAmount(), message.getOrderId().toString());
-            log.info("订单退款余额恢复成功, orderId={}, userId={}, amount={}", message.getOrderId(), message.getUserId(), message.getAmount());
+            if (message.getPayType() == null) {
+                throw new ServiceException("退款消息缺少支付方式");
+            }
+
+            if (message.getPayType().equals(PayTypeConstants.BALANCE)) {
+                // 兼容历史消息：即便余额退款已经切到 RPC，这里仍保留兜底处理能力。
+                walletService.refundOrder(message.getUserId(), message.getAmount(), message.getOrderId().toString());
+                confirmRefundSuccess(message.getOrderId(), "balance");
+                log.info("订单余额退款处理完成, orderId={}, userId={}, amount={}", message.getOrderId(), message.getUserId(), message.getAmount());
+            } else {
+                // 真实环境这里需要调用支付宝/微信退款接口，并以回调/查询结果作为最终成功依据。
+                log.info("收到第三方退款请求，当前按模拟成功回执处理, orderId={}, payType={}", message.getOrderId(), message.getPayType());
+                confirmRefundSuccess(message.getOrderId(), "third-party");
+            }
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
             log.error("[MQ幂等] 退款消息处理异常，清理幂等锁并触发重试，key={}", idempotentKey, e);
             redisService.deleteObject(idempotentKey);
             throw new RuntimeException("退款消息处理异常，触发本地重试", e);
         }
+    }
+
+    /**
+     * 退款执行成功后回调订单模块确认最终状态。
+     */
+    private void confirmRefundSuccess(Long orderId, String refundChannel) {
+        Integer result = remoteOrderService.confirmRefundSuccess(orderId);
+        if (result == null || result <= 0) {
+            throw new ServiceException("订单退款成功确认失败");
+        }
+        log.info("订单退款成功确认完成, orderId={}, refundChannel={}", orderId, refundChannel);
     }
 }

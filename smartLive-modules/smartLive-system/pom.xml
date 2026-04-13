@@ -70,6 +70,12 @@
             <groupId>com.smartLive</groupId>
             <artifactId>smartLive-common-swagger</artifactId>
         </dependency>
+
+        <!-- smartLive Common Seata -->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-seata</artifactId>
+        </dependency>
         <!--arthas-->
         <dependency>
             <groupId>com.taobao.arthas</groupId>

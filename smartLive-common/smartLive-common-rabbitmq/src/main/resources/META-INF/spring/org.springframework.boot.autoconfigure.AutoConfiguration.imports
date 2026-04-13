@@ -1,3 +1,4 @@
 com.smartLive.common.rabbitmq.configure.MqConfig
 com.smartLive.common.rabbitmq.configure.RabbitTemplateConfig
+com.smartLive.common.rabbitmq.configure.MqSendProperties
 com.smartLive.common.rabbitmq.utils.MqMessageSendUtils

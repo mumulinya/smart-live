@@ -10,6 +10,7 @@ import com.smartLive.common.core.enums.common.AuditStatusEnum;
 import com.smartLive.common.core.enums.common.GlobalBizTypeEnum;
 import com.smartLive.common.core.enums.interaction.LikeTypeEnum;
 import com.smartLive.common.rabbitmq.domain.AuditMessage;
+import com.smartLive.common.rabbitmq.domain.MqSendMode;
 import com.smartLive.common.rabbitmq.utils.MqMessageSendUtils;
 import com.smartLive.common.redis.service.RedisService;
 import com.smartLive.user.DTO.UserInfoDTO;
@@ -124,12 +125,10 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         if (userInfo.getLevel() != null){
             updateWrapper.set("level", userInfo.getLevel());
         }
+        updateWrapper.set("audit_status", AuditStatusEnum.WAITING.getCode());
         updateWrapper.set("update_time", new Date());
         boolean update = update(updateWrapper);
         if (update){
-            userService.clearUserCache(userId);
-            //更新用户信息成功，更新es数据
-           userService.publish(new String[]{userId.toString()});
             User userById = userService.selectUserById(userId);
             UserInfoVO userInfoVO = getByUserId(userId);
             UserVO userVO = new UserVO();
@@ -144,7 +143,15 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
                     .auditContent(BeanUtil.beanToMap(userVO))
                     .createTime(userById.getCreateTime())
                     .build();
-            mqMessageSendUtils.sendMqMessage( AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,AiAuditMqConstants.AUDIT_ROUTING_KEY, auditMessage);
+            mqMessageSendUtils.sendMqMessage(
+                    AiAuditMqConstants.AUDIT_DIRECT_EXCHANGE,
+                    AiAuditMqConstants.AUDIT_ROUTING_KEY,
+                    auditMessage,
+                    MqSendMode.SYNC_RETRY_THROW
+            );
+            userService.clearUserCache(userId);
+            //更新用户信息成功，更新es数据
+           userService.publish(new String[]{userId.toString()});
         }
         return update;
     }

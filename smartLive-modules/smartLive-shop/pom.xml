@@ -82,6 +82,12 @@
             <artifactId>smartLive-common-xxl</artifactId>
         </dependency>
 
+        <!-- smartLive Common Seata -->
+        <dependency>
+            <groupId>com.smartLive</groupId>
+            <artifactId>smartLive-common-seata</artifactId>
+        </dependency>
+
         <!-- hutool -->
         <dependency>
             <groupId>cn.hutool</groupId>
